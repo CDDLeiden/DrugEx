@@ -14,6 +14,9 @@ import getopt, sys
 rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
+import argparse
+import json
+
 
 def corpus(input, output, suffix='sdf'):
     if suffix =='sdf':
@@ -21,7 +24,7 @@ def corpus(input, output, suffix='sdf'):
         mols = Chem.ForwardSDMolSupplier(inf)
         # mols = [mol for mol in suppl]
     else:
-        df = pd.read_table(input).Smiles.dropna()
+        df = pd.read_table(input).SMILES.dropna()
         mols = [Chem.MolFromSmiles(s) for s in df]
     voc = Voc('data/voc_smiles.txt')
     charger = rdMolStandardize.Uncharger()
@@ -70,7 +73,7 @@ def corpus(input, output, suffix='sdf'):
 
 def graph_corpus(input, output, suffix='sdf'):
     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
-    voc = utils.VocGraph('data/voc_atom.txt')
+    voc = utils.VocGraph('data/voc_graph.txt')
     inf = gzip.open(input)
     if suffix == 'sdf':
         mols = Chem.ForwardSDMolSupplier(inf)
@@ -129,7 +132,7 @@ def graph_corpus(input, output, suffix='sdf'):
     print(exps)
 
 
-def pair_frags(fname, out, method='Recap', is_mf=True):
+def pair_frags(fname, out, voc, method='Recap', is_mf=True):
     smiles = pd.read_table(fname).Smiles.dropna()
     pairs = []
     for i, smile in enumerate(tqdm(smiles)):
@@ -239,27 +242,63 @@ def train_test_split(fname, out):
     train = df[~df.Frags.isin(test_in)]
     test.to_csv(out + '_test.txt', sep='\t', index=False)
     train.to_csv(out + '_train.txt', sep='\t', index=False)
+    
+    
+def DatasetArgParser(txt=None):
+    
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument('-b', '--base_dir', type=str, default='.',
+                        help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
+                        help="Input file containing raw data. tsv or sdf.gz format")   
+    parser.add_argument('-o', '--output', type=str, default='ligand',
+                        help="Prefix of output files")
+    parser.add_argument('-m', '--method', type=str, default='brics',
+                        help="Method: 'brics' or 'recap'") 
+    parser.add_argument('-f', '--is_mf', type=bool, default=True,
+                        help="??") 
+    
+    if txt:
+        args = parser.parse_args(txt)
+    else:
+        args = parser.parse_args()
+    args.git_commit = utils.commit_hash()
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    with open(args.base_dir + '/data_args.json', 'w') as f:
+        json.dump(vars(args), f)
+        
+    return args
 
+def Dataset(args):
+    
+    if args.input.endswith('tsv') : suffix = 'tsv'
+    elif args.input.endswith('sdf.gz'): suffix = 'sdf'
+    else: sys.exit('Wrong input file format')
+        
+    corpus(args.base_dir + '/data/' + args.input, 
+           args.base_dir + '/data/' + args.output,
+           suffix=suffix)
 
-if __name__ == '__main__':
-    opts, args = getopt.getopt(sys.argv[1:], "d:m:f:")
-    OPT = dict(opts)
-    method = OPT.get('-m', 'brics')
-    dataset = OPT.get('-d', 'chembl')
-    is_mf = bool(OPT.get('-f', 1))
-    BATCH_SIZE = 256
-
-    corpus('data/LIGAND_RAW.tsv', 'data/ligand', suffix='tsv')
-    corpus('data/chembl_27.sdf.gz', 'data/chembl')
-
-    voc = utils.VocGraph('data/voc_graph.txt', n_frags=4)
-    voc_smi = utils.VocSmiles('data/voc_smiles.txt')
-    out = 'data/%s_%s_%s' % (dataset, 'mf' if is_mf else 'sf', method)
-    pair_frags('data/chembl_corpus.txt', out + '.txt', method=method, is_mf=is_mf)
-    pair_frags('data/ligand_corpus.txt', out + '.txt', method=method, is_mf=is_mf)
-    train_test_split('data/chembl_mf_brics.txt', 'data/chembl_mf_brics')
-    train_test_split('data/ligand_mf_brics.txt', 'data/ligand_mf_brics')
-    for ds in ['train']:
+    voc = utils.VocGraph(args.base_dir +'/data/voc_graph.txt', n_frags=4)
+    voc_smi = utils.VocSmiles(args.base_dir + '/data/voc_smiles.txt')
+    
+    inp = '%s/data/%s_corpus.txt' % (args.base_dir, args.output)
+    out = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+    pair_frags(inp, out, voc, method=args.method, is_mf=args.is_mf)
+    
+    inp = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+    out = '%s/data/%s_%s_%s' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+    train_test_split(inp, out)
+    
+    for ds in ['train', 'test']:
         pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
         pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)
-    pos_neg_split()
+    #pos_neg_split() # TO DO : think about this function
+    
+
+if __name__ == '__main__':
+    
+    args = DatasetArgParser()
+    Dataset(args)
+
