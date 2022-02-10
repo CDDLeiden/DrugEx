@@ -626,7 +626,7 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-y', '--year', type=int, default=2015,
                         help="Temporal split limit")  
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
-                        help="Temporal split limit")   
+                        help="Number of CPUs")   
     parser.add_argument('-bs', '--batch_size', type=int, default=2048,
                         help="Batch size")
     parser.add_argument('-e', '--epochs', type=int, default=1000,

@@ -29,9 +29,9 @@ def GeneratorArgParser(txt=None):
                         help="If on, does pretraining, else fine tunes the model with reinforcement learning") 
 
     parser.add_argument('-a', '--algorithm', type=str, default='smiles',
-                        help="Generator algorith: 'smiles' or 'graph' ")
+                        help="Generator algorithm: 'smiles' or 'graph' ")
     parser.add_argument('-m', '--method', type=str, default='gpt',
-                        help="Method: 'gpt', 'ved' or 'attn'") 
+                        help="In case of SMILES-based generator, method: 'gpt', 'ved' or 'attn'") 
     parser.add_argument('-bs', '--batch_size', type=int, default=128,
                         help="Batch size")
     parser.add_argument('-eps', '--epsilon', type=float, default=1e-2,
@@ -47,9 +47,9 @@ def GeneratorArgParser(txt=None):
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
-                        help="Targets")
+                        help="Target IDs for which activity is desirable")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
-                        help="Targets")
+                        help="Target IDs for which activity is undesirable")
     
     if txt:
         args = parser.parse_args(txt)
