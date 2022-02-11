@@ -421,7 +421,7 @@ def Train_model(alg,X,y,out, reg=False):
     joblib.dump(model, out, compress=3)
 
 
-def mt_task(alg, args, reg=False):
+def MultiTask(alg, args, reg=False):
     
     """
     Runs multitask classification/regression model
@@ -494,7 +494,7 @@ def mt_task(alg, args, reg=False):
         test = pd.concat([test, test_p], axis=1)
         data.to_csv(out + '.cv.tsv', sep='\t')
 
-def single_task(target, args, alg='RF', reg=False):
+def SingleTask(target, args, alg='RF', reg=False):
     """
     Runs single task classification/regression model
 
@@ -517,12 +517,13 @@ def single_task(target, args, alg='RF', reg=False):
         os.makedirs(d)    
     out = '%s/%s_%s_%s' % (d, alg, 'REG' if reg else 'CLS', target)
     print(out, end='\t')
-
-    # TO DO : fix keep_low_quality
-    # If doing regression or if keep_low_quality False, remove low quality data points
-#     if not kwargs['keep_low_quality'] or reg:
-#         print(df[columns['quality']].unique())
-#         df = df[df[columns['quality'] != 'Low']]
+    
+    if args.keep_low_quality:
+        # If keeping low quality data, sensory data is set to 3.99
+        df.loc[ df[columns['relation']].str.contains('<').index , columns['pchembl'] ] = 3.99
+    else :
+        # Removing low quality data
+        df = df[ df[columns['quality']] != 'Low']
     
     # Output values
     activity = df[columns['pchembl']]
@@ -621,8 +622,8 @@ def EnvironmentArgParser(txt=None):
                         help="Target indentifiers") 
     parser.add_argument('-a', '--activity_threashold', type=float, default=6.5,
                         help="Activity threashold")
-#     parser.add_argument('-l', '--keep_low_quality', action='store_true',
-#                         help="If included keeps low quality data")
+    parser.add_argument('-l', '--keep_low_quality', action='store_true',
+                        help="If included keeps low quality data")
     parser.add_argument('-y', '--year', type=int, default=2015,
                         help="Temporal split limit")  
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
@@ -660,14 +661,14 @@ def Environment(args):
         for model in args.model_types:
             if model.startswith('MT_'):
                 # Train and validate multitask model
-                mt_task(model, args, reg=reg) 
+                MultiTaks(model, args, reg=reg) 
             elif ( reg is True and model == 'NB' ) or (reg is False and model == 'PLS'):
                 # Skip in case of NB regression and PSL classification
                 continue
             else:
                 # Train and validate single task model
                 for target in args.targets:
-                    single_task(target, args, model, reg=reg)
+                    SingleTask(target, args, model, reg=reg)
     
 if __name__ == '__main__':
 
@@ -676,7 +677,7 @@ if __name__ == '__main__':
                'smiles' : 'SMILES',
                'pchembl' : 'pchembl_value_Mean',
                'data_type' : 'Standard_Type',
-               'relation' : 'Standard_Type',
+               'relation' : 'Standard_Relation',
                'quality' : 'Quality',
                'year' : 'Year'}
     args.columns = columns
