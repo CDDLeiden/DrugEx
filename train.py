@@ -397,5 +397,5 @@ def TrainGenerator(args):
 if __name__ == "__main__":
     
     args = GeneratorArgParser()
-    args.epochs = 1
+    #args.epochs = 1
     TrainGenerator(args)
