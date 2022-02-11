@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import json
 import time
 import torch
@@ -22,9 +23,13 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' (and 'envs')")
     parser.add_argument('-i', '--input', type=str, default=None,
-                        help="Prefix of ligand input file. If --pretraining on, default is 'chembl_mf_brics' else 'ligand_mf_brics' ")   
-    parser.add_argument('-pt_model', '--pretrained_model', type=str, default='chembl_mf_brics_gpt_128',
+                        help="Prefix of input files. If --pretraining on, default is 'chembl_mf_brics' else 'ligand_mf_brics' ")  
+    parser.add_argument('-o', '--output', type=str, default=None,
+                        help="Prefix of output files. If None, set to be the first world of input. ")     
+    parser.add_argument('-pt_model', '--pretrained_model', type=str, default=None,
                         help="Name of pretrained model file without .pkg extension")
+#     parser.add_argument('-pt_model', '--pretrained_model', type=str, default=None,
+#                         help="Name of pretrained model file without .pkg extension")
 
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
                         help="List of GPUs") 
@@ -32,11 +37,11 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pt', '--pretraining', action='store_true', 
                         help="If on, does pretraining, else fine tunes the model with reinforcement learning") 
 
-    parser.add_argument('-a', '--algorithm', type=str, default='smiles',
-                        help="Generator algorithm: 'smiles' or 'graph' ")
-    parser.add_argument('-m', '--method', type=str, default='gpt',
-                        help="In case of SMILES-based generator, method: 'gpt', 'ved' or 'attn'") 
-    parser.add_argument('-bs', '--batch_size', type=int, default=128,
+    parser.add_argument('-a', '--algorithm', type=str, default='graph',
+                        help="Generator algorithm: 'graph' for graph-based algorithm, or 'gpt', 'ved' or 'attn' for SMILES-based algorithm ")
+#     parser.add_argument('-m', '--method', type=str, default='gpt',
+#                         help="In case of SMILES-based generator, method: 'gpt', 'ved' or 'attn'") 
+    parser.add_argument('-bs', '--batch_size', type=int, default=256,
                         help="Batch size")
     parser.add_argument('-eps', '--epsilon', type=float, default=1e-2,
                         help="Exploring rate")
@@ -59,16 +64,30 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
     
+    # Load some arguments from string --> usefull functions called eg. in a notebook
     if txt:
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
     
+    # Default input file prefix in case of pretraining and finetuning
     if args.input is None:
         if args.pretraining:
             args.input = 'chembl_mf_brics'
         else:
             args.input = 'ligand_mf_brics'
+            
+    # Setting output file prefix from input file
+    if args.output is None:
+        args.output = args.input.split('_')[0]
+    
+    #In case of finetuning setting some parameters from pretraining parameters
+    if args.pretraining is False:
+        with open(args.base_dir + '/generators/' + args.pretrained_model + '.json') as f:
+            pt_params = json.load(f)
+        args.algorithm = pt_params['algorithm']
+    
+        
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -117,7 +136,7 @@ def DataPreparationSmiles(args):
     
     data_path = args.base_dir + '/data/'
     
-    if args.method in ['gpt']:
+    if args.algorithm == 'gpt':
         voc = utils.Voc( data_path + 'voc_smiles.txt', src_len=100, trg_len=100)
     else:
         voc = utils.VocSmiles( data_path + 'voc_smiles.txt', max_len=100)
@@ -196,7 +215,7 @@ def CreateDesirabilityFunction(args):
     
     return objs, keys 
 
-def SetModes(scheme, keys, env_task, active_targets, inactive_targets):
+def SetModes(scheme, keys, env_task, active_targets, inactive_targets, qed):
     
     """ 
     Calculate clipped scores and threasholds for each target (and 'QED') of the desirability function 
@@ -208,6 +227,7 @@ def SetModes(scheme, keys, env_task, active_targets, inactive_targets):
         env_task (str): type of predictor task: 'REG' or 'CLS'
         active_targets (lst): list of targets for activity is desirable
         inactive_targets (lst): list of targets for activity is undesirable
+        qed (bool) : if True, includes QED in desirability function
     Returns:
         mods (lst): list of clipped scores per task
         ths (lst): list of threasholds per task
@@ -220,8 +240,11 @@ def SetModes(scheme, keys, env_task, active_targets, inactive_targets):
         else:
             active = utils.ClippedScore(lower_x=3, upper_x=10)
             inactive = utils.ClippedScore(lower_x=10, upper_x=3)
-        qed = utils.ClippedScore(lower_x=0, upper_x=1)
-        ths = [0.5] * (len(active_targets)+len(inactive_targets)) + [0.0]
+        ths = [0.5] * (len(active_targets)+len(inactive_targets)) 
+        if qed :
+            qed = utils.ClippedScore(lower_x=0, upper_x=1)
+            ths += [0.0]
+            
     else:
         if env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
@@ -229,8 +252,10 @@ def SetModes(scheme, keys, env_task, active_targets, inactive_targets):
         else:
             active = utils.ClippedScore(lower_x=3, upper_x=6.5)
             inactive = utils.ClippedScore(lower_x=10, upper_x=6.5)
-        qed = utils.ClippedScore(lower_x=0, upper_x=0.5)
-        ths = [0.99] * (len(active_targets)+len(inactive_targets)) + [0.0]
+        ths = [0.99] * (len(active_targets)+len(inactive_targets)) 
+        if qed :
+            qed = utils.ClippedScore(lower_x=0, upper_x=0.5)
+            ths += [0.0]
         
     mods = []
     for k in keys:
@@ -243,26 +268,24 @@ def SetModes(scheme, keys, env_task, active_targets, inactive_targets):
     
     return mods, ths
 
-def SetAlgorithm(voc, alg, method='gpt'):
+def SetAlgorithm(voc, alg):
     
     """
     Initializes the generator algorithm
     
     Arguments:
         voc (): vocabulary
-        alg (str): molecule format type: 'smiles' or 'graph'
-        method (str, opt): type of SMILES-based algorith: 'ved', 'attn' or 'gpt' (default)
+        alg (str): molecule format type: 'ved', 'attn', 'gpt' or 'graph'
     Return:
         agent (object): molecule generator 
     """
     
-    if alg == 'smiles':
-        if method == 'ved':
-            agent = generator.EncDec(voc, voc).to(utils.dev)
-        elif method == 'attn':
-            agent = generator.Seq2Seq(voc, voc).to(utils.dev)
-        elif method == 'gpt':
-            agent = GPT2Model(voc, n_layer=12).to(utils.dev)
+    if alg == 'ved':
+        agent = generator.EncDec(voc, voc).to(utils.dev)
+    elif alg == 'attn':
+        agent = generator.Seq2Seq(voc, voc).to(utils.dev)
+    elif alg == 'gpt':
+        agent = GPT2Model(voc, n_layer=12).to(utils.dev)
     elif alg == 'graph':
         agent = GraphModel(voc).to(utils.dev)
     
@@ -277,16 +300,23 @@ def PreTrain(args):
         args (NameSpace): namespace containing command line arguments
     """
     
-    print('Pretraining {}-based model with {} data...'.format(args.algorithm, args.input))
-    if args.algorithm == 'smiles':
-        voc, train_loader, valid_loader = utils.DataPreparationSmiles(args)
-    elif args.algorithm == 'graph':
-        voc, train_loader, valid_loader = utils.DataPreparationGraph(args)
+    args.pretrained_model = args.output + '_' + args.algorithm 
+    pt_path = args.base_dir + '/generators/' + args.pretrained_model
         
-    agent = SetAlgorithm(voc, args.algorithm, method=args.method)
-    out = '%s/generators/%s_%s_%d' % (args.base_dir, args.input, args.algorithm, args.batch_size)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, out=out)
+    print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
+    if args.algorithm == 'graph':
+        voc, train_loader, valid_loader = DataPreparationGraph(args)
+        print('Pretraining graph-based model ...')
+    else:
+        voc, train_loader, valid_loader = DataPreparationSmiles(args)
+        print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
     
+    agent = SetAlgorithm(voc, args.algorithm)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, out=pt_path)
+    
+    with open(pt_path + '.json', 'w') as fp:
+        json.dump(vars(args), fp, indent=4)
+      
     
 def RLTrain(args):
     
@@ -298,18 +328,20 @@ def RLTrain(args):
     """
     
     pt_path = args.base_dir + '/generators/' + args.pretrained_model + '.pkg'
+    ft_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
+                                                        args.scheme, str(args.epsilon)]) + 'e'
+                                                    
     
-    print('Finetuning {}-based pretrained {} model with {} data...'.format(args.algorithm, args.pretrained_model, args.input))
-    # Load input data
-    if args.algorithm == 'smiles':
-        voc, train_loader, valid_loader = utils.DataPreparationSmiles(args)    
-    elif args.algorithm == 'graph':
-        voc, train_loader, valid_loader = utils.DataPreparationGraph(args)
+    print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
+    if args.algorithm == 'graph':
+        voc, train_loader, valid_loader = DataPreparationGraph(args)
+    else:
+        voc, train_loader, valid_loader = DataPreparationSmiles(args)
     
     # Initialize agent and prior by loading pretrained model
-    agent = SetAlgorithm(voc, args.algorithm, method=args.method)        
+    agent = SetAlgorithm(voc, args.algorithm)        
     agent.load_state_dict(torch.load( pt_path, map_location=utils.dev))
-    prior = SetAlgorithm(voc, args.algorithm, method=args.method)        
+    prior = SetAlgorithm(voc, args.algorithm)        
     prior.load_state_dict(torch.load( pt_path, map_location=utils.dev))  
 
     # Initialize evolver algorithm
@@ -319,22 +351,24 @@ def RLTrain(args):
     # 1. Load predictors per task : targets + QED
     # 2. Set clipped scores and threasholds per task depending wanted quality
     objs, keys = CreateDesirabilityFunction(args)
-    mods, ths = SetModes(evolver.scheme, keys, args.env_task, args.active_targets, args.inactive_targets)
+    mods, ths = SetModes(evolver.scheme, keys, args.env_task, args.active_targets, args.inactive_targets, args.qed)
     
     # Set Evolver's environment-predictor
     evolver.env = utils.Env(objs=objs, mods=mods, keys=keys, ths=ths)
-
-    root = '%s/generators/%s_%s' % (args.base_dir, args.algorithm, time.strftime('%y%m%d_%H%M%S', time.localtime()))
-
-    os.mkdir(root)
+    
+    #root = '%s/generators/%s_%s' % (args.base_dir, args.algorithm, time.strftime('%y%m%d_%H%M%S', time.localtime()))
+    #os.mkdir(root)
 
     # No idea what the following lines should do as the files that should be copied does not exist !?!?!?
 #     copy2(args.algorithm + '_ex.py', root)
 #     copy2(args.algorithm + '.py', root)
 
     # import evolve as agent
-    evolver.out = root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
+    evolver.out = ft_path #root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
     evolver.fit(train_loader, test_loader=valid_loader, epochs=args.epochs)
+    
+    with open(ft_path + '.json', 'w') as fp:
+        json.dump(vars(args), fp, indent=4)
 
 def TrainGenerator(args):
     
@@ -363,5 +397,5 @@ def TrainGenerator(args):
 if __name__ == "__main__":
     
     args = GeneratorArgParser()
-    args.epochs = 2
+    args.epochs = 1
     TrainGenerator(args)

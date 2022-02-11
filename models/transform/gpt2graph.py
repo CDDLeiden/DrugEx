@@ -279,8 +279,8 @@ class GraphModel(Base):
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-                    if i == 4:
-                        print(i)
+#                     if i == 4:
+#                         print(i)
                     trg = net(src.to(utils.dev))
                     f, s = self.voc_trg.decode(trg)
                     frags += f
