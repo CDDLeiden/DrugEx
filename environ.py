@@ -22,7 +22,7 @@ from sklearn.model_selection import StratifiedKFold, KFold
 from torch.utils.data import DataLoader, TensorDataset
 from xgboost import XGBRegressor, XGBClassifier
 
-#import models
+import models
 import utils
 
 def SVM(X, y, X_ind, y_ind, reg=False):
@@ -290,7 +290,7 @@ def DNN(X, y, X_ind, y_ind, out, reg=False):
         valid_set = TensorDataset(torch.Tensor(X[valided]), torch.Tensor(y[valided]))
         valid_loader = DataLoader(valid_set, batch_size=BATCH_SIZE)
         net = NET(X.shape[1], y.shape[1], is_reg=reg)
-        net.fit(train_loader, valid_loader, out='%s_%d' % (out, i), epochs=N_EPOCH, lr=LR)
+        net.fit(train_loader, valid_loader, out='%s_%d' % (out, i), epochs=N_EPOCH, lr=args.learning_rate)
         cvs[valided] = net.predict(valid_loader)
         inds += net.predict(indep_loader)
     return cvs, inds / 5
@@ -370,7 +370,7 @@ def Train_DNN(X,y,out, reg=False):
     valid_set = TensorDataset(torch.Tensor(X_test), torch.Tensor(y_test))
     valid_loader = DataLoader(valid_set, batch_size=BATCH_SIZE)
     net = NET(X.shape[1], y.shape, is_reg=reg)
-    net.fit(train_loader, valid_loader, out=out, epochs=N_EPOCH, lr=LR)
+    net.fit(train_loader, valid_loader, out=out, epochs=N_EPOCH, lr=args.learning_rate)
     
 def Train_model(alg,X,y,out, reg=False):
     
@@ -488,8 +488,8 @@ def mt_task(alg, args, reg=False):
     else:
         #cross validation
         data_p, test_p = DNN(data_x, data.values, test_x, test.values, out=out, reg=reg)
-        data_p = pd.DataFrame(data_p, columns=[t+'_Score' for t in kwargs['targets']], index=data.index)
-        test_p = pd.DataFrame(test_p, columns=[t+'_Score' for t in kwargs['targets']], index=test.index)
+        data_p = pd.DataFrame(data_p, columns=[t+'_Score' for t in args.targets], index=data.index)
+        test_p = pd.DataFrame(test_p, columns=[t+'_Score' for t in args.targets], index=test.index)
         data = pd.concat([data, data_p], axis=1)
         test = pd.concat([test, test_p], axis=1)
         data.to_csv(out + '.cv.tsv', sep='\t')
@@ -516,7 +516,7 @@ def single_task(target, args, alg='RF', reg=False):
     if not os.path.exists(d):
         os.makedirs(d)    
     out = '%s/%s_%s_%s' % (d, alg, 'REG' if reg else 'CLS', target)
-    print(out)
+    print(out, end='\t')
 
     # TO DO : fix keep_low_quality
     # If doing regression or if keep_low_quality False, remove low quality data points
@@ -527,7 +527,7 @@ def single_task(target, args, alg='RF', reg=False):
     # Output values
     activity = df[columns['pchembl']]
     print("active:", len(activity[activity >= args.activity_threashold]), \
-            "not active:", len(activity[activity < args.activity_threashold]))
+            "not active:", len(activity[activity < args.activity_threashold]), end='\t')
     if not reg:
         activity = (activity > args.activity_threashold).astype(float)
          
@@ -656,7 +656,7 @@ def Environment(args):
         os.makedirs(args.base_dir + '/envs')  
     
     for reg in args.regression:
-        LR = 1e-4 if reg else 1e-5
+        args.learning_rate = 1e-4 if reg else 1e-5
         for model in args.model_types:
             if model.startswith('MT_'):
                 # Train and validate multitask model
