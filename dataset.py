@@ -256,8 +256,8 @@ def DatasetArgParser(txt=None):
                         help="Prefix of output files")
     parser.add_argument('-m', '--method', type=str, default='brics',
                         help="Method: 'brics' or 'recap'") 
-    parser.add_argument('-f', '--is_mf', type=bool, default=True,
-                        help="??") 
+    parser.add_argument('-mf', '--is_mf', type=bool, default=True,
+                        help="If True, uses multiple fragments and largest 4 BRICS fragments are combined to form the output") 
     
     if txt:
         args = parser.parse_args(txt)
