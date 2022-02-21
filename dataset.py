@@ -229,7 +229,9 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-m', '--method', type=str, default='brics',
                         help="Method: 'brics' or 'recap'") 
     parser.add_argument('-mf', '--is_mf', type=bool, default=True,
-                        help="If True, uses multiple fragments and largest 4 BRICS fragments are combined to form the output") 
+                        help="If on, uses multiple fragments and largest 4 BRICS fragments are combined to form the output") 
+    parser.add_argument('-v2', '--version_2', type=bool, default=True,
+                        help="If on, data processing for v2, else for v3.") 
     
     if txt:
         args = parser.parse_args(txt)
@@ -252,23 +254,26 @@ def Dataset(args):
            args.base_dir + '/data/' + args.output,
            suffix=suffix)
 
-    voc = utils.VocGraph(args.base_dir +'/data/voc_graph.txt', n_frags=4)
     voc_smi = utils.VocSmiles(args.base_dir + '/data/voc_smiles.txt')
     
-    inp = '%s/data/%s_corpus.txt' % (args.base_dir, args.output)
-    out = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
-    pair_frags(inp, out, voc, method=args.method, is_mf=args.is_mf)
+    if args.version_2 is False:
     
-    inp = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
-    out = '%s/data/%s_%s_%s' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
-    train_test_split(inp, out)
-    
-    for ds in ['train', 'test']:
-        pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
-        pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)    
+        voc = utils.VocGraph(args.base_dir +'/data/voc_graph.txt', n_frags=4)
+
+        inp = '%s/data/%s_corpus.txt' % (args.base_dir, args.output)
+        out = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+        pair_frags(inp, out, voc, method=args.method, is_mf=args.is_mf)
+
+        inp = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+        out = '%s/data/%s_%s_%s' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
+        train_test_split(inp, out)
+
+        for ds in ['train', 'test']:
+            pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
+            pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)    
 
 if __name__ == '__main__':
-    
+
     args = DatasetArgParser()
     Dataset(args)
 
