@@ -661,7 +661,7 @@ def Environment(args):
         for model in args.model_types:
             if model.startswith('MT_'):
                 # Train and validate multitask model
-                MultiTaks(model, args, reg=reg) 
+                MultiTask(model, args, reg=reg) 
             elif ( reg is True and model == 'NB' ) or (reg is False and model == 'PLS'):
                 # Skip in case of NB regression and PSL classification
                 continue
