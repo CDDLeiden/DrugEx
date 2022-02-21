@@ -681,7 +681,7 @@ if __name__ == '__main__':
                'quality' : 'Quality',
                'year' : 'Year'}
     args.columns = columns
-    args.git_commit = utils.commit_hash()    
+    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))    
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open(args.base_dir + '/env_args.json', 'w') as f:
         json.dump(vars(args), f)

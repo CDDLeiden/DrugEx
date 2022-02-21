@@ -55,7 +55,7 @@ def DesignArgParser(txt=None):
 
 def Design(args):
     
-    args.git_commit = utils.commit_hash() 
+    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
