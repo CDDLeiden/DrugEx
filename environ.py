@@ -18,7 +18,7 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC, SVR
-from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.model_selection import StratifiedKFold, KFold, train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from xgboost import XGBRegressor, XGBClassifier
 
