@@ -620,7 +620,7 @@ def EnvironmentArgParser(txt=None):
                         help="If True, only regression model, if False, only classification, default both")
     parser.add_argument('-t', '--targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target indentifiers") 
-    parser.add_argument('-a', '--activity_threashold', type=float, default=6.5,
+    parser.add_argument('-a', '--activity_threshold', type=float, default=6.5,
                         help="Activity threashold")
     parser.add_argument('-l', '--keep_low_quality', action='store_true',
                         help="If included keeps low quality data")
