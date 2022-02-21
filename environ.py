@@ -18,7 +18,7 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC, SVR
-from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.model_selection import StratifiedKFold, KFold, train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from xgboost import XGBRegressor, XGBClassifier
 
@@ -661,7 +661,7 @@ def Environment(args):
         for model in args.model_types:
             if model.startswith('MT_'):
                 # Train and validate multitask model
-                MultiTaks(model, args, reg=reg) 
+                MultiTask(model, args, reg=reg) 
             elif ( reg is True and model == 'NB' ) or (reg is False and model == 'PLS'):
                 # Skip in case of NB regression and PSL classification
                 continue
