@@ -206,34 +206,6 @@ def pair_smiles_encode(fname, voc, out):
     codes = pd.DataFrame(codes, columns=col)
     codes.to_csv(out, sep='\t', index=False)
 
-
-def pos_neg_split():
-    pair = ['Target ChEMBL ID', 'Smiles', 'pChEMBL Value', 'Comment',
-            'Standard Type', 'Standard Relation']
-    obj = pd.read_table('data/LIGAND.tsv').dropna(subset=pair[1:2])
-    df = obj[obj[pair[0]] == 'CHEMBL251']
-    df = df[pair].set_index(pair[1])
-    numery = df[pair[2]].groupby(pair[1]).mean().dropna()
-
-    comments = df[(df.Comment.str.contains('Not Active') == True)]
-    inhibits = df[(df['Standard Type'] == 'Inhibition') & df['Standard Relation'].isin(['<', '<='])]
-    relations = df[df['Standard Type'].isin(['EC50', 'IC50', 'Kd', 'Ki']) & df['Standard Relation'].isin(['>', '>='])]
-    binary = pd.concat([comments, inhibits, relations], axis=0)
-    binary = binary[~binary.index.isin(numery.index)]
-    binary[pair[2]] = 3.99
-    binary = binary[pair[2]].groupby(binary.index).first()
-    df = numery.append(binary)
-    pos = {utils.clean_mol(s) for s in df[df >=6.5].index}
-    neg = {utils.clean_mol(s) for s in df[df < 6.5].index}.difference(pos)
-    oth = obj[~obj.Smiles.isin(df.index)].Smiles
-    oth = {utils.clean_mol(s) for s in oth}.difference(pos).difference(neg)
-    for data in ['pos', 'neg', 'oth']:
-        file = open('data/ligand_%s.tsv' % data, 'w')
-        file.write('Smiles\n')
-        file.write('\n'.join(eval(data)))
-        file.close()
-
-
 def train_test_split(fname, out):
     df = pd.read_table(fname)
     frags = set(df.Frags)
@@ -293,9 +265,7 @@ def Dataset(args):
     
     for ds in ['train', 'test']:
         pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
-        pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)
-    #pos_neg_split() # TO DO : think about this function
-    
+        pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)    
 
 if __name__ == '__main__':
     
