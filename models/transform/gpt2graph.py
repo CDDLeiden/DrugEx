@@ -109,8 +109,8 @@ class GraphModel(Base):
 
             # The part of growing
             for step in range(1, self.n_grows):
-                if step == 70:
-                    print(step)
+               # if step == 70:
+               #     print(step)
                 if is_end.all():
                     src[:, step, :] = 0
                     continue
@@ -248,24 +248,21 @@ class GraphModel(Base):
         for epoch in range(epochs):
             t0 = time.time()
             for i, src in enumerate(train_loader):
-                # src = src.to(utils.dev)
-                # self.optim.zero_grad()
-                # loss = net(src, is_train=True)
-                # loss_value = [round(-l.mean().item(), 3) for l in loss]
-                # print(epoch, i, loss_value)
-                # loss = sum([-l.mean() for l in loss])
-                # loss.backward()
-                # self.optim.step()
-                # del loss
-                #
-                # if sum(loss_value) < best:
-                #     torch.save(self.state_dict(), out + '.pkg')
-                #     best = sum(loss_value)
+                src = src.to(utils.dev)
+                self.optim.zero_grad()
+                loss = net(src, is_train=True)
+                loss_value = [round(-l.mean().item(), 3) for l in loss]
+                print(epoch, i, loss_value)
+                loss = sum([-l.mean() for l in loss])
+                loss.backward()
+                self.optim.step()
+                del loss
+                
+                if sum(loss_value) < best:
+                    torch.save(self.state_dict(), out + '.pkg')
+                    best = sum(loss_value)
 
-                # if i % 1000 != 0: continue
-                if i == 4:
-                    print('debug here')
-                print(epoch, i)
+                if i % 1000 != 0: continue
                 loss_value = 0
                 frags, smiles, scores = self.evaluate(ind_loader)
                 t1 = time.time()
@@ -282,8 +279,8 @@ class GraphModel(Base):
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-                    if i == 4:
-                        print(i)
+#                     if i == 4:
+#                         print(i)
                     trg = net(src.to(utils.dev))
                     f, s = self.voc_trg.decode(trg)
                     frags += f

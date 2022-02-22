@@ -186,7 +186,7 @@ class GraphExplorer(nn.Module):
             self.optim.step()
             del loss
 
-    def fit(self, data_loader, test_loader=None):
+    def fit(self, data_loader, test_loader=None, epochs=1000):
         best_score = 0
         log = open(self.out + '.log', 'w')
         last_it = -1
@@ -195,7 +195,7 @@ class GraphExplorer(nn.Module):
         trgs = []
         for it in range(n_iters):
             last_save = -1
-            for epoch in range(1000):
+            for epoch in range(epochs):
                 print('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
                 for i, src in enumerate(tqdm(data_loader)):
                     t0 = time.time()
@@ -290,7 +290,7 @@ class SmilesExplorer(nn.Module):
             self.optim.step()
             del loss
 
-    def fit(self, data_loader, test_loader=None):
+    def fit(self, data_loader, test_loader=None, epochs=1000):
         best_score = 0
         log = open(self.out + '.log', 'w')
         last_it = -1
@@ -299,7 +299,7 @@ class SmilesExplorer(nn.Module):
         srcs, trgs = [], []
         for it in range(n_iters):
             last_save = -1
-            for epoch in range(1000):
+            for epoch in range(epochs):
                 t0 = time.time()
 
                 print('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
