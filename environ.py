@@ -518,13 +518,9 @@ def SingleTask(target, args, alg='RF', reg=False):
     out = '%s/%s_%s_%s' % (d, alg, 'REG' if reg else 'CLS', target)
     print(out, end='\t')
     
-    if args.keep_low_quality:
-        # If keeping low quality data, sensory data is set to 3.99
-        df.loc[ df[columns['relation']].str.contains('<').index , columns['pchembl'] ] = 3.99
-    else :
-        # Removing low quality data
+    if args.keep_low_quality is False:
         df = df[ df[columns['quality']] != 'Low']
-    
+        
     # Output values
     activity = df[columns['pchembl']]
     print("active:", len(activity[activity >= args.activity_threshold]), \
