@@ -458,10 +458,10 @@ def MultiTask(alg, args, reg=False):
     df = df[columns['pchembl']].groupby([columns['target'], columns['smiles']]).mean().dropna()
 
     # Output values
-    print("active:", len(df[df >= args.activity_threashold]), \
-            "not active:", len(df[df< args.activity_threashold]), end='\t')
+    print("active:", len(df[df >= args.activity_threshold]), \
+            "not active:", len(df[df< args.activity_threshold]), end='\t')
     if not reg:
-        df = (df > args.activity_threashold).astype(float)
+        df = (df > args.activity_threshold).astype(float)
     # Pivote data
     df = df.unstack(columns['target'])
     
@@ -527,10 +527,10 @@ def SingleTask(target, args, alg='RF', reg=False):
     
     # Output values
     activity = df[columns['pchembl']]
-    print("active:", len(activity[activity >= args.activity_threashold]), \
-            "not active:", len(activity[activity < args.activity_threashold]), end='\t')
+    print("active:", len(activity[activity >= args.activity_threshold]), \
+            "not active:", len(activity[activity < args.activity_threshold]), end='\t')
     if not reg:
-        activity = (activity > args.activity_threashold).astype(float)
+        activity = (activity > args.activity_threshold).astype(float)
          
     # Suffle dataframe
     activity = activity.sample(len(activity))   
