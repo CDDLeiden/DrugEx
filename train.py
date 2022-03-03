@@ -173,10 +173,11 @@ def InitializeEvolver(agent, prior, args):
         
     """
     
-    if args.algorithm == 'smiles':
-        evolver = SmilesExplorer(agent, mutate=prior)
-    elif args.algorithm == 'graph':
+    if args.algorithm == 'graph':
         evolver = GraphExplorer(agent, mutate=prior)
+    else:
+        evolver = SmilesExplorer(agent, mutate=prior)
+        
         
     evolver.batch_size = args.batch_size 
     evolver.epsilon = args.epsilon 
