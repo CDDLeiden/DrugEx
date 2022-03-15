@@ -381,7 +381,7 @@ def TrainGenerator(args):
         args (NameSpace): namespace containing command line arguments
     """
    
-    if args.not_git is False:
+    if args.no_git is False:
        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     
