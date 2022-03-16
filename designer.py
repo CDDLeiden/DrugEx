@@ -18,7 +18,7 @@ torch.set_num_threads(1)
 def DesignArgParser(txt=None):
     """ Define and read command line arguments """
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
