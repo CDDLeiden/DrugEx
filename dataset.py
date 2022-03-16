@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from rdkit import Chem
 from rdkit import rdBase
@@ -18,15 +19,15 @@ import argparse
 import json
 
 
-def corpus(input, output, suffix='sdf'):
+def corpus(base_dir, input, output, suffix='sdf'):
     if suffix =='sdf':
-        inf = gzip.open(input)
+        inf = gzip.open(base_dir + '/data/' + input)
         mols = Chem.ForwardSDMolSupplier(inf)
         # mols = [mol for mol in suppl]
     else:
-        df = pd.read_table(input).SMILES.dropna()
+        df = pd.read_table(base_dir + '/data/' + input).SMILES.dropna()
         mols = [Chem.MolFromSmiles(s) for s in df]
-    voc = Voc('data/voc_smiles.txt')
+    voc = Voc(base_dir + '/data/voc_smiles.txt')
     charger = rdMolStandardize.Uncharger()
     chooser = rdMolStandardize.LargestFragmentChooser()
     disconnector = rdMolStandardize.MetalDisconnector()
@@ -60,7 +61,7 @@ def corpus(input, output, suffix='sdf'):
             words.update(token)
             canons.append(smile)
             tokens.append(' '.join(token))
-    log = open(output + '_voc.txt', 'w')
+    log = open(base_dir + '/data/' + output + '_voc.txt', 'w')
     log.write('\n'.join(sorted(words)))
     log.close()
 
@@ -68,7 +69,7 @@ def corpus(input, output, suffix='sdf'):
     log['Smiles'] = canons
     log['Token'] = tokens
     log.drop_duplicates(subset='Smiles')
-    log.to_csv(output + '_corpus.txt', sep='\t', index=False)
+    log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
 
 
 def graph_corpus(input, output, suffix='sdf'):
@@ -230,14 +231,17 @@ def DatasetArgParser(txt=None):
                         help="Method: 'brics' or 'recap'") 
     parser.add_argument('-mf', '--is_mf', type=bool, default=True,
                         help="If on, uses multiple fragments and largest 4 BRICS fragments are combined to form the output") 
-    parser.add_argument('-v2', '--version_2', type=bool, default=True,
+    parser.add_argument('-v2', '--version_2', action='store_true',
                         help="If on, data processing for v2, else for v3.") 
+    parser.add_argument('-ng', '--no_git', action='store_true',
+                        help="If on, git hash is not retrieved")
     
     if txt:
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
-    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    if args.no_git is False:
+    	args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open(args.base_dir + '/data_args.json', 'w') as f:
         json.dump(vars(args), f)
@@ -250,9 +254,7 @@ def Dataset(args):
     elif args.input.endswith('sdf.gz'): suffix = 'sdf'
     else: sys.exit('Wrong input file format')
         
-    corpus(args.base_dir + '/data/' + args.input, 
-           args.base_dir + '/data/' + args.output,
-           suffix=suffix)
+    corpus(args.base_dir, args.input, args.output, suffix=suffix)
 
     voc_smi = utils.VocSmiles(args.base_dir + '/data/voc_smiles.txt')
     
@@ -272,6 +274,9 @@ def Dataset(args):
             pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
             pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)    
 
+        print('Dataset prepreparation starting from {} for version 3 finished!'.format(args.input)) 
+    else:
+        print('Dataset prepreparation starting from {} for version 2 finished!'.format(args.input))
 if __name__ == '__main__':
 
     args = DatasetArgParser()

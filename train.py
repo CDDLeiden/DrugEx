@@ -18,7 +18,7 @@ from models.explorer import SmilesExplorer, GraphExplorer
 def GeneratorArgParser(txt=None):
     """ Define and read command line arguments """
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' (and 'envs')")
@@ -64,6 +64,8 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
     
+    parser.add_argument('-ng', '--no_git', action='store_true',
+                        help="If on, git hash is not retrieved")
     # Load some arguments from string --> usefull functions called eg. in a notebook
     if txt:
         args = parser.parse_args(txt)
@@ -379,8 +381,9 @@ def TrainGenerator(args):
     Arguments:
         args (NameSpace): namespace containing command line arguments
     """
-    
-    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+   
+    if args.no_git is False:
+       args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]

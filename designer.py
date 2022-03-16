@@ -18,7 +18,7 @@ torch.set_num_threads(1)
 def DesignArgParser(txt=None):
     """ Define and read command line arguments """
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
@@ -28,7 +28,8 @@ def DesignArgParser(txt=None):
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
                         help="Batch size")
-    
+    parser.add_argument('-ng', '--no_git', action='store_true',
+                        help="If on, git hash is not retrieved")    
     if txt:
         args = parser.parse_args(txt)
     else:
@@ -51,12 +52,12 @@ def DesignArgParser(txt=None):
     
     args.targets = args.active_targets + args.inactive_targets
 
+    if args.no_git is False:
+	    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
     return args
 
 def Design(args):
-    
-    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
     torch.cuda.set_device(utils.devices[0])
@@ -72,7 +73,7 @@ def Design(args):
         data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
         loader = DataLoader(data, batch_size=args.batch_size)  
     else:
-        if args.method == 'gpt':
+        if args.algorithm == 'gpt':
             voc = utils.Voc( args.base_dir + '/data/chembl_voc.txt', src_len=100, trg_len=100)
         else:
             voc = utils.VocSmiles( args.base_dir + '/data/chembl_voc.txt', max_len=100)
