@@ -53,7 +53,7 @@ def DesignArgParser(txt=None):
     args.targets = args.active_targets + args.inactive_targets
 
     if args.no_git is False:
-	args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+	    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     return args
 
