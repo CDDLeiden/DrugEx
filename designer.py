@@ -73,7 +73,7 @@ def Design(args):
         data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
         loader = DataLoader(data, batch_size=args.batch_size)  
     else:
-        if args.method == 'gpt':
+        if args.algorithm == 'gpt':
             voc = utils.Voc( args.base_dir + '/data/chembl_voc.txt', src_len=100, trg_len=100)
         else:
             voc = utils.VocSmiles( args.base_dir + '/data/chembl_voc.txt', max_len=100)
