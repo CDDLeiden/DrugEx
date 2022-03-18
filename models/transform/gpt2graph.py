@@ -247,12 +247,13 @@ class GraphModel(Base):
         net = nn.DataParallel(self, device_ids=utils.devices)
         for epoch in range(epochs):
             t0 = time.time()
-            for i, src in enumerate(train_loader):
+            print('\n----------\nEPOCH %d/%d\n----------' % (epoch, epochs))
+            for i, src in enumerate(tqdm(train_loader)):
                 src = src.to(utils.dev)
                 self.optim.zero_grad()
                 loss = net(src, is_train=True)
                 loss_value = [round(-l.mean().item(), 3) for l in loss]
-                print(epoch, i, loss_value)
+                #print(epoch, i, loss_value)
                 loss = sum([-l.mean() for l in loss])
                 loss.backward()
                 self.optim.step()
@@ -277,10 +278,9 @@ class GraphModel(Base):
         net = nn.DataParallel(self, device_ids=utils.devices)
         frags, smiles = [], []
         with torch.no_grad():
-            for _ in range(repeat):
-                for i, src in enumerate(loader):
-#                     if i == 4:
-#                         print(i)
+            for j in range(repeat):
+                print('\n----------\nITER %d/%d\n----------' % (j, repeat))
+                for i, src in enumerate(tqdm(loader)):
                     trg = net(src.to(utils.dev))
                     f, s = self.voc_trg.decode(trg)
                     frags += f
