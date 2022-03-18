@@ -65,6 +65,13 @@ Secondly, all the following packages are installed in your machine:
 **6. [RDKit](https://www.rdkit.org/)** (version >= 2020.03)
 
         $ conda install -c rdkit rdkit
+
+**7. [Xgboost](https://xgboost.readthedocs.io/en/stable/)**
+
+        $ conda install -c conda-forge xgboost
+
+**8. (opt) [RAscore](https://github.com/reymond-group/RAscore)** if you want to use the Retrosynthesis Accessibility Score in the desirability function
+
 Usage
 ======
 For designing the novel drug molecules with SMILES representation, you should do the following steps sequentially by running scripts:
@@ -79,18 +86,14 @@ For designing the novel drug molecules with SMILES representation, you should do
     Training your predictor as the environment for providing the final reward for the action from the agent. 
     The performance can also be evaluated through n-fold cross validation and independent test. 
 
-3. train_graph.py:
+3. train.py:
 
-    Pre-training an training the graph transformer model with graph representation under supvervision and reinforcement learning frameworks, respectively.
-    
-4. train_smiles.py: 
-
-    Pre-training an training the SMILES-based deep learning models with SMILES representation under supvervision and reinforcement learning frameworks, respectively.
-    
+    Pre-training graph- or SMILES-based molecular generator model under supvervision and fine-tuning the model in a reinforcement learning framework.
     
 5. designer.py:
 
     Finally, generating molecules with well-trained deep learning model with either graph or SMILES representations. 
+
 6. plot.py:
 
     It provides a variety of the methods to measure the performance of every step during the training process of 
