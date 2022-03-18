@@ -37,13 +37,12 @@ class RetrosyntheticAccessibilityScorer:
         )
 
     def __call__(self, mols: List[str]):
-        os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
+        #os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
         scores = np.zeros(shape=len(mols), dtype="float64")
         for i, mol in enumerate(mols):
             if mol is None:
                 scores[i] = .0
                 continue
-
             if not isinstance(mol, str):
                 mol = MolToSmiles(mol)
 

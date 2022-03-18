@@ -63,8 +63,8 @@ def GeneratorArgParser(txt=None):
                         help="If on, QED is used in desribality function")
     parser.add_argument('-ras', '--ra_score', action='store_true',
                         help="If on, Retrosythesis Accessibility score is used in desribality function")
-    parser.add_argument('-ras_model', '--ra_score_model', type=str, default='NN',
-                        help="RAScore model: 'NN' or 'XBG'")
+    parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
+                        help="RAScore model: 'XBG'")
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
