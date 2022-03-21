@@ -230,7 +230,7 @@ def CreateDesirabilityFunction(args):
         # Weighted Sum (WS) reward scheme
         if args.env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = utils.ClippedScore(lower_x=0.5, upper_x=0.8)
+            inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
             active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold+pad)
             inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold-pad)
@@ -240,7 +240,7 @@ def CreateDesirabilityFunction(args):
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
         if args.env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = utils.ClippedScore(lower_x=0.5, upper_x=0.8)
+            inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
             active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold)
             inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold)
