@@ -245,14 +245,16 @@ class GraphModel(Base):
         log = open(out + '.log', 'w')
         best = float('inf')
         net = nn.DataParallel(self, device_ids=utils.devices)
+        t00 = time.time()
         for epoch in range(epochs):
             t0 = time.time()
+            print('\n----------\nEPOCH %d/%d\n----------' % (epoch, epochs))
+            print(len(train_loader))
             for i, src in enumerate(train_loader):
                 src = src.to(utils.dev)
                 self.optim.zero_grad()
                 loss = net(src, is_train=True)
                 loss_value = [round(-l.mean().item(), 3) for l in loss]
-                print(epoch, i, loss_value)
                 loss = sum([-l.mean() for l in loss])
                 loss.backward()
                 self.optim.step()
@@ -263,14 +265,18 @@ class GraphModel(Base):
                     best = sum(loss_value)
 
                 if i % 1000 != 0: continue
-                loss_value = 0
                 frags, smiles, scores = self.evaluate(ind_loader)
                 t1 = time.time()
-                log.write("Epoch: %d step: %d loss: %s time: %d\n" % (epoch, i, str(loss_value), t1-t0))
+                print("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
+                log.write("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
                 for j, smile in enumerate(smiles):
                     log.write('%s\t%s\n' % (frags[j], smile))
                 log.flush()
                 t0 = t1
+            
+            t11 = time.time()
+            print("Epoch: {} loss: {:.3f} time: {}".format(epoch, sum(loss_value), int(t11-t00)))
+            t00 = t11
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
@@ -279,8 +285,6 @@ class GraphModel(Base):
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-#                     if i == 4:
-#                         print(i)
                     trg = net(src.to(utils.dev))
                     f, s = self.voc_trg.decode(trg)
                     frags += f

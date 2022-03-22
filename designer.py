@@ -9,7 +9,7 @@ from rdkit import rdBase
 from torch.utils.data import DataLoader
 
 import utils
-from train import SetAlgorithm, CreateDesirabilityFunction, SetModes
+from train import SetAlgorithm, CreateDesirabilityFunction
 
 
 rdBase.DisableLog('rdApp.error')
@@ -49,11 +49,13 @@ def DesignArgParser(txt=None):
     args.inactive_targets = pt_params['inactive_targets']
     args.qed = pt_params['qed']
     args.input = pt_params['input']
+    args.ra_score = pt_params['ra_score']
+    args.ra_score_model = pt_params['ra_score_model']
     
     args.targets = args.active_targets + args.inactive_targets
 
     if args.no_git is False:
-	    args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     return args
 
@@ -87,14 +89,13 @@ def Design(args):
     agent.load_state_dict(torch.load( ft_path, map_location=utils.dev))
     
     # Set up environment-predictor
-    objs, keys = CreateDesirabilityFunction(args)
-    mods, ths = SetModes(args.scheme, keys, args.env_task, args.active_targets, args.inactive_targets, args.qed)
+    objs, keys, mods, ths = CreateDesirabilityFunction(args)
     env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
     
     out = args.base_dir + '/new_molecules/' + args.finetuned_model + '.tsv'
     
     # Generate molecules and save them
-    frags, smiles, scores = agent.evaluate(loader, repeat=10, method=env)
+    frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
     scores['Frags'], scores['SMILES'] = frags, smiles
     scores.to_csv(out, index=False, sep='\t')
 

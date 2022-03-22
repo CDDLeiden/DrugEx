@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from models import generator, GPT2Model, GraphModel
 from models.explorer import SmilesExplorer, GraphExplorer
+from models.ra_scorer import RetrosyntheticAccessibilityScorer
 
     
 def GeneratorArgParser(txt=None):
@@ -56,8 +57,14 @@ def GeneratorArgParser(txt=None):
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, default='RF',
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
+    parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
+                        help="Activity threashold")                    
     parser.add_argument('-qed', '--qed', action='store_true',
                         help="If on, QED is used in desribality function")
+    parser.add_argument('-ras', '--ra_score', action='store_true',
+                        help="If on, Retrosythesis Accessibility score is used in desribality function")
+    parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
+                        help="RAScore model: 'XBG'")
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
@@ -151,9 +158,7 @@ def DataPreparationSmiles(args):
     
 
     test = pd.read_table( data_path + '%s_test_smi.txt' % args.input)
-    print(len(test), 10*args.batch_size)
     test = test.Input.drop_duplicates()
-    print(len(test))
     #test = test.sample(args.batch_size * 10).values
     test_set = voc.encode([seq.split(' ') for seq in test])
     test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
@@ -175,11 +180,10 @@ def InitializeEvolver(agent, prior, args):
         
     """
     
-    if args.algorithm == 'graph':
-        evolver = GraphExplorer(agent, mutate=prior)
-    else:
+    if args.algorithm == 'smiles':
         evolver = SmilesExplorer(agent, mutate=prior)
-        
+    elif args.algorithm == 'graph':
+        evolver = GraphExplorer(agent, mutate=prior)
         
     evolver.batch_size = args.batch_size 
     evolver.epsilon = args.epsilon 
@@ -200,6 +204,8 @@ def CreateDesirabilityFunction(args):
     Returns:
         objs (lst): list of selected predictors 
         keys (lst): list of names of selected predictors
+        mods (lst): list of ClippedScore-functions per predictor
+        ths (lst): list desirability thresholds per predictor
         
     """
     
@@ -215,61 +221,46 @@ def CreateDesirabilityFunction(args):
     if args.qed :
         objs.append(utils.Property('QED'))
         keys.append('QED')
-    
-    return objs, keys 
-
-def SetModes(scheme, keys, env_task, active_targets, inactive_targets, qed):
-    
-    """ 
-    Calculate clipped scores and threasholds for each target (and 'QED') of the desirability function 
-    depending the evolver scheme ('WS' or other) and environement taks ('REG' or 'CLS').
-    
-    Arguments:
-        scheme (str): scheme of multitarget optimisation
-        keys (lst): list of predictor names
-        env_task (str): type of predictor task: 'REG' or 'CLS'
-        active_targets (lst): list of targets for activity is desirable
-        inactive_targets (lst): list of targets for activity is undesirable
-        qed (bool) : if True, includes QED in desirability function
-    Returns:
-        mods (lst): list of clipped scores per task
-        ths (lst): list of threasholds per task
-    """
-    
-    if scheme == 'WS':
-        if env_task == 'CLS':
+    if args.ra_score:
+        objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if args.ra_score_model == 'NN' else True ))
+        keys.append('RAscore')
+        
+    pad = 3.5
+    if args.scheme == 'WS':
+        # Weighted Sum (WS) reward scheme
+        if args.env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = utils.ClippedScore(lower_x=0.5, upper_x=0.8)
+            inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=3, upper_x=10)
-            inactive = utils.ClippedScore(lower_x=10, upper_x=3)
-        ths = [0.5] * (len(active_targets)+len(inactive_targets)) 
-        if qed :
-            qed = utils.ClippedScore(lower_x=0, upper_x=1)
-            ths += [0.0]
+            active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold+pad)
+            inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold-pad)
+        ths = [0.5] * (len(args.targets)) 
             
     else:
-        if env_task == 'CLS':
+        # Pareto Front (PR) or Crowding Distance (CD) reward scheme
+        if args.env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = utils.ClippedScore(lower_x=0.5, upper_x=0.8)
+            inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=3, upper_x=6.5)
-            inactive = utils.ClippedScore(lower_x=10, upper_x=6.5)
-        ths = [0.99] * (len(active_targets)+len(inactive_targets)) 
-        if qed :
-            qed = utils.ClippedScore(lower_x=0, upper_x=0.5)
-            ths += [0.0]
+            active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold)
+            inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold)
+        ths = [0.99] * len((args.targets))
+        
         
     mods = []
     for k in keys:
-        if k in active_targets: 
+        if k in args.active_targets: 
             mods.append(active)
-        elif k in inactive_targets: 
+        elif k in args.inactive_targets: 
             mods.append(inactive)
         elif k == 'QED' : 
-            mods.append(qed)
+            mods.append(utils.ClippedScore(lower_x=0, upper_x=1.0)) 
+            ths += [0.0]
+        elif k == 'RAscore':
+            mods.append(utils.ClippedScore(lower_x=0, upper_x=1.0))
+            ths += [0.0]
     
-    return mods, ths
+    return objs, keys, mods, ths
 
 def SetAlgorithm(voc, alg):
     
@@ -350,11 +341,8 @@ def RLTrain(args):
     # Initialize evolver algorithm
     evolver = InitializeEvolver(agent, prior, args)
     
-    # Chose the desirability function
-    # 1. Load predictors per task : targets + QED
-    # 2. Set clipped scores and threasholds per task depending wanted quality
-    objs, keys = CreateDesirabilityFunction(args)
-    mods, ths = SetModes(evolver.scheme, keys, args.env_task, args.active_targets, args.inactive_targets, args.qed)
+    # Create the desirability function
+    objs, keys, mods, ths = CreateDesirabilityFunction(args)
     
     # Set Evolver's environment-predictor
     evolver.env = utils.Env(objs=objs, mods=mods, keys=keys, ths=ths)
@@ -383,7 +371,7 @@ def TrainGenerator(args):
     """
    
     if args.no_git is False:
-       args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
