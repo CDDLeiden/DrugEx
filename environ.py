@@ -641,7 +641,9 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-c', '--cross_validation', action='store_true',
                         help='If on, cross validation is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
-                        help="Number of CPUs")   
+                        help="Number of CPUs")
+    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
+                        help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=2048,
                         help="Batch size for DNN")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
@@ -676,8 +678,10 @@ def Environment(args):
     """ 
         Optimize, evaluate and train estimators
     """
-    
-    os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+    torch.cuda.set_device(utils.devices[0])
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
     os.environ['OMP_NUM_THREADS'] = str(args.ncpu)
     
     if not os.path.exists(args.base_dir + '/envs'):
