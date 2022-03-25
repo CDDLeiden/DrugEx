@@ -630,8 +630,8 @@ def EnvironmentArgParser(txt=None):
                         help="If included keeps low quality data")
     parser.add_argument('-y', '--year', type=int, default=None,
                         help="Temporal split limit")  
-    parser.add_argument('-n', '--test_size', type=float, default=0.1,
-                        help="Random test split fraction, used when no temporal split given.")
+    parser.add_argument('-n', '--test_size', type=str, default=0.1,
+                        help="Random test split fraction if float is given and absolute size if int is given, used when no temporal split given.")
     parser.add_argument('-o', '--optimization', type=str, default=None,
                         help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")    
     parser.add_argument('-c', '--cross_validation', action='store_true',
@@ -659,6 +659,11 @@ def EnvironmentArgParser(txt=None):
         args.regression = [False]
     else:
         sys.exit("invalid regression arg given")
+
+    if '.' in args.test_size:
+        args.test_size = float(args.test_size) 
+    else: 
+        args.test_size = int(args.test_size)
 
     return args
 
