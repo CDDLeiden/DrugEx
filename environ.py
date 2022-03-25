@@ -34,7 +34,8 @@ class QSARDataset:
 
         Attributes
         ----------
-        base_dir (str)            : base directory, needs to contain a folder data with file dataset.tsv
+        base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing data
+        input  (str)              : tsv file containing SMILES, target accesion & corresponding data
         target (str)              : target identifier, corresponding with accession in papyrus dataset
         reg (bool)                : if true, dataset for regression, if false dataset for classification
         timesplit (int), optional : Year to split test set on
@@ -58,8 +59,9 @@ class QSARDataset:
         create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
         data_standardization: Performs standardization by centering and scaling
     """
-    def __init__(self, base_dir, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False):
+    def __init__(self, base_dir, input, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False):
         self.base_dir = base_dir
+        self.input = input
         self.target = target
         self.reg = reg
         self.timesplit = timesplit
@@ -80,7 +82,7 @@ class QSARDataset:
         log = open('%s/%s_dataset_info' % (self.base_dir, self.target) + '.txt', 'w')
 
         #read in the dataset
-        df = pd.read_table('%s/data/LIGAND_RAW.tsv' % self.base_dir).dropna(subset=['SMILES']) #drops if smiles is missing
+        df = pd.read_table('%s/data/%s.tsv' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
         df = df[df['accession'] == self.target]
         df = df[['accession', 'SMILES', 'pchembl_value_Mean', 'Quality', 'Year']].set_index(['SMILES'])
 
@@ -616,6 +618,8 @@ def EnvironmentArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-i', '--input', type=str, default='dataset',
+                        help="tsv file that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
                         help="If included then then the model will be trained on all data and saved")   
     parser.add_argument('-m', '--model_types', type=str, nargs='*', default=['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'],
@@ -683,7 +687,7 @@ def Environment(args):
         args.learning_rate = 1e-4 if reg else 1e-5
         for target in args.targets:
             #prepare dataset for training QSAR model
-            mydataset = QSARDataset(args.base_dir, target, reg = reg, timesplit=args.year, test_size=args.test_size)
+            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size)
             mydataset.split_dataset()
             
             for model_type in args.model_types:
