@@ -257,7 +257,7 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
             active = utils.ClippedScore(lower_x=activity_threshold-pad, upper_x=activity_threshold+pad)
-            inactive = utils.ClippedScore(lower_x=activity_threshol+pad, upper_x=activity_threshold-pad)
+            inactive = utils.ClippedScore(lower_x=activity_threshold+pad, upper_x=activity_threshold-pad)
         ths = [0.5] * (len(targets)) 
             
     else:
