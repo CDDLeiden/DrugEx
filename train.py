@@ -252,7 +252,7 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
     pad = 3.5
     if scheme == 'WS':
         # Weighted Sum (WS) reward scheme
-        if env_task == 'CLS':
+        if task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
