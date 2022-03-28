@@ -658,7 +658,7 @@ def EnvironmentArgParser(txt=None):
     
     if args.targets is None:
         df = pd.read_table('%s/data/%s.tsv' % (args.base_dir, args.input)).dropna(subset=['SMILES'])
-        args.targets = list(np.unique(df.accession))
+        args.targets = df.accession.unique().tolist()
 
     # If no regression argument, does both regression and classification
     if args.regression is None: 
