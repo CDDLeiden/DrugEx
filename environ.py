@@ -619,14 +619,14 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
     parser.add_argument('-i', '--input', type=str, default='dataset',
-                        help="tsv file that contains SMILES, target accession & corresponding data")
+                        help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
                         help="If included then then the model will be trained on all data and saved")   
     parser.add_argument('-m', '--model_types', type=str, nargs='*', default=['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'],
                         help="Modeltype, defaults to run all modeltypes, choose from: 'RF', 'XGB', 'DNN', 'SVM', 'PLS' (only with REG), 'NB' (only with CLS) 'KNN' or 'MT_DNN'") 
     parser.add_argument('-r', '--regression', type=str, default=None,
                         help="If True, only regression model, if False, only classification, default both")
-    parser.add_argument('-t', '--targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'], #TODO: maybe change this to all accession in the dataset?
+    parser.add_argument('-t', '--targets', type=str, nargs='*', default=None, #TODO: maybe change this to all accession in the dataset?
                         help="Target indentifiers") 
     parser.add_argument('-a', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
@@ -634,7 +634,7 @@ def EnvironmentArgParser(txt=None):
                         help="If included keeps low quality data")
     parser.add_argument('-y', '--year', type=int, default=None,
                         help="Temporal split limit")  
-    parser.add_argument('-n', '--test_size', type=str, default=0.1,
+    parser.add_argument('-n', '--test_size', type=str, default="0.1",
                         help="Random test split fraction if float is given and absolute size if int is given, used when no temporal split given.")
     parser.add_argument('-o', '--optimization', type=str, default=None,
                         help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")    
@@ -656,6 +656,10 @@ def EnvironmentArgParser(txt=None):
     else:
         args = parser.parse_args()
     
+    if args.targets is None:
+        df = pd.read_table('%s/data/%s.tsv' % (args.base_dir, args.input)).dropna(subset=['SMILES'])
+        args.targets = list(np.unique(df.accession))
+
     # If no regression argument, does both regression and classification
     if args.regression is None: 
         args.regression = [True, False]
@@ -728,17 +732,6 @@ def Environment(args):
                
 if __name__ == '__main__':
     args = EnvironmentArgParser()
-
-    #dictionary of dataset columnnames
-    # replace if columnames different in used dataset
-    columns = {'target'    : 'accession',
-               'smiles'    : 'SMILES',
-               'pchembl'   : 'pchembl_value_Mean',
-               'data_type' : 'Standard_Type',
-               'relation'  : 'Standard_Relation',
-               'quality'   : 'Quality',
-               'year'      : 'Year'}
-    args.columns = columns
     
     #Create json log file with used commandline arguments
     if args.no_git is False:
