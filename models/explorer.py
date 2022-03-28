@@ -216,8 +216,8 @@ class GraphExplorer(nn.Module):
                 valid = scores.VALID.mean()
 
                 t1 = time.time()
-                log.write("Iteration: %s Epoch: %d Step: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
-                          (it, epoch, i, score, valid, desire, t1 - t0))
+                log.write("Iteration: %s Epoch: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
+                          (it, epoch, score, valid, desire, t1 - t0))
                 if best_score < desire:
                     torch.save(self.agent.state_dict(), self.out + '.pkg')
                     best_score = desire

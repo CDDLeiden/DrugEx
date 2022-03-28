@@ -248,9 +248,8 @@ class GraphModel(Base):
         t00 = time.time()
         for epoch in range(epochs):
             t0 = time.time()
-            print('\n----------\nEPOCH %d/%d\n----------' % (epoch, epochs))
-            print(len(train_loader))
             for i, src in enumerate(train_loader):
+                
                 src = src.to(utils.dev)
                 self.optim.zero_grad()
                 loss = net(src, is_train=True)
@@ -258,25 +257,34 @@ class GraphModel(Base):
                 loss = sum([-l.mean() for l in loss])
                 loss.backward()
                 self.optim.step()
-                del loss
                 
                 if sum(loss_value) < best:
                     torch.save(self.state_dict(), out + '.pkg')
                     best = sum(loss_value)
 
-                if i % 1000 != 0: continue
-                frags, smiles, scores = self.evaluate(ind_loader)
-                t1 = time.time()
-                print("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
-                log.write("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
-                for j, smile in enumerate(smiles):
-                    log.write('%s\t%s\n' % (frags[j], smile))
-                log.flush()
-                t0 = t1
+#                 if i % 1000 != 0: continue
+#                 t2 = time.time()
+#                 frags, smiles, scores = self.evaluate(ind_loader)
+#                 t1 = time.time()
+#                 print("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
+#                 print('Eval time: {}'.format(int(t2-t1)))
+#                 log.write("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
+#                 for j, smile in enumerate(smiles):
+#                     log.write('%s\t%s\n' % (frags[j], smile))
+#                 log.flush()
+#                 t0 = t1
             
-            t11 = time.time()
-            print("Epoch: {} loss: {:.3f} time: {}".format(epoch, sum(loss_value), int(t11-t00)))
-            t00 = t11
+            frags, smiles, scores = self.evaluate(ind_loader)
+            t1 = time.time()
+            valid = scores.VALID.mean()
+            dt = int(t1-t0)
+            print("Epoch: {}/{} loss: {:.3f} valid: {:.3f} time: {}" .format(epoch, epochs, loss, valid,  dt))
+            log.write("Epoch: {} loss: {:.3f} valid: {:.3f} time: {}" .format(epoch, loss, valid, dt))
+            for j, smile in enumerate(smiles):
+                log.write('%s\t%s\n' % (frags[j], smile))
+            log.flush()
+            t0 = t1
+        
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
