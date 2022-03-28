@@ -19,13 +19,16 @@ import argparse
 import json
 
 
-def corpus(base_dir, input, output, suffix='sdf'):
+def corpus(base_dir, input, output, suffix='sdf', filter_quality=False):
     if suffix =='sdf':
         inf = gzip.open(base_dir + '/data/' + input)
         mols = Chem.ForwardSDMolSupplier(inf)
         # mols = [mol for mol in suppl]
     else:
-        df = pd.read_table(base_dir + '/data/' + input).SMILES.dropna()
+        df = pd.read_table(base_dir + '/data/' + input)
+        if filter_quality:
+            df = df[df.Quality == 'High']
+        df = df.SMILES.dropna()
         mols = [Chem.MolFromSmiles(s) for s in df]
     voc = Voc(base_dir + '/data/voc_smiles.txt')
     charger = rdMolStandardize.Uncharger()
@@ -50,7 +53,7 @@ def corpus(base_dir, input, output, suffix='sdf'):
             print('Parsing Error:') #, Chem.MolToSmiles(mol))
 
     for smile in tqdm(smiles):
-        token = voc.split(smile) + ['EOS']
+        token = voc.split(smile)
         if {'C', 'c'}.isdisjoint(token):
             print('Warning:', smile)
             continue
@@ -232,7 +235,9 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-mf', '--is_mf', type=bool, default=True,
                         help="If on, uses multiple fragments and largest 4 BRICS fragments are combined to form the output") 
     parser.add_argument('-v2', '--version_2', action='store_true',
-                        help="If on, data processing for v2, else for v3.") 
+                        help="If on, data processing for v2, else for v3.")
+    parser.add_argument('-fq', '--filter_quality', action='store_true',
+                        help="If on, only keep high quality ligands.")  
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -254,7 +259,7 @@ def Dataset(args):
     elif args.input.endswith('sdf.gz'): suffix = 'sdf'
     else: sys.exit('Wrong input file format')
         
-    corpus(args.base_dir, args.input, args.output, suffix=suffix)
+    corpus(args.base_dir, args.input, args.output, suffix=suffix, filter_quality=args.filer_quality)
 
     voc_smi = utils.VocSmiles(args.base_dir + '/data/voc_smiles.txt')
     
@@ -277,6 +282,7 @@ def Dataset(args):
         print('Dataset prepreparation starting from {} for version 3 finished!'.format(args.input)) 
     else:
         print('Dataset prepreparation starting from {} for version 2 finished!'.format(args.input))
+
 if __name__ == '__main__':
 
     args = DatasetArgParser()
