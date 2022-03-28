@@ -9,7 +9,7 @@ from rdkit import rdBase
 from torch.utils.data import DataLoader
 
 import utils
-from train import SetAlgorithm, CreateDesirabilityFunction
+from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
 
 rdBase.DisableLog('rdApp.error')
@@ -85,11 +85,14 @@ def Design(args):
     
     # Load finetuned model
     ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
-    agent = SetAlgorithm(voc, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.load_state_dict(torch.load( ft_path, map_location=utils.dev))
     
     # Set up environment-predictor
-    objs, keys, mods, ths = CreateDesirabilityFunction(args)
+    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
+                                                       active_targets=args.active_targets, inactive_targets=args.inactive_targets,
+                                                       activity_threshold=args.activity_threshold, qed=args.qed, 
+                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
     env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
     
     out = args.base_dir + '/new_molecules/' + args.finetuned_model + '.tsv'

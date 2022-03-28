@@ -15,6 +15,9 @@ from models import generator, GPT2Model, GraphModel
 from models.explorer import SmilesExplorer, GraphExplorer
 from models.ra_scorer import RetrosyntheticAccessibilityScorer
 
+import warnings
+warnings.filterwarnings("ignore")
+
     
 def GeneratorArgParser(txt=None):
     """ Define and read command line arguments """
@@ -63,7 +66,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
                         help="RAScore model: 'XBG'")
     
-    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
+    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
@@ -106,88 +109,95 @@ def GeneratorArgParser(txt=None):
 
     return args
 
-def DataPreparationGraph(args):
+def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
     
     Arguments:
-        args: namespace containing command line arguments
+        base_dir (str)              : name of the folder containing 'data' folder with input files
+        input_prefix (str)          : prefix of input files
+        batch_size (int), optional  : batch size
     Returns:
-        voc: atom vocabulary
-        train_loader: torch DataLoader containing training data
-        valid_loader: torch DataLoader containing validation data
+        voc                         : atom vocabulary
+        train_loader                : torch DataLoader containing training data
+        valid_loader                : torch DataLoader containing validation data
     """
     
-    data_path = args.base_dir + '/data/'
+    data_path = base_dir + '/data/'
 
     voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
-    data = pd.read_table( data_path + '%s_train_code.txt' % args.input)
+    data = pd.read_table( data_path + '%s_train_code.txt' % input_prefix)
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
-    train_loader = DataLoader(data, batch_size=args.batch_size * 4, drop_last=True, shuffle=True)
+    train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
-    test = pd.read_table( data_path + '%s_test_code.txt' % args.input)
+    test = pd.read_table( data_path + '%s_test_code.txt' % input_prefix)
     # test = test.sample(int(1e4))
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
-    valid_loader = DataLoader(test, batch_size=args.batch_size * 10, drop_last=True, shuffle=True)
+    valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
     return voc, train_loader, valid_loader
 
-def DataPreparationSmiles(args):
+def DataPreparationSmiles(base_dir, input_prefix, batch_size=128):
     
     """
-    Reads and preprocesses the vocabulary and input data for a SMILES-based generator
+    Reads and preprocesses the vocabulary and input data for a graph-based generator
     
     Arguments:
-        args: namespace containing command line arguments
+        base_dir (str)              : name of the folder containing 'data' folder with input files
+        input_prefix (str)          : prefix of input files
+        batch_size (int), optional  : batch size
     Returns:
-        voc: SMILES vocabulary
-        train_loader: torch DataLoader containing training data
-        valid_loader: torch DataLoader containing validation data
+        voc                         : atom vocabulary
+        train_loader                : torch DataLoader containing training data
+        valid_loader                : torch DataLoader containing validation data
     """
     
-    data_path = args.base_dir + '/data/'
+    data_path = base_dir + '/data/'
     
     if args.algorithm == 'gpt':
         voc = utils.Voc( data_path + 'voc_smiles.txt', src_len=100, trg_len=100)
     else:
         voc = utils.VocSmiles( data_path + 'voc_smiles.txt', max_len=100)
 
-    data = pd.read_table( data_path + '%s_train_smi.txt' % args.input)
+    data = pd.read_table( data_path + '%s_train_smi.txt' % input_prefix)
     data_in = voc.encode([seq.split(' ') for seq in data.Input.values])
     data_out = voc.encode([seq.split(' ') for seq in data.Output.values])
     data_set = TensorDataset(data_in, data_out)
-    train_loader = DataLoader(data_set, batch_size=args.batch_size, shuffle=True)
+    train_loader = DataLoader(data_set, batch_size=batch_size, shuffle=True)
     
 
-    test = pd.read_table( data_path + '%s_test_smi.txt' % args.input)
+    test = pd.read_table( data_path + '%s_test_smi.txt' % input_prefix)
     test = test.Input.drop_duplicates()
     #test = test.sample(args.batch_size * 10).values
     test_set = voc.encode([seq.split(' ') for seq in test])
     test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
-    valid_loader = DataLoader(test_set, batch_size=args.batch_size, collate_fn=test_set.collate_fn)
+    valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
     
     return voc, train_loader, valid_loader
 
-def InitializeEvolver(agent, prior, args):
+def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme):
     
     """
     Sets up the evolver composed of two generators.
     
-    Arguments:
-        agent: main generator that is optimized during training
-        prior: mutation generator is kept frozen during the process
-        args: namespace containing command line arguments
+    Arguments:        
+        agent (torch model)         : main generator that is optimized during training
+        prior (torch model)         : mutation generator is kept frozen during the process
+        algorithm (str)             : name of the generator algorithm
+        batch_size (int)            : batch size
+        epsilon (float)             : exploration rate
+        beta (float)                : reward baseline
+        scheme (str)                : name of optimization scheme
     Returns:
-        evolver : evolver composed of two generators
-        
+        evolver (torch model)       : evolver composed of two generators
     """
     
-    if args.algorithm == 'smiles':
-        evolver = SmilesExplorer(agent, mutate=prior)
-    elif args.algorithm == 'graph':
+    if args.algorithm == 'graph':
         evolver = GraphExplorer(agent, mutate=prior)
+    else:
+        evolver = SmilesExplorer(agent, mutate=prior)
         
     evolver.batch_size = args.batch_size 
     evolver.epsilon = args.epsilon 
@@ -198,64 +208,74 @@ def InitializeEvolver(agent, prior, args):
     return evolver
     
 
-def CreateDesirabilityFunction(args):
+def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], inactive_targets=[], activity_threshold=6.5, qed=False, ra_score=False, ra_score_model='XBG'):
     
     """
     Sets up the objectives of the desirability function.
     
     Arguments:
-        args: namespace containing command line arguments
+        base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
+        alg (str)                   : environment-predictor algoritm
+        task (str)                  : environment-predictor task: 'REG' or 'CLS'
+        scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
+        active_targets (lst), opt   : list of active target IDs
+        inactive_targets (lst), opt : list of inactive target IDs
+        activity_threshold (float), opt : activety threshold in case of 'CLS'
+        qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
+        ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
+        ra_score_model (str), opt   : RAscore algorithm: 'NN' or 'XGB'
     Returns:
-        objs (lst): list of selected predictors 
-        keys (lst): list of names of selected predictors
-        mods (lst): list of ClippedScore-functions per predictor
-        ths (lst): list desirability thresholds per predictor
+        objs (lst)                  : list of selected predictors 
+        keys (lst)                  : list of names of selected predictors
+        mods (lst)                  : list of ClippedScore-functions per predictor
+        ths (lst)                   : list desirability thresholds per predictor
         
     """
     
     objs, keys = [], []
-
-    for t in args.targets:
-        if args.env_alg.startswith('MT_'):
+    targets = active_targets + inactive_targets
+    
+    for t in targets:
+        if alg.startswith('MT_'):
             sys.exit('TO DO: using multitask model')
         else:
-            path = args.base_dir + '/envs/single/' + args.env_alg + '_' + args.env_task + '_' + t + '.pkg'
-        objs.append(utils.Predictor(path, type=args.env_task))
+            path = base_dir + '/envs/single/' + alg + '_' + task + '_' + t + '.pkg'
+        objs.append(utils.Predictor(path, type=task))
         keys.append(t)
-    if args.qed :
+    if qed :
         objs.append(utils.Property('QED'))
         keys.append('QED')
-    if args.ra_score:
-        objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if args.ra_score_model == 'NN' else True ))
+    if ra_score:
+        objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
         
     pad = 3.5
-    if args.scheme == 'WS':
+    if scheme == 'WS':
         # Weighted Sum (WS) reward scheme
-        if args.env_task == 'CLS':
+        if env_task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold+pad)
-            inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold-pad)
-        ths = [0.5] * (len(args.targets)) 
+            active = utils.ClippedScore(lower_x=activity_threshold-pad, upper_x=activity_threshold+pad)
+            inactive = utils.ClippedScore(lower_x=activity_threshol+pad, upper_x=activity_threshold-pad)
+        ths = [0.5] * (len(targets)) 
             
     else:
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
-        if args.env_task == 'CLS':
+        if task == 'CLS':
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=args.activity_threshold-pad, upper_x=args.activity_threshold)
-            inactive = utils.ClippedScore(lower_x=args.activity_threshol+pad, upper_x=args.activity_threshold)
-        ths = [0.99] * len((args.targets))
+            active = utils.ClippedScore(lower_x=activity_threshold-pad, upper_x=activity_threshold)
+            inactive = utils.ClippedScore(lower_x=activity_threshold+pad, upper_x=activity_threshold)
+        ths = [0.99] * len((targets))
         
         
     mods = []
     for k in keys:
-        if k in args.active_targets: 
+        if k in active_targets: 
             mods.append(active)
-        elif k in args.inactive_targets: 
+        elif k in inactive_targets: 
             mods.append(inactive)
         elif k == 'QED' : 
             mods.append(utils.ClippedScore(lower_x=0, upper_x=1.0)) 
@@ -266,7 +286,7 @@ def CreateDesirabilityFunction(args):
     
     return objs, keys, mods, ths
 
-def SetAlgorithm(voc, alg):
+def SetGeneratorAlgorithm(voc, alg):
     
     """
     Initializes the generator algorithm
@@ -275,7 +295,7 @@ def SetAlgorithm(voc, alg):
         voc (): vocabulary
         alg (str): molecule format type: 'ved', 'attn', 'gpt' or 'graph'
     Return:
-        agent (object): molecule generator 
+        agent (torch model): molecule generator 
     """
     
     if alg == 'ved':
@@ -292,7 +312,7 @@ def SetAlgorithm(voc, alg):
 def PreTrain(args):
     
     """
-    Wrapper to pretraining a generator
+    Wrapper to pretrain a generator
     
     Arguments:
         args (NameSpace): namespace containing command line arguments
@@ -303,13 +323,13 @@ def PreTrain(args):
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size)
         print('Pretraining graph-based model ...')
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.input, args.batch_size)
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
     
-    agent = SetAlgorithm(voc, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=pt_path)
     
     with open(pt_path + '.json', 'w') as fp:
@@ -335,13 +355,13 @@ def FineTune(args):
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size)
         print('Fine-tuning graph-based model ...')
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.input, args.batch_size)
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
-    agent = SetAlgorithm(voc, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.load_state_dict(torch.load( pt_path, map_location=utils.dev))
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=ft_path)
     
@@ -352,7 +372,7 @@ def FineTune(args):
 def RLTrain(args):
     
     """
-    Wrapper to fine tune a generator
+    Wrapper for the Reinforcement Learning
     
     Arguments:
         args (NameSpace): namespace containing command line arguments
@@ -373,21 +393,24 @@ def RLTrain(args):
     
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size)
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.input, args.batch_size)
     
     # Initialize agent and prior by loading pretrained model
-    agent = SetAlgorithm(voc, args.algorithm)        
+    agent = SetGeneratorAlgorithm(voc, args.algorithm)        
     agent.load_state_dict(torch.load( ft_path, map_location=utils.dev))
-    prior = SetAlgorithm(voc, args.algorithm)        
+    prior = SetGeneratorAlgorithm(voc, args.algorithm)        
     prior.load_state_dict(torch.load( ft_path, map_location=utils.dev))  
 
     # Initialize evolver algorithm
-    evolver = InitializeEvolver(agent, prior, args)
+    evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme)
     
     # Create the desirability function
-    objs, keys, mods, ths = CreateDesirabilityFunction(args)
+    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
+                                                       active_targets=args.active_targets, inactive_targets=args.inactive_targets,
+                                                       activity_threshold=args.activity_threshold, qed=args.qed, 
+                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
     
     # Set Evolver's environment-predictor
     evolver.env = utils.Env(objs=objs, mods=mods, keys=keys, ths=ths)
