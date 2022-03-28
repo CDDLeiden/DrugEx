@@ -252,9 +252,9 @@ class QSARModel:
         self.model = self.alg.set_params(**bayesian_params)
 
         if self.data.reg: 
-            score = metrics.explained_variance_score(self.data.y, self.cross_validation(save = False))
+            score = metrics.explained_variance_score(self.data.y, self.model_evaluation(save = False))
         else:
-            score = metrics.roc_auc_score(self.data.y, self.cross_validation(save = False))
+            score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
 
         return score
 
@@ -303,7 +303,7 @@ class QSARModel:
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(grid.best_params_, f)
             
-    def cross_validation(self, save=True):
+    def model_evaluation(self, save=True):
         """
             Make predictions for crossvalidation and independent test set
             arguments:
@@ -582,7 +582,7 @@ class DNN(QSARModel):
         net = self.alg(self.data.X.shape[1], self.y.shape[1], is_reg=self.data.reg)
         net.fit(train_loader, valid_loader, out=self.out, epochs=self.n_epoch, lr=self.lr)
 
-    def cross_validation(self):
+    def model_evaluation(self):
         #Make predictions for crossvalidation and independent test set
         indep_set = TensorDataset(torch.Tensor(self.data.X_ind), torch.Tensor(self.y_ind))
         indep_loader = DataLoader(indep_set, batch_size=self.batch_size)
@@ -638,8 +638,8 @@ def EnvironmentArgParser(txt=None):
                         help="Random test split fraction if float is given and absolute size if int is given, used when no temporal split given.")
     parser.add_argument('-o', '--optimization', type=str, default=None,
                         help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")    
-    parser.add_argument('-c', '--cross_validation', action='store_true',
-                        help='If on, cross validation is performed.')
+    parser.add_argument('-c', '--model_evaluation', action='store_true',
+                        help='If on, model evaluation through cross validation and independent test set is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
                         help="Number of CPUs")
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
@@ -726,8 +726,8 @@ def Environment(args):
                 if args.optimization is None and args.save_model:
                     mymodel.fit_model()
                 
-                if args.cross_validation:
-                    mymodel.cross_validation()
+                if args.model_evaluation:
+                    mymodel.model_evaluation()
 
                
 if __name__ == '__main__':
