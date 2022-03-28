@@ -1,16 +1,12 @@
 #!/usr/bin/env python
-import os
-import sys
-import json
-import torch
-import joblib
-import argparse
-
+import models
+import utils
 import numpy as np
 import pandas as pd
-
-from copy import deepcopy
 from rdkit import Chem
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler as Scaler
@@ -18,636 +14,678 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC, SVR
-from sklearn.model_selection import StratifiedKFold, KFold, train_test_split
-from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import StratifiedKFold, KFold
 from xgboost import XGBRegressor, XGBClassifier
+import optuna
+import joblib
+import os
+import os.path
+import sys
+import argparse
+import json
 
-import models
-import utils
-
-def SVM(X, y, X_ind, y_ind, reg=False):
-    """ Cross validation and Independent test for SVM classifion/regression model.
-        Arguments:
-            X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-                and n is the number of features.
-            y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-                equals to row of X.
-            X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-                and n is the number of features.
-            y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-                equals to row of X_ind, and l is the number of types.
-            reg (bool): it True, the training is for regression, otherwise for classification.
-         Returns:
-            cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-            inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
+class QSARDataset:
     """
-    if reg:
-        folds = KFold(5).split(X)
-        alg = SVR()
-    else:
-        folds = StratifiedKFold(5).split(X, y)
-        alg = SVC(probability=True)
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    gs = GridSearchCV(deepcopy(alg), {'C': 2.0 ** np.array([-15, 15]), 'gamma': 2.0 ** np.array([-15, 15])}, n_jobs=10)
-    gs.fit(X, y)
-    params = gs.best_params_
-    #print(params)
-    for i, (trained, valided) in enumerate(folds):
-        model = deepcopy(alg)
-        model.C = params['C']
-        model.gamma = params['gamma']
-        if not reg:
-            model.probability=True
-        model.fit(X[trained], y[trained], sample_weight=[1 if v >= 4 else 0.1 for v in y[trained]])
-        if reg:
-            cvs[valided] = model.predict(X[valided])
-            inds += model.predict(X_ind)
-        else:
-            cvs[valided] = model.predict_proba(X[valided])[:, 1]
-            inds += model.predict_proba(X_ind)[:, 1]
-    return cvs, inds / 5
+        This class is used to prepare the dataset for QSAR model training. 
+        It splits the data in train and test set, as well as creating cross-validation folds.
+        Optionally low quality data is filtered out.
+        For classification the dataset samples are labelled as active/inactive.
+        ...
 
+        Attributes
+        ----------
+        base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing data
+        input  (str)              : tsv file containing SMILES, target accesion & corresponding data
+        target (str)              : target identifier, corresponding with accession in papyrus dataset
+        reg (bool)                : if true, dataset for regression, if false dataset for classification
+        timesplit (int), optional : Year to split test set on
+        test_size (int or float), optional: Used when timesplit is None
+                                            If float, should be between 0.0 and 1.0 and is proportion of dataset to
+                                            include in test split. If int, represents absolute number of test samples.
+        th (float)                : threshold for activity if classficiation model, ignored otherwise
+        keep_low_quality (bool)   : if true low quality data is included in the dataset
+        X (np.ndarray)            : m x n feature matrix for cross validation, where m is the number of samples
+                                    and n is the number of features.
+        y (np.ndarray)            : m-d label array for cross validation, where m is the number of samples and
+                                    equals to row of X.
+        X_ind (np.ndarray)        : m x n Feature matrix for independent set, where m is the number of samples
+                                    and n is the number of features.
+        y_ind (np.ndarray)        : m-l label array for independent set, where m is the number of samples and
+                                    equals to row of X_ind, and l is the number of types.
 
-def RF(X, y, X_ind, y_ind, reg=False):
-    """ Cross validation and Independent test for RF classifion/regression model.
-        Arguments:
-            X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-                and n is the number of features.
-            y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-                equals to row of X.
-            X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-                and n is the number of features.
-            y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-                equals to row of X_ind, and l is the number of types.
-            reg (bool): it True, the training is for regression, otherwise for classification.
-         Returns:
-            cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-            inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
+        Methods
+        -------
+        split_dataset : A train and test split is made.
+        create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
+        data_standardization: Performs standardization by centering and scaling
     """
-    if reg:
-        folds = KFold(5).split(X)
-        alg = RandomForestRegressor
-    else:
-        folds = StratifiedKFold(5).split(X, y)
-        alg = RandomForestClassifier
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for i, (trained, valided) in enumerate(folds):
-        model = alg(n_estimators=1000, n_jobs=10)
-        model.fit(X[trained], y[trained], sample_weight=[1 if v >= 4 else 0.1 for v in y[trained]])
-        if reg:
-            cvs[valided] = model.predict(X[valided])
-            inds += model.predict(X_ind)
+    def __init__(self, base_dir, input, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False):
+        self.base_dir = base_dir
+        self.input = input
+        self.target = target
+        self.reg = reg
+        self.timesplit = timesplit
+        self.test_size = test_size
+        self.th = th
+        self.keep_low_quality = keep_low_quality
+        self.X = None
+        self.y = None
+        self.X_ind = None
+        self.y_ind = None
+        self.folds = None
+
+    def split_dataset(self):
+        """
+        Splits the dataset in a train and temporal test set.
+        Calculates the predictors for the QSAR models.
+        """
+        log = open('%s/%s_dataset_info' % (self.base_dir, self.target) + '.txt', 'w')
+
+        #read in the dataset
+        df = pd.read_table('%s/data/%s.tsv' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
+        df = df[df['accession'] == self.target]
+        df = df[['accession', 'SMILES', 'pchembl_value_Mean', 'Quality', 'Year']].set_index(['SMILES'])
+
+        #Get indexes of samples test set based on temporal split
+        if self.timesplit:
+            year = df[['Year']].groupby(['SMILES']).min().dropna()
+            test_idx = year[year['Year'] > self.timesplit].index
+
+        # filter out low quality data if desired
+        df = df if self.keep_low_quality else df[df.Quality.isin(['High','Medium'])] 
+
+        #keep only pchembl values and make binary for classification
+        df = df['pchembl_value_Mean']
+
+        print(self.target, "active:", sum(df >= self.th), \
+                            "not active:", sum(df < self.th), file = log)
+
+        if not self.reg:
+            df = (df > self.th).astype(float)
+
+        #get test and train (data) set with set temporal split or random split
+        df = df.sample(len(df)) 
+        if self.timesplit:
+            test_ix = set(df.index).intersection(test_idx)
+            test = df.loc[test_ix].dropna()
         else:
-            cvs[valided] = model.predict_proba(X[valided])[:, 1]
-            inds += model.predict_proba(X_ind)[:, 1]
-    return cvs, inds / 5
+            test = df.sample(int(round(len(df)*self.test_size))) if type(self.test_size) == float else df.sample(self.test_size)
+        data = df.drop(test.index)
 
+        print(self.target, "train:", len(data), \
+                            "test:", len(test), file = log)
 
-def XGB(X, y, X_ind, y_ind, reg=False):
-    """ Cross validation and Independent test for XGboost classifion/regression model.
+        #calculate ecfp and physiochemical properties as input for the predictors
+        self.X_ind = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in test.index])
+        self.X = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in data.index])
 
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
+        self.y_ind = test.values
+        self.y = data.values
 
-        y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-            equals to row of X.
+        #Create folds for crossvalidation
+        self.create_folds()
 
-        X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-            and n is the number of features.
+        log.close()
+    
+    def create_folds(self):
+        """
+            Create folds for crossvalidation
+        """
+        if self.reg:
+            self.folds = KFold(5).split(self.X)
+        else:
+            self.folds = StratifiedKFold(5).split(self.X, self.y)
+        
+    @staticmethod
+    def data_standardization(data_x, test_x):
+        """
+        Perform standardization by centering and scaling
 
-        y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-            equals to row of X_ind, and l is the number of types.
-
-        reg (bool): it True, the training is for regression, otherwise for classification.
-
-
+        Arguments:
+                    data_x (list): descriptors of data set
+                    test_x (list): descriptors of test set
+        
         Returns:
-        cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.
-
-        inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.
-
-    """
-    if reg:
-        folds = KFold(5).split(X)
-        alg = XGBRegressor
-    else:
-        folds = StratifiedKFold(5).split(X, y)
-        alg = XGBClassifier(use_label_encoder=False)
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for (trained, valided) in folds:
-        if reg:
-            model = alg(objective='reg:squarederror')#, use_label_encoder=False)
-        else:
-            model = alg
-        model.fit(X[trained], y[trained], sample_weight=[1 if v >= 4 else 0.1 for v in y[trained]])
-        if reg:
-            cvs[valided] = model.predict(X[valided])
-            inds += model.predict(X_ind)
-        else:
-            cvs[valided] = model.predict_proba(X[valided])[:, 1]
-            inds += model.predict_proba(X_ind)[:, 1]
-    return cvs, inds / 5
-
-
-def KNN(X, y, X_ind, y_ind, reg=False):
-    """ Cross validation and Independent test for KNN classifion/regression model.
-        Arguments:
-            X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-                and n is the number of features.
-            y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-                equals to row of X.
-            X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-                and n is the number of features.
-            y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-                equals to row of X_ind, and l is the number of types.
-            reg (bool): it True, the training is for regression, otherwise for classification.
-         Returns:
-            cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-            inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-    """
-    if reg:
-        folds = KFold(5).split(X)
-        alg = KNeighborsRegressor
-    else:
-        folds = StratifiedKFold(5).split(X, y)
-        alg = KNeighborsClassifier
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for i, (trained, valided) in enumerate(folds):
-        model = alg(n_jobs=10)
-        model.fit(X[trained], y[trained])
-        if reg:
-            cvs[valided] = model.predict(X[valided])
-            inds += model.predict(X_ind)
-        else:
-            cvs[valided] = model.predict_proba(X[valided])[:, 1]
-            inds += model.predict_proba(X_ind)[:, 1]
-    return cvs, inds / 5
-
-
-def NB(X, y, X_ind, y_ind):
-    """ Cross validation and Independent test for Naive Bayes classifion model.
-        Arguments:
-            X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-                and n is the number of features.
-            y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-                equals to row of X.
-            X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-                and n is the number of features.
-            y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-                equals to row of X_ind, and l is the number of types.
-         Returns:
-            cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-            inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-    """
-    folds = KFold(5).split(X)
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for i, (trained, valided) in enumerate(folds):
-        model = GaussianNB()
-        model.fit(X[trained], y[trained], sample_weight=[1 if v >= 4 else 0.1 for v in y[trained]])
-        cvs[valided] = model.predict_proba(X[valided])[:, 1]
-        inds += model.predict_proba(X_ind)[:, 1]
-    return cvs, inds / 5
-
-
-def PLS(X, y, X_ind, y_ind):
-    """ Cross validation and Independent test for PLS regression model.
-        Arguments:
-            X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-                and n is the number of features.
-            y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-                equals to row of X.
-            X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-                and n is the number of features.
-            y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-                equals to row of X_ind, and l is the number of types.
-            reg (bool): it True, the training is for regression, otherwise for classification.
-         Returns:
-            cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-            inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-                equals to row of X, and l is the number of types and equals to row of X.
-    """
-    folds = KFold(5).split(X)
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for i, (trained, valided) in enumerate(folds):
-        model = PLSRegression()
-        model.fit(X[trained], y[trained])
-        cvs[valided] = model.predict(X[valided])[:, 0]
-        inds += model.predict(X_ind)[:, 0]
-    return cvs, inds / 5
-
-
-def DNN(X, y, X_ind, y_ind, out, reg=False):
-    
-    """ 
-    Cross validation and Independent test for DNN classifion/regression model.
-    
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m x l label matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types.
-        X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-            and n is the number of features.
-        y_ind (np.ndarray): m-d label arrays for independent set, where m is the number of samples and
-            equals to row of X_ind, and l is the number of types.
-        reg (bool): it True, the training is for regression, otherwise for classification.
-     Returns:
-        cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.
-        inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.
-    """
-    if y.shape[1] > 1 or reg:
-        folds = KFold(5).split(X)
-    else:
-        folds = StratifiedKFold(5).split(X, y[:, 0])
-    NET = models.STFullyConnected if y.shape[1] == 1 else models.MTFullyConnected
-    indep_set = TensorDataset(torch.Tensor(X_ind), torch.Tensor(y_ind))
-    indep_loader = DataLoader(indep_set, batch_size=BATCH_SIZE)
-    cvs = np.zeros(y.shape)
-    inds = np.zeros(y_ind.shape)
-    for i, (trained, valided) in enumerate(folds):
-        train_set = TensorDataset(torch.Tensor(X[trained]), torch.Tensor(y[trained]))
-        train_loader = DataLoader(train_set, batch_size=BATCH_SIZE)
-        valid_set = TensorDataset(torch.Tensor(X[valided]), torch.Tensor(y[valided]))
-        valid_loader = DataLoader(valid_set, batch_size=BATCH_SIZE)
-        net = NET(X.shape[1], y.shape[1], is_reg=reg)
-        net.fit(train_loader, valid_loader, out='%s_%d' % (out, i), epochs=N_EPOCH, lr=args.learning_rate)
-        cvs[valided] = net.predict(valid_loader)
-        inds += net.predict(indep_loader)
-    return cvs, inds / 5
-
-
-def Train_RF(X, y, out, reg=False):
-    
-    """ 
-    Training of RF classifier or regressor.
-    
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m x l label matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types.
-        out (str): file path where the model is saved 
-        reg (bool): it True, the training is for regression, otherwise for classification.
-            
-    """
-    
-    if reg:
-        model = RandomForestRegressor(n_estimators=1000, n_jobs=10)
-    else:
-        model = RandomForestClassifier(n_estimators=1000, n_jobs=10)
-    model.fit(X, y, sample_weight=[1 if v >= 4 else 0.1 for v in y])
-    joblib.dump(model, out, compress=3)
-    
-def Train_SVM(X, y, out, reg=False):
-    
-    """ 
-    Training of SVM classifier or regressor.
-    
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m x l label matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types.
-        out (str): file path where the model is saved 
-        reg (bool): it True, the training is for regression, otherwise for classification.
-            
-    """
-    
-    if reg:
-        alg = SVR()
-    else:
-        alg = SVC(probability=True)
-    gs = GridSearchCV(deepcopy(alg), {'C': 2.0 ** np.array([-15, 15]), 'gamma': 2.0 ** np.array([-15, 15])}, n_jobs=10)
-    gs.fit(X, y)
-    params = gs.best_params_
-    print(params)
-    model = deepcopy(alg)
-    model.C = params['C']
-    model.gamma = params['gamma']
-    if not reg:
-        model.probability=True
-    model.fit(X, y, sample_weight=[1 if v >= 4 else 0.1 for v in y])
-    joblib.dump(model, out, compress=3)
-
-def Train_DNN(X,y,out, reg=False):
-    
-    """ 
-    Training of DNN classifier or regressor.
-    
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m x l label matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types.
-        out (str): file path where the model is saved 
-        reg (bool): it True, the training is for regression, otherwise for classification.
-            
-    """
-    NET = models.STFullyConnected
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
-    train_set = TensorDataset(torch.Tensor(X_train), torch.Tensor(y_train))
-    train_loader = DataLoader(train_set, batch_size=BATCH_SIZE)
-    valid_set = TensorDataset(torch.Tensor(X_test), torch.Tensor(y_test))
-    valid_loader = DataLoader(valid_set, batch_size=BATCH_SIZE)
-    net = NET(X.shape[1], y.shape, is_reg=reg)
-    net.fit(train_loader, valid_loader, out=out, epochs=N_EPOCH, lr=args.learning_rate)
-    
-def Train_model(alg,X,y,out, reg=False):
-    
-    """ 
-    Wrapping function to train and save a model.
-    
-    Arguments:
-        alg (str): algorithm to use for clasification/regression
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m x l label matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types.
-        out (str): file path where the model is saved 
-        reg (bool): it True, the training is for regression, otherwise for classification.
-            
-    """
-
-    if alg == 'RF':
-        if reg:
-            model = RandomForestRegressor(n_estimators=1000, n_jobs=10)
-        else:
-            model = RandomForestClassifier(n_estimators=1000, n_jobs=10)
-    elif alg == 'SVM':
-        print('Train SVM...')
-        Train_SVM(X,y,out, reg)
-        return
-    elif alg == 'KNN':
-        if reg:
-            model = KNeighborsRegressor(n_jobs=10)
-        else:
-            model = KNeighborsClassifier(n_jobs=10)
-    elif alg == 'NB':
-        model = GaussianNB()
-    elif alg == 'PLS':
-        model = PLSRegression()
-    elif alg == 'DNN':
-        Train_DNN(X, y, out, reg)
-        return
-    elif alg == 'XGB':
-        if reg:
-            alg = XGBRegressor(n_estimators=1000, n_jobs=10)
-        else:
-            alg = XGBClassifier(n_estimators=1000, n_jobs=10)
-    if alg in ['KNN', 'PLS']:
-        model.fit(X,y)
-    else:
-        model.fit(X, y, sample_weight=[1 if v >= 4 else 0.1 for v in y])
-    joblib.dump(model, out, compress=3)
-
-
-def MultiTask(alg, args, reg=False):
-    
-    """
-    Runs multitask classification/regression model
-
-    Arguments:
-        alg (str): algorithm to use for clasification/regression
-        reg (bool): if True, the training is for regression, otherwise for classification.
-        args (NameSpace): namespace containing input parameters from parser and input file column names 
-    """
-    
-    alg = alg[3:]
-    columns = args.columns
-    
-    # Load data
-    df = pd.read_table(args.base_dir + '/data/' + args.input).dropna(subset=[columns['smiles'], columns['pchembl']])
-    df = df[df[columns['target']].isin(args.targets)]
-    df = df[list(columns.values())].set_index([columns['target'], columns['smiles']])
-    
-    # Create output dir and output file prefix
-    d = '%s/envs/multi' % args.base_dir
-    if not os.path.exists(d):
-        os.makedirs(d)    
-    targets = '_'.join(x for x in args.targets)
-    out = '%s/%s_%s_%s' % (d, alg, 'REG' if reg else 'CLS', targets)
-    print(out, end='\t')
-    
-    # Temporal split
-    years = df[columns['year']].groupby(columns['smiles']).min().dropna()
-    test_idx = years[years > args.year].index 
-    
-    # TO DO : implement keep_low_quality for MT
-    
-    # Calculate mean if multiple datapoints exist and drop unnecessary columns
-    df = df[columns['pchembl']].groupby([columns['target'], columns['smiles']]).mean().dropna()
-
-    # Output values
-    print("active:", len(df[df >= args.activity_threshold]), \
-            "not active:", len(df[df< args.activity_threshold]), end='\t')
-    if not reg:
-        df = (df > args.activity_threshold).astype(float)
-    # Pivote data
-    df = df.unstack(columns['target'])
-    
-    # Temporal split  
-    test = df.loc[test_idx]
-    data = df.drop(test.index)
-    data = data.sample(len(data))
-    print("train set:", len(df)-len(test_idx), "test set:", len(test_idx) )
-        
-    #calculate ecfp and physiochemical properties as input for the predictors
-    test_x = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in test.index])
-    data_x = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in data.index])
-
-    #Perform standardization by centering and scaling
-    scaler = Scaler(); scaler.fit(data_x)
-    test_x = scaler.transform(test_x)
-    data_x = scaler.transform(data_x)
-    
-    if args.save_model:
-        #train model on all data and save model
-        X = np.concatenate([data_x, test_x], axis=0)
-        y = np.concatenate([data.values, test.values], axis=0)
-        Train_model(alg, X, y, out=out + '.pkg', reg=reg)
-    else:
-        #cross validation
-        data_p, test_p = DNN(data_x, data.values, test_x, test.values, out=out, reg=reg)
-        data_p = pd.DataFrame(data_p, columns=[t+'_Score' for t in args.targets], index=data.index)
-        test_p = pd.DataFrame(test_p, columns=[t+'_Score' for t in args.targets], index=test.index)
-        data = pd.concat([data, data_p], axis=1)
-        test = pd.concat([test, test_p], axis=1)
-        data.to_csv(out + '.cv.tsv', sep='\t')
-
-def SingleTask(target, args, alg='RF', reg=False):
-    """
-    Runs single task classification/regression model
-
-    Arguments:
-        target (str): target name
-        alg (str): algorithm to use for clasification/regression
-        reg (bool): if True, the training is for regression, otherwise for classification.
-        args (NameSpace): namespace containing input parameters from parser and input file column names 
-    """
-
-    
-    columns = args.columns    
-    # Load target specific data
-    df = pd.read_table(args.base_dir + '/data/' + args.input).dropna(subset=[columns['smiles'], columns['pchembl']])
-    df = df[df[columns['target']] == target]
-    df = df[list(columns.values())].set_index(columns['smiles'])
-    
-    d = '%s/envs/single' % args.base_dir
-    if not os.path.exists(d):
-        os.makedirs(d)    
-    out = '%s/%s_%s_%s' % (d, alg, 'REG' if reg else 'CLS', target)
-    print(out, end='\t')
-    
-    if args.keep_low_quality is False:
-        df = df[ df[columns['quality']] != 'Low']
-        
-    # Output values
-    activity = df[columns['pchembl']]
-    print("active:", len(activity[activity >= args.activity_threshold]), \
-            "not active:", len(activity[activity < args.activity_threshold]), end='\t')
-    if not reg:
-        activity = (activity > args.activity_threshold).astype(float)
-         
-    # Suffle dataframe
-    activity = activity.sample(len(activity))   
-    
-    # Temporal split
-    years = df[columns['year']].groupby(columns['smiles']).min().dropna()
-    test_idx = years[years > args.year].index    
-    test = activity.loc[test_idx]
-    data = activity.drop(test.index)
-    print("train set:", len(activity)-len(test_idx), "test set:", len(test_idx) )
-        
-    #calculate ecfp and physiochemical properties as input for the predictors
-    test_x = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in test.index])
-    data_x = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in data.index])
-    
-    if alg != 'RF':
-        #Perform standardization by centering and scaling
+                    data_x (list): descriptors of data set standardized
+                    test_x (list): descriptors of test set standardized
+        """
         scaler = Scaler(); scaler.fit(data_x)
         test_x = scaler.transform(test_x)
         data_x = scaler.transform(data_x)
-    
-    if args.save_model:
-        #train model on all data and save model
-        X = np.concatenate([data_x, test_x], axis=0)
-        y = np.concatenate([data.values, test.values], axis=0)
-        Train_model(alg, X, y, out=out + '.pkg', reg=reg)
-    else:
-        #cross validation
-        data, test = data.to_frame(name='Label'), test.to_frame(name='Label')
-        data['Score'], test['Score'] = cross_validation(data_x, data.values, test_x, test.values, alg, out, reg=reg)
-        data.to_csv(out + '.cv.tsv', sep='\t')
-        test.to_csv(out + '.ind.tsv', sep='\t')
+        return data_x, test_x
 
+class QSARModel:
+    """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
+        ...
 
-def cross_validation(X, y, X_ind, y_ind, alg='DNN', out=None, reg=False):
-    """ 
-    Wrapping function to do cross validation and independent test of a model.
-    
-    Arguments:
-        X (np.ndarray): m x n feature matrix for cross validation, where m is the number of samples
-            and n is the number of features.
-        y (np.ndarray): m-d label array for cross validation, where m is the number of samples and
-            equals to row of X.
-        X_ind (np.ndarray): m x n Feature matrix for independent set, where m is the number of samples
-            and n is the number of features.
-        y_ind (np.ndarray): m-d label array for independent set, where m is the number of samples and
-            equals to row of X_ind, and l is the number of types.
-        reg (bool): it True, the training is for regression, otherwise for classification.
-     Returns:
-        cvs (np.ndarray): m x l result matrix for cross validation, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.
-        inds (np.ndarray): m x l result matrix for independent test, where m is the number of samples and
-            equals to row of X, and l is the number of types and equals to row of X.  
+        Attributes
+        ----------
+        data: instance QSARDataset
+        alg:  instance of estimator
+        parameters (dict): dictionary of algorithm specific parameters
+        search_space_bs (dict): search space for bayesian optimization
+        search_space_gs (dict): search space for grid search
+        save_m (bool): if true, save final model
+        
+        Methods
+        -------
+        init_model: initialize model from saved hyperparameters
+        fit_model: build estimator model from entire data set
+        objective: objective used by bayesian optimization
+        bayes_optimization: bayesian optimization of hyperparameters using optuna
+        grid_search: optimization of hyperparameters using grid_search
+
     """
-    
-    if alg == 'RF':
-        cv, ind = RF(X, y[:, 0], X_ind, y_ind[:, 0], reg=reg)
-    elif alg == 'SVM':
-        cv, ind = SVM(X, y[:, 0], X_ind, y_ind[:, 0], reg=reg)
-    elif alg == 'KNN':
-        cv, ind = KNN(X, y[:, 0], X_ind, y_ind[:, 0], reg=reg)
-    elif alg == 'NB':
-        cv, ind = NB(X, y[:, 0], X_ind, y_ind[:, 0])
-    elif alg == 'PLS':
-        cv, ind = PLS(X, y[:, 0], X_ind, y_ind[:, 0])
-    elif alg == 'DNN':
-        cv, ind = DNN(X, y, X_ind, y_ind, out=out, reg=reg)
-    elif alg == 'XGB':
-        cv, ind = XGB(X, y[:, 0], X_ind, y_ind[:, 0], reg=reg)
-    return cv, ind
+    def __init__(self, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
+        self.data = data
+        self.alg = alg
+        self.parameters = parameters
+        self.search_space_bs = search_space_bs
+        self.search_space_gs = search_space_gs
+        self.save_m = save_m
+        self.model = None
+
+        d = '%s/envs/single' % data.base_dir
+        if not os.path.exists(d):
+            os.makedirs(d)  
+        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
+        print(self.out)
+
+    def init_model(self):
+        """
+            initialize model from saved or default hyperparameters
+        """
+        if os.path.isfile('%s_params.json' % self.out):
+            print("loaded model parameters from file.")
+            with open('%s_params.json' % self.out) as j:
+                self.parameters = json.loads(j.read())
+            print(self.parameters)
+        self.model = self.alg.set_params(**self.parameters)
+
+    def fit_model(self):
+        """
+            build estimator model from entire data set
+        """
+        X_all = np.concatenate([self.data.X, self.data.X_ind], axis=0)
+        y_all = np.concatenate([self.data.y, self.data.y_ind], axis=0)
+        # KNN and PLS do not use sample_weight
+        fit_set = {'X':X_all}
+        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in y_all]
+        
+        if type(self.alg).__name__ == 'PLSRegression':
+            fit_set['Y'] = y_all
+        else:
+            fit_set['y'] = y_all
+            
+        self.model.fit(**fit_set)
+
+        joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+    def objective(self, trial):
+        """
+            objective for bayesian optimization
+            set random seed, has different variable name for XGB
+        """
+
+        if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
+            bayesian_params = {'seed': 42, 'verbosity': 0}
+        elif type(self.alg).__name__ in ['SVR', 'KNeighborsRegressor', 'KNeighborsClassifier', 'GaussianNB', 'PLSRegression']:
+            bayesian_params = {}
+        else:
+            bayesian_params = {'random_state': 42}
+
+        for key, value in self.search_space_bs.items():
+            if value[0] == 'categorical':
+                bayesian_params[key] = trial.suggest_categorical(key, value[1])
+            elif value[0] == 'discrete_uniform':
+                bayesian_params[key] = trial.suggest_discrete_uniform(key, value[1], value[2], value[3])
+            elif value[0] == 'float':
+                bayesian_params[key] = trial.suggest_float(key, value[1], value[2])
+            elif value[0] == 'int':
+                bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
+            elif value[0] == 'loguniform':
+                bayesian_params[key] = trial.suggest_loguniform(key, value[1], value[2])
+            elif value[0] == 'uniform':
+                bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
+
+        self.model = self.alg.set_params(**bayesian_params)
+
+        if self.data.reg: 
+            score = metrics.explained_variance_score(self.data.y, self.model_evaluation(save = False))
+        else:
+            score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
+
+        return score
+
+    def bayes_optimization(self, n_trials):
+        """
+            bayesian optimization of hyperparameters using optuna
+        """
+        print('Bayesian optimization can take a while for some hyperparameter combinations')
+        #TODO add timeout function
+        study = optuna.create_study(direction='maximize')
+        study.optimize(lambda trial: self.objective(trial), n_trials)
+
+        trial = study.best_trial
+
+        self.model = self.alg.set_params(**trial.params)
+        
+        if self.save_m:
+            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+        self.data.create_folds()
+
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(trial.params, f)
+
+    def grid_search(self):
+        """
+            optimization of hyperparameters using grid_search
+        """          
+        scoring = 'explained_variance' if self.data.reg else 'roc_auc'            
+        grid = GridSearchCV(self.alg, self.search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds, scoring=scoring, refit=self.save_m)
+        
+        #TODO maybe move the model fitting and saving to environment?
+        fit_set = {'X':self.data.X}
+        fit_set['y'] = self.data.y
+        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
+        grid.fit(**fit_set)
+        
+        self.model = grid.best_estimator_
+        
+        if self.save_m:
+            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+        self.data.create_folds()
+
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(grid.best_params_, f)
+            
+    def model_evaluation(self, save=True):
+        """
+            Make predictions for crossvalidation and independent test set
+            arguments:
+                save (bool): don't save predictions when used in bayesian optimization
+        """
+        cvs = np.zeros(self.data.y.shape)
+        inds = np.zeros(self.data.y_ind.shape)
+        for i, (trained, valided) in enumerate(self.data.folds):
+            print("cross validation fold ", i)
+            # use sample weight to decrease the weight of low quality datapoints
+            fit_set = {'X':self.data.X[trained]}
+            if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+                fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y[trained]]
+            if type(self.alg).__name__ == 'PLSRegression':
+                fit_set['Y'] = self.data.y[trained]
+            else:
+                fit_set['y'] = self.data.y[trained]
+            self.model.fit(**fit_set)
+            
+            if type(self.alg).__name__ == 'PLSRegression':
+                cvs[valided] = self.model.predict(self.data.X[valided])[:, 0]
+                inds += self.model.predict(self.data.X_ind)[:, 0]
+            elif self.data.reg:
+                cvs[valided] = self.model.predict(self.data.X[valided])
+                inds += self.model.predict(self.data.X_ind)
+            else:
+                cvs[valided] = self.model.predict_proba(self.data.X[valided])[:, 1]
+                inds += self.model.predict_proba(self.data.X_ind)[:, 1]
+        
+        #save crossvalidation results
+        if save:
+            train, test = pd.Series(self.data.y).to_frame(name='Label'), pd.Series(self.data.y_ind).to_frame(name='Label')
+            train['Score'], test['Score'] = cvs, inds / 5
+            train.to_csv(self.out + '.cv.tsv', sep='\t')
+            test.to_csv(self.out + '.ind.tsv', sep='\t')
+
+        self.data.create_folds()
+
+        return cvs
+
+class RF(QSARModel):
+    """ Random forest regressor and classifier initialization. Here the model instance is created 
+        and parameters and search space can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): random forest specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
+        self.parameters=parameters if parameters != None else {'random_state': 42, 'n_estimators': 1000}
+
+        # set the search space for bayesian optimization
+        self.search_space_bs = {
+            'n_estimators': ['int', 10, 2000],
+            'max_depth': ['int', 1, 100],
+            'min_samples_leaf': ['int', 1, 25],
+            'max_features': ['int', 1, 100], 
+            'min_samples_split': ['int', 2, 12] 
+        }
+        if data.reg:
+            self.search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
+        else:
+            self.search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
+
+        # set the search space for grid search
+        self.search_space_gs = {
+            'random_state': [42],
+            'max_depth': [None, 20, 50, 100],
+            'max_features': ['auto', 'log2'],
+            'min_samples_leaf': [1, 3, 5],
+            'min_samples_split': [2, 5, 12],
+            'n_estimators': [100, 200, 300, 1000]
+        }
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+
+class XGB(QSARModel):
+    """ 
+        XG Boost regressor and classifier initialization. Here the model instance is created 
+        and parameters and search space can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): XGboost specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:logistic',use_label_encoder=False, eval_metric='logloss')
+        self.parameters=parameters if parameters != None else {'nthread': 4, 'seed': 42, 'n_estimators': 1000}
+        self.search_space_bs = {
+            'n_estimators': ['int', 100, 1000],
+            'max_depth': ['int',3, 10],
+            'learning_rate': ['uniform', 0.01, 0.1] #so called `eta` value
+        }
+        
+        self.search_space_gs = {
+            'nthread':[4], #when use hyperthread, xgboost may become slower
+            'seed': [42],
+            'learning_rate': [0.01, 0.05, 0.1], #so called `eta` value
+            'max_depth': [3,6,10],
+            'n_estimators': [100, 500, 1000],
+            'colsample_bytree': [0.3, 0.5, 0.7]
+        }
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+
+class SVM(QSARModel):
+    """ Support vector regressor and classifier initialization. Here the model instance is created 
+        and parameters and search space can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): SVM specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for SVM
+        self.alg = SVR() if data.reg else SVC(probability=True)
+        self.parameters=parameters if parameters != None else {}
+        #parameter dictionary for bayesian optimization
+        self.search_space_bs = {
+            'C': ['loguniform', 2.0 ** -5, 2.0 ** 15],
+            'kernel': ['categorical', ['linear', 'sigmoid', 'poly', 'rbf']],
+            'gamma': ['uniform', 0, 20]
+        }
+
+        #parameter dictionary for grid search (might give error if dataset too small)
+        self.search_space_gs = [{
+            'kernel'      : ['rbf', 'sigmoid'],
+            'C'           : [0.001,0.01,0.1,1,10,100,1000],
+            'gamma'       : [0.001,0.01,0.1,1,10,100,1000]
+            },
+            {
+            'kernel'      : ['linear'],
+            'C'           : [0.001,0.01,0.1,1,10,100,1000]
+            },
+            {
+            'kernel'      : ['poly'],
+            'C'           : [0.001,0.01,0.1,1,10,100,1000],
+            'gamma'       : [0.001,0.01,0.1,1,10,100,1000],
+            'degree'      : [1,2,3,4,5]
+            }]
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+
+class KNN(QSARModel):
+    """ K-nearest neighbor regressor and classifier initialization. Here the model instance is created 
+        and parameters and search space can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): KNN specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for KNN
+        self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
+        self.parameters=parameters if parameters != None else {}
+        #parameter dictionary for bayesian optimization
+        self.search_space_bs = {
+            'n_neighbors': ['int', 1, 100],
+            'weights': ['categorical', ['uniform', 'distance']],
+            'metric': ['categorical', ["euclidean","manhattan",
+                        "chebyshev","minkowski"]]
+        }
+        #parameter dictionary for grid search
+        self.search_space_gs = {
+            'n_neighbors' : list(range(1,31)),
+            'weights'      : ['uniform', 'distance']
+            }
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+
+class NB(QSARModel):
+    """ 
+        Gaussian Naive Bayes model initialization. Here the model instance is created 
+        and parameters and search space can be defined.
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): NB specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        if data.reg:
+            raise ValueError("NB should be constructed only with classification.")
+        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for NB
+        self.alg = GaussianNB()
+        self.parameters=parameters if parameters != None else {}
+        #parameter dictionaries for hyperparameter optimization
+        self.search_space_bs = {
+            'var_smoothing': ['loguniform', 1e-10, 1]
+            }
+
+        self.search_space_gs = {
+            'var_smoothing': np.logspace(0,-9, num=100)
+        }
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+
+class PLS(QSARModel):
+    """ 
+        PLS Regression model initialization. Here the model instance is created 
+        and parameters and search space can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): PLS specific parameters
+        save_m (bool): if true, save final model
+
+    """
+    def __init__(self, data, save_m=True, parameters=None):
+        if not data.reg:
+            raise ValueError("PLS should be constructed only with regression.")
+        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for PLS
+        self.alg = PLSRegression()
+        self.parameters=parameters if parameters != None else {}
+        self.search_space_bs = {
+            'n_components': ['int', 1, 100],
+            'scale': ['categorical', [True, False]]
+            }
+        self.search_space_gs = {
+            'n_components': list(range(1, 100, 20))
+        }
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
+
+class DNN(QSARModel):
+    """ 
+        This class holds the methods for training and fitting a Deep Neural Net QSAR model initialization. 
+        Here the model instance is created and parameters  can be defined
+        ...
+
+        Attributes
+        ----------
+        data: instance of QSARDataset
+        parameters (dict): DNN specific parameters
+        save_m (bool): if true, save final model
+        batch_size (int): batch size
+        lr (int): learning rate
+        n_epoch (int): number of epochs
+
+    """
+    def __init__(self, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
+        np.random.seed(42)
+        self.alg = models.STFullyConnected
+        self.parameters = parameters if parameters != None else {}
+        super().__init__(data, self.alg, self.parameters, None, None, save_m=save_m)
+        self.batch_size = batch_size
+        self.lr = lr
+        self.n_epoch = n_epoch
+        self.y = self.data.y.reshape(-1,1)
+        self.y_ind = self.data.y_ind.reshape(-1,1)
+
+    def init_model(self):
+        pass
+
+    def fit_model(self):
+        train_set = TensorDataset(torch.Tensor(self.data.X), torch.Tensor(self.y))
+        train_loader = DataLoader(train_set, batch_size=self.batch_size)
+        valid_set = TensorDataset(torch.Tensor(self.data.X_ind), torch.Tensor(self.y_ind))
+        valid_loader = DataLoader(valid_set, batch_size=self.batch_size)
+        net = self.alg(self.data.X.shape[1], self.y.shape[1], is_reg=self.data.reg)
+        net.fit(train_loader, valid_loader, out=self.out, epochs=self.n_epoch, lr=self.lr)
+
+    def model_evaluation(self):
+        #Make predictions for crossvalidation and independent test set
+        indep_set = TensorDataset(torch.Tensor(self.data.X_ind), torch.Tensor(self.y_ind))
+        indep_loader = DataLoader(indep_set, batch_size=self.batch_size)
+        cvs = np.zeros(self.y.shape)
+        inds = np.zeros(self.y_ind.shape)
+        for i, (trained, valided) in enumerate(self.data.folds):
+            print("cross validation fold", i)
+            train_set = TensorDataset(torch.Tensor(self.data.X[trained]), torch.Tensor(self.y[trained]))
+            train_loader = DataLoader(train_set, batch_size=self.batch_size)
+            valid_set = TensorDataset(torch.Tensor(self.data.X[valided]), torch.Tensor(self.y[valided]))
+            valid_loader = DataLoader(valid_set, batch_size=self.batch_size)
+            net = self.alg(self.data.X.shape[1], self.y.shape[1], is_reg=self.data.reg)
+            net.fit(train_loader, valid_loader, out='%s_%d' % (self.out, i), epochs=self.n_epoch, lr=self.lr)
+            cvs[valided] = net.predict(valid_loader)
+            inds += net.predict(indep_loader)
+        train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
+        train['Score'], test['Score'] = cvs, inds / 5
+        train.to_csv(self.out + '.cv.tsv', sep='\t')
+        test.to_csv(self.out + '.ind.tsv', sep='\t')
+        self.data.create_folds()
+
+    def grid_search(self):
+        #TODO implement gridd search for DNN
+        print("Not yet implemented for DNN")
 
 
 def EnvironmentArgParser(txt=None):
-    """ Define and read command line arguments """
+    """ 
+        Define and read command line arguments
+    """
     
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
-    parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
-                        help="Input file name in 'data' containing raw data")   
+    parser.add_argument('-i', '--input', type=str, default='dataset',
+                        help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
                         help="If included then then the model will be trained on all data and saved")   
     parser.add_argument('-m', '--model_types', type=str, nargs='*', default=['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'],
                         help="Modeltype, defaults to run all modeltypes, choose from: 'RF', 'XGB', 'DNN', 'SVM', 'PLS' (only with REG), 'NB' (only with CLS) 'KNN' or 'MT_DNN'") 
     parser.add_argument('-r', '--regression', type=str, default=None,
                         help="If True, only regression model, if False, only classification, default both")
-    parser.add_argument('-t', '--targets', type=str, nargs='*', default=['P29274', 'P29275', 'P30542','P0DMS8'],
+    parser.add_argument('-t', '--targets', type=str, nargs='*', default=None, #TODO: maybe change this to all accession in the dataset?
                         help="Target indentifiers") 
     parser.add_argument('-a', '--activity_threshold', type=float, default=6.5,
-                        help="Activity threashold")
+                        help="Activity threshold")
     parser.add_argument('-l', '--keep_low_quality', action='store_true',
                         help="If included keeps low quality data")
-    parser.add_argument('-y', '--year', type=int, default=2015,
+    parser.add_argument('-y', '--year', type=int, default=None,
                         help="Temporal split limit")  
+    parser.add_argument('-n', '--test_size', type=str, default="0.1",
+                        help="Random test split fraction if float is given and absolute size if int is given, used when no temporal split given.")
+    parser.add_argument('-o', '--optimization', type=str, default=None,
+                        help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")    
+    parser.add_argument('-c', '--model_evaluation', action='store_true',
+                        help='If on, model evaluation through cross validation and independent test set is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
-                        help="Number of CPUs")   
+                        help="Number of CPUs")
+    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
+                        help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=2048,
-                        help="Batch size")
+                        help="Batch size for DNN")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
-                        help="Number of epochs")
+                        help="Number of epochs for DNN")
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved") 
+    
     if txt:
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
     
-    # If no regression argument, does bith regression and classification
+    if args.targets is None:
+        df = pd.read_table('%s/data/%s.tsv' % (args.base_dir, args.input)).dropna(subset=['SMILES'])
+        args.targets = df.accession.unique().tolist()
+
+    # If no regression argument, does both regression and classification
     if args.regression is None: 
         args.regression = [True, False]
     elif args.regression.lower() == 'true':
         args.regression = [True]
     elif args.regression.lower() == 'false':
         args.regression = [False]
-    
-    return args 
+    else:
+        sys.exit("invalid regression arg given")
+
+    if '.' in args.test_size:
+        args.test_size = float(args.test_size) 
+    else: 
+        args.test_size = int(args.test_size)
+
+    return args
+
 
 def Environment(args):
-    
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    """ 
+        Optimize, evaluate and train estimators
+    """
+    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+    torch.cuda.set_device(utils.devices[0])
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
     os.environ['OMP_NUM_THREADS'] = str(args.ncpu)
     
     if not os.path.exists(args.base_dir + '/envs'):
@@ -655,37 +693,57 @@ def Environment(args):
     
     for reg in args.regression:
         args.learning_rate = 1e-4 if reg else 1e-5
-        for model in args.model_types:
-            if model.startswith('MT_'):
-                # Train and validate multitask model
-                MultiTask(model, args, reg=reg) 
-            elif ( reg is True and model == 'NB' ) or (reg is False and model == 'PLS'):
-                # Skip in case of NB regression and PSL classification
-                continue
-            else:
-                # Train and validate single task model
-                for target in args.targets:
-                    SingleTask(target, args, model, reg=reg)
-    
-if __name__ == '__main__':
+        for target in args.targets:
+            #prepare dataset for training QSAR model
+            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size)
+            mydataset.split_dataset()
+            
+            for model_type in args.model_types:
+                if model_type == 'MT_DNN': print('MT DNN is not implemented yet')
+                elif model_type not in ['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN']: 
+                    print(f'Model type {model_type} does not exist')
+                    continue
+                if model_type == 'NB' and reg:
+                    print("Warning: NB with regression invalid, skipped.")
+                    continue
+                if model_type == 'PLS' and not reg:
+                    print("Warning: PLS with classification invalid, skipped.")
+                    continue
 
+                #Create QSAR model object
+                mymodel_class = getattr(sys.modules[__name__], model_type)
+                mymodel = mymodel_class(mydataset)
+
+                #if desired run parameter optimization
+                if args.optimization == 'grid':
+                    mymodel.grid_search()
+                elif args.optimization == 'bayes':
+                    mymodel.bayes_optimization(n_trials=20)
+                
+                #initialize models from saved or default parameters
+                mymodel.init_model()
+
+                if args.optimization is None and args.save_model:
+                    mymodel.fit_model()
+                
+                if args.model_evaluation:
+                    mymodel.model_evaluation()
+
+               
+if __name__ == '__main__':
     args = EnvironmentArgParser()
-    columns = {'target' : 'accession',
-               'smiles' : 'SMILES',
-               'pchembl' : 'pchembl_value_Mean',
-               'data_type' : 'Standard_Type',
-               'relation' : 'Standard_Relation',
-               'quality' : 'Quality',
-               'year' : 'Year'}
-    args.columns = columns
+    
+    #Create json log file with used commandline arguments
     if args.no_git is False:
         args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))    
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open(args.base_dir + '/env_args.json', 'w') as f:
         json.dump(vars(args), f)
         
+    #settings for DNN model
+    #TODO: set this only for DNN model, instead of global
     BATCH_SIZE = args.batch_size
     N_EPOCH = args.epochs
-        
-    Environment(args)
     
+    #Optimize, evaluate and train estimators according to environment arguments
+    Environment(args)
