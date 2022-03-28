@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from models import generator, GPT2Model, GraphModel
 from models.explorer import SmilesExplorer, GraphExplorer
-from models.ra_scorer import RetrosyntheticAccessibilityScorer
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -246,6 +245,7 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         objs.append(utils.Property('QED'))
         keys.append('QED')
     if ra_score:
+        from models.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
         
