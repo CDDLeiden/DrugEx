@@ -19,27 +19,23 @@ import argparse
 import json
 
 
-def standardize_mol(base_dir, input, suffix='sdf', filter_quality=False):
+def standardize_mol(base_dir, input, suffix='sdf'):
     """
     Standardizes SMILES and removes fragments
     Arguments:
         base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing dataset
         input  (str)              : file containing SMILES
         suffix (str)              : suffix of input file
-        filter_quality (bool)     : if true remove low quality datapoints from fine-tuning set
     """
     if suffix =='sdf':
         # read molecules from file
         inf = gzip.open(base_dir + '/data/' + input)
-        print(type(inf))
         mols = Chem.ForwardSDMolSupplier(inf)
         # mols = [mol for mol in suppl]
     else:
         # read molecules from file and drop duplicate SMILES
         df = pd.read_table(base_dir + '/data/' + input)
         df.columns.str.upper()
-        if filter_quality:
-            df = df[df.Quality == 'HIGH']
         df = df.SMILES.dropna().drop_duplicates()
         mols = [Chem.MolFromSmiles(s) for s in df]
 
@@ -85,10 +81,8 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
         token = voc.split(smile)
         # remove SMILES that do not contain carbon
         if {'C', 'c'}.isdisjoint(token):
-            print('Warning:', smile)
             continue
         if not {'[Na]', '[Zn]'}.isdisjoint(token):
-            print('Redudent', smile)
             continue
         # keep SMILES within certain length
         if 10 < len(token) <= 100:
@@ -211,12 +205,12 @@ def pair_frags(smiles, out, n_frags, method='Recap', is_mf=True):
             # combine leaf fragments into larger fragments
             combs = combinations(frags, ix)
             for comb in combs:
-                input = '.'.join(comb)
+                comb_frags = '.'.join(comb)
                 #remove pair of fragment combinations if longer than original SMILES 
-                if len(input) > len(smile): continue
+                if len(comb_frags) > len(smile): continue
                 # check if substructure is in original molecule
-                if mol.HasSubstructMatch(Chem.MolFromSmarts(input)):
-                    pairs.append([input, smile])
+                if mol.HasSubstructMatch(Chem.MolFromSmarts(comb_frags)):
+                    pairs.append([comb_frags, smile])
     df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
     df.to_csv(out, sep='\t',  index=False)
 
@@ -312,8 +306,6 @@ def DatasetArgParser(txt=None):
                         help="Name for voc file, used to save voc tokens") 
     parser.add_argument('-sv', '--save_voc', action='store_true',
                         help="If on, save voc file (should only be done for the pretraining set)")     
-    parser.add_argument('-fq', '--filter_quality', action='store_true',
-                        help="If on, only keep high quality ligands.")  
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -335,7 +327,7 @@ def Dataset(args):
     else: sys.exit('Wrong input file format')
 
     # standardize smiles and remove salts
-    smiles_std = standardize_mol(args.base_dir, args.input, suffix=suffix, filter_quality=args.filter_quality)
+    smiles_std = standardize_mol(args.base_dir, args.input, suffix=suffix)
 
     # create corpus (only used in v2), vocab (only used in v2) and list of SMILES of length 10-100   
     smiles = corpus(args.base_dir, smiles_std, args.output, args.voc_file, args.save_voc)
