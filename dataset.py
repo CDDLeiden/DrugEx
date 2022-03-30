@@ -44,6 +44,8 @@ def standardize_mol(base_dir, input, suffix='sdf'):
     disconnector = rdMolStandardize.MetalDisconnector()
     normalizer = rdMolStandardize.Normalizer()
     smiles = set()
+    carbon = Chem.MolFromSmarts('[#6]')
+    salts = Chem.MolFromSmarts('[Na,Zn]')
     for mol in tqdm(mols):
         try:
             mol = disconnector.Disconnect(mol)
@@ -53,6 +55,12 @@ def standardize_mol(base_dir, input, suffix='sdf'):
             mol = disconnector.Disconnect(mol)
             mol = normalizer.normalize(mol)
             smileR = Chem.MolToSmiles(mol, 0)
+            # remove SMILES that do not contain carbon
+            if len(mol.GetSubstructMatches(carbon)) == 0:
+                continue
+            # remove SMILES that still contain salts
+            if len(mol.GetSubstructMatches(salts)) > 0:
+                continue
             smiles.add(Chem.CanonSmiles(smileR))
         except:
             print('Parsing Error:', Chem.MolToSmiles(mol))
@@ -79,11 +87,6 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     tokens = []
     for smile in tqdm(smiles):
         token = voc.split(smile)
-        # remove SMILES that do not contain carbon
-        if {'C', 'c'}.isdisjoint(token):
-            continue
-        if not {'[Na]', '[Zn]'}.isdisjoint(token):
-            continue
         # keep SMILES within certain length
         if 10 < len(token) <= 100:
             words.update(token)
@@ -101,8 +104,6 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     log['Token'] = tokens
     log.drop_duplicates(subset='Smiles')
     log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
-
-    return log['Smiles']
 
 
 def graph_corpus(input, output, suffix='sdf'):
@@ -330,13 +331,13 @@ def Dataset(args):
     smiles_std = standardize_mol(args.base_dir, args.input, suffix=suffix)
 
     # create corpus (only used in v2), vocab (only used in v2) and list of SMILES of length 10-100   
-    smiles = corpus(args.base_dir, smiles_std, args.output, args.voc_file, args.save_voc)
+    corpus(args.base_dir, smiles_std, args.output, args.voc_file, args.save_voc)
 
     ## TODO rename version_2 ect. at some point
     if args.version_2 is False:
         out = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
         #create fragments from SMILES
-        pair_frags(smiles, out, args.n_frags, method=args.method, is_mf=args.is_mf)
+        pair_frags(smiles_std, out, args.n_frags, method=args.method, is_mf=args.is_mf)
 
         inp = '%s/data/%s_%s_%s.txt' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
         out = '%s/data/%s_%s_%s' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.method)
