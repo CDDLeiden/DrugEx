@@ -19,7 +19,7 @@ import argparse
 import json
 
 
-def standardize_smiles(base_dir, input, suffix='sdf', filter_quality=False):
+def standardize_mol(base_dir, input, suffix='sdf', filter_quality=False):
     """
     Standardizes SMILES and removes fragments
     Arguments:
@@ -36,10 +36,11 @@ def standardize_smiles(base_dir, input, suffix='sdf', filter_quality=False):
         # mols = [mol for mol in suppl]
     else:
         # read molecules from file and drop duplicate SMILES
-        df = pd.read_table(base_dir + '/data/' + input).drop_duplicates(subset=['SMILES'])
+        df = pd.read_table(base_dir + '/data/' + input)
+        df.columns.str.upper()
         if filter_quality:
-            df = df[df.Quality == 'High']
-        df = df.SMILES.dropna()
+            df = df[df.Quality == 'HIGH']
+        df = df.SMILES.dropna().drop_duplicates()
         mols = [Chem.MolFromSmiles(s) for s in df]
 
     charger = rdMolStandardize.Uncharger()
@@ -334,7 +335,7 @@ def Dataset(args):
     else: sys.exit('Wrong input file format')
 
     # standardize smiles and remove salts
-    smiles_std = standardize_smiles(args.base_dir, args.input, suffix=suffix, filter_quality=args.filter_quality)
+    smiles_std = standardize_mol(args.base_dir, args.input, suffix=suffix, filter_quality=args.filter_quality)
 
     # create corpus (only used in v2), vocab (only used in v2) and list of SMILES of length 10-100   
     smiles = corpus(args.base_dir, smiles_std, args.output, args.voc_file, args.save_voc)
