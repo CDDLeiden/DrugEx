@@ -287,12 +287,14 @@ class Env:
         shape = (len(smiles), 1) if frags is None else (len(smiles), 2)
         valids = np.zeros(shape)
         for j, smile in enumerate(smiles):
+            # 1. Check if SMILES can be parsed by rdkit
             try:
                 mol = Chem.MolFromSmiles(smile)
                 valids[j, 0] = 0 if mol is None else 1
             except:
                 valids[j, 0] = 0
             if frags is not None:
+                # 2. Check if SMILES contain given fragments
                 try:
                     subs = frags[j].split('.')
                     subs = [Chem.MolFromSmiles(sub) for sub in subs]
