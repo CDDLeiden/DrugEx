@@ -22,8 +22,8 @@ def DesignArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
-    parser.add_argument('-ft_model', '--finetuned_model', type=str, default='ligand_mf_brics_gpt_128',
-                        help="Name of finetuned model file without .pkg extension")
+    parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
+                        help="Name of final generator model file without .pkg extension")
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
@@ -36,7 +36,7 @@ def DesignArgParser(txt=None):
         args = parser.parse_args()
         
     # Load parameters generator/environment from trained model
-    with open(args.base_dir + '/generators/' + args.finetuned_model + '.json') as f:
+    with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         pt_params = json.load(f)
     
     args.algorithm = pt_params['algorithm']
@@ -71,7 +71,7 @@ def Design(args):
     # Load data
     if args.algorithm == 'graph':
         voc = utils.VocGraph( args.base_dir + '/data/voc_graph.txt')
-        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_code.txt')
+        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_graph.txt')
         data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
         loader = DataLoader(data, batch_size=args.batch_size)  
     else:
@@ -84,9 +84,9 @@ def Design(args):
         loader = DataLoader(data, batch_size=args.batch_size)
     
     # Load finetuned model
-    ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
+    gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
-    agent.load_state_dict(torch.load( ft_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load( gen_path, map_location=utils.dev))
     
     # Set up environment-predictor
     objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
@@ -95,7 +95,7 @@ def Design(args):
                                                        ra_score=args.ra_score, ra_score_model=args.ra_score_model)
     env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
     
-    out = args.base_dir + '/new_molecules/' + args.finetuned_model + '.tsv'
+    out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
     frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
