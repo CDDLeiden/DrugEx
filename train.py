@@ -119,11 +119,11 @@ def DataPreparationGraph(args):
 
     voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
-    data = pd.read_table( data_path + '%s_train_code.txt' % args.input)
+    data = pd.read_table( data_path + '%s_train_graph.txt' % args.input)
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=args.batch_size * 4, drop_last=True, shuffle=True)
 
-    test = pd.read_table( data_path + '%s_test_code.txt' % args.input)
+    test = pd.read_table( data_path + '%s_test_graph.txt' % args.input)
     # test = test.sample(int(1e4))
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=args.batch_size * 10, drop_last=True, shuffle=True)
