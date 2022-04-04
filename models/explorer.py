@@ -273,7 +273,7 @@ class SmilesExplorer(nn.Module):
             key_mask = utils.pad_mask(sub, self.agent.pad_idx)
             atn_mask = utils.tri_mask(sub)
             rand = torch.rand(1)
-            if self.epsilon < rand <= 0.5 and self.crover is not None:S
+            if self.epsilon < rand <= 0.5 and self.crover is not None:
                 dec = self.crover.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
             elif rand < self.epsilon and self.mutate is not None:
                 dec = self.mutate.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
