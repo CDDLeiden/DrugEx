@@ -56,7 +56,7 @@ def GeneratorArgParser(txt=None):
 
     
     # RL parameters
-    parser.add_argument('-eps', '--epsilon', type=float, default=0.0,
+    parser.add_argument('-eps', '--epsilon', type=float, default=0.1,
                         help="Exploring rate")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
