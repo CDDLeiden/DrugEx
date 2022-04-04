@@ -29,29 +29,40 @@ def GeneratorArgParser(txt=None):
                         help="Prefix of input files. If --mode is 'PT', default is 'chembl_mf_brics' else 'ligand_mf_brics' ")  
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first world of input. ")     
-    parser.add_argument('-pt_model', '--pretrained_model', type=str, default=None,
-                        help="Name of pretrained model file without .pkg extension. If --mode is 'PT', default is {output}_{algorithm}")
-    parser.add_argument('-ft_model', '--finetuned_model', type=str, default=None,
-                        help="Name of pretrained model file without .pkg extension. If --mode is 'FT', default is {output}_{algorithm}")
-
     parser.add_argument('-m', '--mode', type=str, default='RL',
                         help="Mode, of the training: 'PT' for pretraining, 'FT' for fine-tuning and 'RL' for reinforcement learning") 
+    
+    # Input models 
+    parser.add_argument('-pt', '--pretrained_model', type=str, default=None,
+                        help="Name of input model (w/o .pkg extension) used as starting point of FT.")
+    parser.add_argument('-ag', '--agent_model', type=str, default=None,
+                        help="Name of model (w/o .pkg extension) used for the agent in RL.")
+    parser.add_argument('-pr', '--prior_model', type=str, default=None,
+                        help="Name of model (w/o .pkg extension) used for the prior in RL.")
+    
+#     parser.add_argument('-v', '--version', type=int, default=3,
+#                         help="DrugEx version")
+    
+    # General parameters
     parser.add_argument('-a', '--algorithm', type=str, default='graph',
                         help="Generator algorithm: 'graph' for graph-based algorithm, or 'gpt', 'ved' or 'attn' for SMILES-based algorithm ")
-    parser.add_argument('-v', '--version', type=int, default=3,
-                        help="DrugEx version")
-    
+    parser.add_argument('-e', '--epochs', type=int, default=1000,
+                        help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
                         help="Batch size")
-    parser.add_argument('-eps', '--epsilon', type=float, default=1e-2,
+    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
+                        help="List of GPUs") 
+    
+
+    
+    # RL parameters
+    parser.add_argument('-eps', '--epsilon', type=float, default=0.0,
                         help="Exploring rate")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front or 'CD' for crowding distance")
-    parser.add_argument('-e', '--epochs', type=int, default=1000,
-                        help="Number of epochs")
-    
+                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front or 'CD' for 'PR' with crowding distance")
+
     parser.add_argument('-et', '--env_task', type=str, default='REG',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, default='RF',
@@ -72,8 +83,8 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
-    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
-                        help="List of GPUs") 
+
+    
     # Load some arguments from string --> usefull functions called eg. in a notebook
     if txt:
         args = parser.parse_args(txt)
@@ -91,16 +102,16 @@ def GeneratorArgParser(txt=None):
     if args.output is None:
         args.output = args.input.split('_')[0]
     
-    if args.mode == 'FT':
-        #In case of FT setting some parameters from PT parameters
-        with open(args.base_dir + '/generators/' + args.pretrained_model + '.json') as f:
-            pt_params = json.load(f)
-        args.algorithm = pt_params['algorithm']
-    elif args.mode == 'RL':
-        #In case of RL setting some parameters from FT parameters
-        with open(args.base_dir + '/generators/' + args.finetuned_model + '.json') as f:
-            pt_params = json.load(f)
-        args.algorithm = pt_params['algorithm']
+#     if args.mode == 'FT':
+#         #In case of FT setting some parameters from PT parameters
+#         with open(args.base_dir + '/generators/' + args.pretrained_model + '.json') as f:
+#             pt_params = json.load(f)
+#         args.algorithm = pt_params['algorithm']
+#     elif args.mode == 'RL':
+#         #In case of RL setting some parameters from FT parameters
+#         with open(args.base_dir + '/generators/' + args.finetuned_model + '.json') as f:
+#             pt_params = json.load(f)
+#         args.algorithm = pt_params['algorithm']
     
         
     
@@ -326,8 +337,7 @@ def PreTrain(args):
         args (NameSpace): namespace containing command line arguments
     """
     
-    args.pretrained_model = args.output + '_' + args.algorithm 
-    pt_path = args.base_dir + '/generators/' + args.pretrained_model
+    pt_path = args.base_dir + '/generators/' + args.output + '_' + args.algorithm 
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
@@ -339,10 +349,6 @@ def PreTrain(args):
     
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=pt_path)
-    
-    with open(pt_path + '.json', 'w') as fp:
-        json.dump(vars(args), fp, indent=4)
-        
         
 def FineTune(args):
     
@@ -372,9 +378,6 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.load_state_dict(torch.load( pt_path, map_location=utils.dev))
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=ft_path)
-    
-    with open(ft_path + '.json', 'w') as fp:
-        json.dump(vars(args), fp, indent=4)
       
     
 def RLTrain(args):
@@ -386,14 +389,17 @@ def RLTrain(args):
         args (NameSpace): namespace containing command line arguments
     """
     
-    if args.version == 3:
-        # In v3, the agent and prior both use the FT model
-        ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
-        pt_path = ft_path
-    else :
-        # In v2, the agent and crover use the FT model and the prior the PT model
-        ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
-        pt_path = args.base_dir + '/generators/' + args.pretrained_model + '.pkg'
+#     if args.version == 3:
+#         # In v3, the agent and prior both use the FT model
+#         ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
+#         pt_path = ft_path
+#     else :
+#         # In v2, the agent and crover use the FT model and the prior the PT model
+#         ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
+#         pt_path = args.base_dir + '/generators/' + args.pretrained_model + '.pkg'
+
+    ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'
+    pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
 
     rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
                                                         args.scheme, str(args.epsilon)]) + 'e'
@@ -407,9 +413,9 @@ def RLTrain(args):
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
-    agent.load_state_dict(torch.load( ft_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load( ag_path, map_location=utils.dev))
     prior = SetGeneratorAlgorithm(voc, args.algorithm)        
-    prior.load_state_dict(torch.load( ft_path, map_location=utils.dev))  
+    prior.load_state_dict(torch.load( pr_path, map_location=utils.dev))  
 
     # Initialize evolver algorithm
     evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme)

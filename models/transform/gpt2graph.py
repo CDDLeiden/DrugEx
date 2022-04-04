@@ -1,3 +1,4 @@
+import sys
 import torch
 import torch.nn as nn
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
@@ -246,62 +247,59 @@ class GraphModel(Base):
         best = float('inf')
         net = nn.DataParallel(self, device_ids=utils.devices)
         t00 = time.time()
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             t0 = time.time()
             for i, src in enumerate(train_loader):
-                
                 src = src.to(utils.dev)
                 self.optim.zero_grad()
                 loss = net(src, is_train=True)
-                loss_value = [round(-l.mean().item(), 3) for l in loss]
+                loss_train = [round(-l.mean().item(), 3) for l in loss]
                 loss = sum([-l.mean() for l in loss])
                 loss.backward()
                 self.optim.step()
+                del loss
                 
-                if sum(loss_value) < best:
+                if sum(loss_train) < best:
                     torch.save(self.state_dict(), out + '.pkg')
-                    best = sum(loss_value)
-
-#                 if i % 1000 != 0: continue
-#                 t2 = time.time()
-#                 frags, smiles, scores = self.evaluate(ind_loader)
-#                 t1 = time.time()
-#                 print("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
-#                 print('Eval time: {}'.format(int(t2-t1)))
-#                 log.write("Epoch: {} step: {}/{} loss: {:.3f} time: {}" .format(epoch, i, len(train_loader), sum(loss_value), int(t1-t0)))
-#                 for j, smile in enumerate(smiles):
-#                     log.write('%s\t%s\n' % (frags[j], smile))
-#                 log.flush()
-#                 t0 = t1
+                    best = sum(loss_train)
+                    #print('New best - epoch : {} step : {} loss : {}'.format(epoch, i, loss_value))
             
-            frags, smiles, scores = self.evaluate(ind_loader)
+            #t2 = time.time()
+            #print('Epoch {} - Train time: {}'.format(epoch, int(t2-t0)))
+            frags, smiles, scores, loss_valid = self.evaluate(ind_loader)
             t1 = time.time()
+            #print('Epoch {} - Eval time: {}'.format(epoch, int(t1-t2)))
             valid = scores.VALID.mean()
             dt = int(t1-t0)
-            print("Epoch: {}/{} loss: {:.3f} valid: {:.3f} time: {}" .format(epoch, epochs, loss, valid,  dt))
-            log.write("Epoch: {} loss: {:.3f} valid: {:.3f} time: {}" .format(epoch, loss, valid, dt))
+            #print("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
+            log.write("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
             for j, smile in enumerate(smiles):
                 log.write('%s\t%s\n' % (frags[j], smile))
             log.flush()
             t0 = t1
+            del loss_valid
         
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=utils.devices)
         frags, smiles = [], []
+        #t0 = time.time()
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-                    trg = net(src.to(utils.dev))
+                    trg = net(src.to(utils.dev)) 
+                    loss = [round(-l.mean().item(), 3) for l in net(src, is_train=True)] # temporary solution to get validation loss
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s
+        #print('Eval net time:', time.time()-t0)
         if method is None:
             scores = utils.Env.check_smiles(smiles, frags=frags)
             scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
         else:
             scores = method(smiles, frags=frags)
-        return frags, smiles, scores
+        #print('Eval env time:', time.time()-t0)
+        return frags, smiles, scores, loss
 
 
