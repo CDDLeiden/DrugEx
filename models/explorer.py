@@ -206,28 +206,28 @@ class GraphExplorer(nn.Module):
                         trg = net(src.to(utils.dev))
                         trgs.append(trg.detach().cpu())
                     # if len(trgs) < 10 : continue
-                t1 = time.time()
-                print('Net time:', t1-t0)
-                t0 = t1
+                #t1 = time.time()
+                #print('Net time:', t1-t0)
+                #t0 = t1
 
                 trgs = torch.cat(trgs, dim=0)
                 loader = DataLoader(trgs, batch_size=self.batch_size, shuffle=True, drop_last=True)
                 self.policy_gradient(loader)
                 trgs = []
-                t1 = time.time()
-                print('PG time:', t1-t0)
-                t0 = t1
+                #t1 = time.time()
+                #print('PG time:', t1-t0)
+                #t0 = t1
 
                 frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
-                t1 = time.time()
-                print('Eval time:', t1-t0)
-                t0 = t1
+                #t1 = time.time()
+                #print('Eval time:', t1-t0)
+                #t0 = t1
 
                 t1 = time.time()
-                log.write("Iteration: %s Epoch: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
+                log.write("Iteration: %s Epoch: %d Av. Clipped Score: %.4f Valid: %.4f Desire: %.4f Time: %.1fs\n" %
                           (it, epoch, score, valid, desire, t1 - t0))
                 if best_score < desire:
                     torch.save(self.agent.state_dict(), self.out + '.pkg')
@@ -241,8 +241,8 @@ class GraphExplorer(nn.Module):
                     log.write('%s\t%s\t%s\n' % (score, frags[i], smile))
                     
                 t1 = time.time()
-                print('Log time:', t1-t0)
-                print('Epoch time:', t1-t00)
+                #print('Log time:', t1-t0)
+                #print('Epoch time:', t1-t00)
             if self.crover is not None:
                 self.agent.load_state_dict(torch.load(self.out + '.pkg'))
                 self.crover.load_state_dict(torch.load(self.out + '.pkg'))
@@ -273,7 +273,7 @@ class SmilesExplorer(nn.Module):
             key_mask = utils.pad_mask(sub, self.agent.pad_idx)
             atn_mask = utils.tri_mask(sub)
             rand = torch.rand(1)
-            if self.epsilon < rand <= 0.5 and self.crover is not None:
+            if self.epsilon < rand <= 0.5 and self.crover is not None:S
                 dec = self.crover.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
             elif rand < self.epsilon and self.mutate is not None:
                 dec = self.mutate.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
