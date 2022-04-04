@@ -1,9 +1,6 @@
-DrugEx RELEASE NOTES (v3)
+DrugEx 
 ====================
-
-<b>Drug Explorer (DrugEx v3)</b>: Scaffold-Constrained Drug Design with Graph Transformer-based Reinforcement Learning
-
-By Xuhan Liu & Gerard J.P. van Westen, on January 28th 2022
+This repository contains developements by Gerard van Westen's Computational Drug Discovery group to **Drug Explorer (DrugEx)**, a _de novo_ drug design code, originally developped by [Xuhan Liu](https://github.com/XuhanLiu/DrugEx/tree/master) & Gerard J.P. van Westen. [2,3,4]
 
 Please see the LICENSE file for the license terms for the software. Basically it's free to academic users. If you do wish to sell the software or use it in a commercial product, then please contact us:
 
@@ -74,32 +71,26 @@ Secondly, all the following packages are installed in your machine:
 
 Usage
 ======
-For designing the novel drug molecules with SMILES representation, you should do the following steps sequentially by running scripts:
+For designing the novel drug molecules with SMILES- or graph-based representation, you should do the following steps sequentially by running scripts:
 
 1. dataset.py:
- 
-    Preparing your dataset for pre-training and fine-tuning the RNN model as initial states of exploitation 
-    network and exploration network.
-    
-2. environ.py:
+    - (opt) generate vocabulary for the generators
+    - (opt) prepare encoded input files for pre-training
+    - prepare encode input files for fine-tuning and reinforcement learning
 
-    Training your predictor as the environment for providing the final reward for the action from the agent. 
-    The performance can also be evaluated through n-fold cross validation and independent test. 
+2. environ.py:
+    - (opt) evaluate the performance of the predictors through n-fold cross-validation and independent test set evaluation
+    - (opt) optimize predictors' hyperparameters
+    - train your predictor as the environment used to provide the reward for the action from the agent during the reinforcement learning
 
 3. train.py:
+    - (opt) pre-train the generator
+    - fine-tune the generator on your "ligand" set
+    - optimize generator via reinforcement learning
 
-    Pre-training graph- or SMILES-based molecular generator model under supvervision and fine-tuning the model in a reinforcement learning framework.
-    
-5. designer.py:
+4. designer.py:
+    - generate molecules with a well-trained deep learning model with either graph or SMILES representations
 
-    Finally, generating molecules with well-trained deep learning model with either graph or SMILES representations. 
-
-6. plot.py:
-
-    It provides a variety of the methods to measure the performance of every step during the training process of 
-    DrugEx, and form the figure for results visualization.     
-
-        
 In addition, this toolkit also provides some other scripts for definition of special data structures, model architectures and coefficient measurements, etc.
 
 1. models/*.py:
@@ -144,6 +135,12 @@ In addition, this toolkit also provides some other scripts for definition of spe
     More details about SA score can be found [here](https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-1-8)
 
 
+Current development team
+========================
+- S. Luukkonen
+- H. van den Maagdenberg
+- L. Schoenmaker
+
 References
 ==========
 
@@ -157,7 +154,7 @@ References
 
 Acknowledgement
 ===============
-We thank the following Git repositories that gave me a lot of inspirations:
+We thank the following Git repositories that gave Xuhan a lot of inspirations:
    
 1. [REINVENT](https://github.com/MarcusOlivecrona/REINVENT)
 2. [ORGAN](https://github.com/gablg1/ORGAN)
