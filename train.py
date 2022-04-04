@@ -45,7 +45,7 @@ def GeneratorArgParser(txt=None):
     
     # General parameters
     parser.add_argument('-a', '--algorithm', type=str, default='graph',
-                        help="Generator algorithm: 'graph' for graph-based algorithm, or 'gpt', 'ved' or 'attn' for SMILES-based algorithm ")
+                        help="Generator algorithm: 'graph' for graph-based algorithm (transformer), or 'gpt' (transformer), 'ved' (lstm-based encoder-decoder) or 'attn' (lstm-based encoder-decoder with attension mechanism) for SMILES-based algorithm ")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -143,7 +143,9 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
     test = pd.read_table( data_path + '%s_test_graph.txt' % input_prefix)
-    # test = test.sample(int(1e4))
+    if len(test) > int(1e4):
+        print('WARNING: to speed up the training, the test set is reduced to a random sample of 10 000 compounds from the original test !')
+        test = test.sample(int(1e4))
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
