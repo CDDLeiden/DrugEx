@@ -26,7 +26,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' (and 'envs')")
     parser.add_argument('-i', '--input', type=str, default=None,
-                        help="Prefix of input files. If --mode is 'PT', default is 'chembl_mf_brics' else 'ligand_mf_brics' ")  
+                        help="Prefix of input files. If --mode is 'PT', default is 'chembl_4:4_brics' else 'ligand_4:4_brics' ")  
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first world of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
@@ -138,19 +138,11 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
 
     voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
-<<<<<<< train.py
     data = pd.read_table( data_path + '%s_train_graph.txt' % input_prefix)
-=======
-    data = pd.read_table( data_path + '%s_train_code.txt' % input_prefix)
->>>>>>> train.py
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
-<<<<<<< train.py
     test = pd.read_table( data_path + '%s_test_graph.txt' % input_prefix)
-=======
-    test = pd.read_table( data_path + '%s_test_code.txt' % input_prefix)
->>>>>>> train.py
     # test = test.sample(int(1e4))
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
@@ -437,10 +429,10 @@ def RLTrain(args):
 #     copy2(args.algorithm + '.py', root)
 
     # import evolve as agent
-    evolver.out = ft_path #root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
+    evolver.out = rl_path #root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
     evolver.fit(train_loader, test_loader=valid_loader, epochs=args.epochs)
     
-    with open(ft_path + '.json', 'w') as fp:
+    with open(rl_path + '.json', 'w') as fp:
         json.dump(vars(args), fp, indent=4)
 
 def TrainGenerator(args):
@@ -462,6 +454,9 @@ def TrainGenerator(args):
     
     if not os.path.exists(args.base_dir + '/generators'):
         os.makedirs(args.base_dir + '/generators')  
+        
+    with open(args.base_dir + '/generators/{}_{}_args.json'.format(args.output, args.algorithm), 'w') as f:
+        json.dump(vars(args), f)
     
     if args.mode == 'PT':
         PreTrain(args)

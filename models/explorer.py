@@ -218,7 +218,7 @@ class GraphExplorer(nn.Module):
                 #print('PG time:', t1-t0)
                 #t0 = t1
 
-                frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
+                frags, smiles, scores, _ = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
