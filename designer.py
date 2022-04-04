@@ -37,20 +37,21 @@ def DesignArgParser(txt=None):
         
     # Load parameters generator/environment from trained model
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
-        pt_params = json.load(f)
+        g_params = json.load(f)
     
-    args.algorithm = pt_params['algorithm']
-    args.epsilon = pt_params['epsilon']
-    args.beta = pt_params['beta']
-    args.scheme = pt_params['scheme']
-    args.env_alg = pt_params['env_alg']
-    args.env_task = pt_params['env_task']
-    args.active_targets = pt_params['active_targets']
-    args.inactive_targets = pt_params['inactive_targets']
-    args.qed = pt_params['qed']
-    args.input = pt_params['input']
-    args.ra_score = pt_params['ra_score']
-    args.ra_score_model = pt_params['ra_score_model']
+    args.algorithm = g_params['algorithm']
+    args.epsilon = g_params['epsilon']
+    args.beta = g_params['beta']
+    args.scheme = g_params['scheme']
+    args.env_alg = g_params['env_alg']
+    args.env_task = g_params['env_task']
+    args.active_targets = g_params['active_targets']
+    args.inactive_targets = g_params['inactive_targets']
+    args.activity_threshold = g_params['activity_threshold']
+    args.qed = g_params['qed']
+    args.input = g_params['input']
+    args.ra_score = g_params['ra_score']
+    args.ra_score_model = g_params['ra_score_model']
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -76,9 +77,9 @@ def Design(args):
         loader = DataLoader(data, batch_size=args.batch_size)  
     else:
         if args.algorithm == 'gpt':
-            voc = utils.Voc( args.base_dir + '/data/chembl_voc.txt', src_len=100, trg_len=100)
+            voc = utils.Voc( args.base_dir + '/data/voc_smiles.txt', src_len=100, trg_len=100)
         else:
-            voc = utils.VocSmiles( args.base_dir + '/data/chembl_voc.txt', max_len=100)
+            voc = utils.VocSmiles( args.base_dir + '/data/voc_smiles.txt', max_len=100)
         data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_smi.txt')
         data = voc.encode([seq.split(' ')[:-1] for seq in data.values])
         loader = DataLoader(data, batch_size=args.batch_size)
@@ -98,9 +99,9 @@ def Design(args):
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
-    frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
+    frags, smiles, scores, _ = agent.evaluate(loader, repeat=1, method=env)
     scores['Frags'], scores['SMILES'] = frags, smiles
-    scores.to_csv(out, index=False, sep='\t')
+    scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
 
 if __name__ == "__main__":
