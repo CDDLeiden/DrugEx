@@ -187,21 +187,21 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
 #     print(exps)
 
 
-def pair_frags(smiles, out, n_frags, method='Recap', is_mf=True, save_file=False):
+def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     """
     Break molecules into leaf fragments and if is_mf combine those fragments to get larger fragments
     Arguments:
         smiles (list)             : list of SMILES
         out  (str)                : name of output file
-        n_frags (int)             : how many fragments to save
+        n_frags (int)             : how many leaf-fragments are generated per compound
+        n_combs (int)             : how many leaf-fragements can be combined per compound
         method (str)              : whether to use Recap or BRICKS for fragmenting
-        is_mf (bool)              : wheter to combine leaf fragments
         save_file (bool)          : save output file
     Returns:
         df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
     """
     
-    if is_mf:
+    if n_combs > 1 :
         print('Breaking molecules to leaf fragments and making combinations...')
     else:
         print('Breaking molecules to leaf fragments...')
@@ -230,7 +230,7 @@ def pair_frags(smiles, out, n_frags, method='Recap', is_mf=True, save_file=False
         frags = sorted(frags, key=lambda x:-x.GetNumAtoms())[:n_frags]
         frags = [Chem.MolToSmiles(Chem.RemoveHs(f)) for f in frags]
 
-        max_comb = len(frags) if is_mf else 1
+        max_comb = min(n_combs, len(frags))
         for ix in range(1, max_comb+1):
             # combine leaf fragments into larger fragments
             combs = combinations(frags, ix)
@@ -357,7 +357,7 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        log = open( os.path.dirname(fname) + '/%s_smiles.txt' % voc_file, 'w')
+        log = open( os.path.dirname(file_base) + '/%s_smiles.txt' % voc_file, 'w')
         log.write('\n'.join(sorted(words)))
         log.close()
     
@@ -379,17 +379,18 @@ def DatasetArgParser(txt=None):
                         help="Type of molecular representation: 'graph' or 'smiles'")     
     parser.add_argument('-nof', '--no_frags', action='store_true',
                         help="If on, molecules are not split to fragments and a corpus is create")
+    
     parser.add_argument('-fm', '--frag_method', type=str, default='brics',
                         help="Fragmentation method: 'brics' or 'recap'") 
-    parser.add_argument('-mf', '--is_mf', type=bool, default=True,
-                        help="If on, uses multiple fragments and largest 4 BRICS fragments are combined to form the output")
     parser.add_argument('-nf', '--n_frags', type=int, default=4,
-                        help="If multiple fragments is true, sets how many of the largest BRICS fragments kept, and combined to form the output") 
+                        help="Number of largest leaf-fragments used per compound")
+    parser.add_argument('-nc', '--n_combs', type=int, default=None,
+                        help="Maximum number of combined leaf-fragments per compound. If None, default is {n_frags}")
 
     parser.add_argument('-vf', '--voc_file', type=str, default='voc',
                         help="Name for voc file, used to save voc tokens") 
     parser.add_argument('-sv', '--save_voc', action='store_true',
-                        help="If on, save voc file (should only be done for the pretraining set)")   
+                        help="If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is 'smiles'.")   
     parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
                         help="If on, intermediate files")
     parser.add_argument('-ng', '--no_git', action='store_true',
@@ -399,6 +400,10 @@ def DatasetArgParser(txt=None):
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
+        
+    if args.n_combs is None:
+        args.n_combs = args.n_frags
+    
     if args.no_git is False:
         args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
@@ -423,16 +428,18 @@ def Dataset(args):
     smiles = standardize_mol(mols)
 
     if args.no_frags:
+        if args.mol_type == 'graph':
+            raise ValueError("To apply --no_frags, --mol_type needs to be 'smiles'")
         # create corpus (only used in v2), vocab (only used in v2)  
         corpus(args.base_dir, smiles, args.output, args.voc_file, args.save_voc)
         
     else:
         # create encoded fragment-molecule pair files for train and test set (for v3)
-        file_base = '%s/data/%s_%s_%s' % (args.base_dir, args.output, 'mf' if args.is_mf else 'sf', args.frag_method)
+        file_base = '%s/data/%s_%d:%d_%s' % (args.base_dir, args.output, args.n_frags, args.n_combs, args.frag_method)
         
         # create fragment-molecule pairs
-        df_pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, 
-                              method=args.frag_method, is_mf=args.is_mf, save_file=args.save_intermediate_files)
+        df_pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, args.n_combs,
+                              method=args.frag_method, save_file=args.save_intermediate_files)
         
         # split fragment-molecule pairs into train and test set
         df_train, df_test =  train_test_split(df_pairs, file_base, save_files=args.save_intermediate_files)
