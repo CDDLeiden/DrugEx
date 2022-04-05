@@ -99,7 +99,7 @@ def Design(args):
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
-    frags, smiles, scores, _ = agent.evaluate(loader, repeat=1, method=env)
+    frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
     scores['Frags'], scores['SMILES'] = frags, smiles
     scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
