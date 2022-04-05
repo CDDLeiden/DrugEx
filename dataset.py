@@ -38,8 +38,9 @@ def load_molecules(base_dir, input_file):
         mols = Chem.ForwardSDMolSupplier(inf)
     else:
         # read molecules from file and drop duplicate SMILES
-        df = pd.read_csv(file_path, sep='\t' if '.tsv' in input_file else ',') 
-        df.columns.str.upper()
+        df = pd.read_csv(file_path, sep='\t' if '.tsv' in input_file else ',',
+                         usecols= lambda x : x.upper() in ['SMILES']) 
+        #df.columns.str.upper()
         df = df.SMILES.dropna().drop_duplicates()
         mols = [Chem.MolFromSmiles(s) for s in df]    
         
@@ -259,7 +260,11 @@ def train_test_split(df, file_base, save_files=False):
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
     """
     frags = set(df.Frags)
-    test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
+    if len(frags) > int(1e5):
+        print('WARNING: to speed up the training, the test set size is 10 0000 instead of {}!'.format(int(len(frags)/)))
+        test_in = df.Frags.drop_duplicates().sample(int(1e4))
+    else:
+        test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
     test = df[df.Frags.isin(test_in)]
     train = df[~df.Frags.isin(test_in)]
     if save_files:

@@ -143,9 +143,6 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
     test = pd.read_table( data_path + '%s_test_graph.txt' % input_prefix)
-    if len(test) > int(1e4):
-        print('WARNING: to speed up the training, the test set is reduced to a random sample of 10 000 compounds from the original test !')
-        test = test.sample(int(1e4))
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
