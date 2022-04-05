@@ -266,7 +266,8 @@ class GraphModel(Base):
             
             #t2 = time.time()
             #print('Epoch {} - Train time: {}'.format(epoch, int(t2-t0)))
-            frags, smiles, scores, loss_valid = self.evaluate(ind_loader)
+            frags, smiles, scores = self.evaluate(ind_loader)
+            loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in ind_loader] # temporary solution to get validation loss
             t1 = time.time()
             #print('Epoch {} - Eval time: {}'.format(epoch, int(t1-t2)))
             valid = scores.VALID.mean()
@@ -289,7 +290,6 @@ class GraphModel(Base):
             for _ in range(repeat):
                 for i, src in enumerate(loader):
                     trg = net(src.to(utils.dev)) 
-                    loss = [round(-l.mean().item(), 3) for l in net(src, is_train=True)] # temporary solution to get validation loss
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s
@@ -300,6 +300,6 @@ class GraphModel(Base):
         else:
             scores = method(smiles, frags=frags)
         #print('Eval env time:', time.time()-t0)
-        return frags, smiles, scores, loss
+        return frags, smiles, scores
 
 
