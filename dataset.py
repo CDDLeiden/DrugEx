@@ -195,7 +195,7 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
         smiles (list)             : list of SMILES
         out  (str)                : name of output file
         n_frags (int)             : how many leaf-fragments are generated per compound
-        n_combs (int)             : how many leaf-fragements can be combined per compound
+        n_combs (int)             : maximum number of leaf-fragments that are combined for each fragment-combinations
         method (str)              : whether to use Recap or BRICKS for fragmenting
         save_file (bool)          : save output file
     Returns:
@@ -261,7 +261,7 @@ def train_test_split(df, file_base, save_files=False):
     """
     frags = set(df.Frags)
     if len(frags) > int(1e5):
-        print('WARNING: to speed up the training, the test set size is 10 0000 instead of {}!'.format(int(len(frags)/)))
+        print('WARNING: to speed up the training, the test set size is 10 0000 instead of {}!'.format(len(frags)//10))
         test_in = df.Frags.drop_duplicates().sample(int(1e4))
     else:
         test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
@@ -390,7 +390,7 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-nf', '--n_frags', type=int, default=4,
                         help="Number of largest leaf-fragments used per compound")
     parser.add_argument('-nc', '--n_combs', type=int, default=None,
-                        help="Maximum number of combined leaf-fragments per compound. If None, default is {n_frags}")
+                        help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
 
     parser.add_argument('-vf', '--voc_file', type=str, default='voc',
                         help="Name for voc file, used to save voc tokens") 
