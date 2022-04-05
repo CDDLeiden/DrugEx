@@ -1,3 +1,4 @@
+import sys
 import torch
 import torch.nn as nn
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
@@ -109,8 +110,8 @@ class GraphModel(Base):
 
             # The part of growing
             for step in range(1, self.n_grows):
-                if step == 70:
-                    print(step)
+               # if step == 70:
+               #     print(step)
                 if is_end.all():
                     src[:, step, :] = 0
                     continue
@@ -245,54 +246,60 @@ class GraphModel(Base):
         log = open(out + '.log', 'w')
         best = float('inf')
         net = nn.DataParallel(self, device_ids=utils.devices)
-        for epoch in range(epochs):
+        t00 = time.time()
+        for epoch in tqdm(range(epochs)):
             t0 = time.time()
             for i, src in enumerate(train_loader):
-                # src = src.to(utils.dev)
-                # self.optim.zero_grad()
-                # loss = net(src, is_train=True)
-                # loss_value = [round(-l.mean().item(), 3) for l in loss]
-                # print(epoch, i, loss_value)
-                # loss = sum([-l.mean() for l in loss])
-                # loss.backward()
-                # self.optim.step()
-                # del loss
-                #
-                # if sum(loss_value) < best:
-                #     torch.save(self.state_dict(), out + '.pkg')
-                #     best = sum(loss_value)
-
-                # if i % 1000 != 0: continue
-                if i == 4:
-                    print('debug here')
-                print(epoch, i)
-                loss_value = 0
-                frags, smiles, scores = self.evaluate(ind_loader)
-                t1 = time.time()
-                log.write("Epoch: %d step: %d loss: %s time: %d\n" % (epoch, i, str(loss_value), t1-t0))
-                for j, smile in enumerate(smiles):
-                    log.write('%s\t%s\n' % (frags[j], smile))
-                log.flush()
-                t0 = t1
+                src = src.to(utils.dev)
+                self.optim.zero_grad()
+                loss = net(src, is_train=True)
+                loss_train = [round(-l.mean().item(), 3) for l in loss]
+                loss = sum([-l.mean() for l in loss])
+                loss.backward()
+                self.optim.step()
+                del loss
+                
+                if sum(loss_train) < best:
+                    torch.save(self.state_dict(), out + '.pkg')
+                    best = sum(loss_train)
+                    #print('New best - epoch : {} step : {} loss : {}'.format(epoch, i, loss_value))
+            
+            #t2 = time.time()
+            #print('Epoch {} - Train time: {}'.format(epoch, int(t2-t0)))
+            frags, smiles, scores = self.evaluate(ind_loader)
+            loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in ind_loader] # temporary solution to get validation loss
+            t1 = time.time()
+            #print('Epoch {} - Eval time: {}'.format(epoch, int(t1-t2)))
+            valid = scores.VALID.mean()
+            dt = int(t1-t0)
+            #print("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
+            log.write("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
+            for j, smile in enumerate(smiles):
+                log.write('%s\t%s\n' % (frags[j], smile))
+            log.flush()
+            t0 = t1
+            del loss_valid
+        
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=utils.devices)
         frags, smiles = [], []
+        #t0 = time.time()
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-                    if i == 4:
-                        print(i)
-                    trg = net(src.to(utils.dev))
+                    trg = net(src.to(utils.dev)) 
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s
+        #print('Eval net time:', time.time()-t0)
         if method is None:
             scores = utils.Env.check_smiles(smiles, frags=frags)
             scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
         else:
             scores = method(smiles, frags=frags)
+        #print('Eval env time:', time.time()-t0)
         return frags, smiles, scores
 
 

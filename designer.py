@@ -1,78 +1,110 @@
 #!/usr/bin/env python
-import torch
-from rdkit import rdBase
-from models import generator
-import utils
-import pandas as pd
-from models import GPT2Model, GraphModel
-from torch.utils.data import DataLoader
-import getopt
-import sys
 import os
+import json
+import torch
+import argparse
+import pandas as pd
+
+from rdkit import rdBase
+from torch.utils.data import DataLoader
+
+import utils
+from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
 
 rdBase.DisableLog('rdApp.error')
 torch.set_num_threads(1)
-BATCH_SIZE = 1024
+
+def DesignArgParser(txt=None):
+    """ Define and read command line arguments """
+    
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument('-b', '--base_dir', type=str, default='.',
+                        help="Base directory which contains folders 'data' and 'output'")
+    parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
+                        help="Name of final generator model file without .pkg extension")
+    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
+                        help="List of GPUs") 
+    parser.add_argument('-bs', '--batch_size', type=int, default=1048,
+                        help="Batch size")
+    parser.add_argument('-ng', '--no_git', action='store_true',
+                        help="If on, git hash is not retrieved")    
+    if txt:
+        args = parser.parse_args(txt)
+    else:
+        args = parser.parse_args()
+        
+    # Load parameters generator/environment from trained model
+    with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
+        g_params = json.load(f)
+    
+    args.algorithm = g_params['algorithm']
+    args.epsilon = g_params['epsilon']
+    args.beta = g_params['beta']
+    args.scheme = g_params['scheme']
+    args.env_alg = g_params['env_alg']
+    args.env_task = g_params['env_task']
+    args.active_targets = g_params['active_targets']
+    args.inactive_targets = g_params['inactive_targets']
+    args.activity_threshold = g_params['activity_threshold']
+    args.qed = g_params['qed']
+    args.input = g_params['input']
+    args.ra_score = g_params['ra_score']
+    args.ra_score_model = g_params['ra_score_model']
+    
+    args.targets = args.active_targets + args.inactive_targets
+
+    if args.no_git is False:
+        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    return args
+
+def Design(args):
+    
+    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+    torch.cuda.set_device(utils.devices[0])
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    
+    if not os.path.exists(args.base_dir + '/new_molecules'):
+        os.makedirs(args.base_dir + '/new_molecules')
+    
+    # Load data
+    if args.algorithm == 'graph':
+        voc = utils.VocGraph( args.base_dir + '/data/voc_graph.txt')
+        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_graph.txt')
+        data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
+        loader = DataLoader(data, batch_size=args.batch_size)  
+    else:
+        if args.algorithm == 'gpt':
+            voc = utils.Voc( args.base_dir + '/data/voc_smiles.txt', src_len=100, trg_len=100)
+        else:
+            voc = utils.VocSmiles( args.base_dir + '/data/voc_smiles.txt', max_len=100)
+        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_smi.txt')
+        data = voc.encode([seq.split(' ')[:-1] for seq in data.values])
+        loader = DataLoader(data, batch_size=args.batch_size)
+    
+    # Load finetuned model
+    gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
+    agent = SetGeneratorAlgorithm(voc, args.algorithm)
+    agent.load_state_dict(torch.load( gen_path, map_location=utils.dev))
+    
+    # Set up environment-predictor
+    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
+                                                       active_targets=args.active_targets, inactive_targets=args.inactive_targets,
+                                                       activity_threshold=args.activity_threshold, qed=args.qed, 
+                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
+    env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
+    
+    out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
+    
+    # Generate molecules and save them
+    frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
+    scores['Frags'], scores['SMILES'] = frags, smiles
+    scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
 
 if __name__ == "__main__":
-    opts, args = getopt.getopt(sys.argv[1:], "m:d:g:p:")
-    OPT = dict(opts)
-    # torch.cuda.set_device(0)
-    os.environ["CUDA_VISIBLE_DEVICES"] = OPT['-g'] if '-g' in OPT else "0, 1, 2, 3"
-    method = OPT['-m'] if '-m' in OPT else 'atom'
-    dataset = OPT['-d'] if '-d' in OPT else 'ligand_mf_brics'
-    path = OPT['-p'] if '-p' in OPT else dataset
-    utils.devices = [0]
-
-    if method in ['gpt']:
-        voc = utils.Voc('data/chembl_voc.txt', src_len=100, trg_len=100)
-    else:
-        voc = utils.VocSmiles('data/chembl_voc.txt', max_len=100)
-    if method == 'ved':
-        agent = generator.EncDec(voc, voc).to(utils.dev)
-    elif method == 'attn':
-        agent = generator.Seq2Seq(voc, voc).to(utils.dev)
-    elif method == 'gpt':
-        agent = GPT2Model(voc, n_layer=12).to(utils.dev)
-    else:
-        voc = utils.VocGraph('data/voc_atom.txt')
-        agent = GraphModel(voc_trg=voc)
-
-    for agent_path in ['benchmark/graph_PR_REG_OBJ1_0e+00.pkg', 'benchmark/graph_PR_REG_OBJ1_1e-01.pkg',
-                       'benchmark/graph_PR_REG_OBJ1_1e-02.pkg', 'benchmark/graph_PR_REG_OBJ1_1e-03.pkg',
-                       'benchmark/graph_PR_REG_OBJ1_1e-04.pkg', 'benchmark/graph_PR_REG_OBJ1_1e-05.pkg']:
-        # agent_path = 'output/%s_%s_256.pkg' % (path, method)
-        print(agent_path)
-        agent.load_state_dict(torch.load(agent_path))
-
-        z = 'REG'
-        keys = ['A2A']
-        A2A = utils.Predictor('output/env/RF_%s_CHEMBL251.pkg' % z, type=z)
-        QED = utils.Property('QED')
-
-        # Chose the desirability function
-        objs = [A2A, QED]
-
-        ths = [6.5, 0.0]
-
-        env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
-        if method in ['atom']:
-            data = pd.read_table('data/ligand_mf_brics_test.txt')
-            # data = data.sample(BATCH_SIZE * 10)
-            data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
-            loader = DataLoader(data, batch_size=BATCH_SIZE)
-
-            out = '%s.txt' % agent_path
-        else:
-            data = pd.read_table('data/%s_test.txt' % dataset).Input.drop_duplicates()
-            # data = data.sample(BATCH_SIZE * 10)
-            data = voc.encode([seq.split(' ')[:-1] for seq in data.values])
-            loader = DataLoader(data, batch_size=BATCH_SIZE)
-
-            out = agent_path + '.txt'
-        frags, smiles, scores = agent.evaluate(loader, repeat=10, method=env)
-        scores['Frags'] = frags
-        scores['Smiles'] = smiles
-        scores.to_csv(out, index=False, sep='\t')
+    
+    args = DesignArgParser()
+    Design(args)
