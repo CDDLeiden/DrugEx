@@ -62,7 +62,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front, 'CD' for 'PR' with crowding distance or 'PP' for 'PR' with perpendicular distance to reference directions")
+                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front or 'CD' for 'PR' with crowding distance")
 
     parser.add_argument('-et', '--env_task', type=str, default='REG',
                         help="Environment-predictor task: 'REG' or 'CLS'")
