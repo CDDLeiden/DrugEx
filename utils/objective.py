@@ -10,7 +10,7 @@ from rdkit import DataStructs
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
 from utils import sascorer
-from .nsgaii import similarity_sort, nsgaii_sort, nsgaiii_sort
+from .nsgaii import similarity_sort, nsgaii_sort
 from .fingerprints import get_fingerprint
 from . import modifier
 import joblib
