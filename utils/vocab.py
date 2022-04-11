@@ -5,6 +5,7 @@ from rdkit.Chem.MolStandardize import rdMolStandardize
 import numpy as np
 import pandas as pd
 import utils
+from typing import List, Iterable, Optional
 
 
 def clean_mol(smile, is_deep=True):
@@ -252,6 +253,11 @@ class VocSmiles:
     """A class for handling encoding/decoding from SMILES to an array of indices"""
 
     def __init__(self, init_from_file=None, max_len=100):
+        """
+        Args:
+            init_from_file: the file path of vocabulary containing all of tokens split by '\n'
+            max_len: the maximum number of tokens contained in one SMILES
+        """
         self.control = ('_', 'GO', 'EOS')
         self.words = list(self.control) + ['.']
         if init_from_file:
@@ -262,7 +268,15 @@ class VocSmiles:
         self.max_len = max_len
 
     def encode(self, input):
-        """Takes a list of characters (eg '[NH]') and encodes to array of indices"""
+        """
+        Takes a list of tokens (eg '[NH]') and encodes to array of indices
+        Args:
+            input: a list of SMILES squence represented as a series of tokens
+
+        Returns:
+            output (torch.LongTensor): a long tensor containing all of the indices of given tokens.
+        """
+
         output = torch.zeros(len(input), self.max_len).long()
         for i, seq in enumerate(input):
             # print(i, len(seq))
@@ -271,7 +285,13 @@ class VocSmiles:
         return output
 
     def decode(self, tensor, is_tk=True):
-        """Takes an array of indices and returns the corresponding SMILES"""
+        """Takes an array of indices and returns the corresponding SMILES
+        Args:
+            tensor(torch.LongTensor): a long tensor containing all of the indices of given tokens.
+
+        Returns:
+            smiles (str): a decoded smiles sequence.
+        """
         tokens = []
         for token in tensor:
             if not is_tk:
@@ -284,7 +304,13 @@ class VocSmiles:
         return smiles
 
     def split(self, smile):
-        """Takes a SMILES and return a list of characters/tokens"""
+        """Takes a SMILES and return a list of characters/tokens
+        Args:
+            smiles (str): a decoded smiles sequence.
+
+        Returns:
+            tokens (List): a list of tokens decoded from the SMILES sequence.
+        """
         regex = '(\[[^\[\]]{1,6}\])'
         smile = smile.replace('Cl', 'L').replace('Br', 'R')
         tokens = []
@@ -316,6 +342,7 @@ class VocSmiles:
             if not {'[Na]', '[Zn]'}.isdisjoint(token): continue
             fps[i, :] = self.encode(token)
         return fps
+        
     
 class TgtData():
     def __init__(self, seqs, ix, max_len=100):
@@ -339,3 +366,60 @@ class TgtData():
             collated_seq[i, :] = tgt
         return collated_ix, collated_seq
 
+
+#THESE FUNCTIONS WERE ADDED BY HELLE FROM:
+#   https://github.com/BenevolentAI/guacamol/blob/8247bbd5e927fbc3d328865d12cf83cb7019e2d6/guacamol/utils/data.py#L11
+# to solve AttributeError: module 'utils' has no attribute 'canonicalize_list'
+def canonicalize(smiles: str, include_stereocenters=True) -> Optional[str]:
+    """
+    Canonicalize the SMILES strings with RDKit.
+    The algorithm is detailed under https://pubs.acs.org/doi/full/10.1021/acs.jcim.5b00543
+    Args:
+        smiles: SMILES string to canonicalize
+        include_stereocenters: whether to keep the stereochemical information in the canonical SMILES string
+    Returns:
+        Canonicalized SMILES string, None if the molecule is invalid.
+    """
+
+    mol = Chem.MolFromSmiles(smiles)
+
+    if mol is not None:
+        return Chem.MolToSmiles(mol, isomericSmiles=include_stereocenters)
+    else:
+        return None
+
+def remove_duplicates(list_with_duplicates):
+    """
+    Removes the duplicates and keeps the ordering of the original list.
+    For duplicates, the first occurrence is kept and the later occurrences are ignored.
+    Args:
+        list_with_duplicates: list that possibly contains duplicates
+    Returns:
+        A list with no duplicates.
+    """
+
+    unique_set = set()
+    unique_list = []
+    for element in list_with_duplicates:
+        if element not in unique_set:
+            unique_set.add(element)
+            unique_list.append(element)
+
+    return unique_list
+
+def canonicalize_list(smiles_list: Iterable[str], include_stereocenters=True) -> List[str]:
+    """
+    Canonicalize a list of smiles. Filters out repetitions and removes corrupted molecules.
+    Args:
+        smiles_list: molecules as SMILES strings
+        include_stereocenters: whether to keep the stereochemical information in the canonical SMILES strings
+    Returns:
+        The canonicalized and filtered input smiles.
+    """
+
+    canonicalized_smiles = [canonicalize(smiles, include_stereocenters) for smiles in smiles_list]
+
+    # Remove None elements
+    canonicalized_smiles = [s for s in canonicalized_smiles if s is not None]
+
+    return remove_duplicates(canonicalized_smiles)

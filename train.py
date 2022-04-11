@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from lib2to3.refactor import get_fixers_from_package
 import os
 import sys
 import json
@@ -11,8 +12,8 @@ import pandas as pd
 from shutil import copy2
 from torch.utils.data import DataLoader, TensorDataset
 
-from models import generator, GPT2Model, GraphModel
-from models.explorer import SmilesExplorer, GraphExplorer
+from models import encoderdecoder, GPT2Model, GraphModel, single_network
+from models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -40,8 +41,8 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pr', '--prior_model', type=str, default=None,
                         help="Name of model (w/o .pkg extension) used for the prior in RL.")
     
-#     parser.add_argument('-v', '--version', type=int, default=3,
-#                         help="DrugEx version")
+    parser.add_argument('-v', '--version', type=int, default=3,
+                         help="DrugEx version")
     
     # General parameters
     parser.add_argument('-a', '--algorithm', type=str, default='graph',
@@ -61,7 +62,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front or 'CD' for 'PR' with crowding distance")
+                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front, 'CD' for 'PR' with crowding distance or 'PP' for 'PR' with perpendicular distance to reference directions")
 
     parser.add_argument('-et', '--env_task', type=str, default='REG',
                         help="Environment-predictor task: 'REG' or 'CLS'")
@@ -101,6 +102,9 @@ def GeneratorArgParser(txt=None):
     # Setting output file prefix from input file
     if args.output is None:
         args.output = args.input.split('_')[0]
+
+    if args.version == 2:
+        args.algorithm = 'rnn'
     
 #     if args.mode == 'FT':
 #         #In case of FT setting some parameters from PT parameters
@@ -170,19 +174,33 @@ def DataPreparationSmiles(base_dir, input_prefix, batch_size=128):
     else:
         voc = utils.VocSmiles( data_path + 'voc_smiles.txt', max_len=100)
 
-    data = pd.read_table( data_path + '%s_train_smi.txt' % input_prefix)
-    data_in = voc.encode([seq.split(' ') for seq in data.Input.values])
-    data_out = voc.encode([seq.split(' ') for seq in data.Output.values])
-    data_set = TensorDataset(data_in, data_out)
-    train_loader = DataLoader(data_set, batch_size=batch_size, shuffle=True)
-    
+    if args.algorithm == 'rnn':
+        data = pd.read_table( data_path + '%s.txt' % input_prefix)
+        # split data into train and test set (for dnn originally only done during fine-tuning)
+        # test size is 10% of training, with a maximum of 10 000 
+        test_size = min(len(data) // 10, int(1e4))
+        if len(data) // 10 > int(1e4):
+            print('WARNING: to speed up the training, the test set is reduced to a random sample of 10 000 compounds from the original test !')
+        test = data.sample(test_size).Token
+        train = data.drop(test.index).Token
 
-    test = pd.read_table( data_path + '%s_test_smi.txt' % input_prefix)
-    test = test.Input.drop_duplicates()
-    #test = test.sample(args.batch_size * 10).values
-    test_set = voc.encode([seq.split(' ') for seq in test])
-    test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
-    valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
+        train_set = torch.LongTensor(voc.encode([seq.split(' ') for seq in train]))
+        test_set = torch.LongTensor(voc.encode([seq.split(' ') for seq in test]))
+        valid_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
+    else:
+        train = pd.read_table( data_path + '%s_train_smi.txt' % input_prefix)
+        train_in = voc.encode([seq.split(' ') for seq in train.Input.values])
+        train_out = voc.encode([seq.split(' ') for seq in train.Output.values])
+        train_set = TensorDataset(train_in, train_out)
+
+        test = pd.read_table( data_path + '%s_test_smi.txt' % input_prefix)
+        test = test.Input.drop_duplicates()
+        #test = test.sample(args.batch_size * 10).values
+        test_set = voc.encode([seq.split(' ') for seq in test])
+        test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
+        valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
+
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     
     return voc, train_loader, valid_loader
 
@@ -205,6 +223,8 @@ def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme
     
     if args.algorithm == 'graph':
         evolver = GraphExplorer(agent, mutate=prior)
+    elif args.algorithm == 'rnn':
+        evolver = SmilesExplorerNoFrag(agent, prior, agent)
     else:
         evolver = SmilesExplorer(agent, mutate=prior)
         
@@ -309,13 +329,16 @@ def SetGeneratorAlgorithm(voc, alg):
     """
     
     if alg == 'ved':
-        agent = generator.EncDec(voc, voc).to(utils.dev)
+        agent = encoderdecoder.EncDec(voc, voc).to(utils.dev)
     elif alg == 'attn':
-        agent = generator.Seq2Seq(voc, voc).to(utils.dev)
+        agent = encoderdecoder.Seq2Seq(voc, voc).to(utils.dev)
     elif alg == 'gpt':
         agent = GPT2Model(voc, n_layer=12).to(utils.dev)
     elif alg == 'graph':
         agent = GraphModel(voc).to(utils.dev)
+    elif alg == 'rnn':
+        ## add argument for is_lstm
+        agent = single_network.RNN(voc, is_lstm=True)
     
     return agent
 
@@ -395,7 +418,7 @@ def RLTrain(args):
     rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
                                                         args.scheme, str(args.epsilon)]) + 'e'
                                                     
-    
+    ## why need input for RL? probably because need input in v3 to generate sequences
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
         voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size)
@@ -409,6 +432,7 @@ def RLTrain(args):
     prior.load_state_dict(torch.load( pr_path, map_location=utils.dev))  
 
     # Initialize evolver algorithm
+    ## first difference for v2 needs to be adapted
     evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme)
     
     # Create the desirability function
@@ -429,10 +453,16 @@ def RLTrain(args):
 
     # import evolve as agent
     evolver.out = rl_path #root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
-    evolver.fit(train_loader, test_loader=valid_loader, epochs=args.epochs)
+    if args.version == 3:
+        evolver.fit(train_loader, test_loader=valid_loader, epochs=args.epochs)
+    else:
+        ## second difference for v2 needs to be adapted
+        evolver.fit(epochs=args.epochs)
+    
     
     with open(rl_path + '.json', 'w') as fp:
         json.dump(vars(args), fp, indent=4)
+
 
 def TrainGenerator(args):
     
@@ -454,7 +484,7 @@ def TrainGenerator(args):
     if not os.path.exists(args.base_dir + '/generators'):
         os.makedirs(args.base_dir + '/generators')  
         
-    with open(args.base_dir + '/generators/{}_{}_args.json'.format(args.output, args.algorithm), 'w') as f:
+    with open(args.base_dir + '/generators/{}_{}.json'.format(args.output, args.algorithm), 'w') as f:
         json.dump(vars(args), f)
     
     if args.mode == 'PT':
