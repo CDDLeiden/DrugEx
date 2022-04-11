@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
-from models.generator import Base
+from models.encoderdecoder import Base
 from utils import ScheduledOptim
 from torch import optim
 from torch.nn import functional as F

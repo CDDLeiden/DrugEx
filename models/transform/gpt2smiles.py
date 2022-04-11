@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.init import kaiming_normal_
 from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
 from .layer import pad_mask, tri_mask
-from models.generator import Base
+from models.encoderdecoder import Base
 from utils import ScheduledOptim
 from torch import optim
 import utils

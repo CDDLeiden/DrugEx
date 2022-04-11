@@ -10,7 +10,7 @@ from rdkit import DataStructs
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
 from utils import sascorer
-from .nsgaii import similarity_sort, nsgaii_sort
+from .nsgaii import similarity_sort, nsgaii_sort, nsgaiii_sort
 from .fingerprints import get_fingerprint
 from . import modifier
 import joblib
@@ -319,8 +319,10 @@ class Env:
         Args:
             smiles (List):  a list of SMILES-based molecules
             scheme (str): the label of different rewarding schemes, including
-                'WS': weighted sum, 'PR': Pareto ranking with Tanimoto distance,
-                and 'CD': Pareto ranking with crowding distance.
+                'WS': weighted sum
+                'PR': Pareto ranking with Tanimoto distance,
+                'CD': Pareto ranking with crowding distance and
+                'PP': Pareto ranking with perpendicular distance to reference directions
 
         Returns:
             rewards (np.ndarray): n-d array in which the element is the reward for each molecule, and
@@ -342,6 +344,10 @@ class Env:
         elif scheme == 'CD':
             rewards = np.zeros((len(smiles), 1))
             ranks = nsgaii_sort(preds, is_gpu=True)
+            rewards[ranks, 0] = np.arange(len(preds)) / len(preds)
+        elif scheme == 'PP':
+            rewards = np.zeros((len(smiles), 1))
+            ranks = nsgaiii_sort(preds, is_gpu=False)
             rewards[ranks, 0] = np.arange(len(preds)) / len(preds)
         else:
             weight = ((preds < self.ths).mean(axis=0, keepdims=True) + 0.01) / \

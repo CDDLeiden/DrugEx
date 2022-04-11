@@ -5,7 +5,7 @@ from torch import optim
 from .layer import EncoderLayer, DecoderLayer, PositionalEmbedding
 from .layer import pad_mask, tri_mask
 import utils
-from models.generator import Base
+from models.encoderdecoder import Base
 
 
 class Encoder(nn.Module):
