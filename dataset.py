@@ -3,15 +3,17 @@ import pandas as pd
 from rdkit import Chem
 from rdkit import rdBase
 from rdkit.Chem import Recap, BRICS
-from rdkit.Chem.MolStandardize import rdMolStandardize
 from tqdm import tqdm
+
+from drugex.molecules.converters.standardizers import DrExStandardizer
+from drugex.molecules.files.suppliers import CSVSupplier, SDFSupplier
+from drugex.molecules.suppliers import StandardizedSupplier
 from utils import VocSmiles, VocGraph
 import utils
 import re
 import numpy as np
 from itertools import combinations
-import gzip
-import getopt, sys
+
 rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
@@ -32,59 +34,17 @@ def load_molecules(base_dir, input_file):
     
     file_path = base_dir + '/data/' + input_file
     
-    if input_file.endswith('sdf.gz'):
-        # read molecules from file
-        inf = gzip.open(file_path)
-        mols = Chem.ForwardSDMolSupplier(inf)
+    if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
+        mols = SDFSupplier(input_file)
     else:
-        # read molecules from file and drop duplicate SMILES
-        df = pd.read_csv(file_path, sep='\t' if '.tsv' in input_file else ',',
-                         usecols= lambda x : x.upper() in ['SMILES']) 
-        #df.columns.str.upper()
-        df = df.SMILES.dropna().drop_duplicates()
-        mols = [Chem.MolFromSmiles(s) for s in df]    
+        mols = CSVSupplier(
+            file_path,
+            mol_col='CANONICAL_SMILES',
+            sep='\t',
+            hide_duplicates=True
+        )
         
     return mols
-
-def standardize_mol(mols):
-    """
-    Standardizes SMILES and removes fragments
-    Arguments:
-        mols (lst)                : list of rdkit-molecules
-    Returns:
-        smiles (set)              : set of SMILES
-    """
-
-    print('Standardizing molecules...')
-    
-    charger = rdMolStandardize.Uncharger()
-    chooser = rdMolStandardize.LargestFragmentChooser()
-    disconnector = rdMolStandardize.MetalDisconnector()
-    normalizer = rdMolStandardize.Normalizer()
-    smiles = set()
-    carbon = Chem.MolFromSmarts('[#6]')
-    salts = Chem.MolFromSmarts('[Na,Zn]')
-    for mol in tqdm(mols):
-        try:
-            mol = disconnector.Disconnect(mol)
-            mol = normalizer.normalize(mol)
-            mol = chooser.choose(mol)
-            mol = charger.uncharge(mol)
-            mol = disconnector.Disconnect(mol)
-            mol = normalizer.normalize(mol)
-            smileR = Chem.MolToSmiles(mol, 0)
-            # remove SMILES that do not contain carbon
-            if len(mol.GetSubstructMatches(carbon)) == 0:
-                continue
-            # remove SMILES that still contain salts
-            if len(mol.GetSubstructMatches(salts)) > 0:
-                continue
-            smiles.add(Chem.CanonSmiles(smileR))
-        except:
-            print('Parsing Error:', Chem.MolToSmiles(mol))
-
-    return smiles
-
 
 def corpus(base_dir, smiles, output, voc_file, save_voc):
     """
@@ -428,9 +388,12 @@ def Dataset(args):
     
                         
     # load molecules
-    mols = load_molecules(args.base_dir, args.input)              
-    # standardize smiles and remove salts
-    smiles = standardize_mol(mols)
+    mols = load_molecules(args.base_dir, args.input)
+
+    smiles = StandardizedSupplier(
+        mols,
+        standardizer=DrExStandardizer()
+    )
 
     if args.no_frags:
         if args.mol_type == 'graph':
