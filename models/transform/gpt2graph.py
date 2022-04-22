@@ -247,6 +247,9 @@ class GraphModel(Base):
         best = float('inf')
         net = nn.DataParallel(self, device_ids=utils.devices)
         t00 = time.time()
+        last_save = -1
+        # threshold for number of epochs without change that will trigger early stopping
+        max_interval = 100
         for epoch in tqdm(range(epochs)):
             t0 = time.time()
             for i, src in enumerate(train_loader):
@@ -262,6 +265,7 @@ class GraphModel(Base):
                 if sum(loss_train) < best:
                     torch.save(self.state_dict(), out + '.pkg')
                     best = sum(loss_train)
+                    last_save = epoch
                     #print('New best - epoch : {} step : {} loss : {}'.format(epoch, i, loss_value))
             
             #t2 = time.time()
@@ -279,6 +283,8 @@ class GraphModel(Base):
             log.flush()
             t0 = t1
             del loss_valid
+
+            if epoch - last_save > max_interval: break
         
         log.close()
 
