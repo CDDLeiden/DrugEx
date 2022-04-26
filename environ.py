@@ -695,7 +695,7 @@ def Environment(args):
         args.learning_rate = 1e-4 if reg else 1e-5
         for target in args.targets:
             #prepare dataset for training QSAR model
-            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size)
+            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size, th = args.activity_threshold, keep_low_quality=args.keep_low_quality)
             mydataset.split_dataset()
             
             for model_type in args.model_types:
