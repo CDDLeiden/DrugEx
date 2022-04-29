@@ -26,6 +26,10 @@ def DesignArgParser(txt=None):
                         help="Base directory which contains folders 'data' and 'output'")
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
+    parser.add_argument('-i', '--input', type=str, default='ligand_4:4_brics_test',
+                        help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
+    parser.add_argument('-n', '--num', type=int, default=1,
+                        help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
@@ -51,7 +55,6 @@ def DesignArgParser(txt=None):
     args.inactive_targets = g_params['inactive_targets']
     args.activity_threshold = g_params['activity_threshold']
     args.qed = g_params['qed']
-    args.input = g_params['input']
     args.ra_score = g_params['ra_score']
     args.ra_score_model = g_params['ra_score_model']
     
@@ -82,11 +85,11 @@ def Design(args):
     
     # Load data (only done for encoder-decoder models)
     if args.algorithm == 'graph':
-        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_graph.txt')
+        data = pd.read_table(args.base_dir + '/data/' + args.input + '_graph.txt')
         data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
         loader = DataLoader(data, batch_size=args.batch_size)  
     elif args.algorithm != 'rnn':
-        data = pd.read_table(args.base_dir + '/data/' + args.input + '_test_smi.txt')
+        data = pd.read_table(args.base_dir + '/data/' + args.input + '_smi.txt')
         data = voc.encode([seq.split(' ')[:-1] for seq in data.values])
         loader = DataLoader(data, batch_size=args.batch_size)
     
@@ -106,11 +109,11 @@ def Design(args):
     # Generate molecules and save them
     if args.algorithm == 'rnn':
         df = pd.DataFrame()
-        df['Smiles'], scores = agent.evaluate(args.batch_size, repeat = 1, method=env)
+        df['Smiles'], scores = agent.evaluate(args.num, repeat = 1, method=env)
         scores = pd.concat([df, scores],axis=1)
     else:
         # we are currently not saving the generated smiles (for encoder decoder models) only their scores
-        frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
+        frags, smiles, scores = agent.evaluate(loader, repeat=args.num, method=env)
         scores['Frags'], scores['SMILES'] = frags, smiles
     scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
