@@ -130,6 +130,9 @@ class RNN(nn.Module):
         optimizer = optim.Adam(self.parameters(), lr=lr)
         log = open(out + '.log', 'w')
         best_error = np.inf
+        last_save = -1
+        # threshold for number of epochs without change that will trigger early stopping
+        max_interval = 100
         for epoch in range(epochs):
             for i, batch in enumerate(loader_train):
                 optimizer.zero_grad()
@@ -154,14 +157,17 @@ class RNN(nn.Module):
                 if loss_valid < best_error:
                     torch.save(self.state_dict(), out + '.pkg')
                     best_error = loss_valid
+                    last_save = epoch
                 info += ' loss_valid: %.3f' % loss_valid
             elif error < best_error:
                 torch.save(self.state_dict(), out + '.pkg')
                 best_error = error
+                last_save = epoch
             print(info, file=log)
             for i, smile in enumerate(smiles):
                 print('%d\t%s' % (valids[i], smile), file=log)
             print(info)
+            if epoch - last_save > max_interval: break
         log.close()
 
 

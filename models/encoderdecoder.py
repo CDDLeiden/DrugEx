@@ -11,6 +11,9 @@ class Base(nn.Module):
         log = open(out + '.log', 'w')
         best = 0.
         net = nn.DataParallel(self, device_ids=utils.devices)
+        last_save = -1
+        # threshold for number of epochs without change that will trigger early stopping
+        max_interval = 100
         for epoch in range(epochs):
             t0 = time.time()
             for i, (src, trg) in enumerate(pair_loader):
@@ -38,7 +41,9 @@ class Base(nn.Module):
                 if best <= desire:
                     torch.save(self.state_dict(), out + '.pkg')
                     best = desire
+                    last_save = epoch
                 log.flush()
+            if epoch - last_save > max_interval: break
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
