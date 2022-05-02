@@ -52,7 +52,6 @@ class VocabularySequence(Vocabulary, ABC):
         pass
 
     def toFile(self, path):
-        print('Saving vocabulary...')
         log = open(path, 'w')
         log.write('\n'.join(self.words))
         log.close()
