@@ -5,10 +5,13 @@ from rdkit import rdBase
 from rdkit.Chem import Recap, BRICS
 from tqdm import tqdm
 
+from drugex.corpus.corpus import SequenceCorpus
+from drugex.corpus.writers import SequenceFileWriter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import CSVSupplier, SDFSupplier
 from drugex.molecules.suppliers import StandardizedSupplier
-from utils import VocSmiles, VocGraph
+from utils import VocGraph
+from drugex.corpus.vocabulary import VocSmiles
 import utils
 import re
 import numpy as np
@@ -35,7 +38,7 @@ def load_molecules(base_dir, input_file):
     file_path = base_dir + '/data/' + input_file
     
     if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
-        mols = SDFSupplier(input_file)
+        mols = SDFSupplier(input_file, hide_duplicates=True)
     else:
         mols = CSVSupplier(
             file_path,
@@ -58,34 +61,18 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     """
     
     print('Creating the corpus...')
-    voc = VocSmiles()
-    # set of unique tokens
-    words = set()
-    # original SMILES
-    canons = []
-    # tokenized SMILES
-    tokens = []
-    for smile in tqdm(smiles):
-        token = voc.split(smile)
-        # keep SMILES within certain length
-        if 10 < len(token) <= 100:
-            words.update(token)
-            canons.append(smile)
-            tokens.append(' '.join(token))
+    corpus_smiles = SequenceCorpus(
+        smiles,
+        out_writer=SequenceFileWriter(
+            base_dir + '/data/' + output + '_corpus.txt'
+        )
+    )
+    corpus_smiles.get()
     
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        log = open(base_dir + '/data/%s_smiles.txt' % voc_file, 'w')
-        log.write('\n'.join(sorted(words)))
-        log.close()
-
-    log = pd.DataFrame()
-    log['Smiles'] = canons
-    log['Token'] = tokens
-    log.drop_duplicates(subset='Smiles')
-    log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
-
+        corpus_smiles.getVoc().toFile(base_dir + '/data/%s_smiles.txt' % voc_file)
 
 # def graph_corpus(input, output, suffix='sdf'):
 #     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
@@ -417,6 +404,8 @@ def Dataset(args):
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
         pair_encode(df_test, args.mol_type, file_base + '_test', 
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
+
+    print("Dataset finished.")
 
 if __name__ == '__main__':
 

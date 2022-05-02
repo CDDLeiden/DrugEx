@@ -8,20 +8,20 @@ import utils
 from typing import List, Iterable, Optional
 
 
-def clean_mol(smile, is_deep=True):
-    smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
-        .replace('[N]', 'N').replace('[B]', 'B') \
-        .replace('[2H]', '[H]').replace('[3H]', '[H]')
-    try:
-        mol = Chem.MolFromSmiles(smile)
-        if is_deep:
-            mol = rdMolStandardize.ChargeParent(mol)
-        smileR = Chem.MolToSmiles(mol, 0)
-        smile = Chem.CanonSmiles(smileR)
-    except:
-        print('Parsing Error:', smile)
-        smile = None
-    return smile
+# def clean_mol(smile, is_deep=True):
+#     smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
+#         .replace('[N]', 'N').replace('[B]', 'B') \
+#         .replace('[2H]', '[H]').replace('[3H]', '[H]')
+#     try:
+#         mol = Chem.MolFromSmiles(smile)
+#         if is_deep:
+#             mol = rdMolStandardize.ChargeParent(mol)
+#         smileR = Chem.MolToSmiles(mol, 0)
+#         smile = Chem.CanonSmiles(smileR)
+#     except:
+#         print('Parsing Error:', smile)
+#         smile = None
+#     return smile
 
 
 class Voc(object):
@@ -248,102 +248,7 @@ class VocTgt:
                 output[i, j] = self.tk2ix[res]
         return output
 
-    
-class VocSmiles:
-    """A class for handling encoding/decoding from SMILES to an array of indices"""
 
-    def __init__(self, init_from_file=None, max_len=100):
-        """
-        Args:
-            init_from_file: the file path of vocabulary containing all of tokens split by '\n'
-            max_len: the maximum number of tokens contained in one SMILES
-        """
-        self.control = ('_', 'GO', 'EOS')
-        self.words = list(self.control) + ['.']
-        if init_from_file:
-            self.words += self.init_from_file(init_from_file)
-        self.size = len(self.words)
-        self.tk2ix = dict(zip(self.words, range(len(self.words))))
-        self.ix2tk = {v: k for k, v in self.tk2ix.items()}
-        self.max_len = max_len
-
-    def encode(self, input):
-        """
-        Takes a list of tokens (eg '[NH]') and encodes to array of indices
-        Args:
-            input: a list of SMILES squence represented as a series of tokens
-
-        Returns:
-            output (torch.LongTensor): a long tensor containing all of the indices of given tokens.
-        """
-
-        output = torch.zeros(len(input), self.max_len).long()
-        for i, seq in enumerate(input):
-            # print(i, len(seq))
-            for j, char in enumerate(seq):
-                output[i, j] = self.tk2ix[char]
-        return output
-
-    def decode(self, tensor, is_tk=True):
-        """Takes an array of indices and returns the corresponding SMILES
-        Args:
-            tensor(torch.LongTensor): a long tensor containing all of the indices of given tokens.
-
-        Returns:
-            smiles (str): a decoded smiles sequence.
-        """
-        tokens = []
-        for token in tensor:
-            if not is_tk:
-                token = self.ix2tk[int(token)]
-            if token == 'EOS': break
-            if token in self.control: continue
-            tokens.append(token)
-        smiles = "".join(tokens)
-        smiles = smiles.replace('L', 'Cl').replace('R', 'Br')
-        return smiles
-
-    def split(self, smile):
-        """Takes a SMILES and return a list of characters/tokens
-        Args:
-            smiles (str): a decoded smiles sequence.
-
-        Returns:
-            tokens (List): a list of tokens decoded from the SMILES sequence.
-        """
-        regex = '(\[[^\[\]]{1,6}\])'
-        smile = smile.replace('Cl', 'L').replace('Br', 'R')
-        tokens = []
-        for word in re.split(regex, smile):
-            if word == '' or word is None: continue
-            if word.startswith('['):
-                tokens.append(word)
-            else:
-                for i, char in enumerate(word):
-                    tokens.append(char)
-        return tokens + ['EOS']
-
-    def init_from_file(self, file):
-        """Takes a file containing \n separated characters to initialize the vocabulary"""
-        words = []
-        with open(file, 'r') as f:
-            chars = f.read().split()
-            words += sorted(set(chars))
-        return words
-
-    def calc_voc_fp(self, smiles, prefix=None):
-        fps = np.zeros((len(smiles), self.max_len), dtype=np.long)
-        for i, smile in enumerate(smiles):
-            smile = clean_mol(smile)
-            token = self.split(smile)
-            if prefix is not None: token = [prefix] + token
-            if len(token) > self.max_len: continue
-            if {'C', 'c'}.isdisjoint(token): continue
-            if not {'[Na]', '[Zn]'}.isdisjoint(token): continue
-            fps[i, :] = self.encode(token)
-        return fps
-        
-    
 class TgtData():
     def __init__(self, seqs, ix, max_len=100):
         self.max_len = max_len

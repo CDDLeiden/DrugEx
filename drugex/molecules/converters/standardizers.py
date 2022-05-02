@@ -8,7 +8,7 @@ from rdkit import Chem
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 from drugex.molecules.converters.default import DrExToSMILES
-from drugex.molecules.converters.interfaces import MolConverter
+from drugex.molecules.converters.interfaces import MolConverter, ConversionException
 from drugex.molecules.mol import DrExMol
 
 
@@ -54,5 +54,5 @@ class DrExStandardizer(MolConverter):
             raise StandardizationException(exp)
 
 
-class StandardizationException(Exception):
+class StandardizationException(ConversionException):
     pass

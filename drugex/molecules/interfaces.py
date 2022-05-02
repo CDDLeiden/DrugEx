@@ -30,6 +30,9 @@ class Molecule(ABC):
     def __eq__(self, other):
         return self.getUniqueID() == other.getUniqueID()
 
+    def __str__(self):
+        return f"{self.__class__} (ID: {self.getUniqueID()})"
+
     @abstractmethod
     def getUniqueID(self):
         pass
@@ -59,7 +62,7 @@ class MolSupplier(ABC):
         try:
             mol = self.convertMol(mol_data)
         except ConversionException as exp:
-            logging.warning(f"An exception occurred when processing molecule data: {mol_data} {exp}")
+            logging.warning(f"An exception occurred when converting molecule data: {mol_data}\n Cause: {exp}")
             return None
 
         # annotate the instance with metadata
@@ -123,6 +126,9 @@ class MolSupplier(ABC):
 
         """
         pass
+
+    def get(self):
+        return [x for x in self]
 
 
 class BaseMolSupplier(MolSupplier, ABC):
