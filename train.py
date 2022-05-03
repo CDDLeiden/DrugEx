@@ -95,9 +95,9 @@ def GeneratorArgParser(txt=None):
     # Default input file prefix in case of pretraining and finetuning
     if args.input is None:
         if args.mode == 'PT':
-            args.input = 'chembl_mf_brics'
+            args.input = 'chembl_4:4_brics'
         else:
-            args.input = 'ligand_mf_brics'
+            args.input = 'ligand_4:4_brics'
             
     # Setting output file prefix from input file
     if args.output is None:
