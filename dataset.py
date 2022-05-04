@@ -311,7 +311,6 @@ def graph_encode(base_dir, smiles, output_file):
     # create columns for fragments
     col = ['C%d' % d for d in range(voc.max_len*5)]
     codes = []
-    print(smiles)
     large = max(smiles, key=len)
     smiles.remove(large)
     mol = Chem.MolFromSmiles(large)
@@ -320,14 +319,12 @@ def graph_encode(base_dir, smiles, output_file):
         raise ValueError("To create dataset largest smiles has to have less than 75 bonds'")
 
     for smile in smiles:
-        output = voc.encode([large], smile)
+        output = voc.encode([large], [smile])
         f, s = voc.decode(output)
-
         assert large == s[0]
         code = output[0].reshape(-1).tolist()
         codes.append(code)
         
-    print(codes)
     codes = pd.DataFrame(codes, columns=col)
     codes.to_csv('%s/data/%s_graph.txt' % (base_dir, output_file), sep='\t', index=False)
 
@@ -468,7 +465,6 @@ def Dataset(args):
     mols = load_molecules(args.base_dir, args.input)              
     # standardize smiles and remove salts
     smiles = standardize_mol(mols)
-
     if args.no_frags:
         if args.mol_type == 'graph':
             graph_encode(args.base_dir, smiles, args.output)
