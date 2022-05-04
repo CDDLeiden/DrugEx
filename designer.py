@@ -7,8 +7,8 @@ import pandas as pd
 
 from rdkit import rdBase
 from torch.utils.data import DataLoader
-from models import single_network
-from tqdm import tqdm
+
+import math
 
 import utils
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
@@ -109,7 +109,11 @@ def Design(args):
     # Generate molecules and save them
     if args.algorithm == 'rnn':
         df = pd.DataFrame()
-        df['Smiles'], scores = agent.evaluate(args.num, repeat = 1, method=env)
+        repeat = 1
+        batch_size = min(args.num, args.batch_size)
+        if args.num > 1048:
+            repeat = math.ceil(args.num / batch_size)
+        df['Smiles'], scores = agent.evaluate(batch_size, repeat = repeat, method=env)
         scores = pd.concat([df, scores],axis=1)
     else:
         # we are currently not saving the generated smiles (for encoder decoder models) only their scores
