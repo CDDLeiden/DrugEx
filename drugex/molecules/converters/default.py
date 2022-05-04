@@ -56,3 +56,8 @@ class CleanSMILES(MolConverter):
         except:
             raise ConversionException(f"Cleanup error: {orig_smile}")
         return smile
+
+class Identity(MolConverter):
+
+    def __call__(self, item):
+        return item

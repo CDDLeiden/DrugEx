@@ -34,7 +34,8 @@ class SequenceCorpus(Corpus):
             token = self.vocabulary.splitSequence(seq)
 
         if token:
-            self._unique.add(seq)
-            return f"{seq}\t{' '.join(token)}"
+            if self.checkUnique:
+                self._unique.add(seq)
+            return f"{seq}\t{' '.join(token)}\n"
         else:
             return None

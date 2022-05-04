@@ -54,5 +54,5 @@ class CorpusTest(TestCase):
         with open(out_file, "r", encoding="utf-8") as out:
             next(out)
             for idx,line in enumerate(out):
-                self.assertTrue(line.rstrip() == lines[idx])
+                self.assertTrue(line == lines[idx])
 

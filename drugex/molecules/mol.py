@@ -23,20 +23,20 @@ class DrExMol(Molecule):
         self.canonical_smiles = identifier
         if not self.canonical_smiles:
             self.canonical_smiles = Chem.MolToSmiles(rd_mol, False, False, -1, True, False, False, False)
+        self.annotations = dict()
 
     @property
     def smiles(self):
         return self.canonical_smiles
 
     def annotate(self, key, value):
-        self.rd_mol.SetProp(key, value)
+        self.annotations[key] = value
 
     def getAnnotation(self, key):
-        return self.rd_mol.GetProp(key)
+        return self.annotations[key]
 
     def getMetadata(self):
-        props = self.rd_mol.GetPropNames()
-        return  {key : self.rd_mol.GetProp(key) for key in props}
+        return self.annotations
 
     def getUniqueID(self):
         return self.canonical_smiles

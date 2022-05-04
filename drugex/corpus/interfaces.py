@@ -87,7 +87,7 @@ class CorpusWriter(ABC):
 class Corpus(MolSupplier, ABC):
 
     def __init__(self, molecules, out_writer=None):
-        self.molecules = molecules
+        self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
         self.outWriter = out_writer
 
     def next(self):
