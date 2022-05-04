@@ -7,9 +7,13 @@ On: 12.04.22, 15:07
 import os
 from unittest import TestCase
 
+import pandas as pd
+
 from drugex.molecules.files.suppliers import CSVSupplier, SDFSupplier
 from drugex.molecules.files.interfaces import FileParseException
 from drugex.molecules.mol import DrExMol
+from drugex.molecules.parallel import ParallelSupplierEvaluator
+from drugex.molecules.suppliers import DataFrameSupplier
 
 
 class TestFileParsers(TestCase):
@@ -91,3 +95,31 @@ class TestFileParsers(TestCase):
         for idx,mol in enumerate(mols):
             self.assertTrue(isinstance(mol, DrExMol))
 
+    def test_df(self):
+        df = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0)
+        cols = ("LOGP", "MWT",)
+        df_supplier = DataFrameSupplier(df, mol_col="CANONICAL_SMILES", extra_cols=cols)
+
+        for mol in df_supplier:
+            self.assertTrue(isinstance(mol, DrExMol))
+            for col in cols:
+                self.assertTrue(mol.getAnnotation(col))
+                self.assertTrue(col in mol.getMetadata())
+
+    def test_parallel(self):
+        df = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0)
+        cols = ("LOGP", "MWT",)
+        para_supplier = ParallelSupplierEvaluator(
+            DataFrameSupplier,
+            n_proc=2,
+            chunks=int(df.shape[0] / 2),
+            kwargs={"mol_col" : "CANONICAL_SMILES", "extra_cols": cols}
+        )
+
+        results = para_supplier.get(df)
+        self.assertTrue(len(results) == 10)
+        for mol in results:
+            self.assertTrue(isinstance(mol, DrExMol))
+            for col in cols:
+                self.assertTrue(mol.getAnnotation(col))
+                self.assertTrue(col in mol.getMetadata())

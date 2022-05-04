@@ -30,6 +30,9 @@ class Molecule(ABC):
     def __eq__(self, other):
         return self.getUniqueID() == other.getUniqueID()
 
+    def __hash__(self):
+        return hash(self.getUniqueID())
+
     def __str__(self):
         return f"{self.__class__} (ID: {self.getUniqueID()})"
 

@@ -6,10 +6,11 @@ from rdkit.Chem import Recap, BRICS
 from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
-from drugex.corpus.writers import SequenceFileWriter
+from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.standardizers import DrExStandardizer
-from drugex.molecules.files.suppliers import CSVSupplier, SDFSupplier
-from drugex.molecules.suppliers import StandardizedSupplier
+from drugex.molecules.files.suppliers import SDFSupplier
+from drugex.molecules.parallel import ParallelSupplierEvaluator
+from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from utils import VocGraph
 from drugex.corpus.vocabulary import VocSmiles
 import utils
@@ -30,22 +31,32 @@ def load_molecules(base_dir, input_file):
         base_dir (str)            : base directory, needs to contain a folder data with input file
         input_file  (str)         : file containing SMILES, can be 'sdf.gz' or (compressed) 'tsv' or 'csv' file
     Returns:
-        mols (lst)                : list of rdkit-molecules
+        mols (lst)                : list of SMILES extracted from input_file
     """
     
     print('Loading molecules...')
     
     file_path = base_dir + '/data/' + input_file
-    
+
     if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
-        mols = SDFSupplier(input_file, hide_duplicates=True)
+        # TODO: could be parallel as well
+        mols = SDFSupplier(file_path, hide_duplicates=True)
+        mols = [x.smiles for x in mols.get()]
     else:
-        mols = CSVSupplier(
-            file_path,
-            mol_col='CANONICAL_SMILES',
-            sep='\t',
-            hide_duplicates=True
+        df = pd.read_csv(file_path, sep="\t", header=0)
+        supplier = ParallelSupplierEvaluator(
+            DataFrameSupplier,
+            # n_proc=4,
+            # chunks=df.shape[0] // 10000,
+            kwargs={"mol_col" : "CANONICAL_SMILES", "converter" : Identity()}
         )
+        mols = supplier.get(df)
+        # mols = CSVSupplier(
+        #     file_path,
+        #     mol_col='CANONICAL_SMILES',
+        #     sep='\t',
+        #     hide_duplicates=True
+        # )
         
     return mols
 
@@ -61,18 +72,26 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     """
     
     print('Creating the corpus...')
-    corpus_smiles = SequenceCorpus(
-        smiles,
-        out_writer=SequenceFileWriter(
-            base_dir + '/data/' + output + '_corpus.txt'
-        )
+    evaluator = ParallelSupplierEvaluator(
+        SequenceCorpus,
+        return_suppliers=True
     )
-    corpus_smiles.get()
+    words = set()
+    data = []
+    for result in evaluator.get(smiles):
+        data.extend(result[0])
+        words.update(result[1].getVoc().words)
+    voc = VocSmiles(words)
+
+    # save corpus data
+    with open(base_dir + '/data/%s_corpus.txt' % output, "w", encoding="utf-8") as outfile:
+        outfile.writelines(["SMILES\tTokens\n"])
+        outfile.writelines(data)
     
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        corpus_smiles.getVoc().toFile(base_dir + '/data/%s_smiles.txt' % voc_file)
+        voc.toFile(base_dir + '/data/%s_smiles.txt' % voc_file)
 
 # def graph_corpus(input, output, suffix='sdf'):
 #     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
@@ -375,12 +394,16 @@ def Dataset(args):
     
                         
     # load molecules
-    mols = load_molecules(args.base_dir, args.input)
+    smiles = load_molecules(args.base_dir, args.input)
 
-    smiles = StandardizedSupplier(
-        mols,
-        standardizer=DrExStandardizer()
+    print("Standardizing molecules...")
+    standardizer = ParallelSupplierEvaluator(
+        StandardizedSupplier,
+        kwargs={
+            "standardizer": DrExStandardizer(input='SMILES')
+        }
     )
+    smiles = standardizer.get(np.asarray(list(smiles)))
 
     if args.no_frags:
         if args.mol_type == 'graph':
