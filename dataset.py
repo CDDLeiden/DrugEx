@@ -258,6 +258,7 @@ def train_test_split(df, file_base, save_files=False):
     Returns:
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
+        unique (pd.DataFrame)     : dataframe containing a fragment-molecule pair per unique fragment-combination
     """
     frags = set(df.Frags)
     if len(frags) > int(1e5):
@@ -267,11 +268,14 @@ def train_test_split(df, file_base, save_files=False):
         test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
     test = df[df.Frags.isin(test_in)]
     train = df[~df.Frags.isin(test_in)]
+    unique = df.drop_duplicates(subset='Frags')
+    
     if save_files:
         test.to_csv(file_base + '_test.txt', sep='\t', index=False)
         train.to_csv(file_base + '_train.txt', sep='\t', index=False)
+        unique.to_csv(file_base + '_unique.txt', sep='\t', index=False)
     
-    return train, test 
+    return train, test, unique
     
 def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=False):
     
@@ -447,12 +451,14 @@ def Dataset(args):
                               method=args.frag_method, save_file=args.save_intermediate_files)
         
         # split fragment-molecule pairs into train and test set
-        df_train, df_test =  train_test_split(df_pairs, file_base, save_files=args.save_intermediate_files)
+        df_train, df_test, df_unique =  train_test_split(df_pairs, file_base, save_files=args.save_intermediate_files)
         
         # encode pairs to SMILES-tokens or graph-matrices
         pair_encode(df_train, args.mol_type, file_base + '_train', 
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
         pair_encode(df_test, args.mol_type, file_base + '_test', 
+                    n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
+        pair_encode(df_unique, args.mol_type, file_base + '_unique', 
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
 
 if __name__ == '__main__':
