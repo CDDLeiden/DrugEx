@@ -132,7 +132,7 @@ class RNN(nn.Module):
         best_error = np.inf
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
-        max_interval = 100
+        max_interval = 50
         for epoch in range(epochs):
             for i, batch in enumerate(loader_train):
                 optimizer.zero_grad()

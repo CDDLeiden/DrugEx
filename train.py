@@ -95,9 +95,9 @@ def GeneratorArgParser(txt=None):
     # Default input file prefix in case of pretraining and finetuning
     if args.input is None:
         if args.mode == 'PT':
-            args.input = 'chembl_mf_brics'
+            args.input = 'chembl_4:4_brics'
         else:
-            args.input = 'ligand_mf_brics'
+            args.input = 'ligand_4:4_brics'
             
     # Setting output file prefix from input file
     if args.output is None:
@@ -123,7 +123,7 @@ def GeneratorArgParser(txt=None):
 
     return args
 
-def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
+def DataPreparationGraph(base_dir, input_prefix, batch_size=128, unique_frags=False):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
@@ -131,7 +131,8 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
     Arguments:
         base_dir (str)              : name of the folder containing 'data' folder with input files
         input_prefix (str)          : prefix of input files
-        batch_size (int), optional  : batch size
+        batch_size (int), opt       : batch size
+        unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -142,7 +143,11 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
 
     voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
-    data = pd.read_table( data_path + '%s_train_graph.txt' % input_prefix)
+    if unique_frags :
+        data = pd.read_table( data_path + '%s_unique_graph.txt' % input_prefix)
+    else:
+        data = pd.read_table( data_path + '%s_train_graph.txt' % input_prefix)
+    
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
@@ -152,7 +157,7 @@ def DataPreparationGraph(base_dir, input_prefix, batch_size=128):
     
     return voc, train_loader, valid_loader
 
-def DataPreparationSmiles(base_dir, input_prefix, batch_size=128):
+def DataPreparationSmiles(base_dir, input_prefix, batch_size=128, unique_frags=False):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
@@ -161,6 +166,7 @@ def DataPreparationSmiles(base_dir, input_prefix, batch_size=128):
         base_dir (str)              : name of the folder containing 'data' folder with input files
         input_prefix (str)          : prefix of input files
         batch_size (int), optional  : batch size
+        unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -188,7 +194,10 @@ def DataPreparationSmiles(base_dir, input_prefix, batch_size=128):
         test_set = torch.LongTensor(voc.encode([seq.split(' ') for seq in test]))
         valid_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
     else:
-        train = pd.read_table( data_path + '%s_train_smi.txt' % input_prefix)
+        if unique_frags:
+            train = pd.read_table( data_path + '%s_unique_smi.txt' % input_prefix)
+        else:
+            train = pd.read_table( data_path + '%s_train_smi.txt' % input_prefix)
         train_in = voc.encode([seq.split(' ') for seq in train.Input.values])
         train_out = voc.encode([seq.split(' ') for seq in train.Output.values])
         train_set = TensorDataset(train_in, train_out)
@@ -412,6 +421,9 @@ def RLTrain(args):
 #         ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
 #         pt_path = args.base_dir + '/generators/' + args.pretrained_model + '.pkg'
 
+    if not args.targets:
+        raise ValueError('At least on active or inactive target should be given for RL.')
+
     ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'
     pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
 
@@ -421,9 +433,9 @@ def RLTrain(args):
     ## why need input for RL? probably because need input in v3 to generate sequences
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.input, args.batch_size, unique_frags=True)
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.input, args.batch_size, unique_frags=True)
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
