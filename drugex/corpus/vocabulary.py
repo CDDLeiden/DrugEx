@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 from drugex.corpus.interfaces import VocabularySequence
-from drugex.molecules.converters.default import CleanSMILES
+from drugex.molecules.converters.standardizers import CleanSMILES
 
 
 class VocSmiles(VocabularySequence):

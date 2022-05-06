@@ -68,3 +68,24 @@ class DrExStandardizer(MolConverter):
 
 class StandardizationException(ConversionException):
     pass
+
+
+class CleanSMILES(MolConverter):
+
+    def __init__(self, is_deep=True):
+        self.deep  = is_deep
+
+    def __call__(self, smile):
+        orig_smile = smile
+        smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
+        .replace('[N]', 'N').replace('[B]', 'B') \
+        .replace('[2H]', '[H]').replace('[3H]', '[H]')
+        try:
+            mol = Chem.MolFromSmiles(smile)
+            if self.deep:
+                mol = rdMolStandardize.ChargeParent(mol)
+            smileR = Chem.MolToSmiles(mol, 0)
+            smile = Chem.CanonSmiles(smileR)
+        except:
+            raise ConversionException(f"Cleanup error: {orig_smile}")
+        return smile

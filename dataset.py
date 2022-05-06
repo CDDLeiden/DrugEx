@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.molecules.converters.default import Identity
-from drugex.molecules.converters.standardizers import DrExStandardizer
+from drugex.molecules.converters.standardizers import DrExStandardizer, CleanSMILES
 from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.molecules.parallel import ParallelSupplierEvaluator
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
@@ -176,7 +176,7 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     pairs = []
     for i, smile in enumerate(tqdm(smiles)):
         # replace some tokens in SMILES
-        smile = utils.clean_mol(smile)
+        smile = CleanSMILES()(smile)
         mol = Chem.MolFromSmiles(smile)
         # break SMILES up into leaf fragments
         if method == 'recap':
