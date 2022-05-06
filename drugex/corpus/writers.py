@@ -6,6 +6,19 @@ On: 28.04.22, 15:01
 """
 from drugex.corpus.interfaces import CorpusWriter
 
+class ListWriter(CorpusWriter):
+
+    def __init__(self):
+        self.result = []
+
+    def write(self, data):
+        self.result.append(data)
+
+    def close(self):
+        pass
+
+    def get(self):
+        return self.result
 
 class FileWriter(CorpusWriter):
 
