@@ -235,7 +235,7 @@ class GraphExplorer(nn.Module):
                     best_score = desire
                     last_save = epoch
                     last_it = it
-                if epoch - last_save > 100: break
+                if epoch - last_save > 50: break
 
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
@@ -351,7 +351,7 @@ class SmilesExplorer(nn.Module):
                     best_score = desire
                     last_save = epoch
                     last_it = it
-                if epoch - last_save > 100: break
+                if epoch - last_save > 50: break
                 if self.crover is not None:
                     self.agent.load_state_dict(torch.load(self.out + '.pkg'))
                     self.crover.load_state_dict(torch.load(self.out + '.pkg'))
@@ -412,7 +412,7 @@ class PGLearner(object):
             for i, smile in enumerate(smiles):
                 score = "\t".join(['%0.3f' % s for s in scores.values[i]])
                 print('%s\t%s' % (score, smile), file=log)
-            if epoch - last_save > 100:
+            if epoch - last_save > 50:
                 break
         for param_group in self.agent.optim.param_groups:
             param_group['lr'] *= (1 - 0.01)
