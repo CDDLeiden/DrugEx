@@ -39,6 +39,17 @@ class DataFrameSupplier(BaseMolSupplier):
          mol_data = {key : getattr(row, key) for key in self.extra_cols}
          return mol, mol_data
 
+     def __getstate__(self):
+        d = self.__dict__.copy()
+        if 'mols' in d:
+            d['mols'] = repr(d['mols'])
+        return d
+
+     def __setstate__(self, d):
+        if 'mols' in d:
+            d['mols'] = None
+        self.__dict__.update(d)
+
 class  TestSupplier(BaseMolSupplier):
 
     def __init__(self, smiles):
