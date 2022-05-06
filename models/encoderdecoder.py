@@ -13,7 +13,7 @@ class Base(nn.Module):
         net = nn.DataParallel(self, device_ids=utils.devices)
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
-        max_interval = 100
+        max_interval = 50
         for epoch in range(epochs):
             t0 = time.time()
             for i, (src, trg) in enumerate(pair_loader):
