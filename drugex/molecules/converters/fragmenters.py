@@ -15,7 +15,7 @@ from drugex.molecules.converters.interfaces import ConversionException
 from drugex.molecules.converters.standardizers import CleanSMILES
 
 
-class PairFragmenter(CleanSMILES):
+class Fragmenter(CleanSMILES):
 
     def __init__(self, n_frags, n_combs, method='recap', deep_clean=True):
         super().__init__(deep_clean)
@@ -27,7 +27,7 @@ class PairFragmenter(CleanSMILES):
 
 
     def __call__(self, smiles):
-        pairs = []
+        ret_frags = []
         smiles = super().__call__(smiles)
         mol = Chem.MolFromSmiles(smiles)
         # break SMILES up into leaf fragments
@@ -60,7 +60,7 @@ class PairFragmenter(CleanSMILES):
                 if len(comb_frags) > len(smiles): continue
                 # check if substructure is in original molecule
                 if mol.HasSubstructMatch(Chem.MolFromSmarts(comb_frags)):
-                    pairs.append((comb_frags, smiles,))
+                    ret_frags.append(comb_frags)
 
-        return tuple(pairs)
+        return smiles, frags
 

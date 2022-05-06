@@ -6,10 +6,11 @@ from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.molecules.converters.default import Identity
-from drugex.molecules.converters.fragmenters import PairFragmenter
+from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import SDFSupplier
-from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
+from drugex.molecules.fragments import FragmentSupplier
+from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector, ResultCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from utils import VocGraph
 from drugex.corpus.vocabulary import VocSmiles
@@ -152,13 +153,19 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
 #     print(exps)
 
 
-class FlattenCollector(ListCollector):
+class FragmentCollector(ResultCollector):
 
-    def __call__(self, result):
-        result_flat = []
-        for x in result:
-            result_flat.extend(x)
-        self.result.extend(result_flat)
+    def __init__(self):
+        self.result = dict()
+
+    def __call__(self, results):
+        for result in results:
+            for frag in result['frags']:
+                if frag not in self.result:
+                    self.result[frag] = result['smiles']
+
+    def get(self):
+        return self.result
 
 def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     """
@@ -180,17 +187,17 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
         print('Breaking molecules to leaf fragments...')
     
     evaluator = ParallelSupplierEvaluator(
-        StandardizedSupplier,
+        FragmentSupplier,
         return_unique=False,
-        result_collector=FlattenCollector(),
+        result_collector=FragmentCollector(),
         kwargs={
-            "standardizer" : PairFragmenter(n_frags, n_combs, method)
+            "fragmenter" : Fragmenter(n_frags, n_combs, method)
         }
     )
     pairs = evaluator.get(smiles)
 
     if save_file:
-        df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
+        df = pd.DataFrame([(key, pairs[key]) for key in pairs], columns=['Frags', 'Smiles'])
         df.to_csv(out, sep='\t',  index=False)
     
     return pairs
@@ -206,7 +213,7 @@ def train_test_split(pairs, file_base, save_files=False):
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
     """
-    df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
+    df = pd.DataFrame([(key, pairs[key]) for key in pairs], columns=['Frags', 'Smiles'])
     frags = set(df.Frags)
     if len(frags) > int(1e5):
         print('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//10))
@@ -224,7 +231,7 @@ def train_test_split(pairs, file_base, save_files=False):
 def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=False):
     
     """
-    Wrapper to encode fragement-molecule pairs in either SMILES-tokens or graph-matrices
+    Wrapper to encode fragment-molecule pairs in either SMILES-tokens or graph-matrices
     Arguments:
         df (pd.DataFrame)         : dataframe containing fragment-molecule pairs (Fragments in column 'Frags' and SMILES of the output molecule in column 'Smiles')
         mol_type (str)            : molecular representation type
