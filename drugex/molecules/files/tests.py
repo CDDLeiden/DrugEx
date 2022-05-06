@@ -123,3 +123,20 @@ class TestFileParsers(TestCase):
             for col in cols:
                 self.assertTrue(mol.getAnnotation(col))
                 self.assertTrue(col in mol.getMetadata())
+
+    def test_parallel_with_suppliers(self):
+        df = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0)
+        para_supplier = ParallelSupplierEvaluator(
+            DataFrameSupplier,
+            n_proc=2,
+            return_suppliers=True,
+            kwargs={"mol_col" : "CANONICAL_SMILES"}
+        )
+
+        results = para_supplier.get(df)
+        self.assertTrue(len(results) == 2)
+        for result in results:
+            self.assertTrue(len(result[0]) == 5)
+            self.assertTrue(isinstance(result[1], DataFrameSupplier))
+            for mol in result[0]:
+                self.assertTrue(isinstance(mol, DrExMol))
