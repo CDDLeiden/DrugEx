@@ -69,6 +69,7 @@ class VocabularySequence(Vocabulary, ABC):
             return None
 
     def updateIndex(self):
+        self.words = sorted(self.words)
         self.words_set = set(self.words)
         self.size = len(self.words)
         self.tk2ix = dict(zip(self.words, range(len(self.words))))
