@@ -39,9 +39,36 @@ class ArraySplitter(DataSplitter):
 class ParallelException(Exception):
     pass
 
+class ResultCollector(ABC):
+
+    @abstractmethod
+    def __call__(self, result):
+        pass
+
+    @abstractmethod
+    def get(self):
+        pass
+
+class ListCollector(ResultCollector):
+
+    def __init__(self, mode='extend'):
+        self.result = []
+        self.mode = mode
+        if self.mode not in ('append', 'extend'):
+            raise ParallelException("Unknown list collector method:" + mode)
+
+    def __call__(self, result):
+        if self.mode == 'extend':
+            self.result.extend(result)
+        else:
+            self.result.append(result)
+
+    def get(self):
+        return self.result
+
 class ParallelSupplierEvaluator:
 
-    def __init__(self, supplier_class, n_proc=multiprocessing.cpu_count(), chunks=None, return_unique=True, return_suppliers=False, args=None, kwargs=None):
+    def __init__(self, supplier_class, n_proc=multiprocessing.cpu_count(), chunks=None, return_unique=True, return_suppliers=False, result_collector=None, args=None, kwargs=None):
         self.nProc = n_proc
         self.makeUnique = return_unique
         self.includeSuppliers = return_suppliers
@@ -51,7 +78,7 @@ class ParallelSupplierEvaluator:
         self.args = [] if not args else args
         self.kwargs = dict() if not kwargs else kwargs
         self.supplier = supplier_class
-        self.result = []
+        self.result = result_collector if result_collector else (ListCollector('append') if self.includeSuppliers else ListCollector())
         self.errors = []
 
     def initSupplier(self, supplier_class, chunk):
@@ -67,10 +94,7 @@ class ParallelSupplierEvaluator:
             return ret
 
     def callback(self, data):
-        if not self.includeSuppliers:
-            self.result.extend(data)
-        else:
-            self.result.append(data)
+        self.result(data)
 
     def error(self, data):
         self.errors.append(data)
@@ -93,6 +117,7 @@ class ParallelSupplierEvaluator:
         pool.close()
         pool.join()
 
-        return self.result if not self.makeUnique or self.includeSuppliers else list(set(self.result))
+        result = self.result.get()
+        return result if not self.makeUnique or self.includeSuppliers else list(set(result))
 
 

@@ -2,21 +2,19 @@ import os
 import pandas as pd
 from rdkit import Chem
 from rdkit import rdBase
-from rdkit.Chem import Recap, BRICS
 from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.molecules.converters.default import Identity
-from drugex.molecules.converters.standardizers import DrExStandardizer, CleanSMILES
+from drugex.molecules.converters.fragmenters import PairFragmenter
+from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import SDFSupplier
-from drugex.molecules.parallel import ParallelSupplierEvaluator
+from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from utils import VocGraph
 from drugex.corpus.vocabulary import VocSmiles
 import utils
-import re
 import numpy as np
-from itertools import combinations
 
 rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
@@ -154,6 +152,14 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
 #     print(exps)
 
 
+class FlattenCollector(ListCollector):
+
+    def __call__(self, result):
+        result_flat = []
+        for x in result:
+            result_flat.extend(x)
+        self.result.extend(result_flat)
+
 def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     """
     Break molecules into leaf fragments and if is_mf combine those fragments to get larger fragments
@@ -165,7 +171,7 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
         method (str)              : whether to use Recap or BRICKS for fragmenting
         save_file (bool)          : save output file
     Returns:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
+        pairs (list)         : list of tuples containing fragment-molecule pairs
     """
     
     if n_combs > 1 :
@@ -173,61 +179,37 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     else:
         print('Breaking molecules to leaf fragments...')
     
-    pairs = []
-    for i, smile in enumerate(tqdm(smiles)):
-        # replace some tokens in SMILES
-        smile = CleanSMILES()(smile)
-        mol = Chem.MolFromSmiles(smile)
-        # break SMILES up into leaf fragments
-        if method == 'recap':
-            frags = np.array(sorted(Recap.RecapDecompose(mol).GetLeaves().keys()))
-        else:
-            frags = BRICS.BRICSDecompose(mol)
-            frags = np.array(sorted({re.sub(r'\[\d+\*\]', '*', f) for f in frags}))
-        if len(frags) == 1: continue
-        # replace connection tokens with [H]
-        du, hy = Chem.MolFromSmiles('*'), Chem.MolFromSmiles('[H]')
-        subs = np.array([Chem.MolFromSmiles(f) for f in frags])
-        subs = np.array([Chem.RemoveHs(Chem.ReplaceSubstructs(f, du, hy, replaceAll=True)[0]) for f in subs])
-        subs = np.array([m for m in subs if m.GetNumAtoms() > 1])
-        # remove fragments that contain other fragments (or are contained in other fragments?)
-        match = np.array([[m.HasSubstructMatch(f) for f in subs] for m in subs])
-        frags = subs[match.sum(axis=0) == 1]
-        # sort the fragments and only keep n_frag largest ones
-        frags = sorted(frags, key=lambda x:-x.GetNumAtoms())[:n_frags]
-        frags = [Chem.MolToSmiles(Chem.RemoveHs(f)) for f in frags]
+    evaluator = ParallelSupplierEvaluator(
+        StandardizedSupplier,
+        return_unique=False,
+        result_collector=FlattenCollector(),
+        kwargs={
+            "standardizer" : PairFragmenter(n_frags, n_combs, method)
+        }
+    )
+    pairs = evaluator.get(smiles)
 
-        max_comb = min(n_combs, len(frags))
-        for ix in range(1, max_comb+1):
-            # combine leaf fragments into larger fragments
-            combs = combinations(frags, ix)
-            for comb in combs:
-                comb_frags = '.'.join(comb)
-                #remove pair of fragment combinations if longer than original SMILES 
-                if len(comb_frags) > len(smile): continue
-                # check if substructure is in original molecule
-                if mol.HasSubstructMatch(Chem.MolFromSmarts(comb_frags)):
-                    pairs.append([comb_frags, smile])
-    df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
     if save_file:
+        df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
         df.to_csv(out, sep='\t',  index=False)
     
-    return df
+    return pairs
 
-def train_test_split(df, file_base, save_files=False):
+def train_test_split(pairs, file_base, save_files=False):
     """
     Splits fragment-molecule pairs into a train and test set
     Arguments:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
+        pairs (list)         : list containing fragments
         file_base (str)           : base of input and output files
         save_files (bool)         : save output files
     Returns:
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
     """
+    df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
     frags = set(df.Frags)
     if len(frags) > int(1e5):
-        print('WARNING: to speed up the training, the test set size is 10 0000 instead of {}!'.format(len(frags)//10))
+        print('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//10))
         test_in = df.Frags.drop_duplicates().sample(int(1e4))
     else:
         test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
@@ -244,7 +226,7 @@ def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=Fal
     """
     Wrapper to encode fragement-molecule pairs in either SMILES-tokens or graph-matrices
     Arguments:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
+        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs (Fragments in column 'Frags' and SMILES of the output molecule in column 'Smiles')
         mol_type (str)            : molecular representation type
         file_base (str)           : base of output file
         n_frags (int)             : maximum number of fragments used as input per molecule
@@ -317,11 +299,11 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     words = set()
     for i, row in tqdm(df.iterrows(), total=len(df)):
         frag, smile = row.Frags, row.Smiles
-        token_mol = voc.split(smile)
+        token_mol = voc.splitSequence(smile)
         ## currently not checking if molecules contain carbons
         if 10 < len(token_mol) <= 100:
             words.update(token_mol)
-            token_sub = voc.split(frag)
+            token_sub = voc.splitSequence(frag)
             words.update(token_sub)
             codes.append([' '.join(token_sub), ' '.join(token_mol)])
             
@@ -416,11 +398,11 @@ def Dataset(args):
         file_base = '%s/data/%s_%d:%d_%s' % (args.base_dir, args.output, args.n_frags, args.n_combs, args.frag_method)
         
         # create fragment-molecule pairs
-        df_pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, args.n_combs,
+        pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, args.n_combs,
                               method=args.frag_method, save_file=args.save_intermediate_files)
         
         # split fragment-molecule pairs into train and test set
-        df_train, df_test =  train_test_split(df_pairs, file_base, save_files=args.save_intermediate_files)
+        df_train, df_test =  train_test_split(pairs, file_base, save_files=args.save_intermediate_files)
         
         # encode pairs to SMILES-tokens or graph-matrices
         pair_encode(df_train, args.mol_type, file_base + '_train', 
