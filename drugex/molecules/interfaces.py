@@ -51,8 +51,8 @@ class MolSupplier(ABC):
 
     def __next__(self):
         next_item = self.next()
-        if not next_item:
-            return next_item
+        while not next_item:
+            next_item = self.next()
 
         mol_data = next_item
         annotations = dict()
