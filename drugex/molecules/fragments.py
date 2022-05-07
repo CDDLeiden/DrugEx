@@ -16,10 +16,15 @@ class FragmentSupplier(MolSupplier):
     def next(self):
         ret = self.fragmenter(next(self.molecules))
         if ret:
-            smile, frags = ret
-            return {"smiles": smile, "frags" : tuple(frags)}
+            return ret
         else:
-            return next(self)
+            return None
+        # ret = self.fragmenter(next(self.molecules))
+        # if ret:
+        #     smile, frags = ret
+        #     return {"smiles": smile, "frags" : tuple(frags)}
+        # else:
+        #     return next(self)
 
     def convertMol(self, representation):
         return representation

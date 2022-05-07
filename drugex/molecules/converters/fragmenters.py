@@ -60,7 +60,7 @@ class Fragmenter(CleanSMILES):
                 if len(comb_frags) > len(smiles): continue
                 # check if substructure is in original molecule
                 if mol.HasSubstructMatch(Chem.MolFromSmarts(comb_frags)):
-                    ret_frags.append(comb_frags)
+                    ret_frags.append((comb_frags, smiles))
 
-        return smiles, frags
+        return ret_frags
 

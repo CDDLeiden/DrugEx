@@ -152,20 +152,13 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
 #     print(vals)
 #     print(exps)
 
+class FragmentCollector(ListCollector):
 
-class FragmentCollector(ResultCollector):
-
-    def __init__(self):
-        self.result = dict()
-
-    def __call__(self, results):
-        for result in results:
-            for frag in result['frags']:
-                if frag not in self.result:
-                    self.result[frag] = result['smiles']
-
-    def get(self):
-        return self.result
+    def __call__(self, result):
+        result_flat = []
+        for x in result:
+            result_flat.extend(x)
+        self.result.extend(result_flat)
 
 def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     """
@@ -197,7 +190,7 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
     pairs = evaluator.get(smiles)
 
     if save_file:
-        df = pd.DataFrame([(key, pairs[key]) for key in pairs], columns=['Frags', 'Smiles'])
+        df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
         df.to_csv(out, sep='\t',  index=False)
     
     return pairs
@@ -213,7 +206,7 @@ def train_test_split(pairs, file_base, save_files=False):
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
     """
-    df = pd.DataFrame([(key, pairs[key]) for key in pairs], columns=['Frags', 'Smiles'])
+    df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
     frags = set(df.Frags)
     if len(frags) > int(1e5):
         print('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//10))
