@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import logging
+import logging.config
+from datetime import datetime
 import models
 import utils
 import numpy as np
@@ -79,7 +82,6 @@ class QSARDataset:
         Splits the dataset in a train and temporal test set.
         Calculates the predictors for the QSAR models.
         """
-        log = open('%s/%s_dataset_info' % (self.base_dir, self.target) + '.txt', 'w')
 
         #read in the dataset
         df = pd.read_table('%s/data/%s.tsv' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
@@ -97,9 +99,6 @@ class QSARDataset:
         #keep only pchembl values and make binary for classification
         df = df['pchembl_value_Mean']
 
-        print(self.target, "active:", sum(df >= self.th), \
-                            "not active:", sum(df < self.th), file = log)
-
         if not self.reg:
             df = (df > self.th).astype(float)
 
@@ -112,9 +111,6 @@ class QSARDataset:
             test = df.sample(int(round(len(df)*self.test_size))) if type(self.test_size) == float else df.sample(self.test_size)
         data = df.drop(test.index)
 
-        print(self.target, "train:", len(data), \
-                            "test:", len(test), file = log)
-
         #calculate ecfp and physiochemical properties as input for the predictors
         self.X_ind = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in test.index])
         self.X = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in data.index])
@@ -125,7 +121,17 @@ class QSARDataset:
         #Create folds for crossvalidation
         self.create_folds()
 
-        log.close()
+        #Write information about the trainingset to the log
+        log.info('Train and test set created for %s %s:' % (self.target, 'REG' if self.reg else 'CLS'))
+        log.info('    Total: train: %s test: %s' % (len(data), len(test)))
+        if self.reg:
+            log.info('    Total: active: %s not active: %s' % (sum(df >= self.th), sum(df < self.th)))
+            log.info('    In train: active: %s not active: %s' % (sum(data >= self.th), sum(data < self.th)))
+            log.info('    In test:  active: %s not active: %s\n' % (sum(test >= self.th), sum(test < self.th)))
+        else:
+            log.info('    Total: active: %s not active: %s' % (df.sum().astype(int), (len(df)-df.sum()).astype(int)))
+            log.info('    In train: active: %s not active: %s' % (data.sum().astype(int), (len(data)-data.sum()).astype(int)))
+            log.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(data)-test.sum()).astype(int)))
     
     def create_folds(self):
         """
@@ -135,6 +141,7 @@ class QSARDataset:
             self.folds = KFold(5).split(self.X)
         else:
             self.folds = StratifiedKFold(5).split(self.X, self.y)
+        log.debug("Folds created for crossvalidation")
         
     @staticmethod
     def data_standardization(data_x, test_x):
@@ -152,6 +159,7 @@ class QSARDataset:
         scaler = Scaler(); scaler.fit(data_x)
         test_x = scaler.transform(test_x)
         data_x = scaler.transform(data_x)
+        log.debug("Data standardized")
         return data_x, test_x
 
 class QSARModel:
@@ -160,12 +168,14 @@ class QSARModel:
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance QSARDataset
         alg:  instance of estimator
         parameters (dict): dictionary of algorithm specific parameters
         search_space_bs (dict): search space for bayesian optimization
         search_space_gs (dict): search space for grid search
         save_m (bool): if true, save final model
+
         
         Methods
         -------
@@ -176,7 +186,8 @@ class QSARModel:
         grid_search: optimization of hyperparameters using grid_search
 
     """
-    def __init__(self, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
+    def __init__(self, runid, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
+        self.runid = runid
         self.data = data
         self.alg = alg
         self.parameters = parameters
@@ -188,19 +199,20 @@ class QSARModel:
         d = '%s/envs/single' % data.base_dir
         if not os.path.exists(d):
             os.makedirs(d)  
-        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
-        print(self.out)
+        self.out = '%s/%s_%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target, self.runid)
+        log.info('Model intialized: %s' % self.out)
 
     def init_model(self):
         """
             initialize model from saved or default hyperparameters
         """
         if os.path.isfile('%s_params.json' % self.out):
-            print("loaded model parameters from file.")
+            
             with open('%s_params.json' % self.out) as j:
                 self.parameters = json.loads(j.read())
-            print(self.parameters)
+            log.info('loaded model parameters from file: %s_params.json' % self.out)
         self.model = self.alg.set_params(**self.parameters)
+        log.info('parameters: %s' % self.parameters)
 
     def fit_model(self):
         """
@@ -217,9 +229,10 @@ class QSARModel:
             fit_set['Y'] = y_all
         else:
             fit_set['y'] = y_all
-            
-        self.model.fit(**fit_set)
 
+        log.info('Model fit started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))  
+        self.model.fit(**fit_set)
+        log.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
     def objective(self, trial):
@@ -265,7 +278,9 @@ class QSARModel:
         print('Bayesian optimization can take a while for some hyperparameter combinations')
         #TODO add timeout function
         study = optuna.create_study(direction='maximize')
+        log.info('Bayesian optimization started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         study.optimize(lambda trial: self.objective(trial), n_trials)
+        log.info('Bayesian optimization ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         trial = study.best_trial
 
@@ -276,6 +291,7 @@ class QSARModel:
 
         self.data.create_folds()
 
+        log.info('Bayesian optimization best params: %s' % trial.params)
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(trial.params, f)
 
@@ -283,15 +299,18 @@ class QSARModel:
         """
             optimization of hyperparameters using grid_search
         """          
-        scoring = 'explained_variance' if self.data.reg else 'roc_auc'            
+        scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
         grid = GridSearchCV(self.alg, self.search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds, scoring=scoring, refit=self.save_m)
+        
         
         #TODO maybe move the model fitting and saving to environment?
         fit_set = {'X':self.data.X}
         fit_set['y'] = self.data.y
         if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
             fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
+        log.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         grid.fit(**fit_set)
+        log.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
         self.model = grid.best_estimator_
         
@@ -300,6 +319,7 @@ class QSARModel:
 
         self.data.create_folds()
 
+        log.info('Grid search best parameters: %s' % grid.best_params_)
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(grid.best_params_, f)
             
@@ -312,7 +332,7 @@ class QSARModel:
         cvs = np.zeros(self.data.y.shape)
         inds = np.zeros(self.data.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
-            print("cross validation fold ", i)
+            log.info('cross validation fold %s started: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             # use sample weight to decrease the weight of low quality datapoints
             fit_set = {'X':self.data.X[trained]}
             if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
@@ -332,6 +352,7 @@ class QSARModel:
             else:
                 cvs[valided] = self.model.predict_proba(self.data.X[valided])[:, 1]
                 inds += self.model.predict_proba(self.data.X_ind)[:, 1]
+            log.info('cross validation fold %s ended: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         
         #save crossvalidation results
         if save:
@@ -351,12 +372,13 @@ class RF(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): random forest specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
         self.parameters=parameters if parameters != None else {'random_state': 42, 'n_estimators': 1000}
 
@@ -382,7 +404,7 @@ class RF(QSARModel):
             'min_samples_split': [2, 5, 12],
             'n_estimators': [100, 200, 300, 1000]
         }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class XGB(QSARModel):
     """ 
@@ -392,12 +414,13 @@ class XGB(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): XGboost specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:logistic',use_label_encoder=False, eval_metric='logloss')
         self.parameters=parameters if parameters != None else {'nthread': 4, 'seed': 42, 'n_estimators': 1000}
         self.search_space_bs = {
@@ -414,7 +437,7 @@ class XGB(QSARModel):
             'n_estimators': [100, 500, 1000],
             'colsample_bytree': [0.3, 0.5, 0.7]
         }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class SVM(QSARModel):
     """ Support vector regressor and classifier initialization. Here the model instance is created 
@@ -423,12 +446,13 @@ class SVM(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): SVM specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         np.random.seed(42) #TODO: not sure if this is the right way to set random seed for SVM
         self.alg = SVR() if data.reg else SVC(probability=True)
         self.parameters=parameters if parameters != None else {}
@@ -455,7 +479,7 @@ class SVM(QSARModel):
             'gamma'       : [0.001,0.01,0.1,1,10,100,1000],
             'degree'      : [1,2,3,4,5]
             }]
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class KNN(QSARModel):
     """ K-nearest neighbor regressor and classifier initialization. Here the model instance is created 
@@ -464,12 +488,13 @@ class KNN(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): KNN specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         np.random.seed(42) #TODO: not sure if this is the right way to set random seed for KNN
         self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
         self.parameters=parameters if parameters != None else {}
@@ -485,7 +510,7 @@ class KNN(QSARModel):
             'n_neighbors' : list(range(1,31)),
             'weights'      : ['uniform', 'distance']
             }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class NB(QSARModel):
     """ 
@@ -495,12 +520,13 @@ class NB(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): NB specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         if data.reg:
             raise ValueError("NB should be constructed only with classification.")
         np.random.seed(42) #TODO: not sure if this is the right way to set random seed for NB
@@ -514,7 +540,7 @@ class NB(QSARModel):
         self.search_space_gs = {
             'var_smoothing': np.logspace(0,-9, num=100)
         }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class PLS(QSARModel):
     """ 
@@ -524,12 +550,13 @@ class PLS(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): PLS specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, data, save_m=True, parameters=None):
+    def __init__(self, runid, data, save_m=True, parameters=None):
         if not data.reg:
             raise ValueError("PLS should be constructed only with regression.")
         np.random.seed(42) #TODO: not sure if this is the right way to set random seed for PLS
@@ -542,7 +569,7 @@ class PLS(QSARModel):
         self.search_space_gs = {
             'n_components': list(range(1, 100, 20))
         }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
 
 class DNN(QSARModel):
     """ 
@@ -552,6 +579,7 @@ class DNN(QSARModel):
 
         Attributes
         ----------
+        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): DNN specific parameters
         save_m (bool): if true, save final model
@@ -560,11 +588,11 @@ class DNN(QSARModel):
         n_epoch (int): number of epochs
 
     """
-    def __init__(self, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
+    def __init__(self, runid, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
         np.random.seed(42)
         self.alg = models.STFullyConnected
         self.parameters = parameters if parameters != None else {}
-        super().__init__(data, self.alg, self.parameters, None, None, save_m=save_m)
+        super().__init__(runid, data, self.alg, self.parameters, None, None, save_m=save_m)
         self.batch_size = batch_size
         self.lr = lr
         self.n_epoch = n_epoch
@@ -589,7 +617,7 @@ class DNN(QSARModel):
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
-            print("cross validation fold", i)
+            log.info('cross validation fold ' +  i)
             train_set = TensorDataset(torch.Tensor(self.data.X[trained]), torch.Tensor(self.y[trained]))
             train_loader = DataLoader(train_set, batch_size=self.batch_size)
             valid_set = TensorDataset(torch.Tensor(self.data.X[valided]), torch.Tensor(self.y[valided]))
@@ -618,6 +646,9 @@ def EnvironmentArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
+    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
+    parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-i', '--input', type=str, default='dataset',
                         help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
@@ -678,7 +709,7 @@ def EnvironmentArgParser(txt=None):
     return args
 
 
-def Environment(args):
+def Environment(args, runid):
     """ 
         Optimize, evaluate and train estimators
     """
@@ -701,18 +732,18 @@ def Environment(args):
             for model_type in args.model_types:
                 if model_type == 'MT_DNN': print('MT DNN is not implemented yet')
                 elif model_type not in ['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN']: 
-                    print(f'Model type {model_type} does not exist')
+                    log.warning(f'Model type {model_type} does not exist')
                     continue
                 if model_type == 'NB' and reg:
-                    print("Warning: NB with regression invalid, skipped.")
+                    log.warning("NB with regression invalid, skipped.")
                     continue
                 if model_type == 'PLS' and not reg:
-                    print("Warning: PLS with classification invalid, skipped.")
+                    log.warning("PLS with classification invalid, skipped.")
                     continue
 
                 #Create QSAR model object
                 mymodel_class = getattr(sys.modules[__name__], model_type)
-                mymodel = mymodel_class(mydataset)
+                mymodel = mymodel_class(runid, mydataset)
 
                 #if desired run parameter optimization
                 if args.optimization == 'grid':
@@ -733,17 +764,32 @@ def Environment(args):
 if __name__ == '__main__':
     args = EnvironmentArgParser()
     
-    #Create json log file with used commandline arguments
-    if args.no_git is False:
-        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))    
+    # Get run id
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+                            old=args.keep_runid,
+                            id=args.pick_runid)
+
+    # Configure logger
+    utils.config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
+
+    # Get logger, include this in every module
+    log = logging.getLogger(__name__)
+
+    # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open(args.base_dir + '/env_args.json', 'w') as f:
+    with open('%s/logs/%s/env_args.json' % (args.base_dir, runid), 'w') as f:
         json.dump(vars(args), f)
+    
+    # Begin log file
+    githash = None
+    if args.no_git is False:
+        githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))   
+    utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
         
-    #settings for DNN model
+    # settings for DNN model
     #TODO: set this only for DNN model, instead of global
     BATCH_SIZE = args.batch_size
     N_EPOCH = args.epochs
     
     #Optimize, evaluate and train estimators according to environment arguments
-    Environment(args)
+    Environment(args, runid)
