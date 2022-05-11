@@ -387,7 +387,7 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
                         help="Type of molecular representation: 'graph' or 'smiles'")     
     parser.add_argument('-nof', '--no_frags', action='store_true',
-                        help="If on, molecules are not split to fragments and a corpus is create")
+                        help="If on, molecules are not split to fragments and a corpus is created")
     
     parser.add_argument('-fm', '--frag_method', type=str, default='brics',
                         help="Fragmentation method: 'brics' or 'recap'") 
@@ -425,9 +425,14 @@ def Dataset(args):
     """ 
     Prepare input files for DrugEx generators containing encoded molecules for three different cases:
     
-    - SMILES w/o fragments: {output}_corpus.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded molecules and the token-vocabulary respectively
-    - SMILES w/ fragments: {output}_{mf/sf}_{frag_method}_[train/test]_smi.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded fragment-molecule pairs for the train and test sets and the token-vocabulary respectively
-    - Graph fragments: {output}_{mf/sf}_{frag_method}_[train/test]_graph.txt and [opt] {voc}_graph.txt containing the encoded graph-matrices of fragement-molecule pairs for the train and test sets and the token-vocabulary respectively   
+    - SMILES w/o fragments: {output}_corpus.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded molecules
+                             and the token-vocabulary respectively
+    - SMILES w/ fragments: {output}_{mf/sf}_{frag_method}_[train/test]_smi.txt and [opt] {voc}_smiles.txt containing
+                             the SMILES-token-encoded fragment-molecule pairs for the train and test sets and 
+                             the token-vocabulary respectively
+    - Graph fragments: {output}_{mf/sf}_{frag_method}_[train/test]_graph.txt and [opt] {voc}_graph.txt containing the
+                             encoded graph-matrices of fragement-molecule pairs for the train and test sets and
+                             the token-vocabulary respectively   
     """
     
                         
