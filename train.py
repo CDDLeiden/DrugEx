@@ -15,6 +15,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from models import encoderdecoder, GPT2Model, GraphModel, single_network
 from models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
+import logging
+import logging.config
+from datetime import datetime
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -26,10 +30,13 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' (and 'envs')")
+    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
+    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
+    parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Prefix of input files. If --mode is 'PT', default is 'chembl_4:4_brics' else 'ligand_4:4_brics' ")  
     parser.add_argument('-o', '--output', type=str, default=None,
-                        help="Prefix of output files. If None, set to be the first world of input. ")     
+                        help="Prefix of output files. If None, set to be the first word of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
                         help="Mode, of the training: 'PT' for pretraining, 'FT' for fine-tuning and 'RL' for reinforcement learning") 
     
@@ -46,7 +53,9 @@ def GeneratorArgParser(txt=None):
     
     # General parameters
     parser.add_argument('-a', '--algorithm', type=str, default='graph',
-                        help="Generator algorithm: 'graph' for graph-based algorithm (transformer), or 'gpt' (transformer), 'ved' (lstm-based encoder-decoder) or 'attn' (lstm-based encoder-decoder with attension mechanism) for SMILES-based algorithm ")
+                        help="Generator algorithm: 'graph' for graph-based algorithm (transformer),or "\
+                             "'gpt' (transformer), 'ved' (lstm-based encoder-decoder)or "\
+                             "'attn' (lstm-based encoder-decoder with attension mechanism) for SMILES-based algorithm ")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -116,8 +125,6 @@ def GeneratorArgParser(txt=None):
 #         with open(args.base_dir + '/generators/' + args.finetuned_model + '.json') as f:
 #             pt_params = json.load(f)
 #         args.algorithm = pt_params['algorithm']
-    
-        
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -509,6 +516,28 @@ def TrainGenerator(args):
         raise ValueError("--mode should be either 'PT', 'FT' or 'RL', you gave {}".format(args.mode))
 
 if __name__ == "__main__":
-    
     args = GeneratorArgParser()
+
+    # Get run id
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+                            old=args.keep_runid,
+                            id=args.pick_runid)
+
+    # Configure logger
+    utils.config_logger('%s/logs/%s/train.log' % (args.base_dir, runid), args.debug)
+
+    # Get logger, include this in every module
+    log = logging.getLogger(__name__)
+
+    # Create json log file with used commandline arguments 
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    with open('%s/logs/%s/train_args.json' % (args.base_dir, runid), 'w') as f:
+        json.dump(vars(args), f)
+    
+    # Begin log file
+    githash = None
+    if args.no_git is False:
+        githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
+
     TrainGenerator(args)
