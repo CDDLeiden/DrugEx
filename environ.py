@@ -131,7 +131,7 @@ class QSARDataset:
         else:
             log.info('    Total: active: %s not active: %s' % (df.sum().astype(int), (len(df)-df.sum()).astype(int)))
             log.info('    In train: active: %s not active: %s' % (data.sum().astype(int), (len(data)-data.sum()).astype(int)))
-            log.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(data)-test.sum()).astype(int)))
+            log.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(test)-test.sum()).astype(int)))
     
     def create_folds(self):
         """
