@@ -1,4 +1,7 @@
 import os
+import logging
+import logging.config
+from datetime import datetime
 import pandas as pd
 from rdkit import Chem
 from rdkit import rdBase
@@ -81,7 +84,7 @@ def standardize_mol(mols):
                 continue
             smiles.add(Chem.CanonSmiles(smileR))
         except:
-            print('Parsing Error:', Chem.MolToSmiles(mol))
+            log.exception('Parsing Error:', Chem.MolToSmiles(mol))
 
     return smiles
 
@@ -116,15 +119,15 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        log = open(base_dir + '/data/%s_smiles.txt' % voc_file, 'w')
-        log.write('\n'.join(sorted(words)))
-        log.close()
+        voc_file = open(os.path.join(base_dir, '/data/%s_smiles_%s.txt' % (voc_file, runid)), 'w')
+        voc_file.write('\n'.join(sorted(words)))
+        voc_file.close()
 
-    log = pd.DataFrame()
-    log['Smiles'] = canons
-    log['Token'] = tokens
-    log.drop_duplicates(subset='Smiles')
-    log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
+    corpus = pd.DataFrame()
+    corpus['Smiles'] = canons
+    corpus['Token'] = tokens
+    corpus.drop_duplicates(subset='Smiles')
+    corpus.to_csv(os.path.join(base_dir, '/data/%s_corpus_%s.txt' % (output, runid)), sep='\t', index=False)
 
 
 # def graph_corpus(input, output, suffix='sdf'):
@@ -271,9 +274,9 @@ def train_test_split(df, file_base, save_files=False):
     unique = df.drop_duplicates(subset='Frags')
     
     if save_files:
-        test.to_csv(file_base + '_test.txt', sep='\t', index=False)
-        train.to_csv(file_base + '_train.txt', sep='\t', index=False)
-        unique.to_csv(file_base + '_unique.txt', sep='\t', index=False)
+        test.to_csv(file_base + '_test_%s.txt' % runid, sep='\t', index=False)
+        train.to_csv(file_base + '_train_%s.txt' % runid, sep='\t', index=False)
+        unique.to_csv(file_base + '_unique_%s.txt' % runid, sep='\t', index=False)
     
     return train, test, unique
     
@@ -366,12 +369,12 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        log = open( os.path.dirname(file_base) + '/%s_smiles.txt' % voc_file, 'w')
-        log.write('\n'.join(sorted(words)))
-        log.close()
+        voc_file = open( os.path.dirname(file_base) + '/%s_smiles_%s.txt' % (voc_file, runid), 'w')
+        voc_file.write('\n'.join(sorted(words)))
+        voc_file.close()
     
     codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv(file_base + '_smi.txt', sep='\t', index=False)
+    codes.to_csv(file_base + '_smi_%s.txt' % runid, sep='\t', index=False)
     
     
 def DatasetArgParser(txt=None):
@@ -380,6 +383,9 @@ def DatasetArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
+    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
+    parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
                         help="Input file containing raw data. tsv or sdf.gz format")   
     parser.add_argument('-o', '--output', type=str, default='ligand',
@@ -412,12 +418,6 @@ def DatasetArgParser(txt=None):
         
     if args.n_combs is None:
         args.n_combs = args.n_frags
-    
-    if args.no_git is False:
-        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open(args.base_dir + '/data_args.json', 'w') as f:
-        json.dump(vars(args), f)
         
     return args    
 
@@ -452,7 +452,7 @@ def Dataset(args):
         file_base = '%s/data/%s_%d:%d_%s' % (args.base_dir, args.output, args.n_frags, args.n_combs, args.frag_method)
         
         # create fragment-molecule pairs
-        df_pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, args.n_combs,
+        df_pairs = pair_frags(smiles, '%s_%s.txt' % (file_base, runid), args.n_frags, args.n_combs,
                               method=args.frag_method, save_file=args.save_intermediate_files)
         
         # split fragment-molecule pairs into train and test set
@@ -469,4 +469,27 @@ def Dataset(args):
 if __name__ == '__main__':
 
     args = DatasetArgParser()
+
+    # Get run id
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+                            old=args.keep_runid,
+                            id=args.pick_runid)
+
+    # Configure logger
+    utils.config_logger('%s/logs/%s/dataset.log' % (args.base_dir, runid), args.debug)
+
+    # Get logger, include this in every module
+    log = logging.getLogger(__name__)
+
+    # Create json log file with used commandline arguments 
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    with open('%s/logs/%s/data_args.json' % (args.base_dir, runid), 'w') as f:
+        json.dump(vars(args), f)
+    
+    # Begin log file
+    githash = None
+    if args.no_git is False:
+        githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))   
+    utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
+
     Dataset(args)
