@@ -5,6 +5,7 @@ from rdkit import rdBase
 from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
+from drugex.manipulations.fragments import FragmentPairsSplitter
 from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
@@ -206,19 +207,16 @@ def train_test_split(pairs, file_base, save_files=False):
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
     """
-    df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
-    frags = set(df.Frags)
-    if len(frags) > int(1e5):
-        print('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//10))
-        test_in = df.Frags.drop_duplicates().sample(int(1e4))
-    else:
-        test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
-    test = df[df.Frags.isin(test_in)]
-    train = df[~df.Frags.isin(test_in)]
+
+    collectors = dict()
     if save_files:
-        test.to_csv(file_base + '_test.txt', sep='\t', index=False)
-        train.to_csv(file_base + '_train.txt', sep='\t', index=False)
-    
+        collectors['train_collector'] = lambda x : x.to_csv(file_base + '_train.txt', sep='\t', index=False)
+        collectors['test_collector'] = lambda x : x.to_csv(file_base + '_test.txt', sep='\t', index=False)
+    splitter = FragmentPairsSplitter(0.1, 1e4, **collectors)
+    test, train = splitter(
+        pairs
+    )
+
     return train, test 
     
 def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=False):
@@ -254,7 +252,7 @@ def pair_graph_encode(df, file_base, n_frags):
     print('Encoding fragments and molecules to graph-matrices...')
     # initialize vocabulary
     # TO DO: VocGraph doesn't work w/o file >> TO DO: Modify VocGraph to work w/o it OR write voc_graph.txt before this in dataset.py 
-    voc = VocGraph(os.path.dirname(file_base) + '/voc_graph.txt', n_frags=4)
+    voc = VocGraph(os.path.dirname(file_base) + '/voc_graph.txt', n_frags=n_frags)
     
     # create columns for fragments
     col = ['C%d' % d for d in range(voc.max_len*5)]
