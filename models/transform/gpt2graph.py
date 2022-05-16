@@ -249,7 +249,7 @@ class GraphModel(Base):
         t00 = time.time()
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
-        max_interval = 100
+        max_interval = 50
         for epoch in tqdm(range(epochs)):
             t0 = time.time()
             for i, src in enumerate(train_loader):

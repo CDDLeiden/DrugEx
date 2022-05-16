@@ -206,18 +206,20 @@ def train_test_split(pairs, file_base, save_files=False):
     Returns:
         train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
         test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
+        unique (pd.DataFrame)     : dataframe containing a fragment-molecule pair per unique fragment-combination
     """
 
     collectors = dict()
     if save_files:
         collectors['train_collector'] = lambda x : x.to_csv(file_base + '_train.txt', sep='\t', index=False)
         collectors['test_collector'] = lambda x : x.to_csv(file_base + '_test.txt', sep='\t', index=False)
+        collectors['unique_collector'] = lambda x : x.to_csv(file_base + '_unique.txt', sep='\t', index=False)
     splitter = FragmentPairsSplitter(0.1, 1e4, **collectors)
-    test, train = splitter(
+    test, train, unique = splitter(
         pairs
     )
 
-    return train, test 
+    return train, test, unique
     
 def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=False):
     
@@ -329,7 +331,7 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
                         help="Type of molecular representation: 'graph' or 'smiles'")     
     parser.add_argument('-nof', '--no_frags', action='store_true',
-                        help="If on, molecules are not split to fragments and a corpus is create")
+                        help="If on, molecules are not split to fragments and a corpus is created")
     
     parser.add_argument('-fm', '--frag_method', type=str, default='brics',
                         help="Fragmentation method: 'brics' or 'recap'") 
@@ -367,9 +369,14 @@ def Dataset(args):
     """ 
     Prepare input files for DrugEx generators containing encoded molecules for three different cases:
     
-    - SMILES w/o fragments: {output}_corpus.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded molecules and the token-vocabulary respectively
-    - SMILES w/ fragments: {output}_{mf/sf}_{frag_method}_[train/test]_smi.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded fragment-molecule pairs for the train and test sets and the token-vocabulary respectively
-    - Graph fragments: {output}_{mf/sf}_{frag_method}_[train/test]_graph.txt and [opt] {voc}_graph.txt containing the encoded graph-matrices of fragement-molecule pairs for the train and test sets and the token-vocabulary respectively   
+    - SMILES w/o fragments: {output}_corpus.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded molecules
+                             and the token-vocabulary respectively
+    - SMILES w/ fragments: {output}_{mf/sf}_{frag_method}_[train/test]_smi.txt and [opt] {voc}_smiles.txt containing
+                             the SMILES-token-encoded fragment-molecule pairs for the train and test sets and 
+                             the token-vocabulary respectively
+    - Graph fragments: {output}_{mf/sf}_{frag_method}_[train/test]_graph.txt and [opt] {voc}_graph.txt containing the
+                             encoded graph-matrices of fragement-molecule pairs for the train and test sets and
+                             the token-vocabulary respectively   
     """
     
                         
@@ -400,12 +407,14 @@ def Dataset(args):
                               method=args.frag_method, save_file=args.save_intermediate_files)
         
         # split fragment-molecule pairs into train and test set
-        df_train, df_test =  train_test_split(pairs, file_base, save_files=args.save_intermediate_files)
+        df_train, df_test, df_unique =  train_test_split(pairs, file_base, save_files=args.save_intermediate_files)
         
         # encode pairs to SMILES-tokens or graph-matrices
         pair_encode(df_train, args.mol_type, file_base + '_train', 
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
         pair_encode(df_test, args.mol_type, file_base + '_test', 
+                    n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
+        pair_encode(df_unique, args.mol_type, file_base + '_unique', 
                     n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
 
     print("Dataset finished.")
