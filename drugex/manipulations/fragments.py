@@ -1,5 +1,6 @@
 import pandas as pd
 
+from drugex.logs import logger
 from drugex.manipulations.splitting import TrainTestSplitter
 
 
@@ -15,7 +16,7 @@ class FragmentPairsSplitter(TrainTestSplitter):
         df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
         frags = set(df.Frags)
         if len(frags) > int(1e5):
-            print('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//(100 * self.ratio)))
+            logger.warning('WARNING: to speed up the training, the test set size was capped at 10,000 fragments instead of the default 10% of original data, which is: {}!'.format(len(frags)//(100 * self.ratio)))
             test_in = df.Frags.drop_duplicates().sample(int(self.maxTestSamples))
         else:
             test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
