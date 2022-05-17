@@ -7,6 +7,7 @@ On: 21.04.22, 12:19
 from rdkit import Chem
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
+from drugex.logs import logger
 from drugex.molecules.converters.default import DrExToSMILES, Identity, SmilesToDrEx
 from drugex.molecules.converters.interfaces import MolConverter, ConversionException
 from drugex.molecules.mol import DrExMol
@@ -63,6 +64,7 @@ class DrExStandardizer(MolConverter):
                 new_mol.annotate(key, mol.getAnnotation(key))
             return self.outputConvertor(new_mol)
         except Exception as exp:
+            logger.exception('Parsing Error:', Chem.MolToSmiles(rd_mol))
             raise StandardizationException(exp)
 
 

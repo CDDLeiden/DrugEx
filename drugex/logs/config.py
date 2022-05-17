@@ -131,7 +131,7 @@ def init_logfile(log, runid, githash=None, args=None):
     else: 
         logging.info('\nContinued at: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     logging.info('git hash: %s \n' % githash)
-    logging.info('Run settings:')
+    logging.info('Run logSettings:')
     logging.info(args)
     logging.info('')
 
@@ -179,3 +179,11 @@ def get_runid(log_folder='logs', old=True, id=None):
         os.mkdir(os.path.join(log_folder, '%04d' % runid))
     
     return '%04d' % runid
+
+class LogFileConfig:
+
+    def __init__(self, path, logger, debug, run_id):
+        self.path = path
+        self.log = logger
+        self.debug = debug
+        self.runID = run_id

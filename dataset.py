@@ -4,18 +4,20 @@ from rdkit import Chem
 from rdkit import rdBase
 from tqdm import tqdm
 
+import drugex.logs
 from drugex.corpus.corpus import SequenceCorpus
+from drugex.logs import utils
+from drugex.logs.utils import enable_file_logger
 from drugex.manipulations.fragments import FragmentPairsSplitter
 from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.molecules.fragments import FragmentSupplier
-from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector, ResultCollector
+from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from utils import VocGraph
 from drugex.corpus.vocabulary import VocSmiles
-import utils
 import numpy as np
 
 rdBase.DisableLog('rdApp.info')
@@ -84,14 +86,17 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     voc = VocSmiles(words)
 
     # save corpus data
-    with open(base_dir + '/data/%s_corpus.txt' % output, "w", encoding="utf-8") as outfile:
-        outfile.writelines(["SMILES\tTokens\n"])
+    with open(base_dir + f'/data/{output}_corpus_{logSettings.runID}.txt', "w", encoding="utf-8") as outfile:
+        outfile.writelines(["Smiles\tToken\n"])
         outfile.writelines(data)
     
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        voc.toFile(base_dir + '/data/%s_smiles.txt' % voc_file)
+        voc.toFile(os.path.join(
+            base_dir,
+            f'data/{voc_file}_smiles_{logSettings.runid}.txt')
+        )
 
 # def graph_corpus(input, output, suffix='sdf'):
 #     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
@@ -211,9 +216,9 @@ def train_test_split(pairs, file_base, save_files=False):
 
     collectors = dict()
     if save_files:
-        collectors['train_collector'] = lambda x : x.to_csv(file_base + '_train.txt', sep='\t', index=False)
-        collectors['test_collector'] = lambda x : x.to_csv(file_base + '_test.txt', sep='\t', index=False)
-        collectors['unique_collector'] = lambda x : x.to_csv(file_base + '_unique.txt', sep='\t', index=False)
+        collectors['train_collector'] = lambda x : x.to_csv(file_base + f'_train_{logSettings.runID}.txt', sep='\t', index=False)
+        collectors['test_collector'] = lambda x : x.to_csv(file_base + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
+        collectors['unique_collector'] = lambda x : x.to_csv(file_base + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
     splitter = FragmentPairsSplitter(0.1, 1e4, **collectors)
     test, train, unique = splitter(
         pairs
@@ -310,12 +315,12 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        log = open( os.path.dirname(file_base) + '/%s_smiles.txt' % voc_file, 'w')
-        log.write('\n'.join(sorted(words)))
-        log.close()
+        voc_file = open( os.path.dirname(file_base) + '/%s_smiles_%s.txt' % (voc_file, logSettings.runID), 'w')
+        voc_file.write('\n'.join(sorted(words)))
+        voc_file.close()
     
     codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv(file_base + '_smi.txt', sep='\t', index=False)
+    codes.to_csv(file_base + '_smi_%s.txt' % logSettings.runID, sep='\t', index=False)
     
     
 def DatasetArgParser(txt=None):
@@ -324,6 +329,9 @@ def DatasetArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
+    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
+    parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
                         help="Input file containing raw data. tsv or sdf.gz format")   
     parser.add_argument('-o', '--output', type=str, default='ligand',
@@ -356,12 +364,6 @@ def DatasetArgParser(txt=None):
         
     if args.n_combs is None:
         args.n_combs = args.n_frags
-    
-    if args.no_git is False:
-        args.git_commit = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open(args.base_dir + '/data_args.json', 'w') as f:
-        json.dump(vars(args), f)
         
     return args    
 
@@ -403,8 +405,14 @@ def Dataset(args):
         file_base = '%s/data/%s_%d:%d_%s' % (args.base_dir, args.output, args.n_frags, args.n_combs, args.frag_method)
         
         # create fragment-molecule pairs
-        pairs = pair_frags(smiles, file_base + '.txt', args.n_frags, args.n_combs,
-                              method=args.frag_method, save_file=args.save_intermediate_files)
+        pairs = pair_frags(
+            smiles,
+            '%s_%s.txt' % (file_base, logSettings.runID),
+            args.n_frags,
+            args.n_combs,
+            method=args.frag_method,
+            save_file=args.save_intermediate_files
+        )
         
         # split fragment-molecule pairs into train and test set
         df_train, df_test, df_unique =  train_test_split(pairs, file_base, save_files=args.save_intermediate_files)
@@ -422,4 +430,23 @@ def Dataset(args):
 if __name__ == '__main__':
 
     args = DatasetArgParser()
+
+    # enable logger and get logSettings
+    logSettings = enable_file_logger(
+        os.path.join(args.base_dir,'logs'),
+        'dataset.log',
+        args.keep_runid,
+        args.pick_runid,
+        args.debug,
+        __name__,
+        utils.commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
+        vars(args)
+    )
+    drugex.logs.logger = logSettings.log
+
+    # Create json log file with used commandline arguments 
+    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    with open('%s/logs/%s/data_args.json' % (args.base_dir, logSettings.runID), 'w') as f:
+        json.dump(vars(args), f)
+
     Dataset(args)

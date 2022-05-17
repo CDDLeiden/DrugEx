@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import logging
 import logging.config
 from datetime import datetime
+
+import drugex.logs.utils
 import models
 import utils
 import numpy as np
@@ -131,7 +132,7 @@ class QSARDataset:
         else:
             log.info('    Total: active: %s not active: %s' % (df.sum().astype(int), (len(df)-df.sum()).astype(int)))
             log.info('    In train: active: %s not active: %s' % (data.sum().astype(int), (len(data)-data.sum()).astype(int)))
-            log.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(data)-test.sum()).astype(int)))
+            log.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(test)-test.sum()).astype(int)))
     
     def create_folds(self):
         """
@@ -783,10 +784,10 @@ if __name__ == '__main__':
     # Begin log file
     githash = None
     if args.no_git is False:
-        githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))   
+        githash = drugex.logs.utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
         
-    # settings for DNN model
+    # logSettings for DNN model
     #TODO: set this only for DNN model, instead of global
     BATCH_SIZE = args.batch_size
     N_EPOCH = args.epochs

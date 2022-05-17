@@ -1,4 +1,6 @@
 import os
+
+import drugex.logs.utils
 import utils
 import logging_exmpl_mod
 import logging
@@ -38,7 +40,7 @@ if __name__ == '__main__':
     log = logging.getLogger(__name__)
 
     #Begin log file
-    githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    githash = drugex.logs.utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     utils.init_logfile(log, runid, githash)
     
     log.debug('This message should go to the debug log file if debug argument is specified')
