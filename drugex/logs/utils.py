@@ -10,6 +10,7 @@ import os
 
 import git
 
+import drugex.logs
 from drugex.logs import config
 from drugex.logs.config import LogFileConfig
 
@@ -28,6 +29,7 @@ def enable_file_logger(log_folder, filename, keep_old_runid=False, picked_runid=
     config.config_logger(path, debug)
 
     log = logging.getLogger(filename) if not log_name else logging.getLogger(log_name)
+    drugex.logs.logger = log
 
     settings = LogFileConfig(path, log, debug, runid)
 

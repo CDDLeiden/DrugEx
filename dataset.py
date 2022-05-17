@@ -442,7 +442,6 @@ if __name__ == '__main__':
         utils.commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
-    drugex.logs.logger = logSettings.log
 
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
