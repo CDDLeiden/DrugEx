@@ -243,7 +243,7 @@ class QSARModel:
 
         if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
             bayesian_params = {'verbosity': 0}
-        elif type(self.alg).__name__ in ['SVR', 'KNeighborsRegressor', 'KNeighborsClassifier', 'GaussianNB', 'PLSRegression']:
+        else:
             bayesian_params = {}
 
         for key, value in self.search_space_bs.items():
