@@ -9,6 +9,7 @@ import tempfile
 from unittest import TestCase
 
 from drugex.corpus.corpus import SequenceCorpus
+from drugex.corpus.vocabulary import VocGraph
 from drugex.corpus.writers import SequenceFileWriter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.suppliers import TestSupplier, StandardizedSupplier
@@ -55,4 +56,9 @@ class CorpusTest(TestCase):
             next(out)
             for idx,line in enumerate(out):
                 self.assertTrue(line == lines[idx])
+
+    def test_graph_voc(self):
+        voc = VocGraph()
+        df = voc.toDataFrame()
+        self.assertTrue(len(df) == voc.words)
 

@@ -1,27 +1,10 @@
 import torch
 import re
 from rdkit import Chem
-from rdkit.Chem.MolStandardize import rdMolStandardize
 import numpy as np
 import pandas as pd
 import utils
 from typing import List, Iterable, Optional
-
-
-# def clean_mol(smile, is_deep=True):
-#     smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
-#         .replace('[N]', 'N').replace('[B]', 'B') \
-#         .replace('[2H]', '[H]').replace('[3H]', '[H]')
-#     try:
-#         mol = Chem.MolFromSmiles(smile)
-#         if is_deep:
-#             mol = rdMolStandardize.ChargeParent(mol)
-#         smileR = Chem.MolToSmiles(mol, 0)
-#         smile = Chem.CanonSmiles(smileR)
-#     except:
-#         print('Parsing Error:', smile)
-#         smile = None
-#     return smile
 
 
 class Voc(object):
@@ -87,130 +70,130 @@ class Voc(object):
             self.words += chars
 
 
-class VocGraph:
-    def __init__(self, init_from_file=None, max_len=80, n_frags=4):
-        self.control = ('EOS', 'GO')
-        self.words = list(self.control)
-        self.max_len = max_len
-        self.n_frags = n_frags
-        self.tk2ix = {'EOS': 0, 'GO': 1}
-        self.ix2nr = {0: 0, 1: 0}
-        self.ix2ch = {0: 0, 1: 0}
-        if init_from_file: self.init_from_file(init_from_file)
-        self.size = len(self.words)
-        self.E = {0: '', 1: '+', -1: '-'}
-
-    def init_from_file(self, file):
-        chars = []
-        df = pd.read_table(file)
-        self.masks = torch.zeros(len(df) + len(self.control)).long()
-        for i, row in df.iterrows():
-            self.masks[i + len(self.control)] = row.Val
-            ix = i + len(self.control)
-            self.tk2ix[row.Word] = ix
-            self.ix2nr[ix] = row.Nr
-            self.ix2ch[ix] = row.Ch
-            chars.append(row.Word)
-        assert len(set(chars)) == len(chars)
-        self.words += chars
-
-    def get_atom_tk(self, atom):
-        sb = atom.GetSymbol() + self.E[atom.GetFormalCharge()]
-        val = atom.GetExplicitValence() + atom.GetImplicitValence()
-        tk = str(val) + sb
-        return self.tk2ix[tk]
-
-    def encode(self, smiles, subs):
-        output = np.zeros([len(smiles), self.max_len-self.n_frags-1, 5], dtype=np.long)
-        connect = np.zeros([len(smiles), self.n_frags+1, 5], dtype=np.long)
-        for i, s in enumerate(smiles):
-            mol = Chem.MolFromSmiles(s)
-            sub = Chem.MolFromSmiles(subs[i])
-            # Chem.Kekulize(sub)
-            sub_idxs = mol.GetSubstructMatches(sub)
-            for sub_idx in sub_idxs:
-                sub_bond = [mol.GetBondBetweenAtoms(
-                    sub_idx[b.GetBeginAtomIdx()],
-                    sub_idx[b.GetEndAtomIdx()]).GetIdx() for b in sub.GetBonds()]
-                sub_atom = [mol.GetAtomWithIdx(ix) for ix in sub_idx]
-                split_bond = {b.GetIdx() for a in sub_atom for b in a.GetBonds() if b.GetIdx() not in sub_bond}
-                single = sum([int(mol.GetBondWithIdx(b).GetBondType()) for b in split_bond])
-                if single == len(split_bond): break
-            frags = Chem.FragmentOnBonds(mol, list(split_bond))
-
-            Chem.MolToSmiles(frags)
-            rank = eval(frags.GetProp('_smilesAtomOutputOrder'))
-            mol_idx = list(sub_idx) + [idx for idx in rank if idx not in sub_idx and idx < mol.GetNumAtoms()]
-            frg_idx = [i+1 for i, f in enumerate(Chem.GetMolFrags(sub)) for _ in f]
-
-            Chem.Kekulize(mol)
-            m, n, c = [(self.tk2ix['GO'], 0, 0, 0, 1)], [], [(self.tk2ix['GO'], 0, 0, 0, 0)]
-            mol2sub = {ix: i for i, ix in enumerate(mol_idx)}
-            for j, idx in enumerate(mol_idx):
-                atom = mol.GetAtomWithIdx(idx)
-                bonds = sorted(atom.GetBonds(), key=lambda x: mol2sub[x.GetOtherAtomIdx(idx)])
-                bonds = [b for b in bonds if j > mol2sub[b.GetOtherAtomIdx(idx)]]
-                n_split = sum([1 if b.GetIdx() in split_bond else 0 for b in bonds])
-                tk = self.get_atom_tk(atom)
-                for k, bond in enumerate(bonds):
-                    ix2 = mol2sub[bond.GetOtherAtomIdx(idx)]
-                    is_split = bond.GetIdx() in split_bond
-                    if idx in sub_idx:
-                        is_connect = is_split
-                    elif len(bonds) == 1:
-                        is_connect = False
-                    elif n_split == len(bonds):
-                        is_connect = is_split and k != 0
-                    else:
-                        is_connect = False
-                    if bond.GetIdx() in sub_bond:
-                        bin, f = m, frg_idx[j]
-                    elif is_connect:
-                        bin, f = c, 0
-                    else:
-                        bin, f = n, 0
-                    if bond.GetIdx() in sub_bond or not is_connect:
-                        tk2 = tk
-                        tk = self.tk2ix['*']
-                    else:
-                        tk2 = self.tk2ix['*']
-                    bin.append((tk2, j, ix2, int(bond.GetBondType()), f))
-                if tk != self.tk2ix['*']:
-                    bin, f = (m, frg_idx[j]) if idx in sub_idx else (n, f)
-                    bin.append((tk, j, j, 0, f))
-            output[i, :len(m+n), :] = m+n
-            if len(c) > 0:
-                connect[i, :len(c)] = c
-        return np.concatenate([output, connect], axis=1)
-
-    def decode(self, matrix):
-        frags, smiles = [], []
-        for m, adj in enumerate(matrix):
-            # print('decode: ', m)
-            emol = Chem.RWMol()
-            esub = Chem.RWMol()
-            try:
-                for atom, curr, prev, bond, frag in adj:
-                    atom, curr, prev, bond, frag = int(atom), int(curr), int(prev), int(bond), int(frag)
-                    if atom == self.tk2ix['EOS']: continue
-                    if atom == self.tk2ix['GO']: continue
-                    if atom != self.tk2ix['*']:
-                        a = Chem.Atom(self.ix2nr[atom])
-                        a.SetFormalCharge(self.ix2ch[atom])
-                        emol.AddAtom(a)
-                        if frag != 0: esub.AddAtom(a)
-                    if bond != 0:
-                        b = Chem.BondType(bond)
-                        emol.AddBond(curr, prev, b)
-                        if frag != 0: esub.AddBond(curr, prev, b)
-                Chem.SanitizeMol(emol)
-                Chem.SanitizeMol(esub)
-            except Exception as e:
-                print(adj)
-                # raise e
-            frags.append(Chem.MolToSmiles(esub))
-            smiles.append(Chem.MolToSmiles(emol))
-        return frags, smiles
+# class VocGraph:
+#     def __init__(self, init_from_file=None, max_len=80, n_frags=4):
+#         self.control = ('EOS', 'GO')
+#         self.words = list(self.control)
+#         self.max_len = max_len
+#         self.n_frags = n_frags
+#         self.tk2ix = {'EOS': 0, 'GO': 1}
+#         self.ix2nr = {0: 0, 1: 0}
+#         self.ix2ch = {0: 0, 1: 0}
+#         if init_from_file: self.init_from_file(init_from_file)
+#         self.size = len(self.words)
+#         self.E = {0: '', 1: '+', -1: '-'}
+#
+#     def init_from_file(self, file):
+#         chars = []
+#         df = pd.read_table(file)
+#         self.masks = torch.zeros(len(df) + len(self.control)).long()
+#         for i, row in df.iterrows():
+#             self.masks[i + len(self.control)] = row.Val
+#             ix = i + len(self.control)
+#             self.tk2ix[row.Word] = ix
+#             self.ix2nr[ix] = row.Nr
+#             self.ix2ch[ix] = row.Ch
+#             chars.append(row.Word)
+#         assert len(set(chars)) == len(chars)
+#         self.words += chars
+#
+#     def get_atom_tk(self, atom):
+#         sb = atom.GetSymbol() + self.E[atom.GetFormalCharge()]
+#         val = atom.GetExplicitValence() + atom.GetImplicitValence()
+#         tk = str(val) + sb
+#         return self.tk2ix[tk]
+#
+#     def encode(self, smiles, subs):
+#         output = np.zeros([len(smiles), self.max_len-self.n_frags-1, 5], dtype=np.long)
+#         connect = np.zeros([len(smiles), self.n_frags+1, 5], dtype=np.long)
+#         for i, s in enumerate(smiles):
+#             mol = Chem.MolFromSmiles(s)
+#             sub = Chem.MolFromSmiles(subs[i])
+#             # Chem.Kekulize(sub)
+#             sub_idxs = mol.GetSubstructMatches(sub)
+#             for sub_idx in sub_idxs:
+#                 sub_bond = [mol.GetBondBetweenAtoms(
+#                     sub_idx[b.GetBeginAtomIdx()],
+#                     sub_idx[b.GetEndAtomIdx()]).GetIdx() for b in sub.GetBonds()]
+#                 sub_atom = [mol.GetAtomWithIdx(ix) for ix in sub_idx]
+#                 split_bond = {b.GetIdx() for a in sub_atom for b in a.GetBonds() if b.GetIdx() not in sub_bond}
+#                 single = sum([int(mol.GetBondWithIdx(b).GetBondType()) for b in split_bond])
+#                 if single == len(split_bond): break
+#             frags = Chem.FragmentOnBonds(mol, list(split_bond))
+#
+#             Chem.MolToSmiles(frags)
+#             rank = eval(frags.GetProp('_smilesAtomOutputOrder'))
+#             mol_idx = list(sub_idx) + [idx for idx in rank if idx not in sub_idx and idx < mol.GetNumAtoms()]
+#             frg_idx = [i+1 for i, f in enumerate(Chem.GetMolFrags(sub)) for _ in f]
+#
+#             Chem.Kekulize(mol)
+#             m, n, c = [(self.tk2ix['GO'], 0, 0, 0, 1)], [], [(self.tk2ix['GO'], 0, 0, 0, 0)]
+#             mol2sub = {ix: i for i, ix in enumerate(mol_idx)}
+#             for j, idx in enumerate(mol_idx):
+#                 atom = mol.GetAtomWithIdx(idx)
+#                 bonds = sorted(atom.GetBonds(), key=lambda x: mol2sub[x.GetOtherAtomIdx(idx)])
+#                 bonds = [b for b in bonds if j > mol2sub[b.GetOtherAtomIdx(idx)]]
+#                 n_split = sum([1 if b.GetIdx() in split_bond else 0 for b in bonds])
+#                 tk = self.get_atom_tk(atom)
+#                 for k, bond in enumerate(bonds):
+#                     ix2 = mol2sub[bond.GetOtherAtomIdx(idx)]
+#                     is_split = bond.GetIdx() in split_bond
+#                     if idx in sub_idx:
+#                         is_connect = is_split
+#                     elif len(bonds) == 1:
+#                         is_connect = False
+#                     elif n_split == len(bonds):
+#                         is_connect = is_split and k != 0
+#                     else:
+#                         is_connect = False
+#                     if bond.GetIdx() in sub_bond:
+#                         bin, f = m, frg_idx[j]
+#                     elif is_connect:
+#                         bin, f = c, 0
+#                     else:
+#                         bin, f = n, 0
+#                     if bond.GetIdx() in sub_bond or not is_connect:
+#                         tk2 = tk
+#                         tk = self.tk2ix['*']
+#                     else:
+#                         tk2 = self.tk2ix['*']
+#                     bin.append((tk2, j, ix2, int(bond.GetBondType()), f))
+#                 if tk != self.tk2ix['*']:
+#                     bin, f = (m, frg_idx[j]) if idx in sub_idx else (n, f)
+#                     bin.append((tk, j, j, 0, f))
+#             output[i, :len(m+n), :] = m+n
+#             if len(c) > 0:
+#                 connect[i, :len(c)] = c
+#         return np.concatenate([output, connect], axis=1)
+#
+#     def decode(self, matrix):
+#         frags, smiles = [], []
+#         for m, adj in enumerate(matrix):
+#             # print('decode: ', m)
+#             emol = Chem.RWMol()
+#             esub = Chem.RWMol()
+#             try:
+#                 for atom, curr, prev, bond, frag in adj:
+#                     atom, curr, prev, bond, frag = int(atom), int(curr), int(prev), int(bond), int(frag)
+#                     if atom == self.tk2ix['EOS']: continue
+#                     if atom == self.tk2ix['GO']: continue
+#                     if atom != self.tk2ix['*']:
+#                         a = Chem.Atom(self.ix2nr[atom])
+#                         a.SetFormalCharge(self.ix2ch[atom])
+#                         emol.AddAtom(a)
+#                         if frag != 0: esub.AddAtom(a)
+#                     if bond != 0:
+#                         b = Chem.BondType(bond)
+#                         emol.AddBond(curr, prev, b)
+#                         if frag != 0: esub.AddBond(curr, prev, b)
+#                 Chem.SanitizeMol(emol)
+#                 Chem.SanitizeMol(esub)
+#             except Exception as e:
+#                 print(adj)
+#                 # raise e
+#             frags.append(Chem.MolToSmiles(esub))
+#             smiles.append(Chem.MolToSmiles(emol))
+#         return frags, smiles
 
 
 class VocSeq:

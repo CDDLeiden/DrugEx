@@ -15,8 +15,7 @@ from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.molecules.fragments import FragmentPairsSupplier
 from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
-from utils import VocGraph
-from drugex.corpus.vocabulary import VocSmiles
+from drugex.corpus.vocabulary import VocSmiles, VocGraph
 import numpy as np
 
 rdBase.DisableLog('rdApp.info')
@@ -241,12 +240,12 @@ def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=Fal
     if mol_type == 'smiles' :
         pair_smiles_encode(df, file_base, voc_file, save_voc)   
     elif mol_type == 'graph' :
-        pair_graph_encode(df, file_base, n_frags) 
+        pair_graph_encode(df, file_base, n_frags, voc_file, save_voc)
     else:
         raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(mol_type))
 
 
-def pair_graph_encode(df, file_base, n_frags):
+def pair_graph_encode(df, file_base, n_frags, voc_file, save_voc):
     """
     Encodes fragments and molecules to graph-matrices.
     Arguments:
@@ -254,14 +253,17 @@ def pair_graph_encode(df, file_base, n_frags):
         file_base (str)           : base of output file
         n_frags (int)             : maximum number of fragments used as input per molecule
     """    
-    
-    print('Encoding fragments and molecules to graph-matrices...')
+
+    outfile = file_base + f'_graph_{logSettings.runID}.txt'
+    print(f'Encoding fragments and molecules to graph-matrices for: {outfile}')
     # initialize vocabulary
-    # TO DO: VocGraph doesn't work w/o file >> TO DO: Modify VocGraph to work w/o it OR write voc_graph.txt before this in dataset.py 
-    voc = VocGraph(os.path.dirname(file_base) + '/voc_graph.txt', n_frags=n_frags)
+    voc = VocGraph(n_frags=n_frags)
+
+    if save_voc:
+        voc.toFile(os.path.dirname(file_base) + '/%s_graph_%s.txt' % (voc_file, logSettings.runID))
     
     # create columns for fragments
-    col = ['C%d' % d for d in range(voc.max_len*5)]
+    col = ['C%d' % d for d in range(voc.maxLen*5)]
     codes = []
     for i, row in tqdm(df.iterrows(), total=len(df)):
         frags, smile = row.Frags, row.Smiles
@@ -282,7 +284,7 @@ def pair_graph_encode(df, file_base, n_frags):
             print(i, frags, smile)
     
     codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv(file_base + '_graph.txt', sep='\t', index=False)
+    codes.to_csv(outfile, sep='\t', index=False)
 
 def pair_smiles_encode(df, file_base, voc_file, save_voc):
     """
