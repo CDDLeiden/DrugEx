@@ -10,6 +10,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from drugex.logs import logger
+
+
 class DataSplitter(ABC):
 
     def __init__(self, chunks):
@@ -87,7 +90,7 @@ class ParallelSupplierEvaluator:
     def run(self, chunk, current_chunk, total_chunks):
         sup = self.initSupplier(self.supplier, chunk)
         ret = sup.get()
-        print(f"Finished chunks: {current_chunk}/{total_chunks}")
+        logger.info(f"Finished {current_chunk}/{total_chunks} chunks for supplier: {sup}")
         if self.includeSuppliers:
             return ret, sup
         else:
