@@ -80,12 +80,21 @@ def GeneratorArgParser(txt=None):
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threashold")                    
+    
     parser.add_argument('-qed', '--qed', action='store_true',
-                        help="If on, QED is used in desribality function")
+                        help="If on, QED is used in desirability function")
     parser.add_argument('-ras', '--ra_score', action='store_true',
-                        help="If on, Retrosythesis Accessibility score is used in desribality function")
+                        help="If on, Retrosythesis Accessibility score is used in desirability function")
     parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
                         help="RAScore model: 'XBG'")
+    parser.add_argument('-mw', '--molecular_weight', action='store_true',
+                        help='If on, large compounds are penalized in the desirability function')
+    parser.add_argument('-mw_ths', '--mw_thresholds', type=int, nargs='*', default=[500, 1000],
+                        help='Thresholds used calculate molecualr weight clipped scores in the desirability function.')
+    parser.add_argument('-logP', '--logP', action='store_true',
+                        help='If on, compounds with large logP values are penalized in the desirability function')
+    parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[4, 6],
+                        help='Thresholds used calculate logP clipped scores in the desirability function')
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
@@ -256,7 +265,20 @@ def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme
     return evolver
     
 
-def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], inactive_targets=[], activity_threshold=6.5, qed=False, ra_score=False, ra_score_model='XBG'):
+def CreateDesirabilityFunction(base_dir, 
+                               alg, 
+                               task, 
+                               scheme, 
+                               active_targets=[], 
+                               inactive_targets=[], 
+                               activity_threshold=6.5, 
+                               qed=False, 
+                               ra_score=False, 
+                               ra_score_model='XBG',
+                               mw=False,
+                               mw_ths=[500,1000],
+                               logP=False,
+                               logP_ths=[4,6]):
     
     """
     Sets up the objectives of the desirability function.
@@ -272,6 +294,11 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
         ra_score_model (str), opt   : RAscore algorithm: 'NN' or 'XGB'
+        mw (bool), opt              : if True, large molecules are penalized in the desirability function
+        mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
+        logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
+        logP_ths (list), opt        : logP thresholds to penalize large molecules
+    
     Returns:
         objs (lst)                  : list of selected predictors 
         keys (lst)                  : list of names of selected predictors
@@ -297,6 +324,12 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         from models.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
+    if mw:
+        objs.append(utils.Property('MW'))
+        keys.append('MW')
+    if logP:
+        objs.append(utils.Property('logP'))
+        keys.append('logP')
         
     pad = 3.5
     if scheme == 'WS':
@@ -332,6 +365,12 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         elif k == 'RAscore':
             mods.append(utils.ClippedScore(lower_x=0, upper_x=1.0))
             ths += [0.0]
+        elif k == 'MW':
+            mods.append(utils.ClippedScore(lower_x=mw_ths[1], upper_x=mw_ths[0]))
+            ths += [0.5]
+        elif k == 'logP':
+            mods.append(utils.ClippedScore(lower_x=logP_ths[1], upper_x=logP_ths[0]))
+            ths += [0.5]       
     
     return objs, keys, mods, ths
 
