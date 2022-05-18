@@ -26,6 +26,7 @@ import os.path
 import sys
 import argparse
 import json
+import random
 
 class QSARDataset:
     """
@@ -238,15 +239,12 @@ class QSARModel:
     def objective(self, trial):
         """
             objective for bayesian optimization
-            set random seed, has different variable name for XGB
         """
 
         if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
-            bayesian_params = {'seed': 42, 'verbosity': 0}
+            bayesian_params = {'verbosity': 0}
         elif type(self.alg).__name__ in ['SVR', 'KNeighborsRegressor', 'KNeighborsClassifier', 'GaussianNB', 'PLSRegression']:
             bayesian_params = {}
-        else:
-            bayesian_params = {'random_state': 42}
 
         for key, value in self.search_space_bs.items():
             if value[0] == 'categorical':
@@ -380,7 +378,7 @@ class RF(QSARModel):
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
-        self.parameters=parameters if parameters != None else {'random_state': 42, 'n_estimators': 1000}
+        self.parameters=parameters if parameters != None else {'n_estimators': 1000}
 
         # set the search space for bayesian optimization
         self.search_space_bs = {
@@ -397,7 +395,6 @@ class RF(QSARModel):
 
         # set the search space for grid search
         self.search_space_gs = {
-            'random_state': [42],
             'max_depth': [None, 20, 50, 100],
             'max_features': ['auto', 'log2'],
             'min_samples_leaf': [1, 3, 5],
@@ -422,7 +419,7 @@ class XGB(QSARModel):
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:logistic',use_label_encoder=False, eval_metric='logloss')
-        self.parameters=parameters if parameters != None else {'nthread': 4, 'seed': 42, 'n_estimators': 1000}
+        self.parameters=parameters if parameters != None else {'nthread': 4, 'n_estimators': 1000}
         self.search_space_bs = {
             'n_estimators': ['int', 100, 1000],
             'max_depth': ['int',3, 10],
@@ -431,7 +428,6 @@ class XGB(QSARModel):
         
         self.search_space_gs = {
             'nthread':[4], #when use hyperthread, xgboost may become slower
-            'seed': [42],
             'learning_rate': [0.01, 0.05, 0.1], #so called `eta` value
             'max_depth': [3,6,10],
             'n_estimators': [100, 500, 1000],
@@ -453,7 +449,6 @@ class SVM(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for SVM
         self.alg = SVR() if data.reg else SVC(probability=True)
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
@@ -495,7 +490,6 @@ class KNN(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for KNN
         self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
@@ -529,7 +523,6 @@ class NB(QSARModel):
     def __init__(self, runid, data, save_m=True, parameters=None):
         if data.reg:
             raise ValueError("NB should be constructed only with classification.")
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for NB
         self.alg = GaussianNB()
         self.parameters=parameters if parameters != None else {}
         #parameter dictionaries for hyperparameter optimization
@@ -559,7 +552,6 @@ class PLS(QSARModel):
     def __init__(self, runid, data, save_m=True, parameters=None):
         if not data.reg:
             raise ValueError("PLS should be constructed only with regression.")
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for PLS
         self.alg = PLSRegression()
         self.parameters=parameters if parameters != None else {}
         self.search_space_bs = {
@@ -589,7 +581,6 @@ class DNN(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
-        np.random.seed(42)
         self.alg = models.STFullyConnected
         self.parameters = parameters if parameters != None else {}
         super().__init__(runid, data, self.alg, self.parameters, None, None, save_m=save_m)
@@ -649,6 +640,7 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
     parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-ran', '--random_state', type=int, default=1, help="Seed for the random state")
     parser.add_argument('-i', '--input', type=str, default='dataset',
                         help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
@@ -764,6 +756,12 @@ def Environment(args, runid):
 if __name__ == '__main__':
     args = EnvironmentArgParser()
     
+    #Set random seeds
+    random.seed(args.random_state)
+    np.random.seed(args.random_state)
+    torch.manual_seed(args.random_state)
+    os.environ['TF_DETERMINISTIC_OPS'] = str(args.random_state)
+
     # Get run id
     runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
                             old=args.keep_runid,
@@ -792,4 +790,7 @@ if __name__ == '__main__':
     N_EPOCH = args.epochs
     
     #Optimize, evaluate and train estimators according to environment arguments
-    Environment(args, runid)
+    try:
+        Environment(args, runid)
+    except:
+        log.exception("something went wrong in the environment!")
