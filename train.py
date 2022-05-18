@@ -165,15 +165,24 @@ def DataPreparationGraph(base_dir, runid, input_prefix, batch_size=128, unique_f
         log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
         voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
-    if unique_frags :
-        data = pd.read_table( data_path + '%s_unique_graph_%s.txt' % (input_prefix, runid))
-    else:
-        data = pd.read_table( data_path + '%s_train_graph_%s.txt' % (input_prefix, runid))
-    
+    if unique_frags : subset = 'unique'
+    else : subset = 'train'
+
+    try:
+        data = pd.read_table( data_path + '%s_%s_graph_%s.txt' % (input_prefix, subset, runid))
+    except:
+        log.warning('Reading %s_%s_graph.txt instead of %s_%s_graph_%s.txt' % (input_prefix, subset, input_prefix, subset, runid))
+        data = pd.read_table( data_path + '%s_%s_graph.txt' % (input_prefix, subset))
+
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
-    test = pd.read_table( data_path + '%s_test_graph_%s.txt' % (input_prefix, runid))
+    try:
+        test = pd.read_table( data_path + '%s_%s_graph_%s.txt' % (input_prefix, 'test', runid))
+    except:
+        log.warning('Reading %s_%s_graph.txt instead of %s_%s_graph_%s.txt' % (input_prefix, 'test', input_prefix, 'test', runid))
+        test = pd.read_table( data_path + '%s_%s_graph.txt' % (input_prefix, 'test'))
+        
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
