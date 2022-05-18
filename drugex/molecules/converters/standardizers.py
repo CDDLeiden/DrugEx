@@ -64,7 +64,7 @@ class DrExStandardizer(MolConverter):
                 new_mol.annotate(key, mol.getAnnotation(key))
             return self.outputConvertor(new_mol)
         except Exception as exp:
-            logger.exception('Parsing Error:', Chem.MolToSmiles(rd_mol))
+            logger.exception(f'Parsing Error: {Chem.MolToSmiles(rd_mol)}')
             raise StandardizationException(exp)
 
 
