@@ -22,3 +22,12 @@ class TrainTestSplitter(ABC):
     @abstractmethod
     def __call__(self, data):
         pass
+
+class FragmentPairEncoder(ABC):
+
+    @abstractmethod
+    def encodeMol(self, mol):
+        pass
+
+    def encodeFrag(self, frag):
+        pass

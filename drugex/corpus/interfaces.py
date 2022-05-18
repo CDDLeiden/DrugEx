@@ -4,9 +4,9 @@ interfaces
 Created by: Martin Sicho
 On: 26.04.22, 13:12
 """
-import logging
 from abc import ABC, abstractmethod
 
+from drugex.logs import logger
 from drugex.molecules.interfaces import MolSupplier
 
 
@@ -56,16 +56,16 @@ class VocabularySequence(Vocabulary, ABC):
         log.write('\n'.join(self.words))
         log.close()
 
-    def addWordsFromSeq(self, seq):
+    def addWordsFromSeq(self, seq, ignoreConstraints=False):
         token = self.splitSequence(seq)
-        if self.min_len < len(token) <= self.max_len:
+        if ignoreConstraints or (self.min_len < len(token) <= self.max_len):
             diff = set(token) - self.words_set
             if len(diff) > 0:
                 self.words.extend(diff)
                 self.updateIndex()
             return token
         else:
-            logging.info(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {token} (count: {len(token)}). It will be ignored.")
+            logger.warning(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {token} (count: {len(token)}). It will be ignored.")
             return None
 
     def updateIndex(self):

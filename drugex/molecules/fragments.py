@@ -7,7 +7,7 @@ On: 06.05.22, 15:39
 from drugex.molecules.interfaces import MolSupplier
 
 
-class FragmentSupplier(MolSupplier):
+class FragmentPairsSupplier(MolSupplier):
 
     def __init__(self, molecules, fragmenter):
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)

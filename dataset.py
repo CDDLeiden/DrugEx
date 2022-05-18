@@ -4,16 +4,15 @@ from rdkit import Chem
 from rdkit import rdBase
 from tqdm import tqdm
 
-import drugex.logs
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.logs import utils
 from drugex.logs.utils import enable_file_logger
-from drugex.manipulations.fragments import FragmentPairsSplitter
+from drugex.datasets.fragments import FragmentPairsSplitter, FragmentPairsEncodedSupplier, SequenceFragmentEncoder
 from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import SDFSupplier
-from drugex.molecules.fragments import FragmentSupplier
+from drugex.molecules.fragments import FragmentPairsSupplier
 from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from utils import VocGraph
@@ -186,7 +185,7 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
         print('Breaking molecules to leaf fragments...')
     
     evaluator = ParallelSupplierEvaluator(
-        FragmentSupplier,
+        FragmentPairsSupplier,
         return_unique=False,
         result_collector=FragmentCollector(),
         kwargs={
@@ -295,32 +294,29 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
         save_voc (bool)          : if true save voc file (should only be true for the pre-training set)
     """
     
-    print('Encoding fragments and molecules to SMILES-tokens...')
-    # initialize vocabulary
-    voc = VocSmiles()
+    outpath = file_base + '_smi_%s.txt' % logSettings.runID
+    print(f'Encoding fragments and molecules to SMILES-tokens for: {outpath}')
 
-    col = ['Input', 'Output']
-    codes = []
+    evaluator = ParallelSupplierEvaluator(
+        FragmentPairsEncodedSupplier,
+        kwargs={'encoder': SequenceFragmentEncoder()},
+        return_suppliers=True
+    )
+
     words = set()
-    for i, row in tqdm(df.iterrows(), total=len(df)):
-        frag, smile = row.Frags, row.Smiles
-        token_mol = voc.splitSequence(smile)
-        ## currently not checking if molecules contain carbons
-        if 10 < len(token_mol) <= 100:
-            words.update(token_mol)
-            token_sub = voc.splitSequence(frag)
-            words.update(token_sub)
-            codes.append([' '.join(token_sub), ' '.join(token_mol)])
+    codes = []
+    for result in evaluator.get(df):
+        codes.extend(result[0])
+        words.update(result[1].encoder.getVoc().words)
             
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        voc_file = open( os.path.dirname(file_base) + '/%s_smiles_%s.txt' % (voc_file, logSettings.runID), 'w')
-        voc_file.write('\n'.join(sorted(words)))
-        voc_file.close()
+        voc = VocSmiles(words)
+        voc.toFile(os.path.dirname(file_base) + '/%s_smiles_%s.txt' % (voc_file, logSettings.runID))
     
-    codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv(file_base + '_smi_%s.txt' % logSettings.runID, sep='\t', index=False)
+    codes = pd.DataFrame(codes, columns=['Input', 'Output'])
+    codes.to_csv(outpath, sep='\t', index=False)
     
     
 def DatasetArgParser(txt=None):
