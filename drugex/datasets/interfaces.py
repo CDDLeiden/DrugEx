@@ -29,5 +29,5 @@ class FragmentPairEncoder(ABC):
     def encodeMol(self, mol):
         pass
 
-    def encodeFrag(self, frag):
+    def encodeFrag(self, mol, frag):
         pass

@@ -8,11 +8,11 @@ from unittest import TestCase
 
 import pandas as pd
 
-from drugex.datasets.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder
+from drugex.datasets.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.fragments import FragmentPairsSupplier
-from drugex.molecules.parallel import ParallelSupplierEvaluator
+from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import TestSupplier, StandardizedSupplier
 
 
@@ -42,8 +42,8 @@ class FragmentPairs(TestCase):
         voc = encoder.getVoc()
         self.assertTrue('Br' not in voc.words)
         for encoded in encoded_pairs:
-            self. assertTrue(encoded[0].endswith('EOS'))
-            self. assertTrue(encoded[1].endswith('EOS'))
+            self.assertTrue(encoded['mol_encoded'][-1] == 'EOS')
+            self.assertTrue(encoded['frag_encoded'][-1] == 'EOS')
 
     def test_pair_encode_smiles_parallel(self):
         pairs_df = self.getPairs().sample(100, replace=True)
@@ -56,7 +56,19 @@ class FragmentPairs(TestCase):
         for result in evaluator.get(pairs_df):
             data = result[0]
             for item in data:
-                self. assertTrue(item[0].endswith('EOS'))
-                self. assertTrue(item[1].endswith('EOS'))
+                self.assertTrue(item['mol_encoded'][-1] == 'EOS')
+                self.assertTrue(item['frag_encoded'][-1] == 'EOS')
             voc = result[1].encoder.getVoc()
             self.assertTrue('Br' not in voc.words)
+
+    def test_pair_encode_graph(self):
+        pairs_df = self.getPairs().sample(100, replace=True)
+        evaluator = ParallelSupplierEvaluator(
+            FragmentPairsEncodedSupplier,
+            kwargs={'encoder': GraphFragmentEncoder()},
+            return_unique=False
+        )
+
+        for result in evaluator.get(pairs_df):
+            self.assertTrue(result['mol'] == result['mol_encoded'])
+            self.assertTrue(type(result['frag_encoded']) == list)

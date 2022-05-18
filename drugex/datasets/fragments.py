@@ -1,8 +1,11 @@
 import pandas as pd
+from rdkit import Chem
 
-from drugex.corpus.vocabulary import VocSmiles
+from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger
 from drugex.datasets.interfaces import TrainTestSplitter, FragmentPairEncoder
+from drugex.molecules.converters.interfaces import ConversionException
+from drugex.molecules.interfaces import AnnotationException
 from drugex.molecules.suppliers import DataFrameSupplier
 
 
@@ -46,19 +49,59 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
     def encodeMol(self, sequence):
         return self.vocabulary.addWordsFromSeq(sequence)
 
-    def encodeFrag(self, frag):
+    def encodeFrag(self, mol, frag):
         return self.vocabulary.addWordsFromSeq(frag, ignoreConstraints=True)
+
+    def getVoc(self):
+        return self.vocabulary
+
+class GraphFragmentEncoder(FragmentPairEncoder):
+
+    def __init__(self, vocabulary=VocGraph()):
+        self.vocabulary = vocabulary
+
+    def encodeMol(self, smiles):
+        mol = Chem.MolFromSmiles(smiles)
+        total = mol.GetNumBonds()
+        if total >= 75:
+            return None
+        else:
+            return smiles
+
+    def encodeFrag(self, mol, frag):
+        if mol == frag:
+            return None
+        try:
+            output = self.vocabulary.encode([mol], [frag])
+            f, s = self.vocabulary.decode(output)
+
+            assert mol == s[0]
+            #assert f == frag[0]
+            code = output[0].reshape(-1).tolist()
+            return code
+        except Exception as exp:
+            logger.warn(f'The following exception occured while encoding fragment {frag} for molecule {mol}: {exp}')
+            return None
 
     def getVoc(self):
         return self.vocabulary
 
 class FragmentPairsEncodedSupplier(DataFrameSupplier):
 
+    class FragmentEncodingException(AnnotationException):
+        pass
+
+    class MoleculeEncodingException(ConversionException):
+        pass
 
     def conversion(self, seq):
+        encoded = self.encoder.encodeMol(seq)
+        if not encoded:
+            raise self.MoleculeEncodingException(f'Failed to encode molecule: {seq}')
+
         return {
-            'sequence' : seq,
-            'token_mol' : self.encoder.encodeMol(seq)
+            'mol' : seq,
+            'mol_encoded' : encoded
         }
 
     def __init__(self, df_pairs, encoder, mol_col='Smiles', frags_col='Frags'):
@@ -70,13 +113,11 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
         self.encoder = encoder
         self.fragsCol = frags_col
 
-    def __next__(self):
-        ret = super().__next__()
-        return [
-            ' '.join(ret['token_sub']),
-            ' '.join(ret['token_mol']),
-        ]
-
     def annotateMol(self, mol, key, value):
         if key == self.fragsCol:
-            mol['token_sub'] = self.encoder.encodeFrag(value)
+            mol['frag'] = value
+            encoded = self.encoder.encodeFrag(mol['mol'], value)
+            if encoded:
+                mol['frag_encoded'] = encoded
+            else:
+                raise self.FragmentEncodingException(f'Failed to encode fragment {value} from molecule: {mol}')

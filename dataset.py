@@ -7,7 +7,8 @@ from tqdm import tqdm
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.logs import utils
 from drugex.logs.utils import enable_file_logger
-from drugex.datasets.fragments import FragmentPairsSplitter, FragmentPairsEncodedSupplier, SequenceFragmentEncoder
+from drugex.datasets.fragments import FragmentPairsSplitter, FragmentPairsEncodedSupplier, SequenceFragmentEncoder, \
+    GraphFragmentEncoder
 from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
@@ -252,36 +253,31 @@ def pair_graph_encode(df, file_base, n_frags, voc_file, save_voc):
         df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
         file_base (str)           : base of output file
         n_frags (int)             : maximum number of fragments used as input per molecule
-    """    
+        voc_file (str)            : name of output vocabulary file
+        save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
+    """
 
     outfile = file_base + f'_graph_{logSettings.runID}.txt'
-    print(f'Encoding fragments and molecules to graph-matrices for: {outfile}')
+    print(f'Encoding fragments and molecules to graph-matrices. Output: {outfile}')
     # initialize vocabulary
     voc = VocGraph(n_frags=n_frags)
 
     if save_voc:
         voc.toFile(os.path.dirname(file_base) + '/%s_graph_%s.txt' % (voc_file, logSettings.runID))
-    
+
+    evaluator = ParallelSupplierEvaluator(
+        FragmentPairsEncodedSupplier,
+        kwargs={'encoder': GraphFragmentEncoder(voc)},
+        return_unique=False
+    )
+
     # create columns for fragments
     col = ['C%d' % d for d in range(voc.maxLen*5)]
     codes = []
-    for i, row in tqdm(df.iterrows(), total=len(df)):
-        frags, smile = row.Frags, row.Smiles
-        mol = Chem.MolFromSmiles(smile)
-        total = mol.GetNumBonds()
-        if total >= 75 or smile == frags:
+    for code in evaluator.get(df):
+        if 'frag_encoded' not in code:
             continue
-        try:
-            output = voc.encode([smile], [frags])
-            f, s = voc.decode(output)
-
-            assert smile == s[0]
-            #assert f == frag[0]
-            code = output[0].reshape(-1).tolist()
-            codes.append(code)
-        
-        except:
-            print(i, frags, smile)
+        codes.append(code['frag_encoded'])
     
     codes = pd.DataFrame(codes, columns=col)
     codes.to_csv(outfile, sep='\t', index=False)
@@ -297,7 +293,7 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     """
     
     outpath = file_base + '_smi_%s.txt' % logSettings.runID
-    print(f'Encoding fragments and molecules to SMILES-tokens for: {outpath}')
+    print(f'Encoding fragments and molecules to SMILES-tokens. Output: {outpath}')
 
     evaluator = ParallelSupplierEvaluator(
         FragmentPairsEncodedSupplier,
@@ -308,7 +304,17 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
     words = set()
     codes = []
     for result in evaluator.get(df):
-        codes.extend(result[0])
+        if 'frag_encoded' not in result:
+            continue
+        codes.extend(
+            [
+                (
+                    " ".join(x['frag_encoded']),
+                    " ".join(x['mol_encoded'])
+                )
+                for x in result[0]
+            ]
+        )
         words.update(result[1].encoder.getVoc().words)
             
     # save voc file
