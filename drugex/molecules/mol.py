@@ -17,7 +17,7 @@ class DrExMol(Molecule):
 
     def __init__(self, rd_mol, identifier=None):
         if not rd_mol:
-            raise InitializationException(f"Attempting to create a DrExMol instance with and empty molecule! Identifier: {identifier}")
+            raise InitializationException(f"Attempting to create a DrExMol instance with and empty molecule! Identifier was: {identifier}")
 
         self.rd_mol = rd_mol
         self.canonical_smiles = identifier
