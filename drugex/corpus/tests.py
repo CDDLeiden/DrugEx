@@ -60,5 +60,5 @@ class CorpusTest(TestCase):
     def test_graph_voc(self):
         voc = VocGraph()
         df = voc.toDataFrame()
-        self.assertTrue(len(df) == voc.words)
+        self.assertTrue(len(df) == len(voc.words))
 
