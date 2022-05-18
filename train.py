@@ -501,7 +501,7 @@ def TrainGenerator(args):
     if args.no_git is False:
         args.git_commit = commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-    
+
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
     torch.cuda.set_device(utils.devices[0])
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -540,9 +540,11 @@ if __name__ == "__main__":
     args = GeneratorArgParser()
 
     # Get run id
-    runid = get_runid(log_folder=os.path.join(args.base_dir,'logs'),
-                            old=args.keep_runid,
-                            id=args.pick_runid)
+    runid = get_runid(
+        log_folder=os.path.join(args.base_dir,'logs'),
+        old=args.keep_runid,
+        id=args.pick_runid
+    )
 
     # Default input file prefix in case of pretraining and finetuning
     if args.suffix is None:
