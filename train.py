@@ -159,7 +159,11 @@ def DataPreparationGraph(base_dir, runid, input_prefix, batch_size=128, unique_f
     
     data_path = base_dir + '/data/'
 
-    voc = utils.VocGraph( data_path + 'voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
+    try: 
+        voc = utils.VocGraph( data_path + 'voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
+    except:
+        log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
+        voc = utils.VocGraph( data_path + 'voc_graph.txt', max_len=80, n_frags=4)
     
     if unique_frags :
         data = pd.read_table( data_path + '%s_unique_graph_%s.txt' % (input_prefix, runid))
