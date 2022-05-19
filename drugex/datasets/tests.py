@@ -42,8 +42,8 @@ class FragmentPairs(TestCase):
         voc = encoder.getVoc()
         self.assertTrue('Br' not in voc.words)
         for encoded in encoded_pairs:
-            self.assertTrue(encoded['mol_encoded'][-1] == 'EOS')
-            self.assertTrue(encoded['frag_encoded'][-1] == 'EOS')
+            self.assertTrue(encoded[0][-1] == 'EOS')
+            self.assertTrue(encoded[1][-1] == 'EOS')
 
     def test_pair_encode_smiles_parallel(self):
         pairs_df = self.getPairs().sample(100, replace=True)
@@ -56,8 +56,8 @@ class FragmentPairs(TestCase):
         for result in evaluator.get(pairs_df):
             data = result[0]
             for item in data:
-                self.assertTrue(item['mol_encoded'][-1] == 'EOS')
-                self.assertTrue(item['frag_encoded'][-1] == 'EOS')
+                self.assertTrue(item[0][-1] == 'EOS')
+                self.assertTrue(item[1][-1] == 'EOS')
             voc = result[1].encoder.getVoc()
             self.assertTrue('Br' not in voc.words)
 
@@ -70,5 +70,4 @@ class FragmentPairs(TestCase):
         )
 
         for result in evaluator.get(pairs_df):
-            self.assertTrue(result['mol'] == result['mol_encoded'])
-            self.assertTrue(type(result['frag_encoded']) == list)
+            self.assertTrue(type(result[1]) == list)

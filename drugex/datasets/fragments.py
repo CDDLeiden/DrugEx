@@ -113,6 +113,14 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
         self.encoder = encoder
         self.fragsCol = frags_col
 
+    def __next__(self):
+        ret = super().__next__()
+        try:
+            return ret['mol_encoded'], ret['frag_encoded']
+        except KeyError:
+            # logger.warning(f"Failed to encode fragment {ret['frag']} for molecule: {ret['mol']}")
+            return next(self)
+
     def annotateMol(self, mol, key, value):
         if key == self.fragsCol:
             mol['frag'] = value
@@ -120,4 +128,4 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
             if encoded:
                 mol['frag_encoded'] = encoded
             else:
-                raise self.FragmentEncodingException(f'Failed to encode fragment {value} from molecule: {mol}')
+                raise self.FragmentEncodingException(f'Failed to encode fragment {value} from molecule: {mol["mol"]}')

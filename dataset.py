@@ -193,7 +193,8 @@ def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
         result_collector=FragmentCollector(),
         kwargs={
             "fragmenter" : Fragmenter(n_frags, n_combs, method)
-        }
+        },
+        chunks=100
     )
     pairs = evaluator.get(smiles)
 
@@ -277,10 +278,10 @@ def pair_graph_encode(df, file_base, n_frags, voc_file, save_voc):
     # create columns for fragments
     col = ['C%d' % d for d in range(voc.maxLen*5)]
     codes = []
-    for code in evaluator.get(df):
-        if 'frag_encoded' not in code:
+    for mol, code in evaluator.get(df):
+        if not code:
             continue
-        codes.append(code['frag_encoded'])
+        codes.append(code)
     
     codes = pd.DataFrame(codes, columns=col)
     codes.to_csv(outfile, sep='\t', index=False)
@@ -306,19 +307,17 @@ def pair_smiles_encode(df, file_base, voc_file, save_voc):
 
     words = set()
     codes = []
-    for result in evaluator.get(df):
-        if 'frag_encoded' not in result:
-            continue
+    for result, supplier in evaluator.get(df):
         codes.extend(
             [
                 (
-                    " ".join(x['frag_encoded']),
-                    " ".join(x['mol_encoded'])
+                    " ".join(x[1]),
+                    " ".join(x[0])
                 )
-                for x in result[0]
+                for x in result if x[0] and x[1]
             ]
         )
-        words.update(result[1].encoder.getVoc().words)
+        words.update(supplier.encoder.getVoc().words)
             
     # save voc file
     if save_voc:
