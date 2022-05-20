@@ -116,9 +116,11 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
     def __next__(self):
         ret = super().__next__()
         try:
+            if len(ret) == 2:
+                return ret
             return ret['mol_encoded'], ret['frag_encoded']
         except KeyError:
-            # logger.warning(f"Failed to encode fragment {ret['frag']} for molecule: {ret['mol']}")
+            logger.warning(f"Failed to encode fragment {ret['frag']} for molecule: {ret['mol']}")
             return next(self)
 
     def annotateMol(self, mol, key, value):
