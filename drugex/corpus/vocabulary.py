@@ -143,19 +143,21 @@ class VocGraph(Vocabulary):
             n_frags=4
     ):
         self.control = ('EOS', 'GO')
-        self.words = list(words)
         self.nFrags = n_frags
         self.maxLen = max_len
         self.tk2ix = {'EOS': 0, 'GO': 1}
         self.ix2nr = {0: 0, 1: 0}
         self.ix2ch = {0: 0, 1: 0}
-        self.size = len(self.words)
         self.E = {0: '', 1: '+', -1: '-'}
 
-        self.wordsParsed = [self.parseWord(word) for word in self.words]
+        # init words
+        self.words = []
+        self.wordsParsed = [self.parseWord(word) for word in words]
+        self.words = list(self.control) + list(words)
         if '*' not in words:
             self.words.append('*')
             self.wordsParsed.append(('*',0,0,0,'*'))
+        self.size = len(self.words)
         self.masks = torch.zeros(len(self.wordsParsed) + len(self.control)).long()
         for i,item in enumerate(self.wordsParsed):
             self.masks[i + len(self.control)] = item[1]
