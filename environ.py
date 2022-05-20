@@ -29,6 +29,9 @@ import argparse
 import json
 import random
 
+from drugex.logs.config import get_runid, config_logger, init_logfile
+
+
 class QSARDataset:
     """
         This class is used to prepare the dataset for QSAR model training. 
@@ -764,12 +767,12 @@ if __name__ == '__main__':
     os.environ['TF_DETERMINISTIC_OPS'] = str(args.random_state)
 
     # Get run id
-    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+    runid = get_runid(log_folder=os.path.join(args.base_dir,'logs'),
                             old=args.keep_runid,
                             id=args.pick_runid)
 
     # Configure logger
-    utils.config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
+    config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
 
     # Get logger, include this in every module
     log = logging.getLogger(__name__)
@@ -783,7 +786,7 @@ if __name__ == '__main__':
     githash = None
     if args.no_git is False:
         githash = drugex.logs.utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
+    init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
         
     # logSettings for DNN model
     #TODO: set this only for DNN model, instead of global
