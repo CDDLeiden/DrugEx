@@ -47,7 +47,7 @@ def load_molecules(base_dir, input_file):
         mols = SDFSupplier(file_path, hide_duplicates=True)
         mols = [x.smiles for x in mols.get()]
     else:
-        df = pd.read_csv(file_path, sep="\t", header=0)
+        df = pd.read_csv(file_path, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=['CANONICAL_SMILES'])
         supplier = ParallelSupplierEvaluator(
             DataFrameSupplier,
             # n_proc=4,
