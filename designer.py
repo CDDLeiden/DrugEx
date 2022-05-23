@@ -57,6 +57,7 @@ def DesignArgParser(txt=None):
     args.qed = g_params['qed']
     args.ra_score = g_params['ra_score']
     args.ra_score_model = g_params['ra_score_model']
+    args.env_runid = g_params['env_runid']
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -101,7 +102,8 @@ def Design(args):
     objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
                                                        active_targets=args.active_targets, inactive_targets=args.inactive_targets,
                                                        activity_threshold=args.activity_threshold, qed=args.qed, 
-                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
+                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model, 
+                                                       env_runid=args.env_runid)
     env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
     
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
