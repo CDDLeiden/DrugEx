@@ -13,6 +13,10 @@ import math
 import utils
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
+import logging
+import logging.config
+from datetime import datetime
+
 
 rdBase.DisableLog('rdApp.error')
 torch.set_num_threads(1)
@@ -24,6 +28,10 @@ def DesignArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
+    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
+    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
+    parser.add_argument('-d', '--debug', action='store_true')
+
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input', type=str, default='ligand_4:4_brics_test',
@@ -57,6 +65,12 @@ def DesignArgParser(txt=None):
     args.qed = g_params['qed']
     args.ra_score = g_params['ra_score']
     args.ra_score_model = g_params['ra_score_model']
+    args.env_runid = g_params['env_runid']
+    args.data_runid = g_params['data_runid']
+    args.molecular_weight = g_params['molecular_weight']
+    args.mw_thresholds = g_params['mw_thresholds']
+    args.logP = g_params['logP']
+    args.logP_thresholds = g_params['logP_thresholds']
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -67,6 +81,24 @@ def DesignArgParser(txt=None):
 
 def Design(args):
     
+    # Get run id
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+                            old=args.keep_runid,
+                            id=args.pick_runid)
+
+    # Default input file prefix in case of pretraining and finetuning
+    if args.data_runid is None:
+        args.data_runid = runid  
+        
+    if args.env_runid is None:
+        args.env_runid = runid
+
+    # Configure logger
+    utils.config_logger('%s/logs/%s/train.log' % (args.base_dir, runid), args.debug)
+
+    # Get logger, include this in every module
+    log = logging.getLogger(__name__)
+    
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
     torch.cuda.set_device(utils.devices[0])
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -76,12 +108,25 @@ def Design(args):
     
     # Initialize voc
     if args.algorithm == 'graph':
-        voc = utils.VocGraph( args.base_dir + '/data/voc_graph.txt')
+        try: 
+            voc = utils.VocGraph( args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
+        except:
+            log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
+            voc = utils.VocGraph( args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
     else:
-        if args.algorithm == 'gpt':
-            voc = utils.Voc( args.base_dir + '/data/voc_smiles.txt', src_len=100, trg_len=100)
-        else:
-            voc = utils.VocSmiles( args.base_dir + '/data/voc_smiles.txt', max_len=100)
+        try:
+            path = args.base_dir + '/data/voc_smiles_%s.txt' % runid
+            if args.algorithm == 'gpt':
+                voc = utils.Voc(path, src_len=100, trg_len=100)
+            else:
+                voc = utils.VocSmiles(path, max_len=100)
+        except:
+            log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
+            path = args.base_dir + '/data/voc_smiles.txt' 
+            if args.algorithm == 'gpt':
+                voc = utils.Voc( path, src_len=100, trg_len=100)
+            else:
+                voc = utils.VocSmiles( path, max_len=100)
     
     # Load data (only done for encoder-decoder models)
     if args.algorithm == 'graph':
@@ -98,10 +143,22 @@ def Design(args):
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.load_state_dict(torch.load( gen_path, map_location=utils.dev))
     # Set up environment-predictor
-    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
-                                                       active_targets=args.active_targets, inactive_targets=args.inactive_targets,
-                                                       activity_threshold=args.activity_threshold, qed=args.qed, 
-                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
+    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, 
+                                                       args.env_alg, 
+                                                       args.env_task, 
+                                                       args.scheme, 
+                                                       args.env_runid,
+                                                       active_targets=args.active_targets,
+                                                       inactive_targets=args.inactive_targets,
+                                                       activity_threshold=args.activity_threshold, 
+                                                       qed=args.qed, 
+                                                       ra_score=args.ra_score, 
+                                                       ra_score_model=args.ra_score_model,
+                                                       mw=args.molecular_weight,
+                                                       mw_ths=args.mw_thresholds,
+                                                       logP=args.logP,
+                                                       logP_ths=args.logP_thresholds,
+                                                      )
     env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
     
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
