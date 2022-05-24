@@ -301,6 +301,40 @@ def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=Fal
         raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(mol_type))
 
 
+def graph_encode(base_dir, smiles, output_file):
+    """
+    Encodes fragments and molecules to graph-matrices.
+    Arguments:
+        df (pd.DataFrame)         : dataframe containing molecules
+        file_base (str)           : base of output file
+    """    
+    
+    print('Encoding molecules to graph-matrices...')
+    # for this to work the largest fragment needs to have the longest smiles
+    # initialize vocabulary
+    # TO DO: VocGraph doesn't work w/o file >> TO DO: Modify VocGraph to work w/o it OR write voc_graph.txt before this in dataset.py 
+    voc = VocGraph(base_dir + '/data/voc_graph.txt')
+    
+    # create columns for fragments
+    col = ['C%d' % d for d in range(voc.max_len*5)]
+    codes = []
+    large = max(smiles, key=len)
+    smiles.remove(large)
+    mol = Chem.MolFromSmiles(large)
+    total = mol.GetNumBonds()
+    if total >= 75:
+        raise ValueError("To create dataset largest smiles has to have less than 75 bonds'")
+
+    for smile in smiles:
+        output = voc.encode([large], [smile])
+        f, s = voc.decode(output)
+        assert large == s[0]
+        code = output[0].reshape(-1).tolist()
+        codes.append(code)
+        
+    codes = pd.DataFrame(codes, columns=col)
+    codes.to_csv('%s/data/%s_graph.txt' % (base_dir, output_file), sep='\t', index=False)
+
 def pair_graph_encode(df, file_base, n_frags):
     """
     Encodes fragments and molecules to graph-matrices.
@@ -440,10 +474,10 @@ def Dataset(args):
     mols = load_molecules(args.base_dir, args.input)              
     # standardize smiles and remove salts
     smiles = standardize_mol(mols)
-
     if args.no_frags:
         if args.mol_type == 'graph':
-            raise ValueError("To apply --no_frags, --mol_type needs to be 'smiles'")
+            graph_encode(args.base_dir, smiles, args.output)
+            #raise ValueError("To apply --no_frags, --mol_type needs to be 'smiles'")
         # create corpus (only used in v2), vocab (only used in v2)  
         corpus(args.base_dir, smiles, args.output, args.voc_file, args.save_voc)
         
