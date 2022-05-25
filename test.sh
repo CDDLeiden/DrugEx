@@ -318,7 +318,7 @@ ${TRAIN_RL_ARGS} \
 -a rnn
 echo "Test: Done."
 
-rm -rf "${TEST_BASE}/data/*_0001_*.txt"
-rm -rf "${TEST_BASE}/envs"
-rm -rf "${TEST_BASE}/generators"
-rm -rf "${TEST_BASE}/logs"
+rm -rf ${TEST_BASE}/data/*_0001*.txt
+rm -rf ${TEST_BASE}/envs
+rm -rf ${TEST_BASE}/generators
+rm -rf ${TEST_BASE}/logs
