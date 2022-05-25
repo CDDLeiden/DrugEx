@@ -34,7 +34,7 @@ class FileWriter(CorpusWriter):
 
 class SequenceFileWriter(FileWriter):
 
-    def __init__(self, path):
+    def __init__(self, path, seq_col="Sequence", token_col="Token"):
         super().__init__(path)
-        self.file.write("Sequence\tToken\n")
+        self.file.write(f"{seq_col}\t{token_col}\n")
 
