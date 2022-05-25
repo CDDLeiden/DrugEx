@@ -1,15 +1,8 @@
 import os
-import logging
-import logging.config
-from datetime import datetime
 import pandas as pd
-from rdkit import Chem
-from rdkit import rdBase
-from tqdm import tqdm
 
 from drugex.corpus.corpus import SequenceCorpus
-from drugex.logs import utils
-from drugex.logs.utils import enable_file_logger
+from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.datasets.fragments import FragmentPairsSplitter, FragmentPairsEncodedSupplier, SequenceFragmentEncoder, \
     GraphFragmentEncoder
 from drugex.molecules.converters.default import Identity
@@ -21,9 +14,6 @@ from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
 from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from drugex.corpus.vocabulary import VocSmiles, VocGraph
 import numpy as np
-
-rdBase.DisableLog('rdApp.info')
-rdBase.DisableLog('rdApp.warning')
 
 import argparse
 import json
@@ -47,17 +37,17 @@ def load_molecules(base_dir, input_file):
         mols = SDFSupplier(file_path, hide_duplicates=True)
         mols = [x.smiles for x in mols.get()]
     else:
-        df = pd.read_csv(file_path, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=['CANONICAL_SMILES'])
+        df = pd.read_csv(file_path, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
         supplier = ParallelSupplierEvaluator(
             DataFrameSupplier,
             # n_proc=4,
             # chunks=df.shape[0] // 10000,
-            kwargs={"mol_col" : "CANONICAL_SMILES", "converter" : Identity()}
+            kwargs={"mol_col" : args.molecule_column, "converter" : Identity()}
         )
         mols = supplier.get(df)
         # mols = CSVSupplier(
         #     file_path,
-        #     mol_col='CANONICAL_SMILES',
+        #     mol_col=args.molecule_column,
         #     sep='\t',
         #     hide_duplicates=True
         # )
@@ -97,7 +87,7 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
         print('Saving vocabulary...')
         voc.toFile(os.path.join(
             base_dir,
-            f'data/{voc_file}_smiles_{logSettings.runid}.txt')
+            f'data/{voc_file}_smiles_{logSettings.runID}.txt')
         )
 
 # def graph_corpus(input, output, suffix='sdf'):
@@ -276,7 +266,7 @@ def pair_graph_encode(df, file_base, n_frags, voc_file, save_voc):
     )
 
     # create columns for fragments
-    col = ['C%d' % d for d in range(voc.maxLen*5)]
+    col = ['C%d' % d for d in range(voc.max_len * 5)]
     codes = []
     for mol, code in evaluator.get(df):
         if not code:
@@ -355,7 +345,9 @@ def DatasetArgParser(txt=None):
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
 
     parser.add_argument('-vf', '--voc_file', type=str, default='voc',
-                        help="Name for voc file, used to save voc tokens") 
+                        help="Name for voc file, used to save voc tokens")
+    parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
+                        help="Name of the column in CSV files that contains molecules.")
     parser.add_argument('-sv', '--save_voc', action='store_true',
                         help="If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is 'smiles'.")   
     parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
@@ -445,7 +437,7 @@ if __name__ == '__main__':
         args.pick_runid,
         args.debug,
         __name__,
-        utils.commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
+        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
 
