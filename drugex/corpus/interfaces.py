@@ -40,7 +40,7 @@ class VocabularySequence(Vocabulary, ABC):
 
         self.control = ('_', 'GO', 'EOS')
         if words:
-            self.words = words
+            self.words = [x for x in sorted(set(words))]
         else:
             self.words = list(self.control) + ['.']
         self.updateIndex()
@@ -65,7 +65,7 @@ class VocabularySequence(Vocabulary, ABC):
                 self.updateIndex()
             return token
         else:
-            logger.warning(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {token} (count: {len(token)}). It will be ignored.")
+            logger.warning(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {set(token)} (occurrence count: {len(token)}). It will be ignored.")
             return None
 
     def updateIndex(self):
