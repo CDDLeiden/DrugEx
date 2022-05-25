@@ -321,7 +321,7 @@ class SmilesExplorer(nn.Module):
                 print('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
                 for i, (ix, src) in enumerate(tqdm(data_loader)):
                     with torch.no_grad():
-                        frag = data_loader.dataset.index[ix]
+                        # frag = data_loader.dataset.index[ix]
                         trg = net(src.to(utils.dev))
                         trgs.append(trg.detach().cpu())
                         srcs.append(src.detach().cpu())
