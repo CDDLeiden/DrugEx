@@ -30,8 +30,10 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
     parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('-suf', '--suffix', type=str, default=None,
-                        help="Specify runid suffix to input files, defaults to current runid")
+    
+    
+    parser.add_argument('-did', '--data_runid', type=str, default=None,
+                        help="Run id of the input data files, defaults to current runid")
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Prefix of input files. If --mode is 'PT', default is 'chembl_4:4_brics' else 'ligand_4:4_brics' ")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
@@ -56,7 +58,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-a', '--algorithm', type=str, default='graph',
                         help="Generator algorithm: 'graph' for graph-based algorithm (transformer),or "\
                              "'gpt' (transformer), 'ved' (lstm-based encoder-decoder)or "\
-                             "'attn' (lstm-based encoder-decoder with attension mechanism) for SMILES-based algorithm ")
+                             "'attn' (lstm-based encoder-decoder with attention mechanism) for SMILES-based algorithm ")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -71,20 +73,31 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Parento front or 'CD' for 'PR' with crowding distance")
+                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
 
-    parser.add_argument('-et', '--env_task', type=str, default='REG',
+    parser.add_argument('-eid', '--env_runid', type=str, default=None,
+                        help='Run id of the environment-predictor models, defaults to current runid')
+    parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, default='RF',
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
-                        help="Activity threashold")                    
+                        help="Activity threshold")
+    
     parser.add_argument('-qed', '--qed', action='store_true',
-                        help="If on, QED is used in desribality function")
+                        help="If on, QED is used in desirability function")
     parser.add_argument('-ras', '--ra_score', action='store_true',
-                        help="If on, Retrosythesis Accessibility score is used in desribality function")
+                        help="If on, Retrosynthesis Accessibility score is used in desirability function")
     parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
                         help="RAScore model: 'XBG'")
+    parser.add_argument('-mw', '--molecular_weight', action='store_true',
+                        help='If on, large compounds are penalized in the desirability function')
+    parser.add_argument('-mw_ths', '--mw_thresholds', type=int, nargs='*', default=[500, 1000],
+                        help='Thresholds used calculate molecular weight clipped scores in the desirability function.')
+    parser.add_argument('-logP', '--logP', action='store_true',
+                        help='If on, compounds with large logP values are penalized in the desirability function')
+    parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[4, 6],
+                        help='Thresholds used calculate logP clipped scores in the desirability function')
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
@@ -130,6 +143,7 @@ def GeneratorArgParser(txt=None):
 
     return args
 
+
 def getVocFromFiles(paths, voc_class, **kwargs):
     words = []
     for path in paths:
@@ -138,14 +152,40 @@ def getVocFromFiles(paths, voc_class, **kwargs):
 
     return voc_class(words, **kwargs)
 
-def DataPreparationGraph(voc_files, base_dir, runid, input_prefix, batch_size=128, unique_frags=False):
+
+def LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, subset, mol_type, runid='0000'):
     
+    """ 
+    Load fragment-based input data to dataframe.
+    
+    Arguments:
+        data_path (str)            : folder containing input files
+        input_prefix (str)         : prefix of input file
+        subset (str)               : subset name : 'train', 'unique' or 'test'
+        mol_type (str)             : molecule representation type : 'graph' or 'smi'
+        runid (str), opt           : runid of input file
+    Returns:
+        data (pd.DataFrame)        : dataframe containing encoded molecule-fragement pairs
+    """
+    
+    path =  data_path + '_'.join([input_prefix, subset, mol_type, runid]) + '.txt'
+    
+    try:
+        data = pd.read_table(path)
+    except:
+        path_def =  data_path  + '_'.join([input_prefix, subset, mol_type]) + '.txt'
+        logSettings.log.warning('Reading %s instead of %s' % (path_def, path))
+        data = pd.read_table(path_def)
+        
+    return data
+
+def DataPreparationGraph(voc_files, base_dir, runid, input_prefix, batch_size=128, unique_frags=False):
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
     
     Arguments:
         base_dir (str)              : name of the folder containing 'data' folder with input files
-        runid (str)                : runid, suffix of the input files
+        runid (str)                 : runid, suffix of the input files
         input_prefix (str)          : prefix of input files
         batch_size (int), opt       : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
@@ -156,22 +196,32 @@ def DataPreparationGraph(voc_files, base_dir, runid, input_prefix, batch_size=12
     """
     
     data_path = base_dir + '/data/'
-
-    voc = getVocFromFiles(
-        [data_path + f"{voc}_graph_{logSettings.runID}.txt" for voc in voc_files],
-        VocGraph,
-        max_len=80, n_frags=4
-    )
+    mol_type = 'graph'
     
-    if unique_frags :
-        data = pd.read_table( data_path + '%s_unique_graph_%s.txt' % (input_prefix, runid))
-    else:
-        data = pd.read_table( data_path + '%s_train_graph_%s.txt' % (input_prefix, runid))
+    # Set vocabulary
+    try: 
+        voc = getVocFromFiles(
+            [data_path + f"{v}_graph_{logSettings.runID}.txt" for v in voc_files],
+            VocGraph,
+            max_len=80, n_frags=4
+        )
+    except FileNotFoundError:
+        logSettings.log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
+        voc = getVocFromFiles(
+            [data_path + "voc_graph.txt"],
+            VocGraph,
+            max_len=80, n_frags=4
+        )
     
+    # Load train data
+    data = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 
+                                            'unique' if unique_frags else 'train', 
+                                            mol_type, runid)
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
 
-    test = pd.read_table( data_path + '%s_test_graph_%s.txt' % (input_prefix, runid))
+    # Load test data
+    test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid)        
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
@@ -184,7 +234,7 @@ def DataPreparationSmiles(voc_files, base_dir, runid, input_prefix, batch_size=1
     
     Arguments:
         base_dir (str)              : name of the folder containing 'data' folder with input files
-        runid (str)                : runid, suffix of the input files
+        runid (str)                 : runid, suffix of the input files
         input_prefix (str)          : prefix of input files
         batch_size (int), optional  : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
@@ -195,23 +245,39 @@ def DataPreparationSmiles(voc_files, base_dir, runid, input_prefix, batch_size=1
     """
     
     data_path = base_dir + '/data/'
-
+    mol_type = 'smi'
+    
+    # Set vocabulary
     paths = [data_path + f'{x}_smiles_{runid}.txt' for x in voc_files]
     if args.algorithm == 'gpt':
-        voc = getVocFromFiles(
-            paths,
-            VocGPT,
-            src_len=100, trg_len=100
-        )
+        try:
+            voc = getVocFromFiles(
+                paths,
+                VocGPT,
+                src_len=100, trg_len=100
+            )
+        except FileNotFoundError:
+            logSettings.log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
+            voc = getVocFromFiles([data_path + 'voc_smiles.txt'], VocGPT, src_len=100, trg_len=100)
     else:
-        voc = getVocFromFiles(
-            paths,
-            VocSmiles,
-            max_len=100
-        )
+        try:
+            voc = getVocFromFiles(
+                paths,
+                VocSmiles,
+                max_len=100
+            )
+        except FileNotFoundError:
+            logSettings.log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
+            voc = getVocFromFiles([data_path + 'voc_smiles.txt'], VocSmiles, trg_len=100)
 
+    # Without input fragments
     if args.algorithm == 'rnn':
-        data = pd.read_table( data_path + f'{input_prefix}_{runid}.txt')
+        try:
+            data = pd.read_table( data_path + f'{input_prefix}_{runid}.txt')
+        except FileNotFoundError:
+            logSettings.log.warning('Reading %s.txt instead of %s_%s.txt' % (input_prefix, input_prefix, runid))
+            data = pd.read_table( data_path + '%s.txt' % input_prefix)
+
         # split data into train and test set (for dnn originally only done during fine-tuning)
         # test size is 10% of training, with a maximum of 10 000 
         test_size = min(len(data) // 10, int(1e4))
@@ -223,18 +289,20 @@ def DataPreparationSmiles(voc_files, base_dir, runid, input_prefix, batch_size=1
         train_set = torch.LongTensor(voc.encode([seq.split(' ') for seq in train]))
         test_set = torch.LongTensor(voc.encode([seq.split(' ') for seq in test]))
         valid_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
+    
+    # With input fragments
     else:
-        if unique_frags:
-            train = pd.read_table( data_path + '%s_unique_smi_%s.txt' % (input_prefix, runid))
-        else:
-            train = pd.read_table( data_path + '%s_train_smi_%s.txt' % (input_prefix, runid))
+        # Load train data
+        train = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 
+                                                'unique' if unique_frags else 'train', 
+                                                mol_type, runid)
         train_in = voc.encode([seq.split(' ') for seq in train.Input.values])
         train_out = voc.encode([seq.split(' ') for seq in train.Output.values])
         train_set = TensorDataset(train_in, train_out)
 
-        test = pd.read_table( data_path + '%s_test_smi_%s.txt' % (input_prefix, runid))
+        # Load test data
+        test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid)     
         test = test.Input.drop_duplicates()
-        #test = test.sample(args.batch_size * 10).values
         test_set = voc.encode([seq.split(' ') for seq in test])
         test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
         valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
@@ -242,6 +310,7 @@ def DataPreparationSmiles(voc_files, base_dir, runid, input_prefix, batch_size=1
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     
     return voc, train_loader, valid_loader
+
 
 def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme):
     
@@ -276,7 +345,21 @@ def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme
     return evolver
     
 
-def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], inactive_targets=[], activity_threshold=6.5, qed=False, ra_score=False, ra_score_model='XBG'):
+def CreateDesirabilityFunction(base_dir, 
+                               alg, 
+                               task, 
+                               scheme, 
+                               env_runid,
+                               active_targets=[], 
+                               inactive_targets=[], 
+                               activity_threshold=6.5, 
+                               qed=False, 
+                               ra_score=False, 
+                               ra_score_model='XBG',
+                               mw=False,
+                               mw_ths=[500,1000],
+                               logP=False,
+                               logP_ths=[4,6]):
     
     """
     Sets up the objectives of the desirability function.
@@ -286,12 +369,18 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         alg (str)                   : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
+        env_runid (str)             : runid of the environment-predictor model
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
         activity_threshold (float), opt : activety threshold in case of 'CLS'
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
         ra_score_model (str), opt   : RAscore algorithm: 'NN' or 'XGB'
+        mw (bool), opt              : if True, large molecules are penalized in the desirability function
+        mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
+        logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
+        logP_ths (list), opt        : logP thresholds to penalize large molecules
+    
     Returns:
         objs (lst)                  : list of selected predictors 
         keys (lst)                  : list of names of selected predictors
@@ -307,8 +396,14 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         if alg.startswith('MT_'):
             sys.exit('TO DO: using multitask model')
         else:
-            path = base_dir + '/envs/single/' + alg + '_' + task + '_' + t + f'_{args.suffix}.pkg'
-        objs.append(utils.Predictor(path, type=task))
+            try :
+                path = base_dir + '/envs/single/' + '_'.join([alg, task, t, env_runid]) + '.pkg'
+                objs.append(utils.Predictor(path, type=task))
+            except FileNotFoundError:
+                path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t, env_runid]) + '.pkg'
+                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
+                logSettings.log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(utils.Predictor(path, type=task))
         keys.append(t)
     if qed :
         objs.append(utils.Property('QED'))
@@ -317,6 +412,12 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         from models.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
+    if mw:
+        objs.append(utils.Property('MW'))
+        keys.append('MW')
+    if logP:
+        objs.append(utils.Property('logP'))
+        keys.append('logP')
         
     pad = 3.5
     if scheme == 'WS':
@@ -352,6 +453,12 @@ def CreateDesirabilityFunction(base_dir, alg, task, scheme, active_targets=[], i
         elif k == 'RAscore':
             mods.append(utils.ClippedScore(lower_x=0, upper_x=1.0))
             ths += [0.0]
+        elif k == 'MW':
+            mods.append(utils.ClippedScore(lower_x=mw_ths[1], upper_x=mw_ths[0]))
+            ths += [0.5]
+        elif k == 'logP':
+            mods.append(utils.ClippedScore(lower_x=logP_ths[1], upper_x=logP_ths[0]))
+            ths += [0.5]       
     
     return objs, keys, mods, ths
 
@@ -394,10 +501,10 @@ def PreTrain(args):
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
         print('Pretraining graph-based model ...')
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
     
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
@@ -422,10 +529,10 @@ def FineTune(args):
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size)
-        print('Fine-tuning the graph-based model ...')
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
+        print('Fine-tuning graph-based model ...')
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
@@ -454,18 +561,19 @@ def RLTrain(args):
     if not args.targets:
         raise ValueError('At least on active or inactive target should be given for RL.')
 
-    ag_path = args.base_dir + '/generators/' + args.agent_model + f'_{args.algorithm}_{args.suffix}.pkg'
-    pr_path = args.base_dir + '/generators/' + args.prior_model + f'_{args.algorithm}_{args.suffix}.pkg'
+    ag_path = args.base_dir + '/generators/' + args.agent_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
+    pr_path = args.base_dir + '/generators/' + args.prior_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
 
-    rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
-                                                        args.scheme, str(args.epsilon)]) + 'e'
+    # rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
+    #                                                     args.scheme, str(args.epsilon)]) + 'e'
+    rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, 'RL', args.runid])
                                                     
     ## why need input for RL? probably because need input in v3 to generate sequences
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size, unique_frags=True)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True)
     elif args.algorithm != 'rnn':
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.suffix, args.input, args.batch_size, unique_frags=True)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True)
     else:
         data_path = args.base_dir + '/data/'
         paths = [data_path + f'{x}_smiles_{logSettings.runID}.txt' for x in args.voc_files]
@@ -482,10 +590,22 @@ def RLTrain(args):
     evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme)
     
     # Create the desirability function
-    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, args.env_alg, args.env_task, args.scheme, 
-                                                       active_targets=args.active_targets, inactive_targets=args.inactive_targets,
-                                                       activity_threshold=args.activity_threshold, qed=args.qed, 
-                                                       ra_score=args.ra_score, ra_score_model=args.ra_score_model)
+    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, 
+                                                       args.env_alg, 
+                                                       args.env_task, 
+                                                       args.scheme, 
+                                                       args.env_runid,
+                                                       active_targets=args.active_targets,
+                                                       inactive_targets=args.inactive_targets,
+                                                       activity_threshold=args.activity_threshold, 
+                                                       qed=args.qed, 
+                                                       ra_score=args.ra_score, 
+                                                       ra_score_model=args.ra_score_model,
+                                                       mw=args.molecular_weight,
+                                                       mw_ths=args.mw_thresholds,
+                                                       logP=args.logP,
+                                                       logP_ths=args.logP_thresholds,
+                                                      )
     
     # Set Evolver's environment-predictor
     evolver.env = utils.Env(objs=objs, mods=mods, keys=keys, ths=ths)
@@ -572,19 +692,17 @@ if __name__ == "__main__":
         vars(args)
     )
 
+    # Default input file prefix in case of pretraining and finetuning
+    if args.data_runid is None:
+        args.data_runid = logSettings.runID
+        
+    if args.env_runid is None:
+        args.env_runid = logSettings.runID
+
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open('%s/logs/%s/train_args.json' % (args.base_dir, logSettings.runID), 'w') as f:
         json.dump(vars(args), f)
-    
-    # Begin log file
-    githash = None
-    if args.no_git is False:
-        githash = commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    init_logfile(logSettings.log, logSettings.runID, githash, json.dumps(vars(args), sort_keys=False, indent=2))
 
     args.runid = logSettings.runID
-    try:
-        TrainGenerator(args)
-    except:
-        logSettings.log.exception("something went wrong...")
+    TrainGenerator(args)

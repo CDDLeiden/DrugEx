@@ -458,7 +458,7 @@ class SVM(QSARModel):
         #parameter dictionary for bayesian optimization
         self.search_space_bs = {
             'C': ['loguniform', 2.0 ** -5, 2.0 ** 15],
-            'kernel': ['categorical', ['linear', 'sigmoid', 'poly', 'rbf']],
+            'kernel': ['categorical', ['linear', 'sigmoid', 'rbf']], # TODO: add poly kernel
             'gamma': ['uniform', 0, 20]
         }
 
@@ -612,7 +612,7 @@ class DNN(QSARModel):
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
-            log.info('cross validation fold ' +  i)
+            log.info('cross validation fold ' +  str(i))
             train_set = TensorDataset(torch.Tensor(self.data.X[trained]), torch.Tensor(self.y[trained]))
             train_loader = DataLoader(train_set, batch_size=self.batch_size)
             valid_set = TensorDataset(torch.Tensor(self.data.X[valided]), torch.Tensor(self.y[valided]))
@@ -628,8 +628,12 @@ class DNN(QSARModel):
         self.data.create_folds()
 
     def grid_search(self):
-        #TODO implement gridd search for DNN
-        print("Not yet implemented for DNN")
+        #TODO implement grid search for DNN
+        log.warning("Grid search not yet implemented for DNN, will be skipped.")
+    
+    def bayes_optimization(self, n_trials):
+        #TODO implement bayes optimization for DNN
+        log.warning("bayes optimization not yet implemented for DNN, will be skipped.")
 
 
 def EnvironmentArgParser(txt=None):
@@ -777,16 +781,15 @@ if __name__ == '__main__':
     # Get logger, include this in every module
     log = logging.getLogger(__name__)
 
+    #Add optuna logging
+    optuna.logging.enable_propagation()  # Propagate logs to the root logger.
+    optuna.logging.disable_default_handler()  # Stop showing logs in sys.stderr.
+    optuna.logging.set_verbosity(optuna.logging.DEBUG)
+
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open('%s/logs/%s/env_args.json' % (args.base_dir, runid), 'w') as f:
         json.dump(vars(args), f)
-    
-    # Begin log file
-    githash = None
-    if args.no_git is False:
-        githash = drugex.logs.utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
         
     # logSettings for DNN model
     #TODO: set this only for DNN model, instead of global
@@ -794,7 +797,4 @@ if __name__ == '__main__':
     N_EPOCH = args.epochs
     
     #Optimize, evaluate and train estimators according to environment arguments
-    try:
-        Environment(args, runid)
-    except:
-        log.exception("something went wrong in the environment!")
+    Environment(args, runid)

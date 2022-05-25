@@ -27,6 +27,15 @@ TRAIN_BATCH=32
 TRAIN_GPUS=0
 N_CPUS=4
 
+function cleanup() {
+  rm -rf ${TEST_BASE}/data/*_0001.txt;
+  rm -rf ${TEST_BASE}/envs;
+  rm -rf ${TEST_BASE}/generators;
+  rm -rf ${TEST_BASE}/logs;
+}
+
+cleanup
+
 ###########
 # DATASET #
 ###########
@@ -39,8 +48,7 @@ python dataset.py \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
--mt graph \
-${DATASET_FRAGMENT_ARGS} \
+-mt graph ${DATASET_FRAGMENT_ARGS} \
 -vf "${PRETRAINING_PREFIX}_${VOC_PREFIX}"
 echo "Test: Done."
 
@@ -100,12 +108,10 @@ echo "Test: Done."
 ENVIRON_COMMON_ARGS="-b ${TEST_BASE} -k -d"
 python environ.py \
 ${ENVIRON_COMMON_ARGS} \
--i \
-${TEST_DATA_ENVIRONMENT} \
+-i ${TEST_DATA_ENVIRONMENT} \
 -l \
 -s \
--m \
-RF \
+-m RF \
 -ncpu ${N_CPUS} \
 -gpu ${TRAIN_GPUS} \
 -bs ${TRAIN_BATCH}
@@ -113,7 +119,7 @@ RF \
 ############
 # TRAINING #
 ############
-TRAIN_COMMON_ARGS="-b ${TEST_BASE} -k -d -e ${TRAIN_EPOCHS} -bs ${TRAIN_BATCH} -gpu ${TRAIN_GPUS} -suf 0001"
+TRAIN_COMMON_ARGS="-b ${TEST_BASE} -k -d -e ${TRAIN_EPOCHS} -bs ${TRAIN_BATCH} -gpu ${TRAIN_GPUS}"
 TRAIN_VOCAB_ARGS="-vfs ${PRETRAINING_PREFIX}_${VOC_PREFIX} ${FINETUNING_PREFIX}_${VOC_PREFIX}"
 
 # pretraining
@@ -124,10 +130,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -o "${PRETRAINING_PREFIX}" \
--m \
-PT \
--a \
-graph
+-m PT \
+-a graph
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence encoder-decoder model..."
@@ -136,10 +140,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -o "${PRETRAINING_PREFIX}" \
--m \
-PT \
--a \
-ved
+-m PT \
+-a ved
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence encoder-decoder model with attention..."
@@ -148,10 +150,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -o "${PRETRAINING_PREFIX}" \
--m \
-PT \
--a \
-attn
+-m PT \
+-a attn
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence transformer model..."
@@ -160,10 +160,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -o "${PRETRAINING_PREFIX}" \
--m \
-PT \
--a \
-gpt
+-m PT \
+-a gpt
 echo "Test: Done."
 
 echo "Test: Pretrain regular (no fragments) single-network RNN model..."
@@ -172,10 +170,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_corpus" \
 -o "${PRETRAINING_PREFIX}" \
--m \
-PT \
--a \
-rnn
+-m PT \
+-a rnn
 echo "Test: Done."
 
 # fine-tuning
@@ -187,10 +183,8 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -pt "${PRETRAINING_PREFIX}" \
 -o "${FINETUNING_PREFIX}" \
--m \
-FT \
--a \
-graph
+-m FT \
+-a graph
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based vanilla sequence encoder-decoder..."
@@ -202,8 +196,7 @@ ${TRAIN_VOCAB_ARGS} \
 -o "${FINETUNING_PREFIX}" \
 -m \
 FT \
--a \
-ved
+-a ved
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based sequence encoder-decoder with attention..."
@@ -213,10 +206,8 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -pt "${PRETRAINING_PREFIX}" \
 -o "${FINETUNING_PREFIX}" \
--m \
-FT \
--a \
-attn
+-m FT \
+-a attn
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based sequence transformer..."
@@ -226,10 +217,8 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
 -pt "${PRETRAINING_PREFIX}" \
 -o "${FINETUNING_PREFIX}" \
--m \
-FT \
--a \
-gpt
+-m FT \
+-a gpt
 echo "Test: Done."
 
 echo "Test: Fine-tune regular (no fragments) single-network RNN model..."
@@ -239,10 +228,8 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_corpus" \
 -pt "${PRETRAINING_PREFIX}" \
 -o "${FINETUNING_PREFIX}" \
--m \
-FT \
--a \
-rnn
+-m FT \
+-a rnn
 echo "Test: Done."
 
 # reinforcement learning
@@ -318,7 +305,4 @@ ${TRAIN_RL_ARGS} \
 -a rnn
 echo "Test: Done."
 
-rm -rf ${TEST_BASE}/data/*_0001.txt
-rm -rf ${TEST_BASE}/envs
-rm -rf ${TEST_BASE}/generators
-rm -rf ${TEST_BASE}/logs
+cleanup
