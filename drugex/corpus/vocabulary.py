@@ -51,8 +51,10 @@ class VocSmiles(VocabularySequence):
             if token in self.control: continue
             tokens.append(token)
         smiles = "".join(tokens)
-        smiles = smiles.replace('L', 'Cl').replace('R', 'Br')
-        return smiles
+        return self.parseDecoded(smiles)
+
+    def parseDecoded(self, smiles):
+        return smiles.replace('L', 'Cl').replace('R', 'Br')
 
     def splitSequence(self, smile):
         """Takes a SMILES and return a list of characters/tokens
@@ -92,6 +94,43 @@ class VocSmiles(VocabularySequence):
             if not {'[Na]', '[Zn]'}.isdisjoint(token): continue
             fps[i, :] = self.encode(token)
         return fps
+
+class VocGPT(VocSmiles):
+
+    def __init__(self, words, src_len=1000, trg_len=100, max_len=100, min_len=10):
+        super(VocGPT, self).__init__(words, max_len=max_len, min_len=min_len)
+        self.src_len = src_len
+        self.trg_len = trg_len
+
+    def encode(self, input, is_smiles=True):
+        """Takes a list of characters (eg '[NH]') and encodes to array of indices"""
+        seq_len = self.trg_len if is_smiles else self.src_len
+        output = torch.zeros(len(input), seq_len).long()
+        for i, seq in enumerate(input):
+            # print(i, len(seq))
+            for j, char in enumerate(seq):
+                output[i, j] = self.tk2ix[char] if is_smiles else self.tk2ix['|' + char]
+        return output
+
+    def decode(self, matrix, is_smiles=True, is_tk=False):
+        """
+        Takes an array of indices and returns the corresponding SMILES.
+        """
+        chars = super(VocGPT, self).decode(matrix, is_tk)
+        seqs = "".join(chars)
+        if is_smiles:
+            seqs = self.parseDecoded(seqs)
+        else:
+            seqs = seqs.replace('|', '')
+        return seqs
+
+
+    @staticmethod
+    def fromFile(path, src_len=1000, trg_len=100, max_len=100, min_len=10):
+        """Takes a file containing \n separated characters to initialize the vocabulary"""
+        with open(path, 'r') as f:
+            words = f.read().split()
+            return VocGPT(words, src_len=src_len, trg_len=trg_len, max_len=max_len, min_len=min_len)
 
 class VocGraph(Vocabulary):
 
