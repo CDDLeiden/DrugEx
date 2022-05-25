@@ -241,15 +241,15 @@ def DataPreparationSmiles(base_dir, runid, input_prefix, batch_size=128, unique_
             voc = utils.Voc( data_path + 'voc_smiles.txt', src_len=100, trg_len=100)
     else:
         try:
-            voc = utils.VocSmiles( data_path + 'voc_smiles_%s.txt' % runid, trg_len=100)
+            voc = utils.VocSmiles( data_path + 'voc_smiles_%s.txt' % runid)
         except:
             log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
-            voc = utils.VocSmiles( data_path + 'voc_smiles.txt', trg_len=100)
+            voc = utils.VocSmiles( data_path + 'voc_smiles.txt')
 
     # Without input fragments
     if args.algorithm == 'rnn':
         try:
-            data = pd.read_table( data_path + '%s_%s.txt' % input_prefix, runid)
+            data = pd.read_table( data_path + '%s_%s.txt' % (input_prefix, runid))
         except:
             log.warning('Reading %s.txt instead of %s_%s.txt' % (input_prefix, input_prefix, runid))
             data = pd.read_table( data_path + '%s.txt' % input_prefix)
