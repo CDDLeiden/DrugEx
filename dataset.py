@@ -99,7 +99,6 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
         voc_file (str)            : name of output voc_file
         save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
     """
-    
     print('Creating the corpus...')
     voc = VocSmiles()
     # set of unique tokens
@@ -119,7 +118,7 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     # save voc file
     if save_voc:
         print('Saving vocabulary...')
-        voc_file = open(os.path.join(base_dir, '/data/%s_smiles_%s.txt' % (voc_file, runid)), 'w')
+        voc_file = open(os.path.join(base_dir, 'data/%s_smiles_%s.txt' % (voc_file, runid)), 'w')
         voc_file.write('\n'.join(sorted(words)))
         voc_file.close()
 
@@ -127,7 +126,7 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
     corpus['Smiles'] = canons
     corpus['Token'] = tokens
     corpus.drop_duplicates(subset='Smiles')
-    corpus.to_csv(os.path.join(base_dir, '/data/%s_corpus_%s.txt' % (output, runid)), sep='\t', index=False)
+    corpus.to_csv(os.path.join(base_dir, 'data/%s_corpus_%s.txt' % (output, runid)), sep='\t', index=False)
 
 
 # def graph_corpus(input, output, suffix='sdf'):
