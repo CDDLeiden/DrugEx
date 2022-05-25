@@ -77,10 +77,9 @@ class VocSmiles(VocabularySequence):
     @staticmethod
     def fromFile(path, min_len=10, max_len=100):
         """Takes a file containing \n separated characters to initialize the vocabulary"""
-        words = []
         with open(path, 'r') as f:
-            words += f.read().split()
-        return VocSmiles(words, max_len=max_len, min_len=min_len)
+            words = f.read().split()
+            return VocSmiles(words, max_len=max_len, min_len=min_len)
 
     def calc_voc_fp(self, smiles, prefix=None):
         fps = np.zeros((len(smiles), self.max_len), dtype=np.long)
@@ -143,8 +142,14 @@ class VocGraph(Vocabulary):
             n_frags=4
     ):
         self.control = ('EOS', 'GO')
-        self.nFrags = n_frags
-        self.maxLen = max_len
+        words = [x for x in words if x not in self.control]
+        words_unique = []
+        for word in words:
+            if word not in words_unique:
+                words_unique.append(word)
+        words = words_unique
+        self.n_frags = n_frags
+        self.max_len = max_len
         self.tk2ix = {'EOS': 0, 'GO': 1}
         self.ix2nr = {0: 0, 1: 0}
         self.ix2ch = {0: 0, 1: 0}
@@ -183,15 +188,15 @@ class VocGraph(Vocabulary):
         return element + charge, int(valence), charge_num, Chem.Atom(element).GetAtomicNum(), word
 
     @staticmethod
-    def fromFile(path, word_col='Word'):
+    def fromFile(path, word_col='Word', max_len=80, n_frags=4):
         df = pd.read_table(path)
-        return VocGraph.fromDataFrame(df, word_col)
+        return VocGraph.fromDataFrame(df, word_col, max_len=80, n_frags=4)
 
     @staticmethod
-    def fromDataFrame(df, word_col='Word'):
-        return VocGraph(df[word_col].tolist())
+    def fromDataFrame(df, word_col='Word', max_len=80, n_frags=4):
+        return VocGraph(df[word_col].tolist(), max_len=max_len, n_frags=n_frags)
 
-    def toFile(self, path, word_col='Word'):
+    def toFile(self, path):
         self.toDataFrame().to_csv(path, index=False, sep='\t')
 
     def toDataFrame(self):
@@ -207,8 +212,8 @@ class VocGraph(Vocabulary):
         if not subs:
             raise RuntimeError(f'Fragments must be specified, got {subs} instead')
 
-        output = np.zeros([len(smiles), self.maxLen-self.nFrags-1, 5], dtype=np.compat.long)
-        connect = np.zeros([len(smiles), self.nFrags+1, 5], dtype=np.compat.long)
+        output = np.zeros([len(smiles), self.max_len - self.n_frags - 1, 5], dtype=np.compat.long)
+        connect = np.zeros([len(smiles), self.n_frags + 1, 5], dtype=np.compat.long)
         for i, s in enumerate(smiles):
             mol = Chem.MolFromSmiles(s)
             sub = Chem.MolFromSmiles(subs[i])
