@@ -130,7 +130,7 @@ class MolSupplier(ABC):
         """
         pass
 
-    def get(self):
+    def toList(self):
         return [x for x in self]
 
 

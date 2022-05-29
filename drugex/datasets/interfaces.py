@@ -6,11 +6,24 @@ On: 07.05.22, 15:54
 """
 from abc import ABC, abstractmethod
 
+from drugex.parallel.interfaces import ResultCollector
 
-class DataCollector(ABC):
+
+class EncodingCollector(ResultCollector, ABC):
+
+    def __init__(self, outpath):
+        self.outpath = outpath
 
     @abstractmethod
-    def __call__(self, data):
+    def getDataFrame(self):
+        pass
+
+    @abstractmethod
+    def save(self):
+        pass
+
+    @abstractmethod
+    def getVoc(self):
         pass
 
 class TrainTestSplitter(ABC):
@@ -29,5 +42,6 @@ class FragmentPairEncoder(ABC):
     def encodeMol(self, mol):
         pass
 
+    @abstractmethod
     def encodeFrag(self, mol, frag):
         pass

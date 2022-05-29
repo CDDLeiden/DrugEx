@@ -36,6 +36,6 @@ class SequenceCorpus(Corpus):
         if token:
             if self.checkUnique:
                 self._unique.add(seq)
-            return f"{seq}\t{' '.join(token)}\n"
+            return {'seq' : seq, 'token': ' '.join(token)}
         else:
             return None

@@ -27,7 +27,7 @@ class FileWriter(CorpusWriter):
         self.file = open(path, mode="w", encoding="utf-8")
 
     def write(self, data):
-        self.file.write(data.rstrip() + "\n")
+        self.file.write(data['seq'] + "\t" + data['token'] + "\n")
 
     def close(self):
         self.file.close()

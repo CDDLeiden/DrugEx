@@ -36,7 +36,8 @@ class CorpusTest(TestCase):
         corpus = SequenceCorpus(smiles)
         lines = []
         for line in corpus:
-            self.assertTrue("@" not in line.split()[1])
+            self.assertTrue("@" not in line['seq'])
+            self.assertTrue("@" not in line['token'])
             lines.append(line)
         self.assertTrue(len(lines) == 2)
 
@@ -55,7 +56,10 @@ class CorpusTest(TestCase):
         with open(out_file, "r", encoding="utf-8") as out:
             next(out)
             for idx,line in enumerate(out):
-                self.assertTrue(line == lines[idx])
+                seq = lines[idx]['seq']
+                token = lines[idx]['token']
+                self.assertTrue(seq in line)
+                self.assertTrue(token in line)
 
     def test_graph_voc(self):
         voc = VocGraph()

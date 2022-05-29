@@ -12,7 +12,7 @@ import pandas as pd
 from drugex.molecules.files.suppliers import CSVSupplier, SDFSupplier
 from drugex.molecules.files.interfaces import FileParseException
 from drugex.molecules.mol import DrExMol
-from drugex.molecules.parallel import ParallelSupplierEvaluator
+from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.molecules.suppliers import DataFrameSupplier
 
 
@@ -116,7 +116,7 @@ class TestFileParsers(TestCase):
             kwargs={"mol_col" : "CANONICAL_SMILES", "extra_cols": cols}
         )
 
-        results = para_supplier.get(df)
+        results = para_supplier.apply(df)
         self.assertTrue(len(results) == 10)
         for mol in results:
             self.assertTrue(isinstance(mol, DrExMol))
@@ -133,7 +133,7 @@ class TestFileParsers(TestCase):
             kwargs={"mol_col" : "CANONICAL_SMILES"}
         )
 
-        results = para_supplier.get(df)
+        results = para_supplier.apply(df)
         self.assertTrue(len(results) == 2)
         for result in results:
             self.assertTrue(len(result[0]) == 5)

@@ -1,20 +1,18 @@
 import os
+import time
+
 import pandas as pd
 from rdkit import Chem
 
 from drugex.corpus.corpus import SequenceCorpus
+from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataCollector, \
+    SmilesFragDataCollector, SmilesDataCollector
 from drugex.logs.utils import enable_file_logger, commit_hash
-from drugex.datasets.fragments import FragmentPairsSplitter, FragmentPairsEncodedSupplier, SequenceFragmentEncoder, \
+from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder
-from drugex.molecules.converters.default import Identity
 from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.molecules.files.suppliers import SDFSupplier
-from drugex.molecules.fragments import FragmentPairsSupplier
-from drugex.molecules.parallel import ParallelSupplierEvaluator, ListCollector
-from drugex.molecules.suppliers import StandardizedSupplier, DataFrameSupplier
 from drugex.corpus.vocabulary import VocSmiles, VocGraph
-import numpy as np
 
 import argparse
 import json
@@ -36,59 +34,12 @@ def load_molecules(base_dir, input_file):
     if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
         # TODO: could be parallel as well
         mols = SDFSupplier(file_path, hide_duplicates=True)
-        mols = [x.smiles for x in mols.get()]
+        mols = [x.smiles for x in mols.toList()]
     else:
         df = pd.read_csv(file_path, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
-        supplier = ParallelSupplierEvaluator(
-            DataFrameSupplier,
-            # n_proc=4,
-            # chunks=df.shape[0] // 10000,
-            kwargs={"mol_col" : args.molecule_column, "converter" : Identity()}
-        )
-        mols = supplier.get(df)
-        # mols = CSVSupplier(
-        #     file_path,
-        #     mol_col=args.molecule_column,
-        #     sep='\t',
-        #     hide_duplicates=True
-        # )
+        mols = df[args.molecule_column].tolist()
         
     return mols
-
-def corpus(base_dir, smiles, output, voc_file, save_voc):
-    """
-    Tokenizes SMILES and returns corpus of tokenized SMILES and vocabulary of all the unique tokens
-    Arguments:
-        base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing dataset
-        smiles  (str)             : list of standardized SMILES
-        output (str)              : name of output corpus file
-        voc_file (str)            : name of output voc_file
-        save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
-    """
-    print('Creating the corpus...')
-    evaluator = ParallelSupplierEvaluator(
-        SequenceCorpus,
-        return_suppliers=True
-    )
-    words = set()
-    data = []
-    for result in evaluator.get(smiles):
-        data.extend(result[0])
-        words.update(result[1].getVoc().words)
-    voc = VocSmiles(words)
-
-    # save corpus data
-    with open(base_dir + f'/data/{output}_corpus_{logSettings.runID}.txt', "w", encoding="utf-8") as outfile:
-        outfile.writelines(["Smiles\tToken\n"])
-        outfile.writelines(data)
-    
-    # save voc file
-    if save_voc:
-        print('Saving vocabulary...')
-        voc.toFile(os.path.join(
-            base_dir,
-            f'data/{voc_file}_smiles_{logSettings.runID}.txt')
-        )
 
 # def graph_corpus(input, output, suffix='sdf'):
 #     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
@@ -150,96 +101,6 @@ def corpus(base_dir, smiles, output, voc_file, save_voc):
 #     print(vals)
 #     print(exps)
 
-class FragmentCollector(ListCollector):
-
-    def __call__(self, result):
-        result_flat = []
-        for x in result:
-            result_flat.extend(x)
-        self.result.extend(result_flat)
-
-def pair_frags(smiles, out, n_frags, n_combs, method='recap', save_file=False):
-    """
-    Break molecules into leaf fragments and if is_mf combine those fragments to get larger fragments
-    Arguments:
-        smiles (list)             : list of SMILES
-        out  (str)                : name of output file
-        n_frags (int)             : how many leaf-fragments are generated per compound
-        n_combs (int)             : maximum number of leaf-fragments that are combined for each fragment-combinations
-        method (str)              : whether to use Recap or BRICKS for fragmenting
-        save_file (bool)          : save output file
-    Returns:
-        pairs (list)         : list of tuples containing fragment-molecule pairs
-    """
-    
-    if n_combs > 1 :
-        print('Breaking molecules to leaf fragments and making combinations...')
-    else:
-        print('Breaking molecules to leaf fragments...')
-    
-    evaluator = ParallelSupplierEvaluator(
-        FragmentPairsSupplier,
-        return_unique=False,
-        result_collector=FragmentCollector(),
-        kwargs={
-            "fragmenter" : Fragmenter(n_frags, n_combs, method)
-        },
-        chunks=100
-    )
-    pairs = evaluator.get(smiles)
-
-    if save_file:
-        df = pd.DataFrame(pairs, columns=['Frags', 'Smiles'])
-        df.to_csv(out, sep='\t',  index=False)
-    
-    return pairs
-
-def train_test_split(pairs, file_base, save_files=False):
-    """
-    Splits fragment-molecule pairs into a train and test set
-    Arguments:
-        pairs (list)         : list containing fragments
-        file_base (str)           : base of input and output files
-        save_files (bool)         : save output files
-    Returns:
-        train (pd.DataFrame)      : dataframe containing train set fragment-molecule pairs
-        test (pd.DataFrame)       : dataframe containing test set fragment-molecule pairs
-        unique (pd.DataFrame)     : dataframe containing a fragment-molecule pair per unique fragment-combination
-    """
-
-    collectors = dict()
-    if save_files:
-        collectors['train_collector'] = lambda x : x.to_csv(file_base + f'_train_{logSettings.runID}.txt', sep='\t', index=False)
-        collectors['test_collector'] = lambda x : x.to_csv(file_base + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
-        collectors['unique_collector'] = lambda x : x.to_csv(file_base + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
-    splitter = FragmentPairsSplitter(0.1, 1e4, **collectors)
-    test, train, unique = splitter(
-        pairs
-    )
-
-    return train, test, unique
-    
-def pair_encode(df, mol_type, file_base, n_frags=4, voc_file='voc', save_voc=False):
-    
-    """
-    Wrapper to encode fragment-molecule pairs in either SMILES-tokens or graph-matrices
-    Arguments:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs (Fragments in column 'Frags' and SMILES of the output molecule in column 'Smiles')
-        mol_type (str)            : molecular representation type
-        file_base (str)           : base of output file
-        n_frags (int)             : maximum number of fragments used as input per molecule
-        voc_file (str)            : name of output voc_file
-        save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
-    """
-    
-    if mol_type == 'smiles' :
-        pair_smiles_encode(df, file_base, voc_file, save_voc)   
-    elif mol_type == 'graph' :
-        pair_graph_encode(df, file_base, n_frags, voc_file, save_voc)
-    else:
-        raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(mol_type))
-
-
 def graph_encode(base_dir, smiles, output_file):
     """
     Encodes fragments and molecules to graph-matrices.
@@ -270,85 +131,6 @@ def graph_encode(base_dir, smiles, output_file):
 
     codes = pd.DataFrame(codes, columns=col)
     codes.to_csv('%s/data/%s_graph.txt' % (base_dir, output_file), sep='\t', index=False)
-
-def pair_graph_encode(df, file_base, n_frags, voc_file, save_voc):
-    """
-    Encodes fragments and molecules to graph-matrices.
-    Arguments:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
-        file_base (str)           : base of output file
-        n_frags (int)             : maximum number of fragments used as input per molecule
-        voc_file (str)            : name of output vocabulary file
-        save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
-    """
-
-    outfile = file_base + f'_graph_{logSettings.runID}.txt'
-    print(f'Encoding fragments and molecules to graph-matrices. Output: {outfile}')
-    # initialize vocabulary
-    voc = VocGraph(n_frags=n_frags)
-
-    if save_voc:
-        voc.toFile(os.path.dirname(file_base) + '/%s_graph_%s.txt' % (voc_file, logSettings.runID))
-
-    evaluator = ParallelSupplierEvaluator(
-        FragmentPairsEncodedSupplier,
-        kwargs={'encoder': GraphFragmentEncoder(voc)},
-        return_unique=False
-    )
-
-    # create columns for fragments
-    col = ['C%d' % d for d in range(voc.max_len * 5)]
-    codes = []
-    for mol, code in evaluator.get(df):
-        if not code:
-            continue
-        codes.append(code)
-    
-    codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv(outfile, sep='\t', index=False)
-
-def pair_smiles_encode(df, file_base, voc_file, save_voc):
-    """
-    Encodes fragments and molecules to SMILES-tokens.
-    Arguments:
-        df (pd.DataFrame)         : dataframe containing fragment-molecule pairs
-        file_base (str)           : base of output file
-        voc_file (str)            : name of output voc_file
-        save_voc (bool)          : if true save voc file (should only be true for the pre-training set)
-    """
-    
-    outpath = file_base + '_smi_%s.txt' % logSettings.runID
-    print(f'Encoding fragments and molecules to SMILES-tokens. Output: {outpath}')
-
-    evaluator = ParallelSupplierEvaluator(
-        FragmentPairsEncodedSupplier,
-        kwargs={'encoder': SequenceFragmentEncoder()},
-        return_suppliers=True
-    )
-
-    words = set()
-    codes = []
-    for result, supplier in evaluator.get(df):
-        codes.extend(
-            [
-                (
-                    " ".join(x[1]),
-                    " ".join(x[0])
-                )
-                for x in result if x[0] and x[1]
-            ]
-        )
-        words.update(supplier.encoder.getVoc().words)
-            
-    # save voc file
-    if save_voc:
-        print('Saving vocabulary...')
-        voc = VocSmiles(words)
-        voc.toFile(os.path.dirname(file_base) + '/%s_smiles_%s.txt' % (voc_file, logSettings.runID))
-    
-    codes = pd.DataFrame(codes, columns=['Input', 'Output'])
-    codes.to_csv(outpath, sep='\t', index=False)
-    
     
 def DatasetArgParser(txt=None):
     
@@ -374,7 +156,8 @@ def DatasetArgParser(txt=None):
                         help="Number of largest leaf-fragments used per compound")
     parser.add_argument('-nc', '--n_combs', type=int, default=None,
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
-
+    parser.add_argument('-np', '--n_proc', type=int, default=None,
+                        help="Number of parallel processes to use for multi-core tasks. If not specified, this number is set to the number of available CPUs on the system.")
     parser.add_argument('-vf', '--voc_file', type=str, default='voc',
                         help="Name for voc file, used to save voc tokens")
     parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
@@ -394,7 +177,16 @@ def DatasetArgParser(txt=None):
     if args.n_combs is None:
         args.n_combs = args.n_frags
         
-    return args    
+    return args
+
+def save_encoded_data(collectors, file_base, mol_type, save_voc, voc_file, runid):
+    for collector in collectors:
+        collector.save()
+
+    vocs = [x.getVoc() for x in collectors]
+    voc = sum(vocs[1:], start=vocs[0])
+    if save_voc:
+        voc.toFile(os.path.join(file_base, f'{voc_file}_{mol_type}_{runid}.txt'))
 
 def Dataset(args):
     """ 
@@ -412,51 +204,86 @@ def Dataset(args):
     
                         
     # load molecules
+    tm_start = time.perf_counter()
+    print('Dataset started. Loading molecules...')
     smiles = load_molecules(args.base_dir, args.input)
 
     print("Standardizing molecules...")
-    standardizer = ParallelSupplierEvaluator(
-        StandardizedSupplier,
-        kwargs={
-            "standardizer": DrExStandardizer(input='SMILES')
-        }
-    )
-    smiles = standardizer.get(np.asarray(list(smiles)))
+    standardizer = Standardization(n_proc=args.n_proc)
+    smiles = standardizer.applyTo(smiles)
 
-
+    file_base = os.path.join(args.base_dir, 'data')
     if args.no_frags:
         if args.mol_type == 'graph':
             graph_encode(args.base_dir, smiles, args.output)
             #raise ValueError("To apply --no_frags, --mol_type needs to be 'smiles'")
         # create corpus (only used in v2), vocab (only used in v2)  
-        corpus(args.base_dir, smiles, args.output, args.voc_file, args.save_voc)
-        
-    else:
-        # create encoded fragment-molecule pair files for train and test set (for v3)
-        file_base = '%s/data/%s_%d:%d_%s' % (args.base_dir, args.output, args.n_frags, args.n_combs, args.frag_method)
-        
-        # create fragment-molecule pairs
-        pairs = pair_frags(
-            smiles,
-            '%s_%s.txt' % (file_base, logSettings.runID),
-            args.n_frags,
-            args.n_combs,
-            method=args.frag_method,
-            save_file=args.save_intermediate_files
-        )
-        
-        # split fragment-molecule pairs into train and test set
-        df_train, df_test, df_unique =  train_test_split(pairs, file_base, save_files=args.save_intermediate_files)
-        
-        # encode pairs to SMILES-tokens or graph-matrices
-        pair_encode(df_train, args.mol_type, file_base + '_train', 
-                    n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
-        pair_encode(df_test, args.mol_type, file_base + '_test', 
-                    n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
-        pair_encode(df_unique, args.mol_type, file_base + '_unique', 
-                    n_frags=args.n_frags, voc_file=args.voc_file, save_voc=args.save_voc)
+        print('Creating the corpus...')
 
-    print("Dataset finished.")
+        encoder = MoleculeEncoder(
+            SequenceCorpus,
+            {
+                'vocabulary': VocSmiles()
+            },
+            n_proc=args.n_proc
+        )
+        data_collector = SmilesDataCollector(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
+        encoder.applyTo(smiles, collector=data_collector)
+
+        save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+    else:
+        # create encoded fragment-molecule pair files for train and test set (only v3 models)
+        file_name = f'%s_%d:%d_%s' % (args.output, args.n_frags, args.n_combs, args.frag_method)
+        file_prefix = os.path.join(file_base, file_name)
+
+        if args.n_combs > 1 :
+            print('Breaking molecules to leaf fragments, making combinations and encoding...')
+        else:
+            print('Breaking molecules to leaf fragments and encoding...')
+
+        # prepare splitter and collect intermediate files if required
+        # TODO: splitter can be omitted if no splitting is required (add command line option to invoke this)
+        pair_collectors = dict()
+        if args.save_intermediate_files:
+            pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + f'_train_{logSettings.runID}.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
+        splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors)
+
+        if args.mol_type == 'graph':
+            encoder = FragmentEncoder(
+                fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
+                encoder=GraphFragmentEncoder(
+                    VocGraph(n_frags=args.n_frags)
+                ),
+                pairs_splitter=splitter,
+                n_proc=args.n_proc
+            )
+
+            data_collectors = [GraphFragDataCollector(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')]
+            encoder.applyTo(smiles, encodingCollectors=data_collectors)
+
+            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+        elif args.mol_type == 'smiles':
+            data_collectors = [SmilesFragDataCollector(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
+            ]
+            encoder = FragmentEncoder(
+                fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
+                encoder=SequenceFragmentEncoder(
+                    VocSmiles()
+                ),
+                pairs_splitter=splitter,
+                n_proc=args.n_proc
+            )
+            encoder.applyTo(smiles, encodingCollectors=data_collectors)
+
+            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+        else:
+            raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(args.mol_type))
+
+    tm_finish = time.perf_counter()
+
+    print(f"Dataset finished. Execution time: {tm_finish - tm_start:0.4f} seconds")
 
 if __name__ == '__main__':
 

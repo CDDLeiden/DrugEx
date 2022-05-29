@@ -12,6 +12,12 @@ from drugex.molecules.interfaces import MolSupplier
 
 class Vocabulary(ABC):
 
+    def __init__(self, words):
+        self.words = words
+
+    def __add__(self, other):
+        return type(self)(other.words + self.words)
+
     @abstractmethod
     def encode(self, tokens, frags=None):
         pass

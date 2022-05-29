@@ -5,7 +5,7 @@ from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger
 from drugex.datasets.interfaces import TrainTestSplitter, FragmentPairEncoder
 from drugex.molecules.converters.interfaces import ConversionException
-from drugex.molecules.interfaces import AnnotationException
+from drugex.molecules.interfaces import AnnotationException, MolSupplier
 from drugex.molecules.suppliers import DataFrameSupplier
 
 
@@ -131,3 +131,29 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
                 mol['frag_encoded'] = encoded
             else:
                 raise self.FragmentEncodingException(f'Failed to encode fragment {value} from molecule: {mol["mol"]}')
+
+
+class FragmentPairsSupplier(MolSupplier):
+
+    def __init__(self, molecules, fragmenter):
+        self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
+        self.fragmenter = fragmenter
+
+    def next(self):
+        ret = self.fragmenter(next(self.molecules))
+        if ret:
+            return ret
+        else:
+            return None
+        # ret = self.fragmenter(next(self.molecules))
+        # if ret:
+        #     smile, frags = ret
+        #     return {"smiles": smile, "frags" : tuple(frags)}
+        # else:
+        #     return next(self)
+
+    def convertMol(self, representation):
+        return representation
+
+    def annotateMol(self, mol, key, value):
+        return mol
