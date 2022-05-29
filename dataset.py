@@ -166,6 +166,8 @@ def DatasetArgParser(txt=None):
                         help="If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is 'smiles'.")   
     parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
                         help="If on, intermediate files")
+    parser.add_argument('-nfs', '--no_fragment_split', action='store_true',
+                        help="If on, split fragment data sets to training, test and unique sets.")
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -242,13 +244,12 @@ def Dataset(args):
             print('Breaking molecules to leaf fragments and encoding...')
 
         # prepare splitter and collect intermediate files if required
-        # TODO: splitter can be omitted if no splitting is required (add command line option to invoke this)
         pair_collectors = dict()
         if args.save_intermediate_files:
             pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + f'_train_{logSettings.runID}.txt', sep='\t', index=False)
             pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
             pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
-        splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors)
+        splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
 
         if args.mol_type == 'graph':
             encoder = FragmentEncoder(
@@ -260,13 +261,13 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
 
-            data_collectors = [GraphFragDataCollector(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')]
+            data_collectors = [GraphFragDataCollector(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataCollector(file_prefix + f'_train' + '_graph_%s.txt' % logSettings.runID)]
             encoder.applyTo(smiles, encodingCollectors=data_collectors)
 
             save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         elif args.mol_type == 'smiles':
             data_collectors = [SmilesFragDataCollector(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
-            ]
+            ] if splitter else [SmilesFragDataCollector(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
             encoder = FragmentEncoder(
                 fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
                 encoder=SequenceFragmentEncoder(

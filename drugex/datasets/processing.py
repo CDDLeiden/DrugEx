@@ -8,7 +8,7 @@ On: 27.05.22, 10:16
 import numpy as np
 import pandas as pd
 
-from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier
+from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
 from drugex.datasets.interfaces import EncodingCollector
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
@@ -64,7 +64,7 @@ class FragmentEncoder(MoleculeProcessor):
         super().__init__(n_proc, chunk_size)
         self.fragmenter = fragmenter
         self.encoder = encoder
-        self.pairsSplitter = pairs_splitter if pairs_splitter else lambda x : (pd.DataFrame(x, columns=['Frags', 'Smiles']),)
+        self.pairsSplitter = pairs_splitter if pairs_splitter else FragmentPairsSplitterBase()
 
     def getFragmentPairs(self, mols, collector):
         evaluator = ParallelSupplierEvaluator(
@@ -89,7 +89,7 @@ class FragmentEncoder(MoleculeProcessor):
             FragmentPairsEncodedSupplier,
             kwargs={
                 'encoder': self.encoder,
-                'mol_col' : self.pairsSplitter.smilesCol,
+                'mol_col' : self.pairsSplitter.molCol,
                 'frags_col': self.pairsSplitter.fragsCol
             },
             return_unique=False,

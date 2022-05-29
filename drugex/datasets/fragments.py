@@ -8,19 +8,27 @@ from drugex.molecules.converters.interfaces import ConversionException
 from drugex.molecules.interfaces import AnnotationException, MolSupplier
 from drugex.molecules.suppliers import DataFrameSupplier
 
+class FragmentPairsSplitterBase:
 
-class FragmentPairsSplitter(TrainTestSplitter):
+    def __init__(self, frags_col='Frags', mol_col='Smiles'):
+        self.fragsCol = frags_col
+        self.molCol = mol_col
 
-    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", smiles_col="Smiles"):
-        super().__init__(train_collector, test_collector)
+    def __call__(self, pairs):
+        return [pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])]
+
+class FragmentPairsSplitter(FragmentPairsSplitterBase):
+
+    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles"):
+        super().__init__(frags_col, mol_col)
         self.ratio = ratio
         self.maxTestSamples = max_test_samples
         self.uniqueCollect = unique_collector
-        self.smilesCol = smiles_col
-        self.fragsCol = frags_col
+        self.trainCollect = train_collector
+        self.testCollect = test_collector
 
     def __call__(self, pairs):
-        df = pd.DataFrame(pairs, columns=[self.fragsCol, self.smilesCol])
+        df = pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])
         frags = set(df.Frags)
         test_len = len(frags)//(100 * self.ratio)
         if test_len > int(self.maxTestSamples):
