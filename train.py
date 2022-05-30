@@ -662,22 +662,25 @@ def TrainGenerator(args):
         log.info("Pretraining started.")
         try:
             PreTrain(args)
-        except:
+        except Exception as exp:
             log.exception("Something went wrong in the pretraining.")
+            raise exp
         log.info("Pretraining finished.")
     elif args.mode == 'FT':
         log.info("Finetuning started.")
         try:
             FineTune(args)
-        except:
+        except Exception as exp:
             log.exception("Something went wrong in the finetuning.")
+            raise exp
         log.info("Finetuning finished.")
     elif args.mode == 'RL' :
         log.info("Reinforcement learning started.")
         try:
             RLTrain(args)
-        except:
+        except Exception as exp:
             log.exception("Something went wrong in the finetuning.")
+            raise exp
         log.info("Reinforcement learning finised.")
     else:
         raise ValueError("--mode should be either 'PT', 'FT' or 'RL', you gave {}".format(args.mode))
