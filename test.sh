@@ -121,6 +121,7 @@ ${ENVIRON_COMMON_ARGS} \
 ############
 TRAIN_COMMON_ARGS="-b ${TEST_BASE} -k -d -e ${TRAIN_EPOCHS} -bs ${TRAIN_BATCH} -gpu ${TRAIN_GPUS}"
 TRAIN_VOCAB_ARGS="-vfs ${PRETRAINING_PREFIX}_${VOC_PREFIX} ${FINETUNING_PREFIX}_${VOC_PREFIX}"
+#TRAIN_VOCAB_ARGS="" # uncomment to test with the default vocabularies
 
 # pretraining
 
