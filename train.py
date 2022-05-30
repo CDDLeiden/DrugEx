@@ -66,9 +66,14 @@ def GeneratorArgParser(txt=None):
                         help="Batch size")
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
                         help="List of GPUs") 
-
+    
     
     # RL parameters
+    parser.add_argument('-sf', '--scaffold_file', type=str, default=None,
+                        help='If given, RL uses scaffolds in this file as input fragments.')
+    parser.add_argument('-ns', '--n_samples', type=int, default=640, 
+                        help="During RL, n_samples and 0.2*n_samples random fragment-molecule pairs are used for training and validation at each epoch. If -1, all input data is used at each epoch.") 
+                         
     parser.add_argument('-eps', '--epsilon', type=float, default=0.1,
                         help="Exploring rate")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
@@ -144,33 +149,74 @@ def GeneratorArgParser(txt=None):
 
     return args
 
-def LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, subset, mol_type, runid='0000'):
+def LoadEncodedMoleculeFragmentPairs(data_path,  
+                                     input_prefix=None, 
+                                     subset='train', 
+                                     mol_type='graph',
+                                     runid='0000',
+                                     full_fname=None,
+                                    ):
     
     """ 
     Load fragement based input data to dataframe.
     
     Arguments:
         data_path (str)            : folder containing input files
-        input_prefix (str)         : prefix of input file
-        subset (str)               : subset name : 'train', 'unique' or 'test'
-        mol_type (str)             : molecule representation type : 'graph' or 'smi'
+        input_prefix (str), opt    : prefix of input file
+        subset (str), opt          : subset name : 'train', 'unique' or 'test'
+        mol_type (str), opt        : molecule representation type : 'graph' or 'smi'
         runid (str), opt           : runid of input file
+        full_fname (str), opt      : full input file name
     Returns:
         data (pd.DataFrame)        : dataframe containing encoded molecule-fragement pairs
     """
     
-    path =  data_path + '_'.join([input_prefix, subset, mol_type, runid]) + '.txt'
-    
-    try:
+    if full_fname is not None:
+        path = data_path + full_fname
+        log.info('Loading input data from {}'.format(path))
         data = pd.read_table(path)
-    except:
-        path_def =  data_path  + '_'.join([input_prefix, subset, mol_type]) + '.txt'
-        log.warning('Reading %s instead of %s' % (path_def, path))
-        data = pd.read_table(path_def)
+    
+    else:
+        path =  data_path + '_'.join([input_prefix, subset, mol_type, runid]) + '.txt'
+        log.info('Loading input data from {}'.format(path))
+        try:
+            data = pd.read_table(path)
+        except:
+            path_def =  data_path  + '_'.join([input_prefix, subset, mol_type]) + '.txt'
+            log.warning('Reading %s instead of %s' % (path_def, path))
+            data = pd.read_table(path_def)
         
     return data
 
-def DataPreparationGraph(base_dir, runid, input_prefix, batch_size=128, unique_frags=False):
+def OverSampleEncodedMoleculeFragmentPairs(data, n_samples=-1, test=False):
+    
+    """
+    Replicating input molecule-fragement pairs if the amount of input data smaller than sample size
+    
+    Arguments:
+        data (torch.tensor)        : tensor containing encoded pairs
+        n_samples (int), opt       : train sample size  
+        test (bool), opt           : if true, n_sample = 0.2 * original n_sample
+        
+    """
+    if test:
+        n_samples = int(n_samples*0.2)
+        
+    if n_samples > 0 and n_samples > data.shape[0]:
+        log.info('Replicating original {} {} pairs to have set of {} pairs.'.format('test' if test else 'train', data.shape[0], n_samples))
+        m = int(n_samples/data.shape[0])
+        data = data.repeat(m, 1, 1)     
+        
+    return data
+
+def DataPreparationGraph(base_dir, 
+                         runid, 
+                         input_prefix, 
+                         batch_size=128, 
+                         unique_frags=False, 
+                         full_fname=None,
+                         n_samples=-1,
+                        ):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
@@ -181,6 +227,7 @@ def DataPreparationGraph(base_dir, runid, input_prefix, batch_size=128, unique_f
         input_prefix (str)          : prefix of input files
         batch_size (int), opt       : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
+        full_fname (str), opt   : full input file name
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -201,18 +248,26 @@ def DataPreparationGraph(base_dir, runid, input_prefix, batch_size=128, unique_f
     # Load train data
     data = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 
                                             'unique' if unique_frags else 'train', 
-                                            mol_type, runid)
+                                            mol_type, runid, full_fname)
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
+    data = OverSampleEncodedMoleculeFragmentPairs(data, n_samples) 
     train_loader = DataLoader(data, batch_size=batch_size * 4, drop_last=False, shuffle=True)
-
+        
     # Load test data
-    test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid)        
+    test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid, full_fname)   
     test = torch.from_numpy(test.values).long().view(len(test), voc.max_len, -1)
+    test = OverSampleEncodedMoleculeFragmentPairs(test, n_samples, test=True)                  
     valid_loader = DataLoader(test, batch_size=batch_size * 10, drop_last=False, shuffle=True)
     
     return voc, train_loader, valid_loader
 
-def DataPreparationSmiles(base_dir, runid, input_prefix, batch_size=128, unique_frags=False):
+def DataPreparationSmiles(base_dir, 
+                          runid, 
+                          input_prefix, 
+                          batch_size=128, 
+                          unique_frags=False, 
+                          n_samples=-1,
+                          full_fname=None,):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
@@ -223,6 +278,7 @@ def DataPreparationSmiles(base_dir, runid, input_prefix, batch_size=128, unique_
         input_prefix (str)          : prefix of input files
         batch_size (int), optional  : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
+        full_fname (str), opt   : full input file name
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -241,10 +297,10 @@ def DataPreparationSmiles(base_dir, runid, input_prefix, batch_size=128, unique_
             voc = utils.Voc( data_path + 'voc_smiles.txt', src_len=100, trg_len=100)
     else:
         try:
-            voc = utils.VocSmiles( data_path + 'voc_smiles_%s.txt' % runid, trg_len=100)
+            voc = utils.VocSmiles( data_path + 'voc_smiles_%s.txt' % runid)
         except:
             log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
-            voc = utils.VocSmiles( data_path + 'voc_smiles.txt', trg_len=100)
+            voc = utils.VocSmiles( data_path + 'voc_smiles.txt')
 
     # Without input fragments
     if args.algorithm == 'rnn':
@@ -271,24 +327,27 @@ def DataPreparationSmiles(base_dir, runid, input_prefix, batch_size=128, unique_
         # Load train data
         train = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 
                                                 'unique' if unique_frags else 'train', 
-                                                mol_type, runid)
+                                                mol_type, runid, full_fname)
         train_in = voc.encode([seq.split(' ') for seq in train.Input.values])
         train_out = voc.encode([seq.split(' ') for seq in train.Output.values])
         train_set = TensorDataset(train_in, train_out)
+        train_set = OverSampleEncodedMoleculeFragmentPairs(train_set, n_samples)
 
         # Load test data
-        test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid)     
+        test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid, full_fname)     
         test = test.Input.drop_duplicates()
         test_set = voc.encode([seq.split(' ') for seq in test])
         test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
+        test_set = OverSampleEncodedMoleculeFragmentPairs(test_set, n_samples)
         valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
+            
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-    
+
     return voc, train_loader, valid_loader
 
 
-def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme):
+def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme, n_samples):
     
     """
     Sets up the evolver composed of two generators.
@@ -301,6 +360,7 @@ def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme
         epsilon (float)             : exploration rate
         beta (float)                : reward baseline
         scheme (str)                : name of optimization scheme
+        n_samples (int)             : number train and test (0.2*n_samples) of molecules generated at each epoch
     Returns:
         evolver (torch model)       : evolver composed of two generators
     """
@@ -317,6 +377,7 @@ def InitializeEvolver(agent, prior, algorithm, batch_size, epsilon, beta, scheme
     evolver.sigma = beta 
     evolver.scheme = scheme 
     evolver.repeat = 1   
+    evolver.n_samples = n_samples
     
     return evolver
     
@@ -514,8 +575,7 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     agent.load_state_dict(torch.load( pt_path, map_location=utils.dev))
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=ft_path)
-      
-    
+                              
 def RLTrain(args):
     
     """
@@ -543,13 +603,11 @@ def RLTrain(args):
     # rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
     #                                                     args.scheme, str(args.epsilon)]) + 'e'
     rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, 'RL', args.runid])
-                                                    
-    ## why need input for RL? probably because need input in v3 to generate sequences
-    print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
+                                                         
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, full_fname=args.scaffold_file, n_samples=args.n_samples)
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, full_fname=args.scaffold_file)
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
@@ -559,7 +617,7 @@ def RLTrain(args):
 
     # Initialize evolver algorithm
     ## first difference for v2 needs to be adapted
-    evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme)
+    evolver = InitializeEvolver(agent, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme, args.n_samples)
     
     # Create the desirability function
     objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, 
