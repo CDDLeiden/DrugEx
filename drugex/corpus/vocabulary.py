@@ -18,6 +18,9 @@ from drugex.molecules.converters.standardizers import CleanSMILES
 class VocSmiles(VocabularySequence):
     """A class for handling encoding/decoding from SMILES to an array of indices"""
 
+    defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH2-]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
+    )
+
     def encode(self, tokens, frags=None):
         """
         Takes a list of tokens (eg '[NH]') and encodes to array of indices
@@ -134,45 +137,7 @@ class VocGPT(VocSmiles):
 
 class VocGraph(Vocabulary):
 
-    defaultWords=(
-                '2O',
-                '3O+',
-                '1O-',
-                '4C',
-                '3C+',
-                '3C-',
-                '3N',
-                '4N+',
-                '2N-',
-                '1Cl',
-                '2S',
-                '6S',
-                '4S',
-                '3S+',
-                '5S+',
-                '1S-',
-                '1F',
-                '1I',
-                '5I',
-                '2I+',
-                '1Br',
-                '5P',
-                '3P',
-                '4P+',
-                '2Se',
-                '6Se',
-                '4Se',
-                '3Se+',
-                '4Si',
-                '3B',
-                '4B-',
-                '5As',
-                '3As',
-                '4As+',
-                '2Te',
-                '4Te',
-                '3Te+',
-            )
+    defaultWords=('2O','3O+','1O-','4C','3C+','3C-','3N','4N+','2N-','1Cl','2S','6S','4S','3S+','5S+','1S-','1F','1I','5I','2I+','1Br','5P','3P','4P+','2Se','6Se','4Se','3Se+','4Si','3B','4B-','5As','3As','4As+','2Te','4Te','3Te+',)
 
     def __init__(
             self,
@@ -341,3 +306,7 @@ class VocGraph(Vocabulary):
             frags.append(Chem.MolToSmiles(esub))
             smiles.append(Chem.MolToSmiles(emol))
         return frags, smiles
+
+DEFAULT_GRAPH = VocGraph(VocGraph.defaultWords)
+DEFAULT_SMILES = VocSmiles(VocSmiles.defaultWords)
+DEFAULT_GPT = VocGPT(VocSmiles.defaultWords)
