@@ -8,6 +8,9 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 import numpy as np
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class GraphExplorer(nn.Module):
     def __init__(self, agent, crover=None, mutate=None, epsilon=1e-2, repeat=1):
@@ -186,10 +189,39 @@ class GraphExplorer(nn.Module):
             loss.backward()
             self.optim.step()
             del loss
+            
+    def sample_set(self, loader, is_test=False):
+        
+        """
+        Samples n_samples molecule-fargement pairs from the original input loader. 
+        
+        Arguments:
+            loader                   : torch dataloader
+            is_test (bool), opt      : if true, reduced sample size and increased batch size
+        Returns:
+            loader                   
+        """
+        
+        for batch in loader:
+            try:
+                encoded_pairs = torch.cat((encoded_pairs, batch), 0)
+            except:
+                encoded_pairs = batch
+
+        n_pairs = encoded_pairs.shape[0]                
+        n_samples = int(self.n_samples * 0.2) if is_test else self.n_samples     
+        batch_size = self.batch_size * 10 if is_test else self.batch_size * 4
+        
+        log.info('{} fragments-molecule pairs were sampled at random from original {} pairs for {}'.format(n_samples, n_pairs, 'validation' if is_test else 'training'))
+        samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
+        loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
+            
+        return loader
+        
 
     def fit(self, data_loader, test_loader=None, epochs=1000):
         best_score = 0
-        log = open(self.out + '.log', 'w')
+        log_tmp = open(self.out + '.log', 'w')
         last_it = -1
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=utils.devices)
@@ -199,36 +231,27 @@ class GraphExplorer(nn.Module):
             print('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
             for epoch in tqdm(range(epochs)):
                 t0 = time.time()
-                t00 = t0
-                #for i, src in enumerate(tqdm(data_loader)):
+                              
+                if self.n_samples > 0:
+                    data_loader = self.sample_set(data_loader)
+                    test_loader = self.sample_set(test_loader, is_test=True)
+
                 for i, src in enumerate(data_loader):
-                    # trgs.append(src.detach().cpu())
                     with torch.no_grad():
                         trg = net(src.to(utils.dev))
                         trgs.append(trg.detach().cpu())
-                    # if len(trgs) < 10 : continue
-                #t1 = time.time()
-                #print('Net time:', t1-t0)
-                #t0 = t1
-
                 trgs = torch.cat(trgs, dim=0)
                 loader = DataLoader(trgs, batch_size=self.batch_size, shuffle=True, drop_last=True)
                 self.policy_gradient(loader)
                 trgs = []
-                #t1 = time.time()
-                #print('PG time:', t1-t0)
-                #t0 = t1
 
                 frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
-                #t1 = time.time()
-                #print('Eval time:', t1-t0)
-                #t0 = t1
 
                 t1 = time.time()
-                log.write("Iteration: %s Epoch: %d Av. Clipped Score: %.4f Valid: %.4f Desire: %.4f Time: %.1fs\n" %
+                log_tmp.write("Iteration: %s Epoch: %d Av. Clipped Score: %.4f Valid: %.4f Desire: %.4f Time: %.1fs\n" %
                           (it, epoch, score, valid, desire, t1 - t0))
                 if best_score < desire:
                     torch.save(self.agent.state_dict(), self.out + '.pkg')
@@ -239,16 +262,13 @@ class GraphExplorer(nn.Module):
 
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    log.write('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    log_tmp.write('%s\t%s\t%s\n' % (score, frags[i], smile))
                     
-                t1 = time.time()
-                #print('Log time:', t1-t0)
-                #print('Epoch time:', t1-t00)
             if self.crover is not None:
                 self.agent.load_state_dict(torch.load(self.out + '.pkg'))
                 self.crover.load_state_dict(torch.load(self.out + '.pkg'))
             if it - last_it > 1: break
-        log.close()
+        log_tmp.close()
 
 
 class SmilesExplorer(nn.Module):
