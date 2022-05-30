@@ -577,7 +577,11 @@ def RLTrain(args):
     else:
         data_path = args.base_dir + '/data/'
         paths = [data_path + f'{x}_smiles_{logSettings.runID}.txt' for x in args.voc_files]
-        voc = getVocFromFiles(paths, VocSmiles, max_len=100)
+        try:
+            voc = getVocFromFiles(paths, VocSmiles, max_len=100)
+        except FileNotFoundError:
+            logSettings.log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % args.runid)
+            voc = getVocFromFiles([data_path + 'voc_smiles.txt'], VocSmiles, max_len=100)
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
