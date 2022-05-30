@@ -268,7 +268,7 @@ def DataPreparationSmiles(voc_files, base_dir, runid, input_prefix, batch_size=1
             )
         except FileNotFoundError:
             logSettings.log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
-            voc = getVocFromFiles([data_path + 'voc_smiles.txt'], VocSmiles, trg_len=100)
+            voc = getVocFromFiles([data_path + 'voc_smiles.txt'], VocSmiles, max_len=100)
 
     # Without input fragments
     if args.algorithm == 'rnn':

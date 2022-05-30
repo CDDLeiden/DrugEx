@@ -45,10 +45,10 @@ class VocabularySequence(Vocabulary, ABC):
         """
 
         self.control = ('_', 'GO', 'EOS')
+        self.special = list(self.control) + ['.']
+        self.wordSet = set()
         if words:
-            self.words = [x for x in sorted(set(words))]
-        else:
-            self.words = list(self.control) + ['.']
+            self.wordSet = set(x for x in words if x not in self.special)
         self.updateIndex()
         self.max_len = max_len
         self.min_len = min_len
@@ -59,15 +59,15 @@ class VocabularySequence(Vocabulary, ABC):
 
     def toFile(self, path):
         log = open(path, 'w')
-        log.write('\n'.join(self.words))
+        log.write('\n'.join([x for x in self.words if x not in self.special]))
         log.close()
 
     def addWordsFromSeq(self, seq, ignoreConstraints=False):
         token = self.splitSequence(seq)
         if ignoreConstraints or (self.min_len < len(token) <= self.max_len):
-            diff = set(token) - self.words_set
+            diff = set(token) - self.wordSet
             if len(diff) > 0:
-                self.words.extend(diff)
+                self.wordSet.update(diff)
                 self.updateIndex()
             return token
         else:
@@ -75,8 +75,7 @@ class VocabularySequence(Vocabulary, ABC):
             return None
 
     def updateIndex(self):
-        self.words = sorted(self.words)
-        self.words_set = set(self.words)
+        self.words = self.special + [x for x in sorted(self.wordSet) if x not in self.special]
         self.size = len(self.words)
         self.tk2ix = dict(zip(self.words, range(len(self.words))))
         self.ix2tk = {v: k for k, v in self.tk2ix.items()}
