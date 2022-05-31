@@ -180,7 +180,7 @@ def LoadEncodedMoleculeFragmentPairs(data_path,
     
     if full_fname is not None:
         path = data_path + full_fname
-        log.info('Loading input data from {}'.format(path))
+        logSettings.log.info('Loading input data from {}'.format(path))
         data = pd.read_table(path)
     
     else:
@@ -210,7 +210,7 @@ def OverSampleEncodedMoleculeFragmentPairs(data, n_samples=-1, test=False):
         n_samples = int(n_samples*0.2)
         
     if n_samples > 0 and n_samples > data.shape[0]:
-        log.info('Replicating original {} {} pairs to have set of {} pairs.'.format('test' if test else 'train', data.shape[0], n_samples))
+        logSettings.log.info('Replicating original {} {} pairs to have set of {} pairs.'.format('test' if test else 'train', data.shape[0], n_samples))
         m = int(n_samples/data.shape[0])
         data = data.repeat(m, 1, 1)     
         
@@ -609,21 +609,12 @@ def RLTrain(args):
     Arguments:
         args (NameSpace): namespace containing command line arguments
     """
-    
-#     if args.version == 3:
-#         # In v3, the agent and prior both use the FT model
-#         ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
-#         pt_path = ft_path
-#     else :
-#         # In v2, the agent and crover use the FT model and the prior the PT model
-#         ft_path = args.base_dir + '/generators/' + args.finetuned_model + '.pkg'
-#         pt_path = args.base_dir + '/generators/' + args.pretrained_model + '.pkg'
 
     if not args.targets:
         raise ValueError('At least on active or inactive target should be given for RL.')
 
-    ag_path = args.base_dir + '/generators/' + args.agent_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
-    pr_path = args.base_dir + '/generators/' + args.prior_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
+    ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg' #+ f'_{args.algorithm}_{logSettings.runID}.pkg'
+    pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg' #+ f'_{args.algorithm}_{logSettings.runID}.pkg'
 
     # rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
     #                                                     args.scheme, str(args.epsilon)]) + 'e'

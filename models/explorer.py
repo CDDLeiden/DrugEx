@@ -8,8 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 import numpy as np
 
-import logging
-log = logging.getLogger(__name__)
+from drugex.logs import logger
 
 
 class GraphExplorer(nn.Module):
@@ -212,23 +211,26 @@ class GraphExplorer(nn.Module):
         n_samples = int(self.n_samples * 0.2) if is_test else self.n_samples     
         batch_size = self.batch_size * 10 if is_test else self.batch_size * 4
         
-        log.info('{} fragments-molecule pairs were sampled at random from original {} pairs for {}'.format(n_samples, n_pairs, 'validation' if is_test else 'training'))
-        samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
-        loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
+        if n_pairs > n_samples:
+        
+            logger.info('{} fragments-molecule pairs were sampled at random from original {} pairs for {}'.format(n_samples, n_pairs, 'validation' if is_test else 'training'))
+            samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
+            loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
             
         return loader
         
 
     def fit(self, data_loader, test_loader=None, epochs=1000):
         best_score = 0
-        log_tmp = open(self.out + '.log', 'w')
         last_it = -1
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=utils.devices)
         trgs = []
+        logger.info(' ')
         for it in range(n_iters):
             last_save = -1
             print('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
+            logger.info('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
             for epoch in tqdm(range(epochs)):
                 t0 = time.time()
                               
@@ -246,29 +248,28 @@ class GraphExplorer(nn.Module):
                 trgs = []
 
                 frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
-                desire = scores.DESIRE.sum() / len(smiles)
+                desired = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
 
                 t1 = time.time()
-                log_tmp.write("Iteration: %s Epoch: %d Av. Clipped Score: %.4f Valid: %.4f Desire: %.4f Time: %.1fs\n" %
-                          (it, epoch, score, valid, desire, t1 - t0))
-                if best_score < desire:
+                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desired:.4f} Time: {t1-t0:.1f}s")        
+                if best_score < desired:
                     torch.save(self.agent.state_dict(), self.out + '.pkg')
-                    best_score = desire
+                    best_score = desired
                     last_save = epoch
                     last_it = it
                 if epoch - last_save > 50: break
 
+                logger.debug(f"Iteration {it} - Epoch {epoch}" )
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    log_tmp.write('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
                     
             if self.crover is not None:
                 self.agent.load_state_dict(torch.load(self.out + '.pkg'))
                 self.crover.load_state_dict(torch.load(self.out + '.pkg'))
             if it - last_it > 1: break
-        log_tmp.close()
 
 
 class SmilesExplorer(nn.Module):
