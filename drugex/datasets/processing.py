@@ -186,7 +186,7 @@ class SmilesFragDataCollector(EncodingCollector):
     def getVoc(self):
        return self.voc
 
-class GraphFragDataCollector(EncodingCollector):
+class GraphDataCollector(EncodingCollector):
 
     def __init__(self, outpath):
         super().__init__(outpath)
@@ -194,8 +194,11 @@ class GraphFragDataCollector(EncodingCollector):
         self.codes = []
 
     def __call__(self, result):
-        self.codes.extend(x[1] for x in result[0])
-        voc = result[1].encoder.getVoc()
+        self.codes.extend(result[0])
+        voc = result[1].getVoc()
+        self.addVoc(voc)
+
+    def addVoc(self, voc):
         if not self.voc:
             self.voc = voc
         else:
@@ -210,3 +213,15 @@ class GraphFragDataCollector(EncodingCollector):
 
     def getVoc(self):
        return self.voc
+
+class GraphFragDataCollector(GraphDataCollector):
+
+    def __init__(self, outpath):
+        super().__init__(outpath)
+        self.voc = None
+        self.codes = []
+
+    def __call__(self, result):
+        self.codes.extend(x[1] for x in result[0])
+        voc = result[1].encoder.getVoc()
+        self.addVoc(voc)
