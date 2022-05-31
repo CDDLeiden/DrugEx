@@ -121,5 +121,9 @@ class Corpus(MolSupplier, ABC):
     def processMolecule(self, molecule):
         pass
 
+    @abstractmethod
+    def getVoc(self):
+        pass
+
 
 
