@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import logging
 import logging.config
 from datetime import datetime
+
+import drugex.logs.utils
 import models
 import utils
 import numpy as np
@@ -26,6 +27,10 @@ import os.path
 import sys
 import argparse
 import json
+import random
+
+from drugex.logs.config import get_runid, config_logger, init_logfile
+
 
 class QSARDataset:
     """
@@ -238,15 +243,12 @@ class QSARModel:
     def objective(self, trial):
         """
             objective for bayesian optimization
-            set random seed, has different variable name for XGB
         """
 
         if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
-            bayesian_params = {'seed': 42, 'verbosity': 0}
-        elif type(self.alg).__name__ in ['SVR', 'KNeighborsRegressor', 'KNeighborsClassifier', 'GaussianNB', 'PLSRegression']:
-            bayesian_params = {}
+            bayesian_params = {'verbosity': 0}
         else:
-            bayesian_params = {'random_state': 42}
+            bayesian_params = {}
 
         for key, value in self.search_space_bs.items():
             if value[0] == 'categorical':
@@ -380,7 +382,7 @@ class RF(QSARModel):
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
-        self.parameters=parameters if parameters != None else {'random_state': 42, 'n_estimators': 1000}
+        self.parameters=parameters if parameters != None else {'n_estimators': 1000}
 
         # set the search space for bayesian optimization
         self.search_space_bs = {
@@ -397,7 +399,6 @@ class RF(QSARModel):
 
         # set the search space for grid search
         self.search_space_gs = {
-            'random_state': [42],
             'max_depth': [None, 20, 50, 100],
             'max_features': ['auto', 'log2'],
             'min_samples_leaf': [1, 3, 5],
@@ -422,7 +423,7 @@ class XGB(QSARModel):
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
         self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:logistic',use_label_encoder=False, eval_metric='logloss')
-        self.parameters=parameters if parameters != None else {'nthread': 4, 'seed': 42, 'n_estimators': 1000}
+        self.parameters=parameters if parameters != None else {'nthread': 4, 'n_estimators': 1000}
         self.search_space_bs = {
             'n_estimators': ['int', 100, 1000],
             'max_depth': ['int',3, 10],
@@ -431,7 +432,6 @@ class XGB(QSARModel):
         
         self.search_space_gs = {
             'nthread':[4], #when use hyperthread, xgboost may become slower
-            'seed': [42],
             'learning_rate': [0.01, 0.05, 0.1], #so called `eta` value
             'max_depth': [3,6,10],
             'n_estimators': [100, 500, 1000],
@@ -453,13 +453,12 @@ class SVM(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for SVM
         self.alg = SVR() if data.reg else SVC(probability=True)
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
         self.search_space_bs = {
             'C': ['loguniform', 2.0 ** -5, 2.0 ** 15],
-            'kernel': ['categorical', ['linear', 'sigmoid', 'poly', 'rbf']],
+            'kernel': ['categorical', ['linear', 'sigmoid', 'rbf']], # TODO: add poly kernel
             'gamma': ['uniform', 0, 20]
         }
 
@@ -495,7 +494,6 @@ class KNN(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None):
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for KNN
         self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
@@ -529,7 +527,6 @@ class NB(QSARModel):
     def __init__(self, runid, data, save_m=True, parameters=None):
         if data.reg:
             raise ValueError("NB should be constructed only with classification.")
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for NB
         self.alg = GaussianNB()
         self.parameters=parameters if parameters != None else {}
         #parameter dictionaries for hyperparameter optimization
@@ -559,7 +556,6 @@ class PLS(QSARModel):
     def __init__(self, runid, data, save_m=True, parameters=None):
         if not data.reg:
             raise ValueError("PLS should be constructed only with regression.")
-        np.random.seed(42) #TODO: not sure if this is the right way to set random seed for PLS
         self.alg = PLSRegression()
         self.parameters=parameters if parameters != None else {}
         self.search_space_bs = {
@@ -589,7 +585,6 @@ class DNN(QSARModel):
 
     """
     def __init__(self, runid, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
-        np.random.seed(42)
         self.alg = models.STFullyConnected
         self.parameters = parameters if parameters != None else {}
         super().__init__(runid, data, self.alg, self.parameters, None, None, save_m=save_m)
@@ -617,7 +612,7 @@ class DNN(QSARModel):
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
-            log.info('cross validation fold ' +  i)
+            log.info('cross validation fold ' +  str(i))
             train_set = TensorDataset(torch.Tensor(self.data.X[trained]), torch.Tensor(self.y[trained]))
             train_loader = DataLoader(train_set, batch_size=self.batch_size)
             valid_set = TensorDataset(torch.Tensor(self.data.X[valided]), torch.Tensor(self.y[valided]))
@@ -633,8 +628,12 @@ class DNN(QSARModel):
         self.data.create_folds()
 
     def grid_search(self):
-        #TODO implement gridd search for DNN
-        print("Not yet implemented for DNN")
+        #TODO implement grid search for DNN
+        log.warning("Grid search not yet implemented for DNN, will be skipped.")
+    
+    def bayes_optimization(self, n_trials):
+        #TODO implement bayes optimization for DNN
+        log.warning("bayes optimization not yet implemented for DNN, will be skipped.")
 
 
 def EnvironmentArgParser(txt=None):
@@ -649,6 +648,7 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
     parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-ran', '--random_state', type=int, default=1, help="Seed for the random state")
     parser.add_argument('-i', '--input', type=str, default='dataset',
                         help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-s', '--save_model', action='store_true',
@@ -764,29 +764,34 @@ def Environment(args, runid):
 if __name__ == '__main__':
     args = EnvironmentArgParser()
     
+    #Set random seeds
+    random.seed(args.random_state)
+    np.random.seed(args.random_state)
+    torch.manual_seed(args.random_state)
+    os.environ['TF_DETERMINISTIC_OPS'] = str(args.random_state)
+
     # Get run id
-    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+    runid = get_runid(log_folder=os.path.join(args.base_dir,'logs'),
                             old=args.keep_runid,
                             id=args.pick_runid)
 
     # Configure logger
-    utils.config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
+    config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
 
     # Get logger, include this in every module
     log = logging.getLogger(__name__)
+
+    #Add optuna logging
+    optuna.logging.enable_propagation()  # Propagate logs to the root logger.
+    optuna.logging.disable_default_handler()  # Stop showing logs in sys.stderr.
+    optuna.logging.set_verbosity(optuna.logging.DEBUG)
 
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open('%s/logs/%s/env_args.json' % (args.base_dir, runid), 'w') as f:
         json.dump(vars(args), f)
-    
-    # Begin log file
-    githash = None
-    if args.no_git is False:
-        githash = utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))   
-    utils.init_logfile(log, runid, githash, json.dumps(vars(args), sort_keys=False, indent=2))
         
-    # settings for DNN model
+    # logSettings for DNN model
     #TODO: set this only for DNN model, instead of global
     BATCH_SIZE = args.batch_size
     N_EPOCH = args.epochs

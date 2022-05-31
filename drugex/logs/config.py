@@ -148,7 +148,7 @@ def get_runid(log_folder='logs', old=True, id=None):
     """
 
     fname = os.path.join(log_folder, 'runid.txt')
-    
+
     # Determine the runid to fetch
     if not id is None:
         runid = id
@@ -165,17 +165,25 @@ def get_runid(log_folder='logs', old=True, id=None):
     #Maximum runid is 9999
     if runid >= 10000 or runid <= 0:
         raise ValueError('Run id larger than 9999 or smaller than 1')
-    
+
     #Create log directory if necessary
     if not os.path.isdir(log_folder):
         os.mkdir(log_folder)
-    
+
     #Write runid to runid file
     with open(fname, 'a') as f:
         f.write('\n%s: %04d' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), runid))
-    
+
     #Create runid log directory if necessary
     if not os.path.isdir(os.path.join(log_folder, '%04d' % runid)):
         os.mkdir(os.path.join(log_folder, '%04d' % runid))
-    
+
     return '%04d' % runid
+
+class LogFileConfig:
+
+    def __init__(self, path, logger, debug, run_id):
+        self.path = path
+        self.log = logger
+        self.debug = debug
+        self.runID = run_id
