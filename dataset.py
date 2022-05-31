@@ -2,11 +2,10 @@ import os
 import time
 
 import pandas as pd
-from rdkit import Chem
 
-from drugex.corpus.corpus import SequenceCorpus
+from drugex.corpus.corpus import SequenceCorpus, GraphCorpus
 from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataCollector, \
-    SmilesFragDataCollector, SmilesDataCollector
+    SmilesFragDataCollector, SmilesDataCollector, GraphDataCollector
 from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder
@@ -40,97 +39,6 @@ def load_molecules(base_dir, input_file):
         mols = df[args.molecule_column].tolist()
         
     return mols
-
-# def graph_corpus(input, output, suffix='sdf'):
-#     metals = {'Na', 'Zn', 'Li', 'K', 'Ca', 'Mg', 'Ag', 'Cs', 'Ra', 'Rb', 'Al', 'Sr', 'Ba', 'Bi'}
-#     voc = VocGraph('data/voc_graph.txt')
-#     inf = gzip.open(input)
-#     if suffix == 'sdf':
-#         mols = Chem.ForwardSDMolSupplier(inf)
-#         total = 2e6
-#     else:
-#         mols = pd.read_table(input).drop_duplicates(subset=['Smiles']).dropna(subset=['Smiles'])
-#         total = len(mols)
-#         mols = mols.iterrows()
-#     vals = {}
-#     exps = {}
-#     codes, ids = [], []
-#     chooser = rdMolStandardize.LargestFragmentChooser()
-#     disconnector = rdMolStandardize.MetalDisconnector()
-#     normalizer = rdMolStandardize.Normalizer()
-#     for i, mol in enumerate(tqdm(mols, total=total)):
-#         if mol is None: continue
-#         if suffix != 'sdf':
-#             idx = mol[1]['Molecule ChEMBL ID']
-
-#             mol = Chem.MolFromSmiles(mol[1].Smiles)
-#         else:
-#             idx = mol.GetPropsAsDict()
-#             idx = idx['chembl_id']
-#         try:
-#             mol = disconnector.Disconnect(mol)
-#             mol = normalizer.normalize(mol)
-#             mol = chooser.choose(mol)
-#             mol = disconnector.Disconnect(mol)
-#             mol = normalizer.normalize(mol)
-#         except:
-#             print(idx)
-#         symb = [a.GetSymbol() for a in mol.GetAtoms()]
-#         # Nr. of the atoms
-#         bonds = mol.GetBonds()
-#         if len(bonds) < 4 or len(bonds) >= 63: continue
-#         if {'C'}.isdisjoint(symb): continue
-#         if not metals.isdisjoint(symb): continue
-
-#         smile = Chem.MolToSmiles(mol)
-#         try:
-#             s0 = smile.replace('[O]', 'O').replace('[C]', 'C') \
-#                  .replace('[N]', 'N').replace('[B]', 'B') \
-#                  .replace('[2H]', '[H]').replace('[3H]', '[H]')
-#             s0 = Chem.CanonSmiles(s0, 0)
-#             code = voc.encode([smile])
-#             s1 = voc.decode(code)[0]
-#             assert s0 == s1
-#             codes.append(code[0].reshape(-1).tolist())
-#             ids.append(idx)
-#         except Exception as ex:
-#             print(ex)
-#             print('Parse Error:', idx)
-#     df = pd.DataFrame(codes, index=ids, columns=['C%d' % i for i in range(64*4)])
-#     df.to_csv(output, sep='\t', index=True)
-#     print(vals)
-#     print(exps)
-
-def graph_encode(base_dir, smiles, output_file):
-    """
-    Encodes fragments and molecules to graph-matrices.
-    Arguments:
-        df (pd.DataFrame)         : dataframe containing molecules
-        file_base (str)           : base of output file
-    """
-
-    print('Encoding molecules to graph-matrices...')
-    voc = VocGraph()
-
-    # create columns for fragments
-    col = ['C%d' % d for d in range(voc.max_len*5)]
-    codes = []
-    large = max(smiles, key=len)
-    smiles.remove(large)
-    mol = Chem.MolFromSmiles(large)
-    total = mol.GetNumBonds()
-    if total >= 75:
-        raise ValueError("To create dataset largest smiles has to have less than 75 bonds'")
-
-    for smile in smiles:
-        output = voc.encode([large], [smile])
-        f, s = voc.decode(output)
-        assert large == s[0]
-        code = output[0].reshape(-1).tolist()
-        codes.append(code)
-
-    codes = pd.DataFrame(codes, columns=col)
-    codes.to_csv('%s/data/%s_graph.txt' % (base_dir, output_file), sep='\t', index=False)
     
 def DatasetArgParser(txt=None):
     
@@ -217,22 +125,30 @@ def Dataset(args):
     file_base = os.path.join(args.base_dir, 'data')
     if args.no_frags:
         if args.mol_type == 'graph':
-            graph_encode(args.base_dir, smiles, args.output)
-            #raise ValueError("To apply --no_frags, --mol_type needs to be 'smiles'")
-        # create corpus (only used in v2), vocab (only used in v2)  
-        print('Creating the corpus...')
+            data_set = GraphDataCollector('%s/data/%s_graph.txt' % (args.base_dir, args.output))
+            encoder = MoleculeEncoder(
+                GraphCorpus,
+                {
+                    'vocabulary': VocGraph(),
+                    'largest': max(smiles, key=len)
+                },
+                n_proc=args.n_proc
+            )
+            encoder.applyTo(smiles, collector=data_set)
+            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+        else:
+            # create sequence corpus and vocabulary (used only in v2 models)
+            encoder = MoleculeEncoder(
+                SequenceCorpus,
+                {
+                    'vocabulary': VocSmiles()
+                },
+                n_proc=args.n_proc
+            )
+            data_collector = SmilesDataCollector(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
+            encoder.applyTo(smiles, collector=data_collector)
 
-        encoder = MoleculeEncoder(
-            SequenceCorpus,
-            {
-                'vocabulary': VocSmiles()
-            },
-            n_proc=args.n_proc
-        )
-        data_collector = SmilesDataCollector(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
-        encoder.applyTo(smiles, collector=data_collector)
-
-        save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+            save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
     else:
         # create encoded fragment-molecule pair files for train and test set (only v3 models)
         file_name = f'%s_%d:%d_%s' % (args.output, args.n_frags, args.n_combs, args.frag_method)

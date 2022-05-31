@@ -4,8 +4,10 @@ corpus
 Created by: Martin Sicho
 On: 26.04.22, 16:47
 """
+from rdkit import Chem
+
 from drugex.corpus.interfaces import Corpus
-from drugex.corpus.vocabulary import VocSmiles
+from drugex.corpus.vocabulary import VocSmiles, VocGraph
 
 
 class SequenceCorpus(Corpus):
@@ -39,3 +41,26 @@ class SequenceCorpus(Corpus):
             return {'seq' : seq, 'token': ' '.join(token)}
         else:
             return None
+
+class GraphCorpus(Corpus):
+
+    def __init__(self, molecules, largest, vocabulary=VocGraph(), out_writer=None):
+        super().__init__(molecules, out_writer)
+        self.largest = largest
+        mol = Chem.MolFromSmiles(self.largest)
+        total = mol.GetNumBonds()
+        if total >= 75:
+            raise ValueError("To create dataset largest smiles has to have less than 75 bonds'")
+        self.voc = vocabulary
+
+    def processMolecule(self, molecule):
+        if molecule == self.largest:
+            return None
+        output = self.voc.encode([self.largest], [molecule])
+        f, s = self.voc.decode(output)
+        assert self.largest == s[0]
+        code = output[0].reshape(-1).tolist()
+        return code
+
+    def getVoc(self):
+        return self.voc
