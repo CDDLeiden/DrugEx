@@ -99,7 +99,12 @@ class Corpus(MolSupplier, ABC):
     def next(self):
         try:
             molecule = next(self.molecules)
-            ret = self.processMolecule(molecule)
+            try:
+                ret = self.processMolecule(molecule)
+            except Exception as exp:
+                logger.warning(f'Exception occurred when processing data for molecule: {molecule}')
+                logger.exception(exp)
+                return next(self)
             if ret:
                 if self.outWriter:
                     self.outWriter.write(ret)
