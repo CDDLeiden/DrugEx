@@ -125,7 +125,7 @@ def Dataset(args):
     file_base = os.path.join(args.base_dir, 'data')
     if args.no_frags:
         if args.mol_type == 'graph':
-            data_set = GraphDataCollector('%s/data/%s_graph.txt' % (args.base_dir, args.output))
+            data_set = GraphDataCollector('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
                 GraphCorpus,
                 {
