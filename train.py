@@ -5,7 +5,6 @@ import json
 import torch
 
 from drugex.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
-from drugex.logs.config import init_logfile
 from drugex.logs.utils import commit_hash, enable_file_logger
 import utils
 import argparse
@@ -144,13 +143,12 @@ def GeneratorArgParser(txt=None):
     return args
 
 
-def getVocFromFiles(paths, voc_class, **kwargs):
-    words = []
-    for path in paths:
-        voc = voc_class.fromFile(path, **kwargs)
-        words.extend(voc.words)
-
-    return voc_class(words, **kwargs)
+def getVocFromFiles(paths, voc_class, *args, **kwargs):
+    vocs = [voc_class.fromFile(path, *args, **kwargs) for path in paths]
+    if len(vocs) > 1:
+        return sum(vocs[1:], start=vocs[0])
+    else:
+        return vocs[0]
 
 
 def LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, subset, mol_type, runid='0000'):
