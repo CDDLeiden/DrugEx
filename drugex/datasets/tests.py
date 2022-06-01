@@ -12,8 +12,8 @@ from drugex.corpus.corpus import SequenceCorpus
 from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder, \
     FragmentPairsSplitter, FragmentPairsSupplier
-from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, SmilesFragDataCollector, \
-    GraphFragDataCollector, SmilesDataCollector
+from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, SmilesFragDataSet, \
+    GraphFragDataSet, SmilesDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DrExStandardizer
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
@@ -127,7 +127,7 @@ class ProcessingTests(TestCase):
             self.assertTrue(result['seq'])
 
         # with collector
-        collector = SmilesDataCollector('a')
+        collector = SmilesDataSet('a')
         encoder.applyTo(mols, collector=collector)
         voc = collector.getVoc()
         self.assertTrue('R' in voc.words)
@@ -155,7 +155,7 @@ class ProcessingTests(TestCase):
                 self.assertTrue(result[0][-1] == result[1][-1] == 'EOS')
 
         # with collectors
-        collectors = [SmilesFragDataCollector(x) for x in ('a', 'b', 'c')]
+        collectors = [SmilesFragDataSet(x) for x in ('a', 'b', 'c')]
         encoder.applyTo(mols, encodingCollectors=collectors)
         for collector in collectors:
             df = collector.getDataFrame()
@@ -175,7 +175,7 @@ class ProcessingTests(TestCase):
         )
 
         # with collectors
-        collectors = [GraphFragDataCollector(x) for x in ('a', 'b', 'c')]
+        collectors = [GraphFragDataSet(x) for x in ('a', 'b', 'c')]
         encoder.applyTo(mols, encodingCollectors=collectors)
         for collector in collectors:
             df = collector.getDataFrame()

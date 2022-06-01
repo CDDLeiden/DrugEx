@@ -7,9 +7,12 @@ On: 27.05.22, 10:16
 
 import numpy as np
 import pandas as pd
+import torch
+from torch.utils.data import DataLoader, TensorDataset
 
+from drugex.corpus.vocabulary import VocSmiles
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
-from drugex.datasets.interfaces import EncodingCollector
+from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
 from drugex.molecules.converters.standardizers import DrExStandardizer
@@ -129,7 +132,15 @@ class FragmentEncoder(MoleculeProcessor):
         if ret or ret_voc:
             return ret, ret_voc
 
-class SmilesDataCollector(EncodingCollector):
+class SmilesDataSet(DataSet):
+
+    class SplitConverter(DataLoaderCreator):
+
+        def __call__(self, split):
+            split = np.asarray(split)[:,1]
+            tensor = torch.LongTensor(self.voc.encode([seq.split(' ') for seq in split]))
+            loader = DataLoader(tensor, batch_size=self.batchSize, shuffle=True)
+            return loader
 
     def __init__(self, outpath):
         super().__init__(outpath)
@@ -145,6 +156,15 @@ class SmilesDataCollector(EncodingCollector):
     def getVoc(self):
         return self.voc
 
+    def getData(self):
+        return self.data
+
+    def setVoc(self, voc):
+        self.voc = voc
+
+    def getDefaultSplitConverter(self, batch_size, vocabulary):
+        return self.SplitConverter(batch_size, vocabulary)
+
     def __call__(self, result):
         self.data.extend([(x['seq'], x['token']) for x in result[0]])
 
@@ -154,12 +174,62 @@ class SmilesDataCollector(EncodingCollector):
         else:
             self.voc += voc
 
-class SmilesFragDataCollector(EncodingCollector):
+    def fromFile(self, path, vocs=tuple(), voc_class=None, smiles_col='Smiles', token_col='Token'):
+        self.data = pd.read_csv(path, header=0, sep='\t', usecols=[smiles_col, token_col]).values.tolist()
 
-    def __init__(self, outpath):
+        if vocs and voc_class:
+            self.voc = self.readVocs(vocs, voc_class)
+
+class SmilesFragDataSet(DataSet):
+
+    class InOutSplitConverter(DataLoaderCreator):
+
+        def __call__(self, split):
+            split = np.asarray(split)
+            split_in = self.voc.encode([seq.split(' ') for seq in split[:,0]])
+            split_out = self.voc.encode([seq.split(' ') for seq in split[:,1]])
+            split_set = TensorDataset(split_in, split_out)
+            split_loader = DataLoader(split_set, batch_size=self.batchSize, shuffle=True)
+            return split_loader
+
+    class TargetSplitConverter(DataLoaderCreator):
+
+        class TgtData:
+            def __init__(self, seqs, ix, max_len=100):
+                self.max_len = max_len
+                self.index = np.array(ix)
+                self.map = {idx: i for i, idx in enumerate(self.index)}
+                self.seq = seqs
+
+            def __getitem__(self, i):
+                seq = self.seq[i]
+                return i, seq
+
+            def __len__(self):
+                return len(self.seq)
+
+            def collate_fn(self, arr):
+                collated_ix = np.zeros(len(arr), dtype=int)
+                collated_seq = torch.zeros(len(arr), self.max_len).long()
+                for i, (ix, tgt) in enumerate(arr):
+                    collated_ix[i] = ix
+                    collated_seq[i, :] = tgt
+                return collated_ix, collated_seq
+
+        def __call__(self, split):
+            split = np.asarray(split)
+            split = pd.Series(split[:,0]).drop_duplicates()
+            split = self.voc.encode([seq.split(' ') for seq in split])
+            split = self.TgtData(split, ix=[self.voc.decode(seq, is_tk=False) for seq in split])
+            split = DataLoader(split, batch_size=self.batchSize, collate_fn=split.collate_fn)
+            return split
+
+
+    def __init__(self, outpath, columns=('Input', 'Output')):
         super().__init__(outpath)
         self.codes = []
         self.voc = None
+        self.columns = columns
 
     def __call__(self, result):
         self.codes.extend(
@@ -177,16 +247,39 @@ class SmilesFragDataCollector(EncodingCollector):
         else:
             self.voc += voc
 
-    def getDataFrame(self, columns=('Input', 'Output')):
-        return pd.DataFrame(self.codes, columns=columns)
+    def getDataFrame(self):
+        return pd.DataFrame(self.codes, columns=self.columns)
 
-    def save(self, columns=('Input', 'Output')):
-        self.getDataFrame(columns).to_csv(self.outpath, sep='\t', index=False)
+    def save(self,):
+        self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
+
+    def getData(self):
+        return self.codes
 
     def getVoc(self):
        return self.voc
 
-class GraphDataCollector(EncodingCollector):
+    def getDefaultSplitConverter(self, batch_size, vocabulary):
+        return self.InOutSplitConverter(batch_size, vocabulary)
+
+    def setVoc(self, voc):
+        self.voc = voc
+
+    def fromFile(self, path, vocs=tuple(), voc_class=None):
+        self.codes = pd.read_csv(path, header=0, sep='\t', usecols=self.columns).values.tolist()
+
+        if vocs and voc_class:
+            self.voc = self.readVocs(vocs, voc_class)
+
+class GraphDataSet(DataSet):
+
+    class SplitConverter(DataLoaderCreator):
+
+        def __call__(self, split):
+            split = np.asarray(split)
+            split = torch.from_numpy(split).long().view(len(split), self.voc.max_len, -1)
+            loader = DataLoader(split, batch_size=self.batchSize, drop_last=False, shuffle=True)
+            return loader
 
     def __init__(self, outpath):
         super().__init__(outpath)
@@ -211,10 +304,25 @@ class GraphDataCollector(EncodingCollector):
     def save(self):
         self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
 
+    def getData(self):
+        return self.codes
+
+    def getDefaultSplitConverter(self, batch_size, vocabulary):
+        return self.SplitConverter(batch_size, vocabulary)
+
     def getVoc(self):
        return self.voc
 
-class GraphFragDataCollector(GraphDataCollector):
+    def setVoc(self, voc):
+        self.voc = voc
+
+    def fromFile(self, path, vocs=tuple(), voc_class=None):
+        self.codes = pd.read_csv(path, header=0, sep='\t').values.tolist()
+
+        if vocs and voc_class:
+            self.voc = self.readVocs(vocs, voc_class)
+
+class GraphFragDataSet(GraphDataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)

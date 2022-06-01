@@ -4,8 +4,8 @@ import time
 import pandas as pd
 
 from drugex.corpus.corpus import SequenceCorpus, GraphCorpus
-from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataCollector, \
-    SmilesFragDataCollector, SmilesDataCollector, GraphDataCollector
+from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataSet, \
+    SmilesFragDataSet, GraphDataSet, SmilesDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder
@@ -125,7 +125,7 @@ def Dataset(args):
     file_base = os.path.join(args.base_dir, 'data')
     if args.no_frags:
         if args.mol_type == 'graph':
-            data_set = GraphDataCollector('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
+            data_set = GraphDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
                 GraphCorpus,
                 {
@@ -145,7 +145,7 @@ def Dataset(args):
                 },
                 n_proc=args.n_proc
             )
-            data_collector = SmilesDataCollector(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
+            data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
             encoder.applyTo(smiles, collector=data_collector)
 
             save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
@@ -177,13 +177,13 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
 
-            data_collectors = [GraphFragDataCollector(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataCollector(file_prefix + f'_train' + '_graph_%s.txt' % logSettings.runID)]
+            data_collectors = [GraphFragDataSet(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train' + '_graph_%s.txt' % logSettings.runID)]
             encoder.applyTo(smiles, encodingCollectors=data_collectors)
 
             save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         elif args.mol_type == 'smiles':
-            data_collectors = [SmilesFragDataCollector(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
-            ] if splitter else [SmilesFragDataCollector(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
+            data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
+                               ] if splitter else [SmilesFragDataSet(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
             encoder = FragmentEncoder(
                 fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
                 encoder=SequenceFragmentEncoder(
