@@ -2,9 +2,8 @@
 import logging.config
 from datetime import datetime
 
-import drugex.logs.utils
-import models
-import utils
+from drugex import utils
+from drugex.training import models
 import numpy as np
 import pandas as pd
 from rdkit import Chem
@@ -29,7 +28,7 @@ import argparse
 import json
 import random
 
-from drugex.logs.config import get_runid, config_logger, init_logfile
+from drugex.logs.config import get_runid, config_logger
 
 
 class QSARDataset:

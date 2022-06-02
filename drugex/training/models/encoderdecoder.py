@@ -1,5 +1,5 @@
 import torch
-import utils
+from drugex import utils
 from torch import nn
 from .attention import DecoderAttn
 import time

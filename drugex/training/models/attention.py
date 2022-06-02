@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-import utils
+from drugex import utils
 
 
 class Attn(nn.Module):

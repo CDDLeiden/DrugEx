@@ -2,7 +2,7 @@
 import torch
 from torch import nn
 from torch import optim
-import utils
+from drugex import utils
 import time
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm

@@ -1,7 +1,7 @@
 import os
 
 import drugex.logs.utils
-import utils
+from drugex import utils
 import logging_exmpl_mod
 import logging
 import argparse
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     args = EnvironmentArgParser()
 
     #Get run id
-    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir, 'logs'),
                             old=args.keep_runid,
                             id=args.pick_runid,
                             )

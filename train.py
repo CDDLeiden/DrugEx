@@ -7,14 +7,15 @@ import torch
 from drugex.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
 from drugex.logs.config import init_logfile
 from drugex.logs.utils import commit_hash, enable_file_logger
-import utils
+from drugex import utils
 import argparse
 import pandas as pd
 
 from torch.utils.data import DataLoader, TensorDataset
 
-from models import encoderdecoder, GPT2Model, GraphModel, single_network
-from models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
+from drugex.training.models import GPT2Model, GraphModel, single_network
+from drugex.training.models import encoderdecoder
+from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -465,7 +466,7 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(utils.Property('QED'))
         keys.append('QED')
     if ra_score:
-        from models.ra_scorer import RetrosyntheticAccessibilityScorer
+        from drugex.training.models.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
     if mw:
@@ -482,8 +483,8 @@ def CreateDesirabilityFunction(base_dir,
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=activity_threshold-pad, upper_x=activity_threshold+pad)
-            inactive = utils.ClippedScore(lower_x=activity_threshold+pad, upper_x=activity_threshold-pad)
+            active = utils.ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
+            inactive = utils.ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
         ths = [0.5] * (len(targets)) 
             
     else:
@@ -492,8 +493,8 @@ def CreateDesirabilityFunction(base_dir,
             active = utils.ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = utils.ClippedScore(lower_x=0.8, upper_x=0.5)
         else:
-            active = utils.ClippedScore(lower_x=activity_threshold-pad, upper_x=activity_threshold)
-            inactive = utils.ClippedScore(lower_x=activity_threshold+pad, upper_x=activity_threshold)
+            active = utils.ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+            inactive = utils.ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
         ths = [0.99] * len((targets))
         
         
@@ -592,7 +593,7 @@ def FineTune(args):
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
-    agent.load_state_dict(torch.load( pt_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load(pt_path, map_location=utils.dev))
     agent.fit(train_loader, valid_loader, epochs=args.epochs, out=ft_path)
                               
 def RLTrain(args):
@@ -629,9 +630,9 @@ def RLTrain(args):
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
-    agent.load_state_dict(torch.load( ag_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load(ag_path, map_location=utils.dev))
     prior = SetGeneratorAlgorithm(voc, args.algorithm)        
-    prior.load_state_dict(torch.load( pr_path, map_location=utils.dev))  
+    prior.load_state_dict(torch.load(pr_path, map_location=utils.dev))
 
     # Initialize evolver algorithm
     ## first difference for v2 needs to be adapted

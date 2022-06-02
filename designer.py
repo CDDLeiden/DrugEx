@@ -11,13 +11,11 @@ from torch.utils.data import DataLoader
 import math
 
 import drugex.logs.utils
-import utils
+from drugex import utils
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
 import logging
 import logging.config
-from datetime import datetime
-
 
 rdBase.DisableLog('rdApp.error')
 torch.set_num_threads(1)
@@ -83,7 +81,7 @@ def DesignArgParser(txt=None):
 def Design(args):
     
     # Get run id
-    runid = utils.get_runid(log_folder=os.path.join(args.base_dir,'logs'),
+    runid = utils.get_runid(log_folder=os.path.join(args.base_dir, 'logs'),
                             old=args.keep_runid,
                             id=args.pick_runid)
 
@@ -110,10 +108,10 @@ def Design(args):
     # Initialize voc
     if args.algorithm == 'graph':
         try: 
-            voc = utils.VocGraph( args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
+            voc = utils.VocGraph(args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
         except:
             log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
-            voc = utils.VocGraph( args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
+            voc = utils.VocGraph(args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
     else:
         try:
             path = args.base_dir + '/data/voc_smiles_%s.txt' % runid
@@ -125,9 +123,9 @@ def Design(args):
             log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
             path = args.base_dir + '/data/voc_smiles.txt' 
             if args.algorithm == 'gpt':
-                voc = utils.Voc( path, src_len=100, trg_len=100)
+                voc = utils.Voc(path, src_len=100, trg_len=100)
             else:
-                voc = utils.VocSmiles( path, max_len=100)
+                voc = utils.VocSmiles(path, max_len=100)
     
     # Load data (only done for encoder-decoder models)
     if args.algorithm == 'graph':
@@ -142,7 +140,7 @@ def Design(args):
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
-    agent.load_state_dict(torch.load( gen_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load(gen_path, map_location=utils.dev))
     # Set up environment-predictor
     objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, 
                                                        args.env_alg, 

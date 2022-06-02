@@ -1,7 +1,8 @@
 import numpy as np
 from rdkit import DataStructs
 import torch
-import utils
+from drugex import utils
+
 
 def dominate(ind1: np.ndarray, ind2: np.ndarray):
     """
