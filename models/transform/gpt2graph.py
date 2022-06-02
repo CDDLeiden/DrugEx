@@ -242,10 +242,10 @@ class GraphModel(Base):
             out = src
         return out
 
-    def fit(self, train_loader, ind_loader, epochs=100, method=None, out=None):
+    def fit(self, train_loader, ind_loader=None, epochs=100, method=None, out=None):
         log = open(out + '.log', 'w')
         best = float('inf')
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        net = nn.DataParallel(self, device_ids=self.devices)
         t00 = time.time()
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
@@ -253,7 +253,7 @@ class GraphModel(Base):
         for epoch in tqdm(range(epochs)):
             t0 = time.time()
             for i, src in enumerate(train_loader):
-                src = src.to(utils.dev)
+                src = src.to(self.device)
                 self.optim.zero_grad()
                 loss = net(src, is_train=True)
                 loss_train = [round(-l.mean().item(), 3) for l in loss]
@@ -289,13 +289,13 @@ class GraphModel(Base):
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         #t0 = time.time()
         with torch.no_grad():
             for _ in range(repeat):
                 for i, src in enumerate(loader):
-                    trg = net(src.to(utils.dev)) 
+                    trg = net(src.to(self.device))
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s

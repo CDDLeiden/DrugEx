@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from abc import ABC, abstractmethod
+
 import torch
 from torch import nn
 from torch import optim
@@ -8,16 +10,15 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 import numpy as np
 
+from drugex.training.interfaces import Explorer
 
-class GraphExplorer(nn.Module):
-    def __init__(self, agent, crover=None, mutate=None, epsilon=1e-2, repeat=1):
-        super(GraphExplorer, self).__init__()
+
+class GraphExplorer(Explorer):
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+        super(GraphExplorer, self).__init__(agent, mutate, env, batch_size, epsilon, sigma, scheme, repeat)
         self.voc_trg = agent.voc_trg
-        self.agent = agent
         self.crover = None if crover is None else crover
         self.mutate = None if mutate is None else mutate
-        self.epsilon = epsilon
-        self.repeat = repeat
         self.optim = utils.ScheduledOptim(
             optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512)
         # self.optim = optim.Adam(self.parameters(), lr=1e-5)
@@ -187,7 +188,7 @@ class GraphExplorer(nn.Module):
             self.optim.step()
             del loss
 
-    def fit(self, data_loader, test_loader=None, epochs=1000):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, training_monitor=None):
         best_score = 0
         log = open(self.out + '.log', 'w')
         last_it = -1
@@ -201,7 +202,7 @@ class GraphExplorer(nn.Module):
                 t0 = time.time()
                 t00 = t0
                 #for i, src in enumerate(tqdm(data_loader)):
-                for i, src in enumerate(data_loader):
+                for i, src in enumerate(train_loader):
                     # trgs.append(src.detach().cpu())
                     with torch.no_grad():
                         trg = net(src.to(utils.dev))
@@ -212,14 +213,14 @@ class GraphExplorer(nn.Module):
                 #t0 = t1
 
                 trgs = torch.cat(trgs, dim=0)
-                loader = DataLoader(trgs, batch_size=self.batch_size, shuffle=True, drop_last=True)
+                loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=True)
                 self.policy_gradient(loader)
                 trgs = []
                 #t1 = time.time()
                 #print('PG time:', t1-t0)
                 #t0 = t1
 
-                frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
+                frags, smiles, scores = self.agent.evaluate(train_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
@@ -251,14 +252,11 @@ class GraphExplorer(nn.Module):
         log.close()
 
 
-class SmilesExplorer(nn.Module):
-    def __init__(self, agent, crover=None, mutate=None, epsilon=1e-2, repeat=1):
-        super(SmilesExplorer, self).__init__()
-        self.agent = agent
+class SmilesExplorer(Explorer):
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+        super(SmilesExplorer, self).__init__(agent, mutate, env, batch_size, epsilon, sigma, scheme, repeat)
         self.crover = crover
         self.mutate = mutate
-        self.epsilon = epsilon
-        self.repeat = repeat
         self.optim = utils.ScheduledOptim(
             optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512)
         # self.optim = optim.Adam(self.parameters(), lr=1e-5)
@@ -306,7 +304,7 @@ class SmilesExplorer(nn.Module):
             self.optim.step()
             del loss
 
-    def fit(self, data_loader, test_loader=None, epochs=1000):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, training_monitor=None):
         best_score = 0
         log = open(self.out + '.log', 'w')
         last_it = -1
@@ -319,7 +317,7 @@ class SmilesExplorer(nn.Module):
                 t0 = time.time()
 
                 print('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
-                for i, (ix, src) in enumerate(tqdm(data_loader)):
+                for i, (ix, src) in enumerate(tqdm(train_loader)):
                     with torch.no_grad():
                         # frag = data_loader.dataset.index[ix]
                         trg = net(src.to(utils.dev))
@@ -330,11 +328,11 @@ class SmilesExplorer(nn.Module):
                 srcs = torch.cat(srcs, dim=0)
 
                 dataset = TensorDataset(srcs, trgs)
-                loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True, drop_last=True)
+                loader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True, drop_last=True)
                 self.policy_gradient(loader)
                 srcs, trgs = [], []
 
-                frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
+                frags, smiles, scores = self.agent.evaluate(train_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.keys].values.mean()
                 valid = scores.VALID.mean()
@@ -359,7 +357,7 @@ class SmilesExplorer(nn.Module):
         log.close()
 
 
-class PGLearner(object):
+class PGLearner(Explorer, ABC):
     """ Reinforcement learning framework with policy gradient. This class is the base structure for the
         drugex v1 and v2 policy gradient-based  deep reinforcement learning models.
  
@@ -372,24 +370,22 @@ class PGLearner(object):
  
         prior: The auxiliary model which is defined differently in each methods.
     """
-    def __init__(self, agent, prior=None, memory=None, mean_func='geometric'):
+    def __init__(self, agent, env=None, prior=None, memory=None, mean_func='geometric', batch_size=128, epsilon=1e-3,
+                 sigma=0.0, scheme='PR', repeat=1):
+        super().__init__(agent, prior, env, batch_size, epsilon, sigma, scheme, repeat)
         self.replay = 10
-        self.agent = agent
-        self.prior = prior
-        self.batch_size = 64  # * 4
         self.n_samples = 128  # * 8
-        self.epsilon = 1e-3
         self.penalty = 0
-        self.scheme = 'PR'
         self.out = None
         self.memory = memory
         # mean_func: which function to use for averaging: 'arithmetic' or 'geometric'
         self.mean_func = mean_func
  
-    def policy_gradient(self):
+    @abstractmethod
+    def policy_gradient(self, smiles=None, seqs=None, memory=None):
         pass
  
-    def fit(self):
+    def fit(self, train_loader, valid_loader=None, training_monitor=None, epochs=1000):
         best = 0
         last_save = 0
         log = open(self.out + '.log', 'w')
@@ -437,15 +433,15 @@ class SmilesExplorerNoFrag(PGLearner):
         prior (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, prior=None, crover=None, mean_func='geometric', memory=None):
-        super(SmilesExplorerNoFrag, self).__init__(agent, prior, mean_func=mean_func, memory=memory)
+    def __init__(self, agent, prior=None, crover=None, env=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+        super(SmilesExplorerNoFrag, self).__init__(agent, prior, env, mean_func=mean_func, memory=memory, batch_size=batch_size, epsilon=epsilon, sigma=sigma, scheme=scheme, repeat=repeat)
         self.crover = crover
  
     def forward(self, crover=None, memory=None, epsilon=None):
         seqs = []
         #start = time.time()
         for _ in range(self.replay):
-            seq = self.agent.evolve(self.batch_size, epsilon=epsilon, crover=crover, mutate=self.prior)
+            seq = self.agent.evolve(self.batchSize, epsilon=epsilon, crover=crover, mutate=self.prior)
             seqs.append(seq)
         #t1 = time.time()
         seqs = torch.cat(seqs, dim=0)
@@ -459,12 +455,12 @@ class SmilesExplorerNoFrag(PGLearner):
         seqs = seqs[torch.LongTensor(ix).to(utils.dev)]
         return smiles, seqs
    
-    def policy_gradient(self, smiles, seqs, memory=None):
+    def policy_gradient(self, smiles=None, seqs=None, memory=None):
         # function need to get smiles
         scores = self.env.calc_reward(smiles, self.scheme, frags=None)
         if memory is not None:
             scores[:len(memory), 0] = 1
-            ix = scores[:, 0].argsort()[-self.batch_size * 4:]
+            ix = scores[:, 0].argsort()[-self.batchSize * 4:]
             seqs, scores = seqs[ix, :], scores[ix, :]
         #t2 = time.time()
         ds = TensorDataset(seqs, torch.Tensor(scores).to(utils.dev))
@@ -475,7 +471,7 @@ class SmilesExplorerNoFrag(PGLearner):
         #t3 = time.time()
         #print(t1 - start, t2-t1, t3-t2)
  
-    def fit(self, epochs):
+    def fit(self, train_loader, valid_loader=None, training_monitor=None, epochs=1000):
         best = 0
         log = open(self.out + '.log', 'a')
         last_smiles = []

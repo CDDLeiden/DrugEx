@@ -9,6 +9,8 @@ from rdkit.Chem import Lipinski
 from rdkit import DataStructs
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
+
+from drugex.training.interfaces import Scorer, Environment
 from utils import sascorer
 from .nsgaii import similarity_sort, nsgaii_sort
 from .fingerprints import get_fingerprint
@@ -20,7 +22,7 @@ from tqdm import tqdm
 rdBase.DisableLog('rdApp.error')
 
 
-class Predictor:
+class Predictor(Scorer):
     def __init__(self, path, type='CLS'):
         self.type = type
         self.model = joblib.load(path)
@@ -73,7 +75,7 @@ class Predictor:
         return fps
 
 
-class Similarity:
+class Similarity(Scorer):
     def __init__(self, smile, fp_type):
         self.mol = Chem.MolFromSmiles(smile)
         self.fp_type = fp_type
@@ -89,7 +91,7 @@ class Similarity:
         return scores
 
 
-class Scaffold:
+class Scaffold(Scorer):
     def __init__(self, smart, is_match):
         self.frag = Chem.MolFromSmarts(smart)
         self.is_match = is_match
@@ -104,7 +106,7 @@ class Scaffold:
         return scores
 
 
-class Property:
+class Property(Scorer):
     def __init__(self, prop='MW'):
         self.prop = prop
         self.prop_dict = {'MW': desc.MolWt,
@@ -140,7 +142,7 @@ class Property:
         return scores
 
 
-class AtomCounter:
+class AtomCounter(Scorer):
 
     def __init__(self, element: str) -> None:
         """
@@ -171,7 +173,7 @@ class AtomCounter:
         return scores
 
 
-class Isomer:
+class Isomer(Scorer):
     """
     Scoring function for closeness to a molecular formula.
     The score penalizes deviations from the required number of atoms for each element type, and for the total
@@ -232,7 +234,7 @@ class Isomer:
         return scores
 
 
-class Env:
+class Env(Environment):
     def __init__(self, objs, mods, keys, ths=None):
         """
         Initialized methods for the construction of environment.

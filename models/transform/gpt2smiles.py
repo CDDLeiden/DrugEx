@@ -6,7 +6,6 @@ from .layer import pad_mask, tri_mask
 from models.encoderdecoder import Base
 from utils import ScheduledOptim
 from torch import optim
-import utils
 
 
 class Block(nn.Module):
@@ -76,9 +75,9 @@ class GPT2Model(Base):
             out = dec.gather(2, trg.unsqueeze(2)).squeeze(2)
         else:
             seq_len = self.voc_trg.max_len + self.voc_trg.max_len
-            out = torch.zeros(len(src), seq_len).long().to(utils.dev)
+            out = torch.zeros(len(src), seq_len).long().to(self.device)
             out[:, :src.size(1)] = src
-            is_end = torch.zeros(len(src)).bool().to(utils.dev)
+            is_end = torch.zeros(len(src)).bool().to(self.device)
             for step in range(self.voc_trg.max_len):  # decode up to max length
                 input = out[:, :src.size(1)+step]
                 key_mask = pad_mask(input, self.pad_idx)

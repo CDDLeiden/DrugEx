@@ -1,23 +1,25 @@
 import torch
 import utils
 from torch import nn
+
+from drugex.training.interfaces import Generator
 from .attention import DecoderAttn
 import time
 import pandas as pd
 
 
-class Base(nn.Module):
-    def fit(self, pair_loader, ind_loader, epochs=100, method=None, out=None):
+class Base(Generator):
+    def fit(self, pair_loader, ind_loader=None, epochs=100, method=None, out=None):
         log = open(out + '.log', 'w')
         best = 0.
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        net = nn.DataParallel(self, device_ids=self.devices)
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
         max_interval = 50
         for epoch in range(epochs):
             t0 = time.time()
             for i, (src, trg) in enumerate(pair_loader):
-                src, trg = src.to(utils.dev), trg.to(utils.dev)
+                src, trg = src.to(self.device), trg.to(self.device)
 
                 self.optim.zero_grad()
                 loss = net(src, trg)
@@ -47,12 +49,12 @@ class Base(nn.Module):
         log.close()
 
     def evaluate(self, loader, repeat=1, method=None):
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         with torch.no_grad():
             for _ in range(repeat):
                 for ix, src in loader:
-                    trg = net(src.to(utils.dev))
+                    trg = net(src.to(self.device))
                     ix = loader.dataset.index[ix]
                     smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
                     frags += ix.tolist()
@@ -68,7 +70,7 @@ class Base(nn.Module):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        self.to(utils.dev)
+        self.to(self.device)
 
 
 class Seq2Seq(Base):
@@ -88,12 +90,12 @@ class Seq2Seq(Base):
         batch_size = input.size(0)
         memory, hc = self.encoder(input)
 
-        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(utils.dev)
+        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(self.device)
         if output is None:
             output_ = output_.long()
         # Start token
-        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(utils.dev)
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(self.device)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
 
         for step in range(self.voc_trg.max_len):
             logit, hc = self.decoder(x, hc, memory)
@@ -129,12 +131,12 @@ class EncDec(Base):
         batch_size = input.size(0)
         _, hc = self.encoder(input)
 
-        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(utils.dev)
+        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(self.device)
         if output is None:
             output_ = output_.long()
 
-        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(utils.dev)
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(self.device)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
         for step in range(self.voc_trg.max_len):
             logit, hc = self.decoder(x, hc)
             if output is not None:
@@ -215,7 +217,7 @@ class ValueNet(nn.Module):
         self.rnn = rnn_layer(embed_size, hidden_size, num_layers=3, batch_first=True)
         self.linear = nn.Linear(hidden_size, voc.size * n_objs)
         self.optim = torch.optim.Adam(self.parameters())
-        self.to(utils.dev)
+        self.to(self.device)
 
     def forward(self, input, h):
         output = self.embed(input.unsqueeze(-1))
@@ -226,24 +228,24 @@ class ValueNet(nn.Module):
 
     def init_h(self, batch_size):
         if self.is_lstm:
-            return (torch.zeros(3, batch_size, self.hidden_size).to(utils.dev),
-                    torch.zeros(3, batch_size, self.hidden_size).to(utils.dev))
+            return (torch.zeros(3, batch_size, self.hidden_size).to(self.device),
+                    torch.zeros(3, batch_size, self.hidden_size).to(self.device))
         else:
-            return torch.zeros(3, batch_size, 512).to(utils.dev)
+            return torch.zeros(3, batch_size, 512).to(self.device)
 
     def sample(self, batch_size, is_pareto=False):
-        x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(utils.dev)
+        x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
         h = self.init_h(batch_size)
 
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
         outputs = []
         for job in range(self.n_objs):
-            seqs = torch.zeros(batch_size, self.voc.max_len).long().to(utils.dev)
+            seqs = torch.zeros(batch_size, self.voc.max_len).long().to(self.device)
             for step in range(self.voc.max_len):
                 logit, h = self(x, h)
                 logit = logit.view(batch_size, self.voc.size, self.n_objs)
                 if is_pareto:
-                    proba = torch.zeros(batch_size, self.voc.size).to(utils.dev)
+                    proba = torch.zeros(batch_size, self.voc.size).to(self.device)
                     for i in range(batch_size):
                         preds = logit[i, :, :]
                         fronts, ranks = utils.nsgaii_sort(preds)

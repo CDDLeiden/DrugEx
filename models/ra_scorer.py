@@ -4,6 +4,8 @@ import numpy as np
 from rdkit.Chem import MolToSmiles
 from RAscore import RAscore_NN, RAscore_XGB
 
+from drugex.training.interfaces import Scorer
+
 NN_MODEL_PATH = None
 XGB_MODEL_PATH = None
 
@@ -28,7 +30,7 @@ def calculate_score(mol: str, use_xgb_model: bool = False) -> Optional[float]:
     return score
 
 
-class RetrosyntheticAccessibilityScorer:
+class RetrosyntheticAccessibilityScorer(Scorer):
     def __init__(self, use_xgb_model: bool = False):
         self.scorer = (
             RAscore_XGB.RAScorerXGB(model_path=XGB_MODEL_PATH)
