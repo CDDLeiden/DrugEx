@@ -4,7 +4,7 @@ from torch import nn
 from torch import optim
 from torch.nn import functional as F
 import time
-import utils
+from drugex import utils
 
 
 class Base(nn.Module):

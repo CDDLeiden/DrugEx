@@ -1,5 +1,5 @@
 import torch
-import utils
+from drugex import utils
 from torch import nn
 
 from drugex.training.interfaces import Generator

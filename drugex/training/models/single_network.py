@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from torch import nn
 from torch import optim
-import utils
+from drugex import utils
 
 
 class RNN(nn.Module):

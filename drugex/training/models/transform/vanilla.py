@@ -4,8 +4,8 @@ import torch.nn as nn
 from torch import optim
 from .layer import EncoderLayer, DecoderLayer, PositionalEmbedding
 from .layer import pad_mask, tri_mask
-import utils
-from models.encoderdecoder import Base
+from drugex import utils
+from drugex.training.models.encoderdecoder import Base
 
 
 class Encoder(nn.Module):
