@@ -5,12 +5,19 @@ from torch import nn
 from drugex.training.interfaces import Generator
 from .attention import DecoderAttn
 import time
-import pandas as pd
+
+from drugex.logs import logger
+from ..scorers import SmilesChecker
 
 
 class Base(Generator):
-    def fit(self, pair_loader, ind_loader=None, epochs=100, method=None, out=None):
-        log = open(out + '.log', 'w')
+
+    def attachToDevice(self, device):
+        super().attachToDevice(device)
+        self.to(self.device)
+
+    def fit(self, pair_loader, ind_loader=None, epochs=100, evaluator=None, monitor=None):
+
         best = 0.
         net = nn.DataParallel(self, device_ids=self.devices)
         last_save = -1
@@ -18,6 +25,7 @@ class Base(Generator):
         max_interval = 50
         for epoch in range(epochs):
             t0 = time.time()
+            total_steps = len(pair_loader)
             for i, (src, trg) in enumerate(pair_loader):
                 src, trg = src.to(self.device), trg.to(self.device)
 
@@ -29,24 +37,29 @@ class Base(Generator):
                 self.optim.step()
 
                 if i % 1000 != 0: continue
-                frags, smiles, scores = self.evaluate(ind_loader, method=method)
+                frags, smiles, scores = self.evaluate(ind_loader, method=evaluator)
                 valid = scores.VALID.sum() / len(scores)
                 desire = scores.DESIRE.sum() / len(scores)
                 t1 = time.time()
-                log.write("Epoch: %d step: %d loss: %.3f valid: %.3f desire: %.3f time: %d\n" %
+                logger.info("Epoch: %d step: %d loss: %.3f valid: %.3f desire: %.3f time: %d\n" %
                       (epoch, i, loss.item(), valid, desire, t1-t0))
-                print('%.3f' % (t1-t0))
-                del loss
+                logger.info('%.3f' % (t1-t0))
                 t0 = t1
+                monitor.saveProgress(i, epoch, total_steps, epochs)
+
+                smiles_scores = []
                 for i, smile in enumerate(smiles):
-                    log.write('%d\t%.3f\t%s\t%s\n' % (scores.VALID[i], scores.DESIRE[i], frags[i], smile))
+                    logger.debug('%d\t%.3f\t%s\t%s\n' % (scores.VALID[i], scores.DESIRE[i], frags[i], smile))
+                    smiles_scores.append((smiles, scores.VALID[i], scores.DESIRE[i], frags[i]))
+                monitor.savePerformanceInfo(i, epoch, loss.item(), valid=valid, desire=desire, best=best, smiles_scores=smiles_scores)
+                del loss
                 if best <= desire:
-                    torch.save(self.state_dict(), out + '.pkg')
+                    monitor.saveModel(self)
                     best = desire
                     last_save = epoch
-                log.flush()
+                monitor.endStep(i, epoch)
             if epoch - last_save > max_interval: break
-        log.close()
+        monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=self.devices)
@@ -60,10 +73,8 @@ class Base(Generator):
                     frags += ix.tolist()
                     break
         if method is None:
-            scores = utils.Env.check_smiles(smiles, frags=frags)
-            scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
-        else:
-            scores = method(smiles, frags=frags)
+            method = SmilesChecker()
+        scores = method(smiles, frags=frags)
         return frags, smiles, scores
 
     def init_states(self):

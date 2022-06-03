@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+
+from drugex.logs import logger
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
@@ -9,6 +11,8 @@ from drugex import utils
 import time
 import pandas as pd
 from tqdm import tqdm
+
+from ...scorers import SmilesChecker
 
 
 class Block(nn.Module):
@@ -240,8 +244,7 @@ class GraphModel(Base):
             out = src
         return out
 
-    def fit(self, train_loader, ind_loader=None, epochs=100, method=None, out=None):
-        log = open(out + '.log', 'w')
+    def fit(self, train_loader, ind_loader=None, epochs=100, evaluator=None, monitor=None):
         best = float('inf')
         net = nn.DataParallel(self, device_ids=self.devices)
         t00 = time.time()
@@ -250,6 +253,7 @@ class GraphModel(Base):
         max_interval = 50
         for epoch in tqdm(range(epochs)):
             t0 = time.time()
+            total_steps = len(train_loader)
             for i, src in enumerate(train_loader):
                 src = src.to(self.device)
                 self.optim.zero_grad()
@@ -259,32 +263,34 @@ class GraphModel(Base):
                 loss.backward()
                 self.optim.step()
                 del loss
+
+                monitor.saveProgress(i, epoch, total_steps, epochs)
                 
                 if sum(loss_train) < best:
-                    torch.save(self.state_dict(), out + '.pkg')
+                    monitor.saveModel(self)
                     best = sum(loss_train)
                     last_save = epoch
                     #print('New best - epoch : {} step : {} loss : {}'.format(epoch, i, loss_value))
             
             #t2 = time.time()
             #print('Epoch {} - Train time: {}'.format(epoch, int(t2-t0)))
-            frags, smiles, scores = self.evaluate(ind_loader)
+            frags, smiles, scores = self.evaluate(ind_loader, method=evaluator)
             loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in ind_loader] # temporary solution to get validation loss
             t1 = time.time()
             #print('Epoch {} - Eval time: {}'.format(epoch, int(t1-t2)))
             valid = scores.VALID.mean()
             dt = int(t1-t0)
             #print("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
-            log.write("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
+            logger.info("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
             for j, smile in enumerate(smiles):
-                log.write('%s\t%s\n' % (frags[j], smile))
-            log.flush()
+                logger.debug('%s\t%s\n' % (frags[j], smile))
             t0 = t1
+            monitor.savePerformanceInfo(None, epoch, loss_train, loss_valid=loss_valid, valid=valid, smiles=smiles, frags=frags)
             del loss_valid
-
+            monitor.endStep(None, epoch)
             if epoch - last_save > max_interval: break
         
-        log.close()
+        monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=self.devices)
@@ -299,10 +305,8 @@ class GraphModel(Base):
                     smiles += s
         #print('Eval net time:', time.time()-t0)
         if method is None:
-            scores = utils.Env.check_smiles(smiles, frags=frags)
-            scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
-        else:
-            scores = method(smiles, frags=frags)
+            method = SmilesChecker()
+        scores = method(smiles, frags=frags)
         #print('Eval env time:', time.time()-t0)
         return frags, smiles, scores
 

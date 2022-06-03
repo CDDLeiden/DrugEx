@@ -10,10 +10,16 @@ from abc import ABC, abstractmethod
 import torch
 from torch import nn
 
+class ModelEvaluator(ABC):
+
+    @abstractmethod
+    def __call__(self, mols, frags=None):
+        pass
+
 class Scorer(ABC):
 
     @abstractmethod
-    def __call__(self, data):
+    def __call__(self, mols, frags=None):
         """
         Returns scores for input data.
 
@@ -106,7 +112,19 @@ class TrainingMonitor(ModelProvider, ABC):
         pass
 
     @abstractmethod
+    def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
+        pass
+
+    @abstractmethod
     def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def endStep(self, step, epoch):
+        pass
+
+    @abstractmethod
+    def close(self):
         pass
 
 class Trainer(ModelProvider, ABC):
@@ -114,7 +132,7 @@ class Trainer(ModelProvider, ABC):
     def __init__(self, algorithm, gpus=(0,)):
         assert len(gpus) > 0
         self.availableGPUs = gpus
-        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(self.availableGPUs)
+        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
         self.device = None
         self.deviceID = None
         self.model = algorithm
@@ -132,6 +150,8 @@ class Trainer(ModelProvider, ABC):
     def attachDevices(self, device_id=None):
         if device_id and (device_id not in self.availableGPUs):
             raise RuntimeError(f"Unavailable device: {device_id}")
+        if not device_id:
+            device_id = self.availableGPUs[0]
         torch.cuda.set_device(device_id)
         self.device = torch.device('cuda')
         self.deviceID = device_id

@@ -10,12 +10,45 @@ from unittest import TestCase
 import pandas as pd
 
 from drugex.corpus.corpus import SequenceCorpus
-from drugex.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
 from drugex.datasets.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder
 from drugex.datasets.splitters import RandomTrainTestSplitter
 from drugex.datasets.processing import MoleculeEncoder, SmilesDataSet, Standardization, FragmentEncoder, \
     GraphFragDataSet, SmilesFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.training.interfaces import TrainingMonitor
+from drugex.training.models import GPT2Model, EncDec, Seq2Seq, RNN, GraphModel
+from drugex.training.trainers import Pretrainer, FineTuner
+
+
+class TestModelMonitor(TrainingMonitor):
+
+    def __init__(self):
+        self.model = None
+
+    def saveModel(self, model):
+        self.model = model
+
+    def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
+        print("Test Progress Monitor:")
+        print(current_step, current_epoch, total_steps, total_epochs)
+        print(args)
+        print(kwargs)
+
+    def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
+        print("Test Performance Monitor:")
+        print(current_step, current_epoch, loss)
+        print(args)
+        print(kwargs)
+
+    def endStep(self, step, epoch):
+        print(f"Finished step {step} of epoch {epoch}.")
+
+    def close(self):
+        print("Training done.")
+
+    def getModel(self):
+        return self.model
 
 
 class TrainingTestCase(TestCase):
@@ -34,6 +67,51 @@ class TrainingTestCase(TestCase):
 
     def standardize(self, smiles):
         return Standardization(n_proc=self.N_PROC).applyTo(smiles)
+
+    def setUpSmilesFragData(self):
+        pre_smiles = self.getSmilesPretrain()
+        ft_smiles = self.getSmilesFinetune()
+
+        # create and encode fragments
+        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True)
+        encoder = FragmentEncoder(
+            fragmenter=Fragmenter(4, 4, 'brics'),
+            encoder=SequenceFragmentEncoder(
+                VocSmiles()
+            ),
+            pairs_splitter=splitter,
+            n_proc=self.N_PROC
+        )
+
+        # get training data
+        pr_data_set_test = SmilesFragDataSet('pretrain')
+        pr_data_set_train = SmilesFragDataSet('pretrain')
+        encoder.applyTo(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
+        ft_data_set_test = SmilesFragDataSet('finetune')
+        ft_data_set_train = SmilesFragDataSet('finetune')
+        encoder.applyTo(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
+
+        # get vocabulary (we will join all generated vocabularies to make sure the one used to create data loaders contains all tokens)
+        vocabulary = pr_data_set_test.getVoc() + pr_data_set_train.getVoc() + ft_data_set_train.getVoc() + ft_data_set_test.getVoc()
+        pr_data_set_test.setVoc(vocabulary)
+        pr_data_set_train.setVoc(vocabulary)
+        ft_data_set_train.setVoc(vocabulary)
+        ft_data_set_test.setVoc(vocabulary)
+
+        pr_loader_train = pr_data_set_train.asDataLoader(32)
+        pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        self.assertTrue(pr_loader_train)
+        self.assertTrue(pr_loader_test)
+
+        ft_loader_train = pr_data_set_train.asDataLoader(32)
+        ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        self.assertTrue(ft_loader_train)
+        self.assertTrue(ft_loader_test)
+
+        self.smiles_frags_data = pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary
+
+    def setUp(self):
+        self.setUpSmilesFragData()
 
     def test_rnn_nofrags(self):
         pre_smiles = self.getSmilesPretrain()
@@ -60,6 +138,26 @@ class TrainingTestCase(TestCase):
         pr_loader_train, pr_loader_test = pre_data_set.asDataLoader(32, splitter=splitter)
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
+
+        algorithm = RNN(vocabulary, is_lstm=True)
+        pretrainer = Pretrainer(algorithm)
+        monitor = TestModelMonitor()
+        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # fine-tuning
+        splitter = RandomTrainTestSplitter(0.1)
+        ft_loader_train, ft_loader_test = ft_data_set.asDataLoader(32, splitter=splitter)
+        self.assertTrue(ft_loader_train)
+        self.assertTrue(ft_loader_test)
+
+        finetuner = FineTuner(algorithm)
+        monitor = TestModelMonitor()
+        finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # TODO: RL
+
 
     def test_graph_frags(self):
         pre_smiles = self.getSmilesPretrain()
@@ -93,43 +191,79 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-    def test_smiles_frags(self):
-        pre_smiles = self.getSmilesPretrain()
-        ft_smiles = self.getSmilesFinetune()
+        algorithm = GraphModel(vocabulary)
+        pretrainer = Pretrainer(algorithm)
+        monitor = TestModelMonitor()
+        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
 
-        # create and encode fragments
-        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True)
-        encoder = FragmentEncoder(
-            fragmenter=Fragmenter(4, 4, 'brics'),
-            encoder=SequenceFragmentEncoder(
-                VocSmiles()
-            ),
-            pairs_splitter=splitter,
-            n_proc=self.N_PROC
-        )
+        # fine-tuning
+        ft_loader_train = ft_data_set_train.asDataLoader(128)
+        ft_loader_test = ft_data_set_test.asDataLoader(256)
+        self.assertTrue(ft_loader_train)
+        self.assertTrue(ft_loader_test)
 
-        # get training data
-        pr_data_set_test = SmilesFragDataSet('pretrain')
-        pr_data_set_train = SmilesFragDataSet('pretrain')
-        encoder.applyTo(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
-        ft_data_set_test = SmilesFragDataSet('finetune')
-        ft_data_set_train = SmilesFragDataSet('finetune')
-        encoder.applyTo(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
+        pretrainer = FineTuner(pretrainer.getModel())
+        monitor = TestModelMonitor()
+        pretrainer.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
 
-        # get vocabulary (we will join all generated vocabularies to make sure the one used to create data loaders contains all tokens)
-        vocabulary = pr_data_set_test.getVoc() + pr_data_set_train.getVoc() + ft_data_set_train.getVoc() + ft_data_set_test.getVoc()
-        pr_data_set_test.setVoc(vocabulary)
-        pr_data_set_train.setVoc(vocabulary)
-        ft_data_set_train.setVoc(vocabulary)
-        ft_data_set_test.setVoc(vocabulary)
+        # TODO: RL
+
+    def test_smiles_frags_vec(self):
+        pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
 
         # pretraining
-        pr_loader_train = pr_data_set_train.asDataLoader(32)
-        pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
-        self.assertTrue(pr_loader_train)
-        self.assertTrue(pr_loader_test)
+        algorithm = EncDec(vocabulary, vocabulary)
+        pretrainer = Pretrainer(algorithm)
+        monitor = TestModelMonitor()
+        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
 
+        # fine-tuning
+        finetuner = FineTuner(pretrainer.getModel())
+        monitor = TestModelMonitor()
+        finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
 
+        # TODO: RL
+
+    def test_smiles_frags_attn(self):
+        pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
+
+        # pretraining
+        algorithm = Seq2Seq(vocabulary, vocabulary)
+        pretrainer = Pretrainer(algorithm)
+        monitor = TestModelMonitor()
+        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # fine-tuning
+        finetuner = FineTuner(pretrainer.getModel())
+        monitor = TestModelMonitor()
+        finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # TODO: RL
+
+    def test_smiles_frags_gpt(self):
+        pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
+
+        # pretraining
+        vocab_gpt = VocGPT(vocabulary.words)
+        algorithm = GPT2Model(vocab_gpt, n_layer=12)
+        pretrainer = Pretrainer(algorithm)
+        monitor = TestModelMonitor()
+        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # fine-tuning
+        finetuner = FineTuner(pretrainer.getModel())
+        monitor = TestModelMonitor()
+        finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        self.assertTrue(monitor.getModel())
+
+        # TODO: RL
 
 
 
