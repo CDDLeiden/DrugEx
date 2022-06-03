@@ -59,7 +59,10 @@ class DataSet(EncodingCollector, ABC):
         for split in self.generateSplits(self.getData(), splitter, split_converter):
             results.append(split)
 
-        return results
+        if len(results) == 1:
+            return results[0]
+        else:
+            return results
 
     @abstractmethod
     def getDefaultSplitConverter(self, batch_size, vocabulary):
