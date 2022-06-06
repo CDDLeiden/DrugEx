@@ -18,7 +18,6 @@ from models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
 import warnings
 warnings.filterwarnings("ignore")
-
     
 def GeneratorArgParser(txt=None):
     """ Define and read command line arguments """
@@ -132,17 +131,6 @@ def GeneratorArgParser(txt=None):
 
     if args.version == 2:
         args.algorithm = 'rnn'
-    
-#     if args.mode == 'FT':
-#         #In case of FT setting some parameters from PT parameters
-#         with open(args.base_dir + '/generators/' + args.pretrained_model + '.json') as f:
-#             pt_params = json.load(f)
-#         args.algorithm = pt_params['algorithm']
-#     elif args.mode == 'RL':
-#         #In case of RL setting some parameters from FT parameters
-#         with open(args.base_dir + '/generators/' + args.finetuned_model + '.json') as f:
-#             pt_params = json.load(f)
-#         args.algorithm = pt_params['algorithm']
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -360,11 +348,17 @@ def DataPreparationSmiles(voc_files,
 
         # Load test data
         test = LoadEncodedMoleculeFragmentPairs(data_path, input_prefix, 'test', mol_type, runid, full_fname)     
-        test = test.Input.drop_duplicates()
-        test_set = voc.encode([seq.split(' ') for seq in test])
-        test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
-        test_set = OverSampleEncodedMoleculeFragmentPairs(test_set, n_samples)
-        valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
+        test = test.drop_duplicates(subset='Input', keep="first")
+        test_in = voc.encode([seq.split(' ') for seq in test.Input.values])
+        test_out = voc.encode([seq.split(' ') for seq in test.Output.values])
+        test_set = TensorDataset(test_in, test_out)
+        test_set = OverSampleEncodedMoleculeFragmentPairs(test_set, n_samples, test=True)
+        valid_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
+
+        # test_set = voc.encode([seq.split(' ') for seq in test])
+        # test_set = utils.TgtData(test_set, ix=[voc.decode(seq, is_tk=False) for seq in test_set])
+        # test_set = OverSampleEncodedMoleculeFragmentPairs(test_set, n_samples)
+        # valid_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=test_set.collate_fn)
             
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
@@ -663,16 +657,8 @@ def RLTrain(args):
     
     # Set Evolver's environment-predictor
     evolver.env = utils.Env(objs=objs, mods=mods, keys=keys, ths=ths)
+    evolver.out = rl_path 
     
-    #root = '%s/generators/%s_%s' % (args.base_dir, args.algorithm, time.strftime('%y%m%d_%H%M%S', time.localtime()))
-    #os.mkdir(root)
-
-    # No idea what the following lines should do as the files that should be copied does not exist !?!?!?
-#     copy2(args.algorithm + '_ex.py', root)
-#     copy2(args.algorithm + '.py', root)
-
-    # import evolve as agent
-    evolver.out = rl_path #root + '/%s_%s_%s_%.0e' % (args.algorithm, evolver.scheme, args.env_task, evolver.epsilon)
     if args.version == 3 and args.algorithm != 'rnn':
         evolver.fit(train_loader, test_loader=valid_loader, epochs=args.epochs)
     else:
@@ -696,10 +682,12 @@ def TrainGenerator(args):
     if args.no_git is False:
         args.git_commit = commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-
-    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
-    torch.cuda.set_device(utils.devices[0])
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    
+    if torch.cuda.is_available():
+        print(torch.cuda.is_available())
+        utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+        torch.cuda.set_device(utils.devices[0])
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     
     if not os.path.exists(args.base_dir + '/generators'):
         os.makedirs(args.base_dir + '/generators')  
