@@ -408,7 +408,7 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(utils.Property('QED'))
         keys.append('QED')
     if ra_score:
-        from drugex.training.models.ra_scorer import RetrosyntheticAccessibilityScorer
+        from drugex.training.scorers.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
     if mw:

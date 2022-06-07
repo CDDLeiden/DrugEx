@@ -18,8 +18,11 @@ class ModelEvaluator(ABC):
 
 class Scorer(ABC):
 
+    def __init__(self, modifier=None):
+        self.modifier = modifier
+
     @abstractmethod
-    def __call__(self, mols, frags=None):
+    def getScores(self, mols, frags=None):
         """
         Returns scores for input data.
 
@@ -35,26 +38,45 @@ class Scorer(ABC):
 
         pass
 
+    def __call__(self, mols, frags=None):
+        return self.getModifiedScores(self.getScores(mols, frags))
+
+    def getModifiedScores(self, scores):
+        if self.modifier:
+            return self.modifier(scores)
+        else:
+            return scores
+
     @abstractmethod
     def getKey(self):
         pass
 
-    @abstractmethod
-    def setModifier(self, score_modifier):
-        pass
+    def setModifier(self, modifier):
+        self.modifier = modifier
 
-    @abstractmethod
-    def setThreshold(self):
-        pass
+    def getModifier(self):
+        return self.modifier
 
 class Environment(ABC):
 
-    def __init__(self, scorers):
+    def __init__(self, scorers, thresholds=None):
         self.scorers = scorers
+        self.thresholds = thresholds if thresholds is not None else [0.99] * len(scorers)
+        assert len(self.scorers) == len(self.thresholds)
+
+    def __call__(self, smiles, is_modified=True, frags=None):
+        return self.getScores(smiles, is_modified, frags)
 
     @abstractmethod
-    def __call__(self, smiles, is_modified=True, frags=None):
+    def getScores(self, smiles, is_modified=True, frags=None):
         pass
+
+    @abstractmethod
+    def getRewards(self, smiles, scheme='WS', frags=None):
+        pass
+
+    def getScorerKeys(self):
+        return [x.getKey() for x in self.scorers]
 
 
 class Model(nn.Module, ABC):
@@ -82,9 +104,13 @@ class Generator(Model, ABC):
     def fit(self, train_loader, valid_loader=None, epochs=1000, method=None, out=None):
         pass
 
+    @abstractmethod
+    def evaluate(self, n_samples, method=None, drop_duplicates=True):
+        pass
+
 class Explorer(Model, ABC):
 
-    def __init__(self, agent, prior, env, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
         super().__init__()
         self.batchSize = batch_size
         self.epsilon = epsilon
@@ -93,10 +119,11 @@ class Explorer(Model, ABC):
         self.repeat = repeat
         self.env = env
         self.agent = agent
-        self.prior = prior
+        self.mutate = mutate
+        self.crover = crover
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader=None, epochs=1000, out=None):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
         pass
 
 class ModelProvider(ABC):

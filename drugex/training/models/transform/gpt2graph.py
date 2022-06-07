@@ -12,7 +12,7 @@ import time
 import pandas as pd
 from tqdm import tqdm
 
-from ...scorers import SmilesChecker
+from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Block(nn.Module):
@@ -289,7 +289,7 @@ class GraphModel(Base):
             del loss_valid
             monitor.endStep(None, epoch)
             if epoch - last_save > max_interval: break
-        
+        torch.cuda.empty_cache()
         monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
@@ -305,8 +305,9 @@ class GraphModel(Base):
                     smiles += s
         #print('Eval net time:', time.time()-t0)
         if method is None:
-            method = SmilesChecker()
-        scores = method(smiles, frags=frags)
+            scores = SmilesChecker.checkSmiles(smiles, frags=frags)
+        else:
+            scores = method.getScores(smiles, frags=frags)
         #print('Eval env time:', time.time()-t0)
         return frags, smiles, scores
 

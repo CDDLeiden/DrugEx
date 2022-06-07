@@ -16,39 +16,59 @@ from drugex.datasets.splitters import RandomTrainTestSplitter
 from drugex.datasets.processing import MoleculeEncoder, SmilesDataSet, Standardization, FragmentEncoder, \
     GraphFragDataSet, SmilesFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.models import GPT2Model, EncDec, Seq2Seq, RNN, GraphModel
-from drugex.training.trainers import Pretrainer, FineTuner
+from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
+from drugex.training.scorers.modifiers import ClippedScore
+from drugex.training.scorers.predictors import Predictor
+from drugex.training.scorers.properties import Property
+from drugex.training.trainers import Pretrainer, FineTuner, Reinforcer
 
 
 class TestModelMonitor(TrainingMonitor):
 
     def __init__(self):
         self.model = None
+        self.execution = {
+            'model' : False,
+            'progress' : False,
+            'performance' : False,
+            'end' : False,
+            'close' : False,
+        }
 
     def saveModel(self, model):
         self.model = model
+        self.execution['model'] = True
 
     def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
         print("Test Progress Monitor:")
         print(current_step, current_epoch, total_steps, total_epochs)
         print(args)
         print(kwargs)
+        self.execution['progress'] = True
 
     def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
         print("Test Performance Monitor:")
         print(current_step, current_epoch, loss)
         print(args)
         print(kwargs)
+        self.execution['performance'] = True
 
     def endStep(self, step, epoch):
         print(f"Finished step {step} of epoch {epoch}.")
+        self.execution['end'] = True
 
     def close(self):
         print("Training done.")
+        self.execution['close'] = True
 
     def getModel(self):
         return self.model
+
+    def allMethodsExecuted(self):
+        return all([self.execution[key] for key in self.execution])
 
 
 class TrainingTestCase(TestCase):
@@ -58,6 +78,23 @@ class TrainingTestCase(TestCase):
     finetuning_file = os.path.join(test_data_dir, 'A2AR_raw_small.txt')
 
     N_PROC = 2
+
+    activity_threshold = 6.5
+    pad = 3.5
+    scorers = [
+        Property(
+            "MW",
+            modifier=ClippedScore(lower_x=500, upper_x=1000)),
+        Predictor.fromFile(
+            os.path.join(os.path.dirname(__file__), "test_data/RF_REG_P29274_0006.pkg"),
+            type="REG",
+            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)),
+
+    ]
+    thresholds = [0.5, 0.99]
+
+    def getTestEnvironment(self):
+        return DrugExEnvironment(self.scorers, thresholds=self.thresholds)
 
     def getSmilesPretrain(self):
         return self.standardize(pd.read_csv(self.pretraining_file, header=0, sep='\t')['CANONICAL_SMILES'].tolist())
@@ -144,6 +181,8 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        pr_model = monitor.getModel()
 
         # fine-tuning
         splitter = RandomTrainTestSplitter(0.1)
@@ -155,8 +194,17 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        ft_model = monitor.getModel()
 
-        # TODO: RL
+        # RL
+        environment = self.getTestEnvironment()
+        explorer = SmilesExplorerNoFrag(pr_model, env=environment, mutate=ft_model, crover=pr_model)
+        reinforcer = Reinforcer(explorer)
+        monitor = TestModelMonitor()
+        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=2)
+        self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
 
     def test_graph_frags(self):
@@ -196,6 +244,8 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        pr_model = monitor.getModel()
 
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(128)
@@ -203,12 +253,21 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        pretrainer = FineTuner(pretrainer.getModel())
+        tuner = FineTuner(pretrainer.getModel())
         monitor = TestModelMonitor()
-        pretrainer.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
+        tuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        ft_model = monitor.getModel()
 
-        # TODO: RL
+        # reinforcement learning
+        environment = self.getTestEnvironment()
+        explorer = GraphExplorer(pr_model, environment, mutate=ft_model)
+        reinforcer = Reinforcer(explorer)
+        monitor = TestModelMonitor()
+        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=2)
+        self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
     def test_smiles_frags_vec(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
@@ -219,14 +278,16 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
         # fine-tuning
         finetuner = FineTuner(pretrainer.getModel())
         monitor = TestModelMonitor()
         finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
-        # TODO: RL
+        # FIXME: RL for these models currently not working
 
     def test_smiles_frags_attn(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
@@ -237,14 +298,16 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
         # fine-tuning
         finetuner = FineTuner(pretrainer.getModel())
         monitor = TestModelMonitor()
         finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
-        # TODO: RL
+        # FIXME: RL for these models currently not working
 
     def test_smiles_frags_gpt(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.smiles_frags_data
@@ -256,14 +319,25 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         pretrainer.fit(pr_loader_train, pr_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        pr_model = monitor.getModel()
 
         # fine-tuning
         finetuner = FineTuner(pretrainer.getModel())
         monitor = TestModelMonitor()
         finetuner.fit(ft_loader_train, ft_loader_test, epochs=2, monitor=monitor)
         self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
+        ft_model = monitor.getModel()
 
-        # TODO: RL
+        # RL
+        environment = self.getTestEnvironment()
+        explorer = SmilesExplorer(pr_model, environment, mutate=ft_model, batch_size=32)
+        reinforcer = Reinforcer(explorer)
+        monitor = TestModelMonitor()
+        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=2)
+        self.assertTrue(monitor.getModel())
+        self.assertTrue(monitor.allMethodsExecuted())
 
 
 

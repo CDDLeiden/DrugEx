@@ -7,7 +7,7 @@ from .attention import DecoderAttn
 import time
 
 from drugex.logs import logger
-from ..scorers import SmilesChecker
+from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Base(Generator):
@@ -32,7 +32,7 @@ class Base(Generator):
                 self.optim.zero_grad()
                 loss = net(src, trg)
                 loss = -loss.mean()
-                print(epoch, i, loss)
+                # print(epoch, i, loss)
                 loss.backward()
                 self.optim.step()
 
@@ -48,9 +48,9 @@ class Base(Generator):
                 monitor.saveProgress(i, epoch, total_steps, epochs)
 
                 smiles_scores = []
-                for i, smile in enumerate(smiles):
-                    logger.debug('%d\t%.3f\t%s\t%s\n' % (scores.VALID[i], scores.DESIRE[i], frags[i], smile))
-                    smiles_scores.append((smiles, scores.VALID[i], scores.DESIRE[i], frags[i]))
+                for idx, smile in enumerate(smiles):
+                    logger.debug('%d\t%.3f\t%s\t%s\n' % (scores.VALID[idx], scores.DESIRE[idx], frags[idx], smile))
+                    smiles_scores.append((smiles, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 monitor.savePerformanceInfo(i, epoch, loss.item(), valid=valid, desire=desire, best=best, smiles_scores=smiles_scores)
                 del loss
                 if best <= desire:
@@ -59,6 +59,7 @@ class Base(Generator):
                     last_save = epoch
                 monitor.endStep(i, epoch)
             if epoch - last_save > max_interval: break
+        torch.cuda.empty_cache()
         monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
@@ -73,8 +74,9 @@ class Base(Generator):
                     frags += ix.tolist()
                     break
         if method is None:
-            method = SmilesChecker()
-        scores = method(smiles, frags=frags)
+            scores = SmilesChecker.checkSmiles(smiles, frags=frags)
+        else:
+            scores = method.getScores(smiles, frags=frags)
         return frags, smiles, scores
 
     def init_states(self):
