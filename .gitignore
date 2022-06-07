@@ -4,3 +4,4 @@ __*__
 /build/
 /*.egg-info
 /base_test/
+/tutorial/data/
