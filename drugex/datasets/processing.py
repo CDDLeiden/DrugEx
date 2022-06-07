@@ -10,7 +10,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from drugex.corpus.vocabulary import VocSmiles
+from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
 from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
@@ -321,6 +321,8 @@ class GraphDataSet(DataSet):
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
+        else:
+            self.voc = VocGraph()
 
 class GraphFragDataSet(GraphDataSet):
 
