@@ -38,19 +38,16 @@ class Base(nn.Module):
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
         
-        loss_valid = []
-        if self.mol_type == 'smiles':
-            for src, trg in loader:
-                print(type(src), type(trg))
-                loss_valid.append(l.mean().item() for l in net(src, trg))
-            # loss_valid = [-l.mean() for l in net(src, trg) for src, trg in loader]
-            #loss_valid = torch.mean(torch.stack(loss_valid, dim=0)).item()
-        elif self.mol_type == 'graph':
-            for src in loader:
-                loss_valid.append(-l.mean().item() for l in net(src, is_train=True))
-            # loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in loader]
-        loss_valid = sum(loss_valid)
-            
+        with torch.no_grad():
+            if self.mol_type == 'smiles':
+                loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
+            elif self.mol_type == 'graph':
+                loss_valid = sum( [ sum([-l.mean().item() for l in net(src, is_train=False)]) for src in loader ] )
+                
+        # Should only be done if debug is on
+        for j, smile in enumerate(smiles):
+            logger.debug('%s\t%s\n' % (frags[j], smile))   
+                
         return valid, desired, loss_valid
 
     
@@ -68,18 +65,13 @@ class Base(nn.Module):
             valid, _, loss_valid = self.validate(valid_loader, net)
             t1 = time.time()
             
-            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}")
+            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
             
             if loss_valid < best:
                 torch.save(self.state_dict(), out + '.pkg')
                 best = loss_valid
                 last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")
-                
-            # Should only be done if debug is on
-            logger.debug(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
-            for j, smile in enumerate(smiles):
-                logger.debug('%s\t%s\n' % (frags[j], smile))            
+                logger.info(f"Model was saved at epoch {epoch}")         
                 
             if epoch - last_save > max_interval : break
 
