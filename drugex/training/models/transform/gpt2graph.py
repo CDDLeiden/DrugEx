@@ -10,9 +10,7 @@ from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
 from torch import optim
-from drugex import utils
 import time
-import pandas as pd
 from tqdm import tqdm
 
 from drugex.training.scorers.smiles import SmilesChecker
@@ -306,19 +304,16 @@ class GraphModel(Base):
         #print('Eval env time:', time.time()-t0)
         return frags, smiles, scores
 
-    def sample(self, loader, repeat=1, min_samples=None):
+    def sample(self, loader, repeat=1):
         net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         with torch.no_grad():
-            repeats = 0
-            while repeats < repeat or (min_samples and (len(smiles) < min_samples)):
+            for _ in range(repeat):
                 for i, src in enumerate(loader):
                     trg = net(src.to(self.device))
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s
-                    if len(smiles) >= min_samples:
-                        repeats += 1
 
         return smiles, frags
 
@@ -336,6 +331,13 @@ class GraphModel(Base):
         )
         out_data = GraphFragDataSet("dataset_graph_frag.txt")
         encoder.applyTo(smiles, encodingCollectors=[out_data])
-        return self.sample(out_data.asDataLoader(32), repeat=repeat, min_samples=min_samples)
+
+        smiles, frags = [], []
+        while not len(smiles) >= min_samples:
+            new_s, new_f = self.sample(out_data.asDataLoader(32), repeat=repeat)
+            smiles.extend(new_s)
+            frags.extend(new_f)
+
+        return smiles, frags
 
 
