@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 
+from drugex.datasets.fragments import GraphFragmentEncoder
+from drugex.datasets.processing import Standardization, FragmentEncoder, GraphFragDataSet
 from drugex.logs import logger
+from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
@@ -293,16 +296,8 @@ class GraphModel(Base):
         monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
-        net = nn.DataParallel(self, device_ids=self.devices)
-        frags, smiles = [], []
         #t0 = time.time()
-        with torch.no_grad():
-            for _ in range(repeat):
-                for i, src in enumerate(loader):
-                    trg = net(src.to(self.device))
-                    f, s = self.voc_trg.decode(trg)
-                    frags += f
-                    smiles += s
+        smiles, frags = self.sample(loader, repeat)
         #print('Eval net time:', time.time()-t0)
         if method is None:
             scores = SmilesChecker.checkSmiles(smiles, frags=frags)
@@ -310,5 +305,37 @@ class GraphModel(Base):
             scores = method.getScores(smiles, frags=frags)
         #print('Eval env time:', time.time()-t0)
         return frags, smiles, scores
+
+    def sample(self, loader, repeat=1, min_samples=None):
+        net = nn.DataParallel(self, device_ids=self.devices)
+        frags, smiles = [], []
+        with torch.no_grad():
+            repeats = 0
+            while repeats < repeat or (min_samples and (len(smiles) < min_samples)):
+                for i, src in enumerate(loader):
+                    trg = net(src.to(self.device))
+                    f, s = self.voc_trg.decode(trg)
+                    frags += f
+                    smiles += s
+                    if len(smiles) >= min_samples:
+                        repeats += 1
+
+        return smiles, frags
+
+    def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
+        standardizer = Standardization(n_proc=n_proc)
+        smiles = standardizer.applyTo(smiles)
+
+        fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
+        encoder = FragmentEncoder(
+            fragmenter=fragmenter,
+            encoder=GraphFragmentEncoder(
+                self.voc_trg
+            ),
+            n_proc=n_proc
+        )
+        out_data = GraphFragDataSet("dataset_graph_frag.txt")
+        encoder.applyTo(smiles, encodingCollectors=[out_data])
+        return self.sample(out_data.asDataLoader(32), repeat=repeat, min_samples=min_samples)
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import torch
 from torch import nn
@@ -238,7 +239,7 @@ class GraphExplorer(Explorer):
                           (it, epoch, score, valid, desire, t1 - t0))
                 if best_score < desire:
                     monitor.saveModel(self)
-                    self.bestState = self.state_dict()
+                    self.bestState = deepcopy(self.state_dict())
                     best_score = desire
                     last_save = epoch
                     last_it = it
@@ -322,7 +323,7 @@ class SmilesExplorer(Explorer):
             step_idx += 1
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
-        self.bestState = self.state_dict()
+        self.bestState = deepcopy(self.state_dict())
         monitor.saveModel(self)
         best_score = 0
         last_it = -1
@@ -366,7 +367,7 @@ class SmilesExplorer(Explorer):
 
                 if best_score < desire:
                     monitor.saveModel(self)
-                    self.bestState = self.state_dict()
+                    self.bestState = deepcopy(self.state_dict())
                     best_score = desire
                     last_save = epoch
                     last_it = it
@@ -498,7 +499,7 @@ class SmilesExplorerNoFrag(PGLearner):
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
         monitor.saveModel(self)
-        self.bestState = self.state_dict()
+        self.bestState = deepcopy(self.state_dict())
         best = 0
         last_smiles = []
         last_scores = []
@@ -528,7 +529,7 @@ class SmilesExplorerNoFrag(PGLearner):
             monitor.savePerformanceInfo(None, epoch, None, score=score, valid=valid, desire=desire, smiles_scores=[smiles, scores])
             if best < score:
                 monitor.saveModel(self)
-                self.bestState = self.state_dict()
+                self.bestState = deepcopy(self.state_dict())
                 best = score
                 last_smiles = smiles
                 last_scores = scores
