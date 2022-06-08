@@ -4,6 +4,8 @@ import numpy as np
 from rdkit.Chem import MolToSmiles
 from RAscore import RAscore_NN, RAscore_XGB
 
+from drugex.training.interfaces import Scorer
+
 NN_MODEL_PATH = None
 XGB_MODEL_PATH = None
 
@@ -28,15 +30,16 @@ def calculate_score(mol: str, use_xgb_model: bool = False) -> Optional[float]:
     return score
 
 
-class RetrosyntheticAccessibilityScorer:
-    def __init__(self, use_xgb_model: bool = False):
+class RetrosyntheticAccessibilityScorer(Scorer):
+    def __init__(self, use_xgb_model: bool = False, modifier=None):
+        super().__init__(modifier=modifier)
         self.scorer = (
             RAscore_XGB.RAScorerXGB(model_path=XGB_MODEL_PATH)
             if use_xgb_model
             else RAscore_NN.RAScorerNN(model_path=NN_MODEL_PATH)
         )
 
-    def __call__(self, mols: List[str]):
+    def getScores(self, mols: List[str], frags=None):
         #os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
         scores = np.zeros(shape=len(mols), dtype="float64")
         for i, mol in enumerate(mols):
@@ -48,6 +51,9 @@ class RetrosyntheticAccessibilityScorer:
 
             scores[i] = self.scorer.predict(mol)
         return scores
+
+    def getKey(self):
+        return "RAscore"
 
 
 # TODO: Extract to dedicated test module

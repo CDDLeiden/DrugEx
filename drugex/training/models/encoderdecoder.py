@@ -1,26 +1,34 @@
 import torch
-from drugex import utils
-from torch import nn
-from .attention import DecoderAttn
 import time
-import pandas as pd
+
 from tqdm import tqdm
+from torch import nn
 
+from drugex import utils
 from drugex.logs import logger
+from .attention import DecoderAttn
+from drugex.training.interfaces import Generator
+from drugex.training.scorers.smiles import SmilesChecker
 
-class Base(nn.Module):
-    
-    def train(self, loader, net):
+
+class Base(Generator):
+
+    def attachToDevice(self, device):
+        super().attachToDevice(device)
+        self.to(self.device)
+        
+    def train(self, loader):
+        
+        net = nn.DataParallel(self, device_ids=self.devices)
         
         if self.mol_type == 'smiles':
             for src, trg in loader:
-                src, trg = src.to(utils.dev), trg.to(utils.dev)
+                src, trg = src.to(self.device), trg.to(self.device)
                 self.optim.zero_grad()
                 loss = net(src, trg)
                 loss = -loss.mean()     
                 loss.backward()
                 self.optim.step()
-                del loss
                 
         elif self.mol_type == 'graph':
             for src in loader:
@@ -30,11 +38,14 @@ class Base(nn.Module):
                 loss = sum([-l.mean() for l in loss])   
                 loss.backward()
                 self.optim.step()
-                del loss              
+            
+        return loss
                 
-    def validate(self, loader, net):
+    def validate(self, loader, evaluator=None):
         
-        frags, smiles, scores = self.evaluate(loader)
+        net = nn.DataParallel(self, device_ids=self.devices)
+        
+        frags, smiles, scores = self.evaluate(loader, method=evaluator)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
         
@@ -49,63 +60,83 @@ class Base(nn.Module):
             logger.debug('%s\t%s\n' % (frags[j], smile))   
                 
         return valid, desired, loss_valid
-
-    
-    def fit(self, train_loader, valid_loader, epochs=100, method=None, out=None):
-        log = open(out + '.log', 'w')
-        best = float('inf')
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        
+    def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
+        best = 0.
+        net = nn.DataParallel(self, device_ids=self.devices)
         last_save = -1
         max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
          
         for epoch in tqdm(range(epochs)):
             
             t0 = time.time()
-            self.train(train_loader, net)
-            valid, _, loss_valid = self.validate(valid_loader, net)
-            t1 = time.time()
+            loss_train = self.train(train_loader)
+            valid, _, loss_valid = self.validate(valid_loader, evaluator=evaluator)
+            t1 = time.time(i, )
             
             logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
+            monitor.saveProgress(None, epoch, None, epochs)
             
             if loss_valid < best:
-                torch.save(self.state_dict(), out + '.pkg')
+                monitor.saveModel(self)    
                 best = loss_valid
                 last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")         
+                logger.info(f"Model was saved at epoch {epoch}")     
+                
+            smiles_scores = []
+            for idx, smile in enumerate(smiles):
+                logger.debug(f"{scores.VALID[idx]}\t{frag[idx]}\t{smile}")
+                smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            monitor.savePerformanceInfo(None, epoch, loss_train, loss_valid=loss_valid, valid=valid, best=best, smiles_scores=smiles_scores)
+            del loss_train, loss_valid
+            monitor.endStep(None, epoch)
                 
             if epoch - last_save > max_interval : break
-
-    def evaluate(self, loader, repeat=1, method=None):
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        
+        torch.cuda.empty_cache()
+        monitor.close()
+        
+    def sample(self, loader, repeat=1, min_samples=None):
+        net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         with torch.no_grad():
-            for _ in range(repeat):
-                if self.mol_type == 'graph':
-                   # Molecules and fragments encoded togther >> graph
-                    for src in loader:
-                        trg = net(src.to(utils.dev)) 
+            repeats = 0
+            while repeats < repeat or (min_samples and (len(smiles) < min_samples)):
+                
+                if self.mol_type == 'graph':       
+                    # Molecules and fragments encoded togther >> graph
+                    for i, src in enumerate(loader):
+                        trg = net(src.to(self.device))
                         f, s = self.voc_trg.decode(trg)
                         frags += f
-                        smiles += s  
+                        smiles += s
                 elif self.mol_type == 'smiles':
                     # Molecules and fragments encoded separtetly >> smiles
                     for src, _ in loader:
                         trg = net(src.to(utils.dev))
                         smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                        frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]
-                        break
+                        frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
+           
+                if min_samples and len(smiles) >= min_samples:
+                    repeats += 1
+
+        return smiles, frags
+
+    def evaluate(self, loader, repeat=1, method=None):
+        net = nn.DataParallel(self, device_ids=self.devices)
+        smiles, frags = self.sample(loader, repeat)
+
         if method is None:
-            scores = utils.Env.check_smiles(smiles, frags=frags)
-            scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
+            scores = SmilesChecker.checkSmiles(smiles, frags=frags)
         else:
-            scores = method(smiles, frags=frags)
+            scores = method.getScores(smiles, frags=frags)
         return frags, smiles, scores
 
     def init_states(self):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        self.to(utils.dev)
+        self.to(self.device)
 
 
 class Seq2Seq(Base):
@@ -126,12 +157,12 @@ class Seq2Seq(Base):
         batch_size = input.size(0)
         memory, hc = self.encoder(input)
 
-        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(utils.dev)
+        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(self.device)
         if output is None:
             output_ = output_.long()
         # Start token
-        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(utils.dev)
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(self.device)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
 
         for step in range(self.voc_trg.max_len):
             logit, hc = self.decoder(x, hc, memory)
@@ -168,12 +199,12 @@ class EncDec(Base):
         batch_size = input.size(0)
         _, hc = self.encoder(input)
 
-        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(utils.dev)
+        output_ = torch.zeros(batch_size, self.voc_trg.max_len).to(self.device)
         if output is None:
             output_ = output_.long()
 
-        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(utils.dev)
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        x = torch.LongTensor([self.voc_trg.tk2ix['GO']] * batch_size).to(self.device)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
         for step in range(self.voc_trg.max_len):
             logit, hc = self.decoder(x, hc)
             if output is not None:
@@ -254,7 +285,7 @@ class ValueNet(nn.Module):
         self.rnn = rnn_layer(embed_size, hidden_size, num_layers=3, batch_first=True)
         self.linear = nn.Linear(hidden_size, voc.size * n_objs)
         self.optim = torch.optim.Adam(self.parameters())
-        self.to(utils.dev)
+        self.to(self.device)
 
     def forward(self, input, h):
         output = self.embed(input.unsqueeze(-1))
@@ -265,24 +296,24 @@ class ValueNet(nn.Module):
 
     def init_h(self, batch_size):
         if self.is_lstm:
-            return (torch.zeros(3, batch_size, self.hidden_size).to(utils.dev),
-                    torch.zeros(3, batch_size, self.hidden_size).to(utils.dev))
+            return (torch.zeros(3, batch_size, self.hidden_size).to(self.device),
+                    torch.zeros(3, batch_size, self.hidden_size).to(self.device))
         else:
-            return torch.zeros(3, batch_size, 512).to(utils.dev)
+            return torch.zeros(3, batch_size, 512).to(self.device)
 
     def sample(self, batch_size, is_pareto=False):
-        x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(utils.dev)
+        x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
         h = self.init_h(batch_size)
 
-        isEnd = torch.zeros(batch_size).bool().to(utils.dev)
+        isEnd = torch.zeros(batch_size).bool().to(self.device)
         outputs = []
         for job in range(self.n_objs):
-            seqs = torch.zeros(batch_size, self.voc.max_len).long().to(utils.dev)
+            seqs = torch.zeros(batch_size, self.voc.max_len).long().to(self.device)
             for step in range(self.voc.max_len):
                 logit, h = self(x, h)
                 logit = logit.view(batch_size, self.voc.size, self.n_objs)
                 if is_pareto:
-                    proba = torch.zeros(batch_size, self.voc.size).to(utils.dev)
+                    proba = torch.zeros(batch_size, self.voc.size).to(self.device)
                     for i in range(batch_size):
                         preds = logit[i, :, :]
                         fronts, ranks = utils.nsgaii_sort(preds)

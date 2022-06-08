@@ -12,7 +12,8 @@ from sklearn.preprocessing import MinMaxScaler as Scaler
 from scipy import linalg
 import torch
 from torch.nn import functional as F
-from .objective import Predictor
+
+from drugex.training.scorers.predictors import Predictor
 
 rdBase.DisableLog('rdApp.error')
 

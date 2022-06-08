@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+from abc import ABC, abstractmethod
+from copy import deepcopy
+
 import torch
 from torch import nn
-from torch import optim
+from torch.optim import Adam
 from drugex import utils
 import time
 from torch.utils.data import DataLoader, TensorDataset
@@ -9,19 +12,16 @@ from tqdm import tqdm
 import numpy as np
 
 from drugex.logs import logger
+from drugex.training.interfaces import Explorer    
 
-
-class GraphExplorer(nn.Module):
-    def __init__(self, agent, crover=None, mutate=None, epsilon=1e-2, repeat=1):
-        super(GraphExplorer, self).__init__()
+class GraphExplorer(Explorer):
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None):
+        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
         self.voc_trg = agent.voc_trg
-        self.agent = agent
-        self.crover = None if crover is None else crover
-        self.mutate = None if mutate is None else mutate
-        self.epsilon = epsilon
-        self.repeat = repeat
+        self.mutate = mutate
+        self.bestState = None
         self.optim = utils.ScheduledOptim(
-            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512)
+            Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
         # self.optim = optim.Adam(self.parameters(), lr=1e-5)
 
     def forward(self, src):
@@ -173,12 +173,15 @@ class GraphExplorer(nn.Module):
             exists[order, src[:, step, 2], src[:, step, 1]] = src[:, step, 3]
         return src
 
-    def policy_gradient(self, loader):
-        net = nn.DataParallel(self.agent, device_ids=utils.devices)
-        for src in loader:
-            src = src.to(utils.dev)
+    def policy_gradient(self, loader, progress=None):
+        net = nn.DataParallel(self.agent, device_ids=self.devices)
+        total_steps = len(loader)
+        for step_idx, src in enumerate(loader):
+            if progress:
+                progress.saveProgress(step_idx, None, total_steps, None)
+            src = src.to(self.device)
             frags, smiles = self.voc_trg.decode(src)
-            reward = self.env.calc_reward(smiles, self.scheme, frags=frags)
+            reward = self.env.getRewards(smiles, self.scheme, frags=frags)
             reward = torch.Tensor(reward).to(src.device)
 
             self.optim.zero_grad()
@@ -186,10 +189,156 @@ class GraphExplorer(nn.Module):
             loss = sum(loss).squeeze(dim=-1) * reward
             loss = -loss.mean()
             loss.backward()
+            if progress:
+                progress.savePerformanceInfo(step_idx, None, loss.item())
             self.optim.step()
             del loss
             
-    def sample_set(self, loader, is_test=False):
+    def sample_input(self, loader, is_test=False):
+        
+        """
+        Samples n_samples molecule-fargement pairs from the original input loader. 
+        
+        Arguments:
+            loader                   : torch dataloader
+            is_test (bool), opt      : if true, reduced sample size and increased batch size
+        Returns:
+            loader                   
+        """
+
+        encoded_pairs = torch.cat([batch for batch in loader], 0)
+        n_pairs = encoded_pairs.shape[0]                
+        n_samples = int(self.n_samples * 0.2) if is_test else self.n_samples     
+        batch_size = self.batch_size * 10 if is_test else self.batch_size * 4
+        
+        if n_pairs > n_samples:
+        
+            logger.info('{} fragments-molecule pairs were sampled at random from original {} pairs for {}'.format(n_samples, n_pairs, 'validation' if is_test else 'training'))
+            samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
+            loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
+            
+        return loader
+        
+
+    def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
+        best_score = 0
+        last_it = -1
+        n_iters = 1 if self.crover is None else 10
+        net = nn.DataParallel(self, device_ids=self.devices)
+        trgs = []
+        logger.info(' ')
+        for it in range(n_iters):
+            last_save = -1
+            print('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
+            logger.info('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
+            for epoch in tqdm(range(epochs)):
+                t0 = time.time()
+                              
+                if self.n_samples > 0:
+                    data_loader = self.sample_input(data_loader)
+                    test_loader = self.sample_input(test_loader, is_test=True)
+
+                for i, src in enumerate(data_loader):
+                    with torch.no_grad():
+                        trg = net(src.to(self.device))
+                        trgs.append(trg.detach().cpu())
+                trgs = torch.cat(trgs, dim=0)
+                loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=True)
+                self.policy_gradient(loader, progress=monitor)
+                trgs = []
+
+                frags, smiles, scores = self.agent.evaluate(train_loader, repeat=self.repeat, method=self.env)
+                desire = scores.DESIRE.sum() / len(smiles)
+                score = scores[self.env.getScorerKeys()].values.mean()
+                valid = scores.VALID.mean()
+
+                t1 = time.time()
+                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desired:.4f} Time: {t1-t0:.1f}s")   
+        
+                if best_score < desire:
+                    monitor.saveModel(self)
+                    self.bestState = deepcopy(self.state_dict())
+                    best_score = desire
+                    last_save = epoch
+                    last_it = it
+                if epoch - last_save > 50: break
+
+                smiles_scores = []
+                for i, smile in enumerate(smiles):
+                    score = "\t".join(['%.3f' % s for s in scores.values[i]])
+                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    smiles_scores.append((smile, score, frags[i]))
+
+                monitor.saveProgress(None, epoch, None, epochs, score=score, valid=valid, desire=desire, smiles_scores=smiles_scores)
+                monitor.endStep(None, epoch)
+
+            if self.crover is not None:
+                self.agent.load_state_dict(self.bestState)
+                self.crover.load_state_dict(self.bestState)
+            if it - last_it > 1: break
+
+        torch.cuda.empty_cache()
+        monitor.close()
+
+
+class SmilesExplorer(Explorer):
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None):
+        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
+        self.optim = utils.ScheduledOptim(
+            Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
+        self.bestState = None
+        # self.optim = optim.Adam(self.parameters(), lr=1e-5)
+
+    def forward(self, src):
+        seq_len = self.agent.voc_trg.max_len + self.agent.voc_trg.max_len
+        out = torch.zeros(len(src), seq_len).long().to(self.device)
+        out[:, :src.size(1)] = src
+        is_end = torch.zeros(len(src)).bool().to(self.device)
+
+        for step in range(self.agent.voc_trg.max_len):  # decode up to max length
+            sub = out[:, :src.size(1) + step]
+            key_mask = utils.pad_mask(sub, self.agent.pad_idx)
+            atn_mask = utils.tri_mask(sub)
+            rand = torch.rand(1)
+            if self.epsilon < rand <= 0.5 and self.crover is not None:
+                dec = self.crover.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
+            elif rand < self.epsilon and self.mutate is not None:
+                dec = self.mutate.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
+            else:
+                dec = self.agent.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
+            proba = dec[-1,:, :].softmax(dim=-1)
+
+            # sampling based on output probability distribution
+            x = torch.multinomial(proba, 1).view(-1)
+
+            x[is_end] = self.agent.voc_trg.tk2ix['_']
+            is_end |= x == self.agent.voc_trg.tk2ix['EOS']
+            out[:, src.size(1) + step] = x
+            if is_end.all(): break
+        return out[:, self.agent.voc_trg.max_len:].detach()
+
+    def policy_gradient(self, loader, progress=None):
+        net = nn.DataParallel(self.agent, device_ids=self.devices)
+        total_steps = len(loader)
+        step_idx = 0
+        for src, trg in loader:
+            src, trg = src.to(self.device), trg.to(self.device)
+            self.optim.zero_grad()
+            smiles = [self.agent.voc_trg.decode(s, is_tk=False) for s in trg]
+            frags = [self.agent.voc_trg.decode(s, is_tk=False) for s in src]
+            reward = self.env.getRewards(smiles, self.scheme, frags=frags)
+            reward = torch.Tensor(reward).to(src.device)
+            loss = net(src, trg) * reward
+            if progress:
+                progress.saveProgress(step_idx, None, total_steps, None)
+                progress.savePerformanceInfo(step_idx, None, loss.mean().item())
+            loss = -loss.mean()
+            loss.backward()
+            self.optim.step()
+            del loss
+            step_idx += 1
+            
+    def sample_input(self, loader, is_test=False):
         
         """
         Samples n_samples molecule-fargement pairs from the original input loader. 
@@ -218,132 +367,29 @@ class GraphExplorer(nn.Module):
             loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
             
         return loader
-        
 
-    def fit(self, data_loader, test_loader=None, epochs=1000):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
+        self.bestState = deepcopy(self.state_dict())
+        monitor.saveModel(self)
         best_score = 0
         last_it = -1
         n_iters = 1 if self.crover is None else 10
-        net = nn.DataParallel(self, device_ids=utils.devices)
-        trgs = []
-        logger.info(' ')
-        for it in range(n_iters):
-            last_save = -1
-            print('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
-            logger.info('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
-            for epoch in tqdm(range(epochs)):
-                t0 = time.time()
-                              
-                if self.n_samples > 0:
-                    data_loader = self.sample_set(data_loader)
-                    test_loader = self.sample_set(test_loader, is_test=True)
-
-                for i, src in enumerate(data_loader):
-                    with torch.no_grad():
-                        trg = net(src.to(utils.dev))
-                        trgs.append(trg.detach().cpu())
-                trgs = torch.cat(trgs, dim=0)
-                loader = DataLoader(trgs, batch_size=self.batch_size, shuffle=True, drop_last=True)
-                self.policy_gradient(loader)
-                trgs = []
-
-                frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
-                desired = scores.DESIRE.sum() / len(smiles)
-                score = scores[self.env.keys].values.mean()
-                valid = scores.VALID.mean()
-
-                t1 = time.time()
-                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desired:.4f} Time: {t1-t0:.1f}s")        
-                if best_score < desired:
-                    torch.save(self.agent.state_dict(), self.out + '.pkg')
-                    best_score = desired
-                    last_save = epoch
-                    last_it = it
-                if epoch - last_save > 50: break
-
-                logger.debug(f"Iteration {it} - Epoch {epoch}" )
-                for i, smile in enumerate(smiles):
-                    score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
-                    
-            if self.crover is not None:
-                self.agent.load_state_dict(torch.load(self.out + '.pkg'))
-                self.crover.load_state_dict(torch.load(self.out + '.pkg'))
-            if it - last_it > 1: break
-
-
-class SmilesExplorer(nn.Module):
-    def __init__(self, agent, crover=None, mutate=None, epsilon=1e-2, repeat=1):
-        super(SmilesExplorer, self).__init__()
-        self.agent = agent
-        self.crover = crover
-        self.mutate = mutate
-        self.epsilon = epsilon
-        self.repeat = repeat
-        self.optim = utils.ScheduledOptim(
-            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512)
-        # self.optim = optim.Adam(self.parameters(), lr=1e-5)
-
-    def forward(self, src):
-        seq_len = self.agent.voc_trg.max_len + self.agent.voc_trg.max_len
-        out = torch.zeros(len(src), seq_len).long().to(utils.dev)
-        out[:, :src.size(1)] = src
-        is_end = torch.zeros(len(src)).bool().to(utils.dev)
-
-        for step in range(self.agent.voc_trg.max_len):  # decode up to max length
-            sub = out[:, :src.size(1) + step]
-            key_mask = utils.pad_mask(sub, self.agent.pad_idx)
-            atn_mask = utils.tri_mask(sub)
-            rand = torch.rand(1)
-            if self.epsilon < rand <= 0.5 and self.crover is not None:
-                dec = self.crover.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
-            elif rand < self.epsilon and self.mutate is not None:
-                dec = self.mutate.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
-            else:
-                dec = self.agent.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)
-            proba = dec[-1,:, :].softmax(dim=-1)
-
-            # sampling based on output probability distribution
-            x = torch.multinomial(proba, 1).view(-1)
-
-            x[is_end] = self.agent.voc_trg.tk2ix['_']
-            is_end |= x == self.agent.voc_trg.tk2ix['EOS']
-            out[:, src.size(1) + step] = x
-            if is_end.all(): break
-        return out[:, self.agent.voc_trg.max_len:].detach()
-
-    def policy_gradient(self, loader):
-        net = nn.DataParallel(self.agent, device_ids=utils.devices)
-        for src, trg in loader:
-            src, trg = src.to(utils.dev), trg.to(utils.dev)
-            self.optim.zero_grad()
-            smiles = [self.agent.voc_trg.decode(s, is_tk=False) for s in trg]
-            frags = [self.agent.voc_trg.decode(s, is_tk=False) for s in src]
-            reward = self.env.calc_reward(smiles, self.scheme, frags=frags)
-            reward = torch.Tensor(reward).to(src.device)
-            loss = net(src, trg) * reward
-            loss = -loss.mean()
-            loss.backward()
-            self.optim.step()
-            del loss
-
-    def fit(self, data_loader, test_loader=None, epochs=1000):
-        best_score = 0
-        log = open(self.out + '.log', 'w')
-        last_it = -1
-        n_iters = 1 if self.crover is None else 10
-        net = nn.DataParallel(self, device_ids=utils.devices)
+        net = nn.DataParallel(self, device_ids=self.devices)
         srcs, trgs = [], []
         for it in range(n_iters):
             last_save = -1
             for epoch in range(epochs):
                 t0 = time.time()
+                
+                if self.n_samples > 0:
+                    data_loader = self.sample_input(data_loader)
+                    test_loader = self.sample_input(test_loader, is_test=True)
 
-                print('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
-                for i, (ix, src) in enumerate(tqdm(data_loader)):
+                logger.info('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
+                for i, (ix, src) in enumerate(tqdm(train_loader)):
                     with torch.no_grad():
                         # frag = data_loader.dataset.index[ix]
-                        trg = net(src.to(utils.dev))
+                        trg = net(src.to(self.device))
                         trgs.append(trg.detach().cpu())
                         srcs.append(src.detach().cpu())
 
@@ -351,36 +397,43 @@ class SmilesExplorer(nn.Module):
                 srcs = torch.cat(srcs, dim=0)
 
                 dataset = TensorDataset(srcs, trgs)
-                loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True, drop_last=True)
-                self.policy_gradient(loader)
+                loader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True, drop_last=True)
+                self.policy_gradient(loader, progress=monitor)
                 srcs, trgs = [], []
 
-                frags, smiles, scores = self.agent.evaluate(test_loader, repeat=self.repeat, method=self.env)
+                frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
-                score = scores[self.env.keys].values.mean()
+                score = scores[self.env.getScorerKeys()].values.mean()
                 valid = scores.VALID.mean()
 
                 t1 = time.time()
-                log.write("Iteration: %s Epoch: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
+                logger.info("Iteration: %s Epoch: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
                           (it, epoch, score, valid, desire, t1 - t0))
+                smiles_scores = []
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    log.write('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    smiles_scores.append((smile, score))
 
                 if best_score < desire:
-                    torch.save(self.agent.state_dict(), self.out + '.pkg')
+                    monitor.saveModel(self)
+                    self.bestState = deepcopy(self.state_dict())
                     best_score = desire
                     last_save = epoch
                     last_it = it
+                monitor.savePerformanceInfo(None, epoch, None, score=score, valid=valid, desire=desire, smiles_scores=smiles_scores)
+                monitor.saveProgress(None, epoch, None, epochs)
+                monitor.endStep(None, epoch)
                 if epoch - last_save > 50: break
                 if self.crover is not None:
-                    self.agent.load_state_dict(torch.load(self.out + '.pkg'))
-                    self.crover.load_state_dict(torch.load(self.out + '.pkg'))
+                    self.agent.load_state_dict(self.bestState)
+                    self.crover.load_state_dict(self.bestState)
             if it - last_it > 1: break
-        log.close()
+        monitor.close()
+        torch.cuda.empty_cache()
 
 
-class PGLearner(object):
+class PGLearner(Explorer, ABC):
     """ Reinforcement learning framework with policy gradient. This class is the base structure for the
         drugex v1 and v2 policy gradient-based  deep reinforcement learning models.
  
@@ -393,24 +446,22 @@ class PGLearner(object):
  
         prior: The auxiliary model which is defined differently in each methods.
     """
-    def __init__(self, agent, prior=None, memory=None, mean_func='geometric'):
+    def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, mean_func='geometric', batch_size=128, epsilon=1e-3,
+                 sigma=0.0, scheme='PR', repeat=1):
+        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
         self.replay = 10
-        self.agent = agent
-        self.prior = prior
-        self.batch_size = 64  # * 4
         self.n_samples = 128  # * 8
-        self.epsilon = 1e-3
         self.penalty = 0
-        self.scheme = 'PR'
         self.out = None
         self.memory = memory
         # mean_func: which function to use for averaging: 'arithmetic' or 'geometric'
         self.mean_func = mean_func
  
-    def policy_gradient(self):
+    @abstractmethod
+    def policy_gradient(self, smiles=None, seqs=None, memory=None):
         pass
  
-    def fit(self):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
         best = 0
         last_save = 0
         log = open(self.out + '.log', 'w')
@@ -420,7 +471,7 @@ class PGLearner(object):
             smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True)
  
             desire = (scores.DESIRE).sum() / self.n_samples
-            score = scores[self.env.keys].values.mean()
+            score = scores[self.env.getScorerKeys()].values.mean()
             valid = scores.VALID.mean()
  
             if best <= score:
@@ -455,18 +506,18 @@ class SmilesExplorerNoFrag(PGLearner):
         env (utils.Env): The environment which provides the reward and judge
                                  if the genrated molecule is valid and desired.
  
-        prior (models.Generator): The pre-trained network which is constructed by deep learning model
+        mutate (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, prior=None, crover=None, mean_func='geometric', memory=None):
-        super(SmilesExplorerNoFrag, self).__init__(agent, prior, mean_func=mean_func, memory=memory)
-        self.crover = crover
+    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, scheme=scheme, repeat=repeat)
+        self.bestState = None
  
     def forward(self, crover=None, memory=None, epsilon=None):
         seqs = []
         #start = time.time()
         for _ in range(self.replay):
-            seq = self.agent.evolve(self.batch_size, epsilon=epsilon, crover=crover, mutate=self.prior)
+            seq = self.agent.evolve(self.batchSize, epsilon=epsilon, crover=crover, mutate=self.mutate)
             seqs.append(seq)
         #t1 = time.time()
         seqs = torch.cat(seqs, dim=0)
@@ -477,55 +528,58 @@ class SmilesExplorerNoFrag(PGLearner):
         # smiles = np.array(utils.canonicalize_list(smiles))
         ix = utils.unique(np.array([[s] for s in smiles]))
         smiles = smiles[ix]
-        seqs = seqs[torch.LongTensor(ix).to(utils.dev)]
+        seqs = seqs[torch.LongTensor(ix).to(self.device)]
         return smiles, seqs
    
-    def policy_gradient(self, smiles, seqs, memory=None):
+    def policy_gradient(self, smiles=None, seqs=None, memory=None, progress=None):
         # function need to get smiles
-        scores = self.env.calc_reward(smiles, self.scheme, frags=None)
+        scores = self.env.getRewards(smiles, self.scheme, frags=None)
         if memory is not None:
             scores[:len(memory), 0] = 1
-            ix = scores[:, 0].argsort()[-self.batch_size * 4:]
+            ix = scores[:, 0].argsort()[-self.batchSize * 4:]
             seqs, scores = seqs[ix, :], scores[ix, :]
         #t2 = time.time()
-        ds = TensorDataset(seqs, torch.Tensor(scores).to(utils.dev))
+        ds = TensorDataset(seqs, torch.Tensor(scores).to(self.device))
         loader = DataLoader(ds, batch_size=self.n_samples, shuffle=True)
  
         # updating loss is done in rnn.py
-        self.agent.PGLoss(loader)
+        self.agent.PGLoss(loader, progress=progress)
         #t3 = time.time()
         #print(t1 - start, t2-t1, t3-t2)
  
-    def fit(self, epochs):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
+        monitor.saveModel(self)
+        self.bestState = deepcopy(self.state_dict())
         best = 0
-        log = open(self.out + '.log', 'a')
         last_smiles = []
         last_scores = []
         interval = 250
         last_save = -1
         ## add self.epoch
         for epoch in range(epochs):
-            if epoch % 50 == 0: print('\n----------\nEPOCH %d\n----------' % epoch)
+            if epoch % 50 == 0: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             if epoch < interval and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
-                self.policy_gradient(smiles, seqs, memory=self.memory)
+                self.policy_gradient(smiles, seqs, memory=self.memory, progress=monitor)
             else:
                 smiles, seqs = self.forward(crover=self.crover, epsilon=self.epsilon)
-                self.policy_gradient(smiles, seqs)
+                self.policy_gradient(smiles, seqs, progress=monitor)
             smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True)
  
             desire = (scores.DESIRE).sum() / self.n_samples
             if self.mean_func == 'arithmetic':
-                score = scores[self.env.keys].values.sum() / self.n_samples / len(self.env.keys)
+                score = scores[self.env.getScorerKeys()].values.sum() / self.n_samples / len(self.env.getScorerKeys())
             else:
-                score = scores[self.env.keys].values.prod(axis=1) ** (1.0 / len(self.env.keys))
+                score = scores[self.env.getScorerKeys()].values.prod(axis=1) ** (1.0 / len(self.env.getScorerKeys()))
                 score = score.sum() / self.n_samples
             valid = scores.VALID.sum() / self.n_samples
  
-            print("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
-                  (epoch, score, valid, desire), file=log)
+            logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
+                  (epoch, score, valid, desire))
+            monitor.savePerformanceInfo(None, epoch, None, score=score, valid=valid, desire=desire, smiles_scores=[smiles, scores])
             if best < score:
-                torch.save(self.agent.state_dict(), self.out + '.pkg')
+                monitor.saveModel(self)
+                self.bestState = deepcopy(self.state_dict())
                 best = score
                 last_smiles = smiles
                 last_scores = scores
@@ -534,9 +588,11 @@ class SmilesExplorerNoFrag(PGLearner):
             if epoch % interval == 0 and epoch != 0:
                 for i, smile in enumerate(last_smiles):
                     score = "\t".join(['%.3f' % s for s in last_scores.values[i]])
-                    print('%s\t%s' % (score, smile), file=log)
-                self.agent.load_state_dict(torch.load(self.out + '.pkg'))
-                self.crover.load_state_dict(torch.load(self.out + '.pkg'))
+                    logger.info('%s\t%s' % (score, smile))
+                self.agent.load_state_dict(self.bestState)
+                self.crover.load_state_dict(self.bestState)
+            monitor.saveProgress(None, epoch, None, epochs)
+            monitor.endStep(None, epoch)
             if epoch - last_save > interval: break
-        print('End time reinforcement learning: %s \n' % time.strftime('%d-%m-%y %H:%M:%S', time.localtime()), file=log)
-        log.close()
+        logger.info('End time reinforcement learning: %s \n' % time.strftime('%d-%m-%y %H:%M:%S', time.localtime()))
+        monitor.close()

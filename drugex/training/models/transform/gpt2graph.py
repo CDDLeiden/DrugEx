@@ -1,5 +1,10 @@
 import torch
 import torch.nn as nn
+
+from drugex.datasets.fragments import GraphFragmentEncoder
+from drugex.datasets.processing import Standardization, FragmentEncoder, GraphFragDataSet
+from drugex.logs import logger
+from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
@@ -9,6 +14,8 @@ from drugex import utils
 import time
 import pandas as pd
 from tqdm import tqdm
+
+from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Block(nn.Module):
@@ -241,65 +248,21 @@ class GraphModel(Base):
             out = src
         return out
 
-#     def fit(self, train_loader, ind_loader, epochs=100, method=None, out=None):
-#         log = open(out + '.log', 'w')
-#         best = float('inf')
-#         net = nn.DataParallel(self, device_ids=utils.devices)
-#         t00 = time.time()
-#         last_save = -1
-#         # threshold for number of epochs without change that will trigger early stopping
-#         max_interval = 50
-#         for epoch in tqdm(range(epochs)):
-#             t0 = time.time()
-#             for i, src in enumerate(train_loader):
-#                 src = src.to(utils.dev)
-#                 self.optim.zero_grad()
-#                 loss = net(src, is_train=True)
-#                 loss_train = [round(-l.mean().item(), 3) for l in loss]
-#                 loss = sum([-l.mean() for l in loss])
-#                 loss.backward()
-#                 self.optim.step()
-#                 del loss
-                
-#                 if sum(loss_train) < best:
-#                     torch.save(self.state_dict(), out + '.pkg')
-#                     best = sum(loss_train)
-#                     last_save = epoch
-            
-#             frags, smiles, scores = self.evaluate(ind_loader)
-#             loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in ind_loader] # temporary solution to get validation loss
-#             t1 = time.time()
-#             valid = scores.VALID.mean()
-#             dt = int(t1-t0)
-#             log.write("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
-#             for j, smile in enumerate(smiles):
-#                 log.write('%s\t%s\n' % (frags[j], smile))
-#             log.flush()
-#             t0 = t1
-#             del loss_valid
 
-#             if epoch - last_save > max_interval: break
-        
-#         log.close()
+    def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
+        standardizer = Standardization(n_proc=n_proc)
+        smiles = standardizer.applyTo(smiles)
 
-    # def evaluate(self, loader, repeat=1, method=None):
-    #     net = nn.DataParallel(self, device_ids=utils.devices)
-    #     frags, smiles = [], []
-    #     #t0 = time.time()
-    #     with torch.no_grad():
-    #         for _ in range(repeat):
-    #             for i, src in enumerate(loader):
-    #                 trg = net(src.to(utils.dev)) 
-    #                 f, s = self.voc_trg.decode(trg)
-    #                 frags += f
-    #                 smiles += s
-    #     #print('Eval net time:', time.time()-t0)
-    #     if method is None:
-    #         scores = utils.Env.check_smiles(smiles, frags=frags)
-    #         scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
-    #     else:
-    #         scores = method(smiles, frags=frags)
-    #     #print('Eval env time:', time.time()-t0)
-    #     return frags, smiles, scores
+        fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
+        encoder = FragmentEncoder(
+            fragmenter=fragmenter,
+            encoder=GraphFragmentEncoder(
+                self.voc_trg
+            ),
+            n_proc=n_proc
+        )
+        out_data = GraphFragDataSet("dataset_graph_frag.txt")
+        encoder.applyTo(smiles, encodingCollectors=[out_data])
+        return self.sample(out_data.asDataLoader(32), repeat=repeat, min_samples=min_samples)
 
 

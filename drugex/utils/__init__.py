@@ -1,7 +1,6 @@
 from .nsgaii import *
 from .metric import *
 from .objective import *
-from .modifier import *
 from .vocab import *
 from .optim import *
 

@@ -5,7 +5,6 @@ import json
 import torch
 
 from drugex.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
-from drugex.logs.config import init_logfile
 from drugex.logs.utils import commit_hash, enable_file_logger
 from drugex import utils
 import argparse
@@ -137,13 +136,12 @@ def GeneratorArgParser(txt=None):
 
     return args
 
-def getVocFromFiles(paths, voc_class, **kwargs):
-    words = []
-    for path in paths:
-        voc = voc_class.fromFile(path, **kwargs)
-        words.extend(voc.words)
-
-    return voc_class(words, **kwargs)
+def getVocFromFiles(paths, voc_class, *args, **kwargs):
+    vocs = [voc_class.fromFile(path, *args, **kwargs) for path in paths]
+    if len(vocs) > 1:
+        return sum(vocs[1:], start=vocs[0])
+    else:
+        return vocs[0]
 
 def LoadEncodedMoleculeFragmentPairs(data_path,  
                                      input_prefix=None, 
@@ -154,7 +152,7 @@ def LoadEncodedMoleculeFragmentPairs(data_path,
                                     ):
     
     """ 
-    Load fragement based input data to dataframe.
+    Load fragment based input data to dataframe.
     
     Arguments:
         data_path (str)            : folder containing input files
@@ -466,7 +464,7 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(utils.Property('QED'))
         keys.append('QED')
     if ra_score:
-        from drugex.training.models.ra_scorer import RetrosyntheticAccessibilityScorer
+        from drugex.training.scorers.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True ))
         keys.append('RAscore')
     if mw:

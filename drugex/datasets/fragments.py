@@ -3,12 +3,12 @@ from rdkit import Chem
 
 from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger
-from drugex.datasets.interfaces import TrainTestSplitter, FragmentPairEncoder
+from drugex.datasets.interfaces import DataSplitter, FragmentPairEncoder
 from drugex.molecules.converters.interfaces import ConversionException
 from drugex.molecules.interfaces import AnnotationException, MolSupplier
 from drugex.molecules.suppliers import DataFrameSupplier
 
-class FragmentPairsSplitterBase:
+class FragmentPairsSplitterBase(DataSplitter):
 
     def __init__(self, frags_col='Frags', mol_col='Smiles'):
         self.fragsCol = frags_col
@@ -19,13 +19,14 @@ class FragmentPairsSplitterBase:
 
 class FragmentPairsSplitter(FragmentPairsSplitterBase):
 
-    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles"):
+    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles", unique_only=False):
         super().__init__(frags_col, mol_col)
         self.ratio = ratio
         self.maxTestSamples = max_test_samples
         self.uniqueCollect = unique_collector
         self.trainCollect = train_collector
         self.testCollect = test_collector
+        self.uniqueOnly = unique_only
 
     def __call__(self, pairs):
         df = pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])
@@ -38,7 +39,7 @@ class FragmentPairsSplitter(FragmentPairsSplitterBase):
             test_in = df.Frags.drop_duplicates().sample(len(frags) // 10)
         test = df[df.Frags.isin(test_in)]
         train = df[~df.Frags.isin(test_in)]
-        unique = df.drop_duplicates(subset='Frags')
+        unique = df.drop_duplicates(subset=self.fragsCol)
 
         if self.trainCollect:
             self.trainCollect(train)
@@ -46,6 +47,9 @@ class FragmentPairsSplitter(FragmentPairsSplitterBase):
             self.testCollect(test)
         if self.uniqueCollect:
             self.uniqueCollect(unique)
+
+        if self.uniqueOnly:
+            return test, unique
 
         return test, train, unique
 

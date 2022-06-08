@@ -1,3 +1,6 @@
 .*
 __*__
 !.gitignore
+/build/
+/*.egg-info
+/base_test/
