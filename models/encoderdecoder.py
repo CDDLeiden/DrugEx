@@ -4,59 +4,104 @@ from torch import nn
 from .attention import DecoderAttn
 import time
 import pandas as pd
+from tqdm import tqdm
 
+from drugex.logs import logger
 
 class Base(nn.Module):
-    def fit(self, pair_loader, ind_loader, epochs=100, method=None, out=None):
-        log = open(out + '.log', 'w')
-        best = 0.
-        net = nn.DataParallel(self, device_ids=utils.devices)
-        last_save = -1
-        # threshold for number of epochs without change that will trigger early stopping
-        max_interval = 50
-        for epoch in range(epochs):
-            t0 = time.time()
-            for i, (src, trg) in enumerate(pair_loader):
+    
+    def train(self, loader, net):
+        
+        if self.mol_type == 'smiles':
+            for src, trg in loader:
                 src, trg = src.to(utils.dev), trg.to(utils.dev)
-
                 self.optim.zero_grad()
                 loss = net(src, trg)
-                loss = -loss.mean()
-                print(epoch, i, loss)
+                loss = -loss.mean()     
                 loss.backward()
                 self.optim.step()
-
-                if i % 1000 != 0: continue
-                frags, smiles, scores = self.evaluate(ind_loader, method=method)
-                valid = scores.VALID.sum() / len(scores)
-                desire = scores.DESIRE.sum() / len(scores)
-                t1 = time.time()
-                log.write("Epoch: %d step: %d loss: %.3f valid: %.3f desire: %.3f time: %d\n" %
-                      (epoch, i, loss.item(), valid, desire, t1-t0))
-                print('%.3f' % (t1-t0))
                 del loss
-                t0 = t1
-                for i, smile in enumerate(smiles):
-                    log.write('%d\t%.3f\t%s\t%s\n' % (scores.VALID[i], scores.DESIRE[i], frags[i], smile))
-                if best <= desire:
-                    torch.save(self.state_dict(), out + '.pkg')
-                    best = desire
-                    last_save = epoch
-                log.flush()
-            if epoch - last_save > max_interval: break
-        log.close()
+                
+        elif self.mol_type == 'graph':
+            for src in loader:
+                src = src.to(utils.dev)
+                self.optim.zero_grad()
+                loss = net(src, is_train=True)
+                loss = sum([-l.mean() for l in loss])   
+                loss.backward()
+                self.optim.step()
+                del loss              
+                
+    def validate(self, loader, net):
+        
+        frags, smiles, scores = self.evaluate(loader)
+        valid = scores.VALID.mean() 
+        desired = scores.DESIRE.mean()
+        
+        loss_valid = []
+        if self.mol_type == 'smiles':
+            for src, trg in loader:
+                print(type(src), type(trg))
+                loss_valid.append(l.mean().item() for l in net(src, trg))
+            # loss_valid = [-l.mean() for l in net(src, trg) for src, trg in loader]
+            #loss_valid = torch.mean(torch.stack(loss_valid, dim=0)).item()
+        elif self.mol_type == 'graph':
+            for src in loader:
+                loss_valid.append(-l.mean().item() for l in net(src, is_train=True))
+            # loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in loader]
+        loss_valid = sum(loss_valid)
+            
+        return valid, desired, loss_valid
+
+    
+    def fit(self, train_loader, valid_loader, epochs=100, method=None, out=None):
+        log = open(out + '.log', 'w')
+        best = float('inf')
+        net = nn.DataParallel(self, device_ids=utils.devices)
+        last_save = -1
+        max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
+         
+        for epoch in tqdm(range(epochs)):
+            
+            t0 = time.time()
+            self.train(train_loader, net)
+            valid, _, loss_valid = self.validate(valid_loader, net)
+            t1 = time.time()
+            
+            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}")
+            
+            if loss_valid < best:
+                torch.save(self.state_dict(), out + '.pkg')
+                best = loss_valid
+                last_save = epoch
+                logger.info(f"Model was saved at epoch {epoch}")
+                
+            # Should only be done if debug is on
+            logger.debug(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
+            for j, smile in enumerate(smiles):
+                logger.debug('%s\t%s\n' % (frags[j], smile))            
+                
+            if epoch - last_save > max_interval : break
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=utils.devices)
         frags, smiles = [], []
         with torch.no_grad():
             for _ in range(repeat):
-                for ix, src in loader:
-                    trg = net(src.to(utils.dev))
-                    ix = loader.dataset.index[ix]
-                    smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                    frags += ix.tolist()
-                    break
+                if self.mol_type == 'graph':
+                   # Molecules and fragments encoded togther >> graph
+                    for src in loader:
+                        trg = net(src.to(utils.dev)) 
+                        f, s = self.voc_trg.decode(trg)
+                        frags += f
+                        smiles += s  
+                elif self.mol_type == 'smiles':
+                    # Molecules and fragments encoded separtetly >> smiles
+                    for src, _ in loader:
+                        trg = net(src.to(utils.dev))
+                        smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
+                        frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]
+                        break
         if method is None:
             scores = utils.Env.check_smiles(smiles, frags=frags)
             scores = pd.DataFrame(scores, columns=['VALID', 'DESIRE'])
@@ -74,6 +119,7 @@ class Base(nn.Module):
 class Seq2Seq(Base):
     def __init__(self, voc_src, voc_trg, emb_sharing=True):
         super(Seq2Seq, self).__init__()
+        self.mol_type = 'smiles'
         self.voc_size = 128
         self.hidden_size = 512
         self.voc_src = voc_src
@@ -115,6 +161,7 @@ class Seq2Seq(Base):
 class EncDec(Base):
     def __init__(self, voc_src, voc_trg, emb_sharing=True):
         super(EncDec, self).__init__()
+        self.mol_type = 'smiles'
         self.voc_size = 128
         self.hidden_size = 512
         self.voc_src = voc_src
