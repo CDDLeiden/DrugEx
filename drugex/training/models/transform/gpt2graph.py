@@ -266,7 +266,7 @@ class GraphModel(Base):
                 del loss
 
                 monitor.saveProgress(i, epoch, total_steps, epochs)
-                
+                monitor.savePerformanceInfo(i, epoch, sum(loss_train))
                 if sum(loss_train) < best:
                     monitor.saveModel(self)
                     best = sum(loss_train)
@@ -286,7 +286,7 @@ class GraphModel(Base):
             for j, smile in enumerate(smiles):
                 logger.debug('%s\t%s\n' % (frags[j], smile))
             t0 = t1
-            monitor.savePerformanceInfo(None, epoch, loss_train, loss_valid=loss_valid, valid=valid, smiles=smiles, frags=frags)
+            monitor.savePerformanceInfo(None, epoch, sum(loss_train), loss_valid=sum(loss_valid), valid=valid, smiles=smiles, frags=frags)
             del loss_valid
             monitor.endStep(None, epoch)
             if epoch - last_save > max_interval: break
