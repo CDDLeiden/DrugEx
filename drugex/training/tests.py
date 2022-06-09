@@ -84,11 +84,13 @@ class TrainingTestCase(TestCase):
     scorers = [
         Property(
             "MW",
-            modifier=ClippedScore(lower_x=500, upper_x=1000)),
+            modifier=ClippedScore(lower_x=1000, upper_x=500)
+        ),
         Predictor.fromFile(
             os.path.join(os.path.dirname(__file__), "test_data/RF_REG_P29274_0006.pkg"),
             type="REG",
-            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)),
+            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+        ),
 
     ]
     thresholds = [0.5, 0.99]
