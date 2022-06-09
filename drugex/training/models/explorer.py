@@ -208,8 +208,10 @@ class GraphExplorer(Explorer):
                 t0 = time.time()
                 t00 = t0
                 #for i, src in enumerate(tqdm(data_loader)):
+                total_batches = len(train_loader)
                 for i, src in enumerate(train_loader):
                     # trgs.append(src.detach().cpu())
+                    logger.info(f"Forward pass: Batch {i}/{total_batches}.")
                     with torch.no_grad():
                         trg = net(src.to(self.device))
                         trgs.append(trg.detach().cpu())
