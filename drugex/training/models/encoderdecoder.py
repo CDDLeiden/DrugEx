@@ -48,18 +48,22 @@ class Base(Generator):
         frags, smiles, scores = self.evaluate(loader, method=evaluator)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
-        
+                
         with torch.no_grad():
             if self.mol_type == 'smiles':
                 loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
             elif self.mol_type == 'graph':
+                for src in loader:
+                    loss = [-l for l in net(src, is_train=False)]
+                    print(loss)
                 loss_valid = sum( [ sum([-l.mean().item() for l in net(src, is_train=False)]) for src in loader ] )
                 
-        # Should only be done if debug is on
-        for j, smile in enumerate(smiles):
-            logger.debug('%s\t%s\n' % (frags[j], smile))   
+        smiles_scores = []
+        for idx, smile in enumerate(smiles):
+            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
+            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
                 
-        return valid, desired, loss_valid
+        return valid, desired, loss_valid, smiles_scores
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
         best = 0.
@@ -71,8 +75,8 @@ class Base(Generator):
             
             t0 = time.time()
             loss_train = self.train(train_loader)
-            valid, _, loss_valid = self.validate(valid_loader, evaluator=evaluator)
-            t1 = time.time(i, )
+            valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator)
+            t1 = time.time()
             
             logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
@@ -83,10 +87,6 @@ class Base(Generator):
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
                 
-            smiles_scores = []
-            for idx, smile in enumerate(smiles):
-                logger.debug(f"{scores.VALID[idx]}\t{frag[idx]}\t{smile}")
-                smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
             monitor.savePerformanceInfo(None, epoch, loss_train, loss_valid=loss_valid, valid=valid, best=best, smiles_scores=smiles_scores)
             del loss_train, loss_valid
             monitor.endStep(None, epoch)
@@ -96,13 +96,11 @@ class Base(Generator):
         torch.cuda.empty_cache()
         monitor.close()
         
-    def sample(self, loader, repeat=1, min_samples=None):
+    def sample(self, loader, repeat=1):
         net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         with torch.no_grad():
-            repeats = 0
-            while repeats < repeat or (min_samples and (len(smiles) < min_samples)):
-                
+            for _ in range(repeat):                
                 if self.mol_type == 'graph':       
                     # Molecules and fragments encoded togther >> graph
                     for i, src in enumerate(loader):
@@ -113,12 +111,9 @@ class Base(Generator):
                 elif self.mol_type == 'smiles':
                     # Molecules and fragments encoded separtetly >> smiles
                     for src, _ in loader:
-                        trg = net(src.to(utils.dev))
+                        trg = net(src.to(self.device))
                         smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
                         frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
-           
-                if min_samples and len(smiles) >= min_samples:
-                    repeats += 1
 
         return smiles, frags
 

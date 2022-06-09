@@ -41,7 +41,7 @@ class VocSmiles(VocabularySequence):
                 output[i, j] = self.tk2ix[char]
         return output
 
-    def decode(self, tensor, is_tk=True):
+    def decode(self, tensor, is_tk=True, is_smiles=True):
         """Takes an array of indices and returns the corresponding SMILES
         Args:
             tensor(torch.LongTensor): a long tensor containing all of the indices of given tokens.
@@ -56,8 +56,12 @@ class VocSmiles(VocabularySequence):
             if token == 'EOS': break
             if token in self.control: continue
             tokens.append(token)
-        smiles = "".join(tokens)
-        return self.parseDecoded(smiles)
+        seqs = "".join(tokens)
+        if is_smiles:
+            seqs = self.parseDecoded(seqs)
+        else:
+            seqs = seqs.replace('|', '')
+        return seqs
 
     def parseDecoded(self, smiles):
         return smiles.replace('L', 'Cl').replace('R', 'Br')

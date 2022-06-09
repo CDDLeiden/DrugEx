@@ -136,12 +136,14 @@ class TrainingTestCase(TestCase):
         ft_data_set_test.setVoc(vocabulary)
 
         pr_loader_train = pr_data_set_train.asDataLoader(32)
-        pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        pr_loader_test = pr_data_set_test.asDataLoader(32)
+        #pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
         ft_loader_train = pr_data_set_train.asDataLoader(32)
-        ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        ft_loader_test = pr_data_set_test.asDataLoader(32)
+        #ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
