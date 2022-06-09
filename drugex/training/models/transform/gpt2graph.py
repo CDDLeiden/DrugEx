@@ -10,9 +10,7 @@ from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
 from torch import optim
-from drugex import utils
 import time
-import pandas as pd
 from tqdm import tqdm
 
 from drugex.training.scorers.smiles import SmilesChecker
@@ -263,6 +261,13 @@ class GraphModel(Base):
         )
         out_data = GraphFragDataSet("dataset_graph_frag.txt")
         encoder.applyTo(smiles, encodingCollectors=[out_data])
-        return self.sample(out_data.asDataLoader(32), repeat=repeat, min_samples=min_samples)
+
+        smiles, frags = [], []
+        while not len(smiles) >= min_samples:
+            new_s, new_f = self.sample(out_data.asDataLoader(32), repeat=repeat)
+            smiles.extend(new_s)
+            frags.extend(new_f)
+
+        return smiles, frags
 
 
