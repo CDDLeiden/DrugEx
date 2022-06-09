@@ -15,8 +15,8 @@ from drugex.logs import logger
 from drugex.training.interfaces import Explorer    
 
 class GraphExplorer(Explorer):
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None):
-        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1, optim=None):
+        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
         self.voc_trg = agent.voc_trg
         self.mutate = mutate
         self.bestState = None
@@ -208,8 +208,8 @@ class GraphExplorer(Explorer):
 
         encoded_pairs = torch.cat([batch for batch in loader], 0)
         n_pairs = encoded_pairs.shape[0]                
-        n_samples = int(self.n_samples * 0.2) if is_test else self.n_samples     
-        batch_size = self.batch_size * 10 if is_test else self.batch_size * 4
+        n_samples = int(self.nSamples * 0.2) if is_test else self.nSamples     
+        batch_size = self.batchSize * 10 if is_test else self.batchSize * 4
         
         if n_pairs > n_samples:
         
@@ -234,11 +234,11 @@ class GraphExplorer(Explorer):
             for epoch in tqdm(range(epochs)):
                 t0 = time.time()
                               
-                if self.n_samples > 0:
-                    data_loader = self.sample_input(data_loader)
-                    test_loader = self.sample_input(test_loader, is_test=True)
+                if self.nSamples > 0:
+                    train_loader = self.sample_input(train_loader)
+                    valid_loader = self.sample_input(valid_loader, is_test=True)
 
-                for i, src in enumerate(data_loader):
+                for i, src in enumerate(train_loader):
                     with torch.no_grad():
                         trg = net(src.to(self.device))
                         trgs.append(trg.detach().cpu())
@@ -247,13 +247,13 @@ class GraphExplorer(Explorer):
                 self.policy_gradient(loader, progress=monitor)
                 trgs = []
 
-                frags, smiles, scores = self.agent.evaluate(train_loader, repeat=self.repeat, method=self.env)
+                frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.getScorerKeys()].values.mean()
                 valid = scores.VALID.mean()
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desired:.4f} Time: {t1-t0:.1f}s")   
+                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Time: {t1-t0:.1f}s")   
         
                 if best_score < desire:
                     monitor.saveModel(self)
@@ -355,10 +355,12 @@ class SmilesExplorer(Explorer):
                 encoded_pairs = torch.cat((encoded_pairs, batch), 0)
             except:
                 encoded_pairs = batch
+                
+        #print(len(encoded_pairs[0]), print(len(encoded_pairs[1])))
 
-        n_pairs = encoded_pairs.shape[0]                
-        n_samples = int(self.n_samples * 0.2) if is_test else self.n_samples     
-        batch_size = self.batch_size * 10 if is_test else self.batch_size * 4
+        n_pairs = encoded_pairs[0].shape[0]                
+        n_samples = int(self.nSamples * 0.2) if is_test else self.nSamples     
+        batch_size = self.batchSize * 10 if is_test else self.batchSize * 4
         
         if n_pairs > n_samples:
         
@@ -381,9 +383,9 @@ class SmilesExplorer(Explorer):
             for epoch in range(epochs):
                 t0 = time.time()
                 
-                if self.n_samples > 0:
-                    data_loader = self.sample_input(data_loader)
-                    test_loader = self.sample_input(test_loader, is_test=True)
+                if self.nSamples > 0:
+                    train_loader = self.sample_input(train_loader)
+                    valid_loader = self.sample_input(valid_loader, is_test=True)
 
                 logger.info('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
                 for i, (ix, src) in enumerate(tqdm(train_loader)):
@@ -407,8 +409,8 @@ class SmilesExplorer(Explorer):
                 valid = scores.VALID.mean()
 
                 t1 = time.time()
-                logger.info("Iteration: %s Epoch: %d average: %.4f valid: %.4f desire: %.4f time: %.1fs\n" %
-                          (it, epoch, score, valid, desire, t1 - t0))
+                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Time: {t1-t0:.1f}s")  
+
                 smiles_scores = []
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])

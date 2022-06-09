@@ -53,10 +53,7 @@ class Base(Generator):
             if self.mol_type == 'smiles':
                 loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
             elif self.mol_type == 'graph':
-                for src in loader:
-                    loss = [-l for l in net(src, is_train=False)]
-                    print(loss)
-                loss_valid = sum( [ sum([-l.mean().item() for l in net(src, is_train=False)]) for src in loader ] )
+                loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=False)]) for src in loader ] )
                 
         smiles_scores = []
         for idx, smile in enumerate(smiles):
@@ -66,7 +63,7 @@ class Base(Generator):
         return valid, desired, loss_valid, smiles_scores
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
-        best = 0.
+        best = float('inf')
         net = nn.DataParallel(self, device_ids=self.devices)
         last_save = -1
         max_interval = 50 # threshold for number of epochs without change that will trigger early stopping

@@ -110,7 +110,7 @@ class Generator(Model, ABC):
 
 class Explorer(Model, ABC):
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', n_samples=-1, repeat=1):
         super().__init__()
         self.batchSize = batch_size
         self.epsilon = epsilon
@@ -121,6 +121,7 @@ class Explorer(Model, ABC):
         self.agent = agent
         self.mutate = mutate
         self.crover = crover
+        self.nSamples = 640 #n_samples
 
     @abstractmethod
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
