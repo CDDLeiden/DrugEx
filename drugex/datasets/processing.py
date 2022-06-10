@@ -4,6 +4,7 @@ processing
 Created by: Martin Sicho
 On: 27.05.22, 10:16
 """
+import os.path
 
 import numpy as np
 import pandas as pd
@@ -144,8 +145,11 @@ class SmilesDataSet(DataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.data = []
+        self.voc = VocSmiles()
+        if os.path.exists(outpath):
+            self.fromFile(outpath)
+        else:
+            self.data = []
 
     def getDataFrame(self, columns=('Smiles', 'Token')):
         return pd.DataFrame(self.data, columns=columns)
@@ -227,9 +231,12 @@ class SmilesFragDataSet(DataSet):
 
     def __init__(self, outpath, columns=('Input', 'Output')):
         super().__init__(outpath)
-        self.codes = []
-        self.voc = None
+        self.voc = VocSmiles()
         self.columns = columns
+        if os.path.exists(outpath):
+            self.fromFile(outpath)
+        else:
+            self.codes = []
 
     def __call__(self, result):
         self.codes.extend(
@@ -283,13 +290,16 @@ class GraphDataSet(DataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.codes = []
+        if os.path.exists(outpath):
+            self.fromFile(outpath)
+        else:
+            self.codes = []
+        self.voc = VocGraph()
 
     def __call__(self, result):
         self.codes.extend(result[0])
-        voc = result[1].getVoc()
-        self.addVoc(voc)
+        # voc = result[1].getVoc()
+        # self.addVoc(voc)
 
     def addVoc(self, voc):
         if not self.voc:
@@ -321,17 +331,13 @@ class GraphDataSet(DataSet):
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
-        else:
-            self.voc = VocGraph()
 
 class GraphFragDataSet(GraphDataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.codes = []
 
     def __call__(self, result):
         self.codes.extend(x[1] for x in result[0])
-        voc = result[1].encoder.getVoc()
-        self.addVoc(voc)
+        # voc = result[1].encoder.getVoc()
+        # self.addVoc(voc)
