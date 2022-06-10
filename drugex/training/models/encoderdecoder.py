@@ -10,57 +10,11 @@ from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 
-
 class Base(Generator):
 
     def attachToDevice(self, device):
         super().attachToDevice(device)
         self.to(self.device)
-        
-    def train(self, loader):
-        
-        net = nn.DataParallel(self, device_ids=self.devices)
-        
-        if self.mol_type == 'smiles':
-            for src, trg in loader:
-                src, trg = src.to(self.device), trg.to(self.device)
-                self.optim.zero_grad()
-                loss = net(src, trg)
-                loss = -loss.mean()     
-                loss.backward()
-                self.optim.step()
-                
-        elif self.mol_type == 'graph':
-            for src in loader:
-                src = src.to(utils.dev)
-                self.optim.zero_grad()
-                loss = net(src, is_train=True)
-                loss = sum([-l.mean() for l in loss])   
-                loss.backward()
-                self.optim.step()
-            
-        return loss
-                
-    def validate(self, loader, evaluator=None):
-        
-        net = nn.DataParallel(self, device_ids=self.devices)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator)
-        valid = scores.VALID.mean() 
-        desired = scores.DESIRE.mean()
-                
-        with torch.no_grad():
-            if self.mol_type == 'smiles':
-                loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
-            elif self.mol_type == 'graph':
-                loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=False)]) for src in loader ] )
-                
-        smiles_scores = []
-        for idx, smile in enumerate(smiles):
-            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
-                
-        return valid, desired, loss_valid, smiles_scores
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
         best = float('inf')
@@ -92,27 +46,6 @@ class Base(Generator):
         
         torch.cuda.empty_cache()
         monitor.close()
-        
-    def sample(self, loader, repeat=1):
-        net = nn.DataParallel(self, device_ids=self.devices)
-        frags, smiles = [], []
-        with torch.no_grad():
-            for _ in range(repeat):                
-                if self.mol_type == 'graph':       
-                    # Molecules and fragments encoded togther >> graph
-                    for i, src in enumerate(loader):
-                        trg = net(src.to(self.device))
-                        f, s = self.voc_trg.decode(trg)
-                        frags += f
-                        smiles += s
-                elif self.mol_type == 'smiles':
-                    # Molecules and fragments encoded separtetly >> smiles
-                    for src, _ in loader:
-                        trg = net(src.to(self.device))
-                        smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                        frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
-
-        return smiles, frags
 
     def evaluate(self, loader, repeat=1, method=None):
         net = nn.DataParallel(self, device_ids=self.devices)
@@ -129,9 +62,54 @@ class Base(Generator):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
         self.to(self.device)
+        
+class SmilesFragsGeneratorBase(Base):
+        
+    def train(self, loader):
+        
+        net = nn.DataParallel(self, device_ids=self.devices) 
+        for src, trg in loader:
+            src, trg = src.to(self.device), trg.to(self.device)
+            self.optim.zero_grad()
+            loss = net(src, trg)
+            loss = -loss.mean()     
+            loss.backward()
+            self.optim.step()
+            
+        return loss
+            
+    def validate(self, loader, evaluator=None):
+        
+        net = nn.DataParallel(self, device_ids=self.devices)
+        
+        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+        valid = scores.VALID.mean() 
+        desired = scores.DESIRE.mean()
+                
+        with torch.no_grad():
+            loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
+                
+        smiles_scores = []
+        for idx, smile in enumerate(smiles):
+            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
+            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+                
+        return valid, desired, loss_valid, smiles_scores
+    
+    def sample(self, loader, repeat=1):
+        net = nn.DataParallel(self, device_ids=self.devices)
+        frags, smiles = [], []
+        with torch.no_grad():
+            for _ in range(repeat):                
+                for src, _ in loader:
+                    trg = net(src.to(self.device))
+                    smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
+                    frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
+
+        return smiles, frags
 
 
-class Seq2Seq(Base):
+class Seq2Seq(SmilesFragsGeneratorBase):
     def __init__(self, voc_src, voc_trg, emb_sharing=True):
         super(Seq2Seq, self).__init__()
         self.mol_type = 'smiles'
@@ -173,7 +151,7 @@ class Seq2Seq(Base):
         return output_
 
 
-class EncDec(Base):
+class EncDec(SmilesFragsGeneratorBase):
     def __init__(self, voc_src, voc_trg, emb_sharing=True):
         super(EncDec, self).__init__()
         self.mol_type = 'smiles'

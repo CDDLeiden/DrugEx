@@ -247,6 +247,50 @@ class GraphModel(Base):
                 exists[order, src[:, step, 2], src[:, step, 1]] = src[:, step, 3]
             out = src
         return out
+    
+    def train(self, loader):
+        
+        net = nn.DataParallel(self, device_ids=self.devices)
+        for src in loader:
+            src = src.to(utils.dev)
+            self.optim.zero_grad()
+            loss = net(src, is_train=True)
+            loss = sum([-l.mean() for l in loss])   
+            loss.backward()
+            self.optim.step()
+            
+        return loss
+                
+    def validate(self, loader, evaluator=None):
+        
+        net = nn.DataParallel(self, device_ids=self.devices)
+        
+        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+        valid = scores.VALID.mean() 
+        desired = scores.DESIRE.mean()
+                
+        with torch.no_grad():
+            loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=False)]) for src in loader ] )
+                
+        smiles_scores = []
+        for idx, smile in enumerate(smiles):
+            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
+            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+                
+        return valid, desired, loss_valid, smiles_scores
+    
+    def sample(self, loader, repeat=1):
+        net = nn.DataParallel(self, device_ids=self.devices)
+        frags, smiles = [], []
+        with torch.no_grad():
+            for _ in range(repeat):                
+                for i, src in enumerate(loader):
+                    trg = net(src.to(self.device))
+                    f, s = self.voc_trg.decode(trg)
+                    frags += f
+                    smiles += s
+                        
+        return smiles, frags
 
 
     def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
