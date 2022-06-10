@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import torch
 import time
 
@@ -10,11 +12,15 @@ from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 
-class Base(Generator):
+class Base(Generator, ABC):
 
     def attachToDevice(self, device):
         super().attachToDevice(device)
         self.to(self.device)
+
+    @abstractmethod
+    def trainNet(self, loader):
+        pass
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
         best = float('inf')
@@ -24,7 +30,7 @@ class Base(Generator):
         for epoch in tqdm(range(epochs)):
             
             t0 = time.time()
-            loss_train = self.train(train_loader)
+            loss_train = self.trainNet(train_loader)
             valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator)
             t1 = time.time()
             
@@ -63,8 +69,7 @@ class Base(Generator):
         
 class SmilesFragsGeneratorBase(Base):
         
-    def train(self, loader):
-        
+    def trainNet(self, loader):
         net = nn.DataParallel(self, device_ids=self.devices) 
         for src, trg in loader:
             src, trg = src.to(self.device), trg.to(self.device)

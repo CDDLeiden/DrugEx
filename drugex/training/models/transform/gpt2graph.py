@@ -10,10 +10,6 @@ from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
 from torch import optim
-import time
-from tqdm import tqdm
-
-from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Block(nn.Module):
@@ -246,11 +242,11 @@ class GraphModel(Base):
             out = src
         return out
     
-    def train(self, loader):
+    def trainNet(self, loader):
         
         net = nn.DataParallel(self, device_ids=self.devices)
         for src in loader:
-            src = src.to(utils.dev)
+            src = src.to(self.device)
             self.optim.zero_grad()
             loss = net(src, is_train=True)
             loss = sum([-l.mean() for l in loss])   
