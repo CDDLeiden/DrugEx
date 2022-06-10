@@ -112,7 +112,7 @@ class TrainingTestCase(TestCase):
         ft_smiles = self.getSmilesFinetune()
 
         # create and encode fragments
-        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True)
+        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True, seed=42)
         encoder = FragmentEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(

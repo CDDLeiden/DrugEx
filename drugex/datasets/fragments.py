@@ -19,7 +19,7 @@ class FragmentPairsSplitterBase(DataSplitter):
 
 class FragmentPairsSplitter(FragmentPairsSplitterBase):
 
-    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles", unique_only=False):
+    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles", unique_only=False, seed=None):
         super().__init__(frags_col, mol_col)
         self.ratio = ratio
         self.maxTestSamples = max_test_samples
@@ -27,6 +27,7 @@ class FragmentPairsSplitter(FragmentPairsSplitterBase):
         self.trainCollect = train_collector
         self.testCollect = test_collector
         self.uniqueOnly = unique_only
+        self.seed = seed
 
     def __call__(self, pairs):
         df = pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])
@@ -34,9 +35,9 @@ class FragmentPairsSplitter(FragmentPairsSplitterBase):
         test_len = int(len(frags) * self.ratio)
         if test_len > int(self.maxTestSamples):
             logger.warning(f'To speed up the training, the test set size was automatically capped at {self.maxTestSamples} fragments instead of the default 10% of original data, which would have been: {test_len}.')
-            test_in = df.Frags.drop_duplicates().sample(int(self.maxTestSamples))
+            test_in = df.Frags.drop_duplicates().sort_values().sample(int(self.maxTestSamples), random_state=self.seed)
         else:
-            test_in = df.Frags.drop_duplicates().sample(test_len)
+            test_in = df.Frags.drop_duplicates().sort_values().sample(test_len, random_state=self.seed)
         test = df[df.Frags.isin(test_in)]
         train = df[~df.Frags.isin(test_in)]
         unique = df.drop_duplicates(subset=self.fragsCol)
