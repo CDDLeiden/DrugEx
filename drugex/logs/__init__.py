@@ -6,5 +6,5 @@ On: 17.05.22, 9:53
 """
 import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
+logger = logging.getLogger("DrugEx")
+logger.setLevel(logging.INFO)
