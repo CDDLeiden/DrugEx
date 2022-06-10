@@ -18,7 +18,6 @@ class Base(Generator):
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
         best = float('inf')
-        net = nn.DataParallel(self, device_ids=self.devices)
         last_save = -1
         max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
          
@@ -48,7 +47,6 @@ class Base(Generator):
         monitor.close()
 
     def evaluate(self, loader, repeat=1, method=None):
-        net = nn.DataParallel(self, device_ids=self.devices)
         smiles, frags = self.sample(loader, repeat)
 
         if method is None:
