@@ -1,32 +1,18 @@
-from abc import abstractmethod
 from functools import partial
 from typing import List
 
 import numpy as np
 
-
-class Modifier:
-    """
-    Interface for score modifiers.
-    """
-    @abstractmethod
-    def __call__(self, x):
-        """
-        Apply the modifier on x.
-        Args:
-            x: float or np.array to modify
-        Returns:
-            float or np.array (depending on the type of x) after application of the distance function.
-        """
+from drugex.training.interfaces import ScoreModifier
 
 
-class Chained:
+class Chained(ScoreModifier):
     """
     Calls several modifiers one after the other, for instance:
         score = modifier3(modifier2(modifier1(raw_score)))
     """
 
-    def __init__(self, modifiers: List[Modifier]) -> None:
+    def __init__(self, modifiers: List[ScoreModifier]) -> None:
         """
         Args:
             modifiers: modifiers to call in sequence.
@@ -41,7 +27,7 @@ class Chained:
         return score
 
 
-class Linear:
+class Linear(ScoreModifier):
     """
     Score modifier that multiplies the score by a scalar (default: 1, i.e. do nothing).
     """
@@ -53,7 +39,7 @@ class Linear:
         return self.slope * x
 
 
-class Squared:
+class Squared(ScoreModifier):
     """
     Score modifier that has a maximum at a given target value, and decreases
     quadratically with increasing distance from the target value.
@@ -67,7 +53,7 @@ class Squared:
         return 1.0 - self.coefficient * np.square(self.target_value - x)
 
 
-class AbsoluteScore:
+class AbsoluteScore(ScoreModifier):
     """
     Score modifier that has a maximum at a given target value, and decreases
     linearly with increasing distance from the target value.
@@ -80,7 +66,7 @@ class AbsoluteScore:
         return 1. - np.abs(self.target_value - x)
 
 
-class Gaussian:
+class Gaussian(ScoreModifier):
     """
     Score modifier that reproduces a Gaussian bell shape.
     """
@@ -93,7 +79,7 @@ class Gaussian:
         return np.exp(-0.5 * np.power((x - self.mu) / self.sigma, 2.))
 
 
-class MinMaxGaussian:
+class MinMaxGaussian(ScoreModifier):
     """
     Score modifier that reproduces a half Gaussian bell shape.
     For minimize==True, the function is 1.0 for x <= mu and decreases to zero for x > mu.
@@ -118,7 +104,7 @@ MinGaussian = partial(MinMaxGaussian, minimize=True)
 MaxGaussian = partial(MinMaxGaussian, minimize=False)
 
 
-class ClippedScore:
+class ClippedScore(ScoreModifier):
     r"""
     Clips a score between specified low and high scores, and does a linear interpolation in between.
     The function looks like this:
@@ -155,7 +141,7 @@ class ClippedScore:
         return np.clip(y, self.low_score, self.high_score)
 
 
-class SmoothClippedScore:
+class SmoothClippedScore(ScoreModifier):
     """
     Smooth variant of ClippedScore.
     Implemented as a logistic function that has the same steepness as ClippedScore in the
@@ -186,7 +172,7 @@ class SmoothClippedScore:
         return self.low_score + self.L / (1 + np.exp(-self.k * (x - self.middle_x)))
 
 
-class ThresholdedLinear:
+class ThresholdedLinear(ScoreModifier):
     """
     Returns a value of min(input, threshold)/threshold.
     """
