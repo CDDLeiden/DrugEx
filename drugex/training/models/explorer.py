@@ -286,8 +286,8 @@ class GraphExplorer(Explorer):
 
 
 class SmilesExplorer(Explorer):
-    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None):
-        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None, n_samples=-1):
+        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
         self.bestState = None
@@ -453,8 +453,8 @@ class PGLearner(Explorer, ABC):
         prior: The auxiliary model which is defined differently in each methods.
     """
     def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, mean_func='geometric', batch_size=128, epsilon=1e-3,
-                 sigma=0.0, scheme='PR', repeat=1):
-        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
+                 sigma=0.0, scheme='PR', repeat=1, n_samples=-1):
+        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
         self.replay = 10
         self.n_samples = 128  # * 8
         self.penalty = 0
@@ -515,8 +515,8 @@ class SmilesExplorerNoFrag(PGLearner):
         mutate (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
-        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, scheme=scheme, repeat=repeat)
+    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1):
+        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, scheme=scheme, repeat=repeat, n_samples=n_samples)
         self.bestState = None
  
     def forward(self, crover=None, memory=None, epsilon=None):
