@@ -1,7 +1,8 @@
 import numpy as np
 from rdkit import DataStructs
 import torch
-from drugex import utils
+
+from drugex import DEFAULT_DEVICE
 
 
 def dominate(ind1: np.ndarray, ind2: np.ndarray):
@@ -105,7 +106,7 @@ def similarity_sort(swarm, fps, is_gpu=False):
         rank (np.array): m-d vector as the index of well-ranked solutions.
     """
     if is_gpu:
-        swarm = torch.Tensor(swarm).to(utils.dev)
+        swarm = torch.Tensor(swarm).to(DEFAULT_DEVICE)
         fronts = gpu_non_dominated_sort(swarm)
     else:
         fronts = cpu_non_dominated_sort(swarm)
@@ -140,7 +141,7 @@ def nsgaii_sort(swarm, is_gpu=False):
         rank (np.array): m-d vector as the index of well-ranked solutions.
     """
     if is_gpu:
-        swarm = torch.Tensor(swarm).to(utils.dev)
+        swarm = torch.Tensor(swarm).to(DEFAULT_DEVICE)
         fronts = gpu_non_dominated_sort(swarm)
     else:
         fronts = cpu_non_dominated_sort(swarm)

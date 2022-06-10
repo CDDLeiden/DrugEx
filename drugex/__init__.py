@@ -11,3 +11,6 @@ rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
 torch.set_num_threads(1)
+
+DEFAULT_DEVICE = torch.device('cuda')
+DEFAULT_DEVICE_ID = 0

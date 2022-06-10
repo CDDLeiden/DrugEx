@@ -10,6 +10,9 @@ from abc import ABC, abstractmethod
 import torch
 from torch import nn
 
+from drugex import DEFAULT_DEVICE_ID, DEFAULT_DEVICE
+
+
 class ModelEvaluator(ABC):
 
     @abstractmethod
@@ -157,7 +160,7 @@ class TrainingMonitor(ModelProvider, ABC):
 
 class Trainer(ModelProvider, ABC):
 
-    def __init__(self, algorithm, gpus=(0,)):
+    def __init__(self, algorithm, gpus=(DEFAULT_DEVICE_ID,)):
         assert len(gpus) > 0
         self.availableGPUs = gpus
         os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
@@ -175,13 +178,13 @@ class Trainer(ModelProvider, ABC):
     def getDevices(self):
         return self.availableGPUs
 
-    def attachDevices(self, device_id=None):
+    def attachDevices(self, device_id=DEFAULT_DEVICE_ID, device=DEFAULT_DEVICE):
         if device_id and (device_id not in self.availableGPUs):
             raise RuntimeError(f"Unavailable device: {device_id}")
         if not device_id:
             device_id = self.availableGPUs[0]
         torch.cuda.set_device(device_id)
-        self.device = torch.device('cuda')
+        self.device = torch.device(device)
         self.deviceID = device_id
         self.model.attachToDevice(self.device)
         self.model.attachToDevices(self.availableGPUs)
