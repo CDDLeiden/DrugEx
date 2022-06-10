@@ -7,10 +7,11 @@ On: 06.04.22, 16:51
 import torch
 from rdkit import rdBase
 
+rdBase.DisableLog('rdApp.error')
 rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
 torch.set_num_threads(1)
 
-DEFAULT_DEVICE = torch.device('cuda')
+DEFAULT_DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 DEFAULT_DEVICE_ID = 0
