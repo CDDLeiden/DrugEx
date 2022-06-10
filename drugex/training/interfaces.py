@@ -88,8 +88,8 @@ class Model(nn.Module, ABC):
         super().__init__()
         self.device = None
         self.devices = None
-        self.attachToDevice(0)
-        self.attachToDevices([0])
+        self.attachToDevice(DEFAULT_DEVICE)
+        self.attachToDevices([DEFAULT_DEVICE_ID])
 
     def attachToDevice(self, device):
         self.device = device
@@ -100,6 +100,9 @@ class Model(nn.Module, ABC):
     @abstractmethod
     def fit(self, train_loader, valid_loader, epochs=1000, out=None):
         pass
+
+    def loadStatesFromFile(self, path):
+        self.load_state_dict(torch.load(path, map_location=self.device))
 
 class Generator(Model, ABC):
 
@@ -194,7 +197,5 @@ class Trainer(ModelProvider, ABC):
     def fit(self, train_loader, valid_loader=None, training_monitor=None, epochs=None, args=None, kwargs=None):
         pass
 
-
-
-
-
+    def loadStatesFromFile(self, path):
+        self.model.loadStatesFromFile(path)
