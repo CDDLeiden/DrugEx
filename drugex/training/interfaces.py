@@ -121,7 +121,7 @@ class Explorer(Model, ABC):
         self.agent = agent
         self.mutate = mutate
         self.crover = crover
-        self.nSamples = 640 #n_samples
+        self.nSamples = n_samples
 
     @abstractmethod
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
