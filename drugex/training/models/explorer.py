@@ -288,7 +288,7 @@ class GraphExplorer(Explorer):
 
 class SmilesExplorer(Explorer):
     def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1, optim=None):
-        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
+        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
         self.bestState = None
