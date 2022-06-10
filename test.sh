@@ -3,7 +3,6 @@
 set -e
 
 # run unit tests first
-# TODO: in the future this is all that should be done to test stuff
 python -m unittest discover drugex
 
 # input data and base directory
@@ -299,6 +298,7 @@ python train.py \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
+-i "${FINETUNING_PREFIX}_corpus" \
 -ag "${PRETRAINING_PREFIX}" \
 -pr "${FINETUNING_PREFIX}" \
 -o "${FINETUNING_PREFIX}_${RL}" \
