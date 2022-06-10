@@ -41,7 +41,7 @@ class FileMonitor(TrainingMonitor):
         torch.save(self.bestState, self.path + '.pkg')
 
     def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
-        self.out.write(f"Epoch {current_epoch+1}/{total_epochs}, Step {current_step+1}/{total_steps}\n")
+        self.out.write(f"Epoch {current_epoch+1 if current_epoch else '--'}/{total_epochs if total_epochs else '--'}, Step {current_step+1 if current_step else '--'}/{total_steps if total_steps else '--'}\n")
         self.out.flush()
 
     def getModel(self):
