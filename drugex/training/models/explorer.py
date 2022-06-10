@@ -222,6 +222,8 @@ class GraphExplorer(Explorer):
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
         best_score = 0
+        self.bestState = deepcopy(self.state_dict())
+        monitor.saveModel(self)
         last_it = -1
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=self.devices)
@@ -229,7 +231,6 @@ class GraphExplorer(Explorer):
         logger.info(' ')
         for it in range(n_iters):
             last_save = -1
-            print('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
             logger.info('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
             for epoch in tqdm(range(epochs)):
                 t0 = time.time()
