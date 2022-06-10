@@ -13,9 +13,7 @@ from scipy import linalg
 import torch
 from torch.nn import functional as F
 
-from drugex.training.scorers.predictors import Predictor
-
-rdBase.DisableLog('rdApp.error')
+# rdBase.DisableLog('rdApp.error')
 
 
 def pad_mask(seq, pad_idx=0):
@@ -95,6 +93,7 @@ def logP_mw(fnames, is_active=False):
 
 
 def dimension(fnames, fp='ECFP', alg='PCA', maximum=int(1e5)):
+    from drugex.training.scorers.predictors import Predictor
     df = pd.DataFrame()
     for i, fname in enumerate(fnames):
         sub = pd.read_table(fname).dropna(subset=['Smiles'])

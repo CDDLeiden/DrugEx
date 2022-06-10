@@ -15,7 +15,7 @@ from drugex.training.interfaces import Scorer
 from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
 from rdkit.Chem.QED import qed
 
-from drugex.training.scorers import sascorer, modifiers
+from drugex.training.scorers.sascorer import calculateScore
 import tqdm
 
 from drugex.training.scorers.modifiers import Gaussian
@@ -47,7 +47,7 @@ class Property(Scorer):
                           'Valence': desc.NumValenceElectrons,
                           'MR': Crippen.MolMR,
                           'QED': qed,
-                          'SA': sascorer.calculateScore,
+                          'SA': calculateScore,
                           'Bertz': BertzCT}
 
     def getScores(self, mols, frags=None):

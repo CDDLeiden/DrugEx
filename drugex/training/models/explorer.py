@@ -239,6 +239,8 @@ class GraphExplorer(Explorer):
                     valid_loader = self.sample_input(valid_loader, is_test=True)
 
                 for i, src in enumerate(train_loader):
+                    # trgs.append(src.detach().cpu())
+                    logger.info(f"Forward pass: Batch {i}/{total_batches}.")
                     with torch.no_grad():
                         trg = net(src.to(self.device))
                         trgs.append(trg.detach().cpu())
