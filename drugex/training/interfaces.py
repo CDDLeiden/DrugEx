@@ -19,6 +19,20 @@ class ModelEvaluator(ABC):
     def __call__(self, mols, frags=None):
         pass
 
+class ScoreModifier:
+    """
+    Interface for score modifiers.
+    """
+    @abstractmethod
+    def __call__(self, x):
+        """
+        Apply the modifier on x.
+        Args:
+            x: float or np.array to modify
+        Returns:
+            float or np.array (depending on the type of x) after application of the distance function.
+        """
+
 class Scorer(ABC):
 
     def __init__(self, modifier=None):
