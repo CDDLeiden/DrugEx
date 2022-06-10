@@ -238,6 +238,7 @@ class GraphExplorer(Explorer):
                     train_loader = self.sample_input(train_loader)
                     valid_loader = self.sample_input(valid_loader, is_test=True)
 
+                total_batches = len(train_loader)
                 for i, src in enumerate(train_loader):
                     # trgs.append(src.detach().cpu())
                     logger.info(f"Forward pass: Batch {i}/{total_batches}.")
