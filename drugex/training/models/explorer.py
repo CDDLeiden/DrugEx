@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
+import random
 import torch
 from torch import nn
 from torch.optim import Adam
@@ -286,7 +287,7 @@ class GraphExplorer(Explorer):
 
 
 class SmilesExplorer(Explorer):
-    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, optim=None):
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1, optim=None):
         super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, repeat)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
@@ -354,22 +355,18 @@ class SmilesExplorer(Explorer):
             loader                   
         """
         
-        for batch in loader:
-            try:
-                encoded_pairs = torch.cat((encoded_pairs, batch), 0)
-            except:
-                encoded_pairs = batch
-                
-        #print(len(encoded_pairs[0]), print(len(encoded_pairs[1])))
-
-        n_pairs = encoded_pairs[0].shape[0]                
+        encoded_in = torch.cat([batch[0] for batch in loader], 0)
+        encoded_out = torch.cat([batch[1] for batch in loader], 0)
+        
+        n_pairs = encoded_in.shape[0]                
         n_samples = int(self.nSamples * 0.2) if is_test else self.nSamples     
         batch_size = self.batchSize * 10 if is_test else self.batchSize * 4
-        
+                
         if n_pairs > n_samples:
         
             logger.info(f"{n_samples} fragments-molecule pairs were sampled at random from original {n_pairs} pairs for {'validation' if is_test else 'training'}")
-            samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
+            sample_idx = torch.tensor(random.sample([ i for i in range(n_pairs)], n_samples))
+            samples = [ torch.index_select(encoded_in, 0, sample_idx), torch.index_select(encoded_out, 0, sample_idx) ]
             loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
             
         return loader
@@ -386,6 +383,7 @@ class SmilesExplorer(Explorer):
             last_save = -1
             for epoch in range(epochs):
                 t0 = time.time()
+                
                 
                 if self.nSamples > 0:
                     train_loader = self.sample_input(train_loader)
