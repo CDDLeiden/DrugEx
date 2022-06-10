@@ -367,7 +367,7 @@ class SmilesExplorer(Explorer):
         
         if n_pairs > n_samples:
         
-            logger.info('{} fragments-molecule pairs were sampled at random from original {} pairs for {}'.format(n_samples, n_pairs, 'validation' if is_test else 'training'))
+            logger.info(f"{n_samples} fragments-molecule pairs were sampled at random from original {n_pairs} pairs for {'validation' if is_test else 'training'}")
             samples = encoded_pairs[torch.randint(n_pairs, (n_samples,))]
             loader = DataLoader(samples, batch_size=batch_size, drop_last=False, shuffle=True)
             
@@ -471,7 +471,7 @@ class PGLearner(Explorer, ABC):
         last_save = 0
         log = open(self.out + '.log', 'w')
         for epoch in range(1000):
-            print('\n----------\nEPOCH %d\n----------' % epoch)
+            logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             self.policy_gradient()
             smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True)
  
@@ -484,7 +484,7 @@ class PGLearner(Explorer, ABC):
                 best = score
                 last_save = epoch
  
-            print("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
+            logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
                   (epoch, score, valid, desire), file=log)
             for i, smile in enumerate(smiles):
                 score = "\t".join(['%0.3f' % s for s in scores.values[i]])
