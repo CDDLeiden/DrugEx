@@ -95,13 +95,13 @@ class Model(nn.Module, ABC):
         self.devices = devices
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader=None, epochs=1000, out=None):
+    def fit(self, train_loader, valid_loader, epochs=1000, out=None):
         pass
 
 class Generator(Model, ABC):
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader=None, epochs=1000, method=None, out=None):
+    def fit(self, train_loader, valid_loader, epochs=1000, evaluator=None, monitor=None):
         pass
 
     @abstractmethod
