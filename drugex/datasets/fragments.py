@@ -33,11 +33,15 @@ class FragmentPairsSplitter(FragmentPairsSplitterBase):
         df = pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])
         frags = set(df.Frags)
         test_len = int(len(frags) * self.ratio)
+        if self.seed:
+            test_in = df.Frags.drop_duplicates().sort_values()
+        else:
+            test_in = df.Frags.drop_duplicates()
         if test_len > int(self.maxTestSamples):
             logger.warning(f'To speed up the training, the test set size was automatically capped at {self.maxTestSamples} fragments instead of the default 10% of original data, which would have been: {test_len}.')
-            test_in = df.Frags.drop_duplicates().sort_values().sample(int(self.maxTestSamples), random_state=self.seed)
+            test_in = test_in.sample(int(self.maxTestSamples), random_state=self.seed)
         else:
-            test_in = df.Frags.drop_duplicates().sort_values().sample(test_len, random_state=self.seed)
+            test_in = test_in.sample(test_len, random_state=self.seed)
         test = df[df.Frags.isin(test_in)]
         train = df[~df.Frags.isin(test_in)]
         unique = df.drop_duplicates(subset=self.fragsCol)
