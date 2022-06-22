@@ -214,7 +214,6 @@ def DataPreparationGraph(voc_files,
                          input_prefix,
                          batch_size=128,
                          unique_frags=False,
-                         full_fname=None,
                          n_samples=-1,
                         ):
 
@@ -227,7 +226,6 @@ def DataPreparationGraph(voc_files,
         input_prefix (str)          : prefix of input files
         batch_size (int), opt       : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
-        full_fname (str), opt   : full input file name
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -245,12 +243,23 @@ def DataPreparationGraph(voc_files,
             path = data_path + "voc_graph.txt"
         assert os.path.exists(path)
         voc_paths.append(path)
-    if not full_fname:
-        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
-        test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'
-    else:
+        
+    # If exact data path was given as input, that data is both used for training and testing
+    if os.path.exists(data_path + input_prefix):
         train_path = data_path + full_fname
         test_path = train_path
+    # Else if prefix was given, read separate train and test sets
+    else:
+        # This is temporary fix before changing RUNID system to backing up files
+        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
+        if os.path.exists(train_path):
+            test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'     
+        else:
+            train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type]) + '.txt'
+            test_path = data_path + '_'.join([input_prefix, 'test', mol_type]) + '.txt'                 
+        
+    logSettings.log.info(f'Loading training data from {train_path}')
+    logSettings.log.info(f'Loading validation data from {test_path}')
 
     # Load train data
     data_set_train = GraphFragDataSet(train_path)
@@ -272,7 +281,7 @@ def DataPreparationSmiles(voc_files,
                           batch_size=128, 
                           unique_frags=False, 
                           n_samples=-1,
-                          full_fname=None,):
+                          ):
     
     """
     Reads and preprocesses the vocabulary and input data for a graph-based generator
@@ -283,7 +292,6 @@ def DataPreparationSmiles(voc_files,
         input_prefix (str)          : prefix of input files
         batch_size (int), optional  : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
-        full_fname (str), opt   : full input file name
     Returns:
         voc                         : atom vocabulary
         train_loader                : torch DataLoader containing training data
@@ -302,12 +310,23 @@ def DataPreparationSmiles(voc_files,
             path = data_path + "voc_smiles.txt"
         assert os.path.exists(path)
         voc_paths.append(path)
-    if not full_fname:
-        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
-        test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'
-    else:
+    
+    # If exact data path was given as input, that data is both used for training and testing
+    if os.path.exists(data_path + input_prefix):
         train_path = data_path + full_fname
         test_path = train_path
+    # Else if prefix was given, read separate train and test sets
+    else:
+        # This is temporary fix before changing RUNID system to backing up files
+        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
+        if os.path.exists(train_path):
+            test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'     
+        else:
+            train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type]) + '.txt'
+            test_path = data_path + '_'.join([input_prefix, 'test', mol_type]) + '.txt'                 
+        
+    logSettings.log.info(f'Loading training data from {train_path}')
+    logSettings.log.info(f'Loading validation data from {test_path}')
 
     voc = None
     train_loader = None
@@ -566,17 +585,20 @@ def RLTrain(args):
     if not args.targets:
         raise ValueError('At least on active or inactive target should be given for RL.')
 
+    # This is temporary fix before changing RUNID system to backing up files
     ag_path = args.base_dir + '/generators/' + args.agent_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
     pr_path = args.base_dir + '/generators/' + args.prior_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
+    if not os.path.exists(ag_path):
+        ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'
+    if not os.path.exists(pr_path):
+        pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
 
-    # rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, args.env_alg, args.env_task, 
-    #                                                     args.scheme, str(args.epsilon)]) + 'e'
-    rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, 'RL', args.runid])
+    rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, 'RL', logSettings.runID])
                                                          
     if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, full_fname=args.scaffold_file, n_samples=args.n_samples)
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, n_samples=args.n_samples)
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, full_fname=args.scaffold_file)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, n_samples=args.n_samples)
     
     # Initialize agent and prior by loading pretrained model
     agent = SetGeneratorAlgorithm(voc, args.algorithm)        
@@ -623,17 +645,17 @@ def TrainGenerator(args):
         args (NameSpace): namespace containing command line arguments
     """
    
-    if args.no_git is False:
-        args.git_commit = commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    print(json.dumps(vars(args), sort_keys=False, indent=2))
+    # if args.no_git is False:
+    #     args.git_commit = commit_hash(os.path.dirname(os.path.realpath(__file__)))
+    # print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     args.gpu = [int(x) for x in args.gpu.split(',')]
     
     if not os.path.exists(args.base_dir + '/generators'):
         os.makedirs(args.base_dir + '/generators')  
         
-    with open(args.base_dir + '/logs/{}/{}_{}_{}.json'.format(args.runid, args.output, args.algorithm, args.runid), 'w') as f:
-        json.dump(vars(args), f)
+    # with open(args.base_dir + '/logs/{}/{}_{}_{}.json'.format(args.runid, args.output, args.algorithm, args.runid), 'w') as f:
+    #     json.dump(vars(args), f)
     
     log = logSettings.log
     if args.mode == 'PT':
