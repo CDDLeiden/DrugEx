@@ -39,7 +39,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-did', '--data_runid', type=str, default=None,
                         help="Run id of the input data files, defaults to current runid")
     parser.add_argument('-i', '--input', type=str, default=None,
-                        help="Prefix of input files. If --mode is 'PT', default is 'chembl_4:4_brics' else 'ligand_4:4_brics' ")  
+                        help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
     parser.add_argument('-o', '--output', type=str, default=None,
@@ -72,10 +72,8 @@ def GeneratorArgParser(txt=None):
     
     
     # RL parameters
-    parser.add_argument('-sf', '--scaffold_file', type=str, default=None,
-                        help='If given, RL uses scaffolds in this file as input fragments.')
     parser.add_argument('-ns', '--n_samples', type=int, default=640, 
-                        help="During RL, n_samples and 0.2*n_samples random fragment-molecule pairs are used for training and validation at each epoch. If -1, all input data is used at each epoch.") 
+                        help="During RL, n_samples and 0.2*n_samples random input fragments are used for training and validation at each epoch. If -1, all input data is used at once each epoch.") 
                          
     parser.add_argument('-eps', '--epsilon', type=float, default=0.1,
                         help="Exploring rate")
@@ -122,13 +120,6 @@ def GeneratorArgParser(txt=None):
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
-
-    # Default input file prefix in case of pretraining and finetuning
-    if args.input is None:
-        if args.mode == 'PT':
-            args.input = 'chembl_4:4_brics'
-        else:
-            args.input = 'ligand_4:4_brics'
             
     # Setting output file prefix from input file
     if args.output is None:
@@ -140,73 +131,6 @@ def GeneratorArgParser(txt=None):
     args.targets = args.active_targets + args.inactive_targets
 
     return args
-
-# def getVocFromFiles(paths, voc_class, *args, **kwargs):
-#     vocs = [voc_class.fromFile(path, *args, **kwargs) for path in paths]
-#     if len(vocs) > 1:
-#         return sum(vocs[1:], start=vocs[0])
-#     else:
-#         return vocs[0]
-
-# def LoadEncodedMoleculeFragmentPairs(data_path,
-#                                      input_prefix=None,
-#                                      subset='train',
-#                                      mol_type='graph',
-#                                      runid='0000',
-#                                      full_fname=None,
-#                                     ):
-#
-#     """
-#     Load fragment based input data to dataframe.
-#
-#     Arguments:
-#         data_path (str)            : folder containing input files
-#         input_prefix (str), opt    : prefix of input file
-#         subset (str), opt          : subset name : 'train', 'unique' or 'test'
-#         mol_type (str), opt        : molecule representation type : 'graph' or 'smi'
-#         runid (str), opt           : runid of input file
-#         full_fname (str), opt      : full input file name
-#     Returns:
-#         data (pd.DataFrame)        : dataframe containing encoded molecule-fragement pairs
-#     """
-#
-#     if full_fname is not None:
-#         path = data_path + full_fname
-#         logSettings.log.info('Loading input data from {}'.format(path))
-#         data = pd.read_table(path)
-#
-#     else:
-#         path =  data_path + '_'.join([input_prefix, subset, mol_type, runid]) + '.txt'
-#
-#         try:
-#             data = pd.read_table(path)
-#         except:
-#             path_def =  data_path  + '_'.join([input_prefix, subset, mol_type]) + '.txt'
-#             logSettings.log.warning('Reading %s instead of %s' % (path_def, path))
-#             data = pd.read_table(path_def)
-#
-#     return data
-
-# def OverSampleEncodedMoleculeFragmentPairs(data, n_samples=-1, test=False):
-#
-#     """
-#     Replicating input molecule-fragement pairs if the amount of input data smaller than sample size
-#
-#     Arguments:
-#         data (torch.tensor)        : tensor containing encoded pairs
-#         n_samples (int), opt       : train sample size
-#         test (bool), opt           : if true, n_sample = 0.2 * original n_sample
-#
-#     """
-#     if test:
-#         n_samples = int(n_samples*0.2)
-#
-#     if n_samples > 0 and n_samples > data.shape[0]:
-#         logSettings.log.info('Replicating original {} {} pairs to have set of {} pairs.'.format('test' if test else 'train', data.shape[0], n_samples))
-#         m = int(n_samples/data.shape[0])
-#         data = data.repeat(m, 1, 1)
-#
-#     return data
 
 def DataPreparationGraph(voc_files,
                          base_dir,
@@ -246,7 +170,7 @@ def DataPreparationGraph(voc_files,
         
     # If exact data path was given as input, that data is both used for training and testing
     if os.path.exists(data_path + input_prefix):
-        train_path = data_path + full_fname
+        train_path = data_path + input_prefix
         test_path = train_path
     # Else if prefix was given, read separate train and test sets
     else:
@@ -313,7 +237,7 @@ def DataPreparationSmiles(voc_files,
     
     # If exact data path was given as input, that data is both used for training and testing
     if os.path.exists(data_path + input_prefix):
-        train_path = data_path + full_fname
+        train_path = data_path + input_prefix
         test_path = train_path
     # Else if prefix was given, read separate train and test sets
     else:
