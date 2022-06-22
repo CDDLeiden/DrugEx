@@ -5,6 +5,14 @@ Created by: Martin Sicho
 On: 17.05.22, 9:53
 """
 import logging
+import sys
 
-logger = logging.getLogger("DrugEx")
-logger.setLevel(logging.INFO)
+logger = None
+
+if not logger:
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+def setLogger(log):
+    setattr(sys.modules[__name__], 'logger', log)
+    print(logger)
