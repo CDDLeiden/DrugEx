@@ -278,6 +278,26 @@ class SmilesFragDataSet(DataSet):
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
 
+class SmilesScaffoldDataSet(SmilesFragDataSet):
+
+    def __call__(self, result):
+        if result[0]:
+            self.codes.extend(
+                [
+                    (
+                        " ".join(x['mol']),
+                        " ".join(x['frag'])
+                    )
+                    for x in result[0] if x['mol'] and x['frag']
+                ]
+            )
+
+            voc = result[1].getVoc()
+            if not self.voc:
+                self.voc = voc
+            else:
+                self.voc += voc
+
 class GraphDataSet(DataSet):
 
     class SplitConverter(DataLoaderCreator):
