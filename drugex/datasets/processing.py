@@ -289,8 +289,8 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
             self.codes.extend(
                 [
                     (
-                        " ".join(x['mol']),
-                        " ".join(x['frag'])
+                        " ".join(x['frag']),
+                        " ".join(x['mol'])
                     )
                     for x in result[0] if x['mol'] and x['frag']
                 ]
