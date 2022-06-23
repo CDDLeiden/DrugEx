@@ -2,7 +2,7 @@
 import logging.config
 from datetime import datetime
 
-from drugex import utils
+from drugex import DEFAULT_DEVICE_ID
 from drugex.training import models
 import numpy as np
 import pandas as pd
@@ -29,6 +29,7 @@ import json
 import random
 
 from drugex.logs.config import get_runid, config_logger
+from drugex.training.scorers.predictors import Predictor
 
 
 class QSARDataset:
@@ -116,8 +117,8 @@ class QSARDataset:
         data = df.drop(test.index)
 
         #calculate ecfp and physiochemical properties as input for the predictors
-        self.X_ind = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in test.index])
-        self.X = utils.Predictor.calc_fp([Chem.MolFromSmiles(mol) for mol in data.index])
+        self.X_ind = Predictor.calculateDescriptors([Chem.MolFromSmiles(mol) for mol in test.index])
+        self.X = Predictor.calculateDescriptors([Chem.MolFromSmiles(mol) for mol in data.index])
 
         self.y_ind = test.values
         self.y = data.values
@@ -712,8 +713,8 @@ def Environment(args, runid):
     """ 
         Optimize, evaluate and train estimators
     """
-    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
-    torch.cuda.set_device(utils.devices[0])
+    args.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+    torch.cuda.set_device(DEFAULT_DEVICE_ID)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
     os.environ['OMP_NUM_THREADS'] = str(args.ncpu)

@@ -4,6 +4,7 @@ processing
 Created by: Martin Sicho
 On: 27.05.22, 10:16
 """
+import os.path
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,8 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from drugex.corpus.vocabulary import VocGraph
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
-from drugex.datasets.interfaces import DataSet, DataLoaderCreator
+from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
+from drugex.logs import logger
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
 from drugex.molecules.converters.standardizers import DefaultStandardizer
@@ -171,8 +173,11 @@ class SmilesDataSet(DataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.data = []
+        self.voc = VocSmiles()
+        if os.path.exists(outpath):
+            self.fromFile(outpath)
+        else:
+            self.data = []
 
     def getDataFrame(self, columns=('Smiles', 'Token')):
         return pd.DataFrame(self.data, columns=columns)
@@ -254,10 +259,17 @@ class SmilesFragDataSet(DataSet):
 
     def __init__(self, outpath, columns=('Input', 'Output')):
         super().__init__(outpath)
-        self.codes = []
-        self.voc = None
+        self.voc = VocSmiles()
         self.columns = columns
-
+        if os.path.exists(outpath):
+            try:
+                self.fromFile(outpath)
+            except Exception as exp:
+                logger.warning(f"{outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file? Initializing an empty data set instead...")
+                self.codes = []
+        else:
+            self.codes = []
+            
     def __call__(self, result):
         self.codes.extend(
                 [
@@ -298,6 +310,26 @@ class SmilesFragDataSet(DataSet):
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
 
+class SmilesScaffoldDataSet(SmilesFragDataSet):
+
+    def __call__(self, result):
+        if result[0]:
+            self.codes.extend(
+                [
+                    (
+                        " ".join(x['frag']),
+                        " ".join(x['mol'])
+                    )
+                    for x in result[0] if x['mol'] and x['frag']
+                ]
+            )
+
+            voc = result[1].getVoc()
+            if not self.voc:
+                self.voc = voc
+            else:
+                self.voc += voc
+
 class GraphDataSet(DataSet):
 
     class SplitConverter(DataLoaderCreator):
@@ -310,13 +342,16 @@ class GraphDataSet(DataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.codes = []
+        if os.path.exists(outpath):
+            self.fromFile(outpath)
+        else:
+            self.codes = []
+        self.voc = VocGraph()
 
     def __call__(self, result):
         self.codes.extend(result[0])
-        voc = result[1].getVoc()
-        self.addVoc(voc)
+        # voc = result[1].getVoc()
+        # self.addVoc(voc)
 
     def addVoc(self, voc):
         if not self.voc:
@@ -348,17 +383,13 @@ class GraphDataSet(DataSet):
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
-        else:
-            self.voc = VocGraph()
 
 class GraphFragDataSet(GraphDataSet):
 
     def __init__(self, outpath):
         super().__init__(outpath)
-        self.voc = None
-        self.codes = []
 
     def __call__(self, result):
         self.codes.extend(x[1] for x in result[0])
-        voc = result[1].encoder.getVoc()
-        self.addVoc(voc)
+        # voc = result[1].encoder.getVoc()
+        # self.addVoc(voc)

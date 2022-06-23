@@ -3,9 +3,9 @@ import time
 
 import pandas as pd
 
-from drugex.corpus.corpus import SequenceCorpus, GraphCorpus
+from drugex.corpus.corpus import SequenceCorpus, GraphCorpus, ScaffoldCorpus
 from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataSet, \
-    SmilesFragDataSet, GraphDataSet, SmilesDataSet
+    SmilesFragDataSet, GraphDataSet, SmilesDataSet, SmilesScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder
@@ -53,10 +53,14 @@ def DatasetArgParser(txt=None):
                         help="Input file containing raw data. tsv or sdf.gz format")   
     parser.add_argument('-o', '--output', type=str, default='ligand',
                         help="Prefix of output files")
+    
     parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
                         help="Type of molecular representation: 'graph' or 'smiles'")     
-    parser.add_argument('-nof', '--no_frags', action='store_true',
-                        help="If on, molecules are not split to fragments and a corpus is created")
+    parser.add_argument('-sm', '--smiles_corpus', action='store_true',
+                        help="If on, molecules are not split to fragments and a smiles corpus is created (for v2)")
+    parser.add_argument('-nof', '--no_fragmentation', action='store_true',
+                        help="If on, molecules are directly encoded without fragmentation (for v3 scaffold-based molecule generation)")
+    
     
     parser.add_argument('-fm', '--frag_method', type=str, default='brics',
                         help="Fragmentation method: 'brics' or 'recap'") 
@@ -64,7 +68,7 @@ def DatasetArgParser(txt=None):
                         help="Number of largest leaf-fragments used per compound")
     parser.add_argument('-nc', '--n_combs', type=int, default=None,
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
-    parser.add_argument('-np', '--n_proc', type=int, default=None,
+    parser.add_argument('-np', '--n_proc', type=int, default=8,
                         help="Number of parallel processes to use for multi-core tasks. If not specified, this number is set to the number of available CPUs on the system.")
     parser.add_argument('-vf', '--voc_file', type=str, default='voc',
                         help="Name for voc file, used to save voc tokens")
@@ -123,13 +127,29 @@ def Dataset(args):
     smiles = standardizer.applyTo(smiles)
 
     file_base = os.path.join(args.base_dir, 'data')
-    if args.no_frags:
+    
+    if args.smiles_corpus:
+        # create sequence corpus and vocabulary (used only in v2 models)
+        encoder = MoleculeEncoder(
+            SequenceCorpus,
+            {
+                'vocabulary': VocSmiles()
+            },
+            n_proc=args.n_proc
+        )
+        data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
+        encoder.applyTo(smiles, collector=data_collector)
+
+        save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+        
+    if args.no_fragmentation:
+        # encode inputs to single fragment-molecule pair without fragmentation and splitting to subsets (only v3 models)
         if args.mol_type == 'graph':
             data_set = GraphDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
                 GraphCorpus,
                 {
-                    'vocabulary': VocGraph(),
+                    'vocabulary': VocGraph(min_len=3),
                     'largest': max(smiles, key=len)
                 },
                 n_proc=args.n_proc
@@ -137,18 +157,18 @@ def Dataset(args):
             encoder.applyTo(smiles, collector=data_set)
             save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         else:
-            # create sequence corpus and vocabulary (used only in v2 models)
+            data_set = SmilesScaffoldDataSet('%s/data/%s_smi_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
-                SequenceCorpus,
+                ScaffoldCorpus,
                 {
-                    'vocabulary': VocSmiles()
+                    'vocabulary': VocSmiles(min_len=3),
+                    'largest': max(smiles, key=len)
                 },
                 n_proc=args.n_proc
             )
-            data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
-            encoder.applyTo(smiles, collector=data_collector)
+            encoder.applyTo(smiles, collector=data_set)
+            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)            
 
-            save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
     else:
         # create encoded fragment-molecule pair files for train and test set (only v3 models)
         file_name = f'%s_%d:%d_%s' % (args.output, args.n_frags, args.n_combs, args.frag_method)

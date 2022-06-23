@@ -5,15 +5,13 @@ from rdkit.Chem import QED
 import pandas as pd
 from rdkit import DataStructs
 import numpy as np
-from rdkit import rdBase
+
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import MinMaxScaler as Scaler
 from scipy import linalg
 import torch
 from torch.nn import functional as F
-
-# rdBase.DisableLog('rdApp.error')
 
 
 def pad_mask(seq, pad_idx=0):

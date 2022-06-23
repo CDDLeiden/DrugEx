@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from torch import optim
 from drugex import utils
+
 from drugex.logs import logger
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker

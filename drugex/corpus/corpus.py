@@ -42,6 +42,23 @@ class SequenceCorpus(Corpus):
         else:
             return None
 
+class ScaffoldCorpus(SequenceCorpus):
+
+    def __init__(self, molecules, largest, vocabulary=VocSmiles(), update_voc=True, out_writer=None, check_unique=True):
+        super().__init__(molecules, vocabulary, update_voc, out_writer, check_unique)
+        self.largest = largest
+        self.largestToken = self.vocabulary.addWordsFromSeq(self.largest)
+
+    def processMolecule(self, seq):
+        if seq == self.largest:
+            return None
+
+        processed = super().processMolecule(seq)
+        return {
+            "mol": self.largestToken,
+            "frag": processed['token'].split(' ')
+        }
+
 class GraphCorpus(Corpus):
 
     def __init__(self, molecules, largest, vocabulary=VocGraph(), out_writer=None):

@@ -10,11 +10,28 @@ from abc import ABC, abstractmethod
 import torch
 from torch import nn
 
+from drugex import DEFAULT_DEVICE_ID, DEFAULT_DEVICE
+
+
 class ModelEvaluator(ABC):
 
     @abstractmethod
     def __call__(self, mols, frags=None):
         pass
+
+class ScoreModifier:
+    """
+    Interface for score modifiers.
+    """
+    @abstractmethod
+    def __call__(self, x):
+        """
+        Apply the modifier on x.
+        Args:
+            x: float or np.array to modify
+        Returns:
+            float or np.array (depending on the type of x) after application of the distance function.
+        """
 
 class Scorer(ABC):
 
@@ -85,8 +102,8 @@ class Model(nn.Module, ABC):
         super().__init__()
         self.device = None
         self.devices = None
-        self.attachToDevice(0)
-        self.attachToDevices([0])
+        self.attachToDevice(DEFAULT_DEVICE)
+        self.attachToDevices([DEFAULT_DEVICE_ID])
 
     def attachToDevice(self, device):
         self.device = device
@@ -95,13 +112,16 @@ class Model(nn.Module, ABC):
         self.devices = devices
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader=None, epochs=1000, out=None):
+    def fit(self, train_loader, valid_loader, epochs=1000, out=None):
         pass
+
+    def loadStatesFromFile(self, path):
+        self.load_state_dict(torch.load(path, map_location=self.device))
 
 class Generator(Model, ABC):
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader=None, epochs=1000, method=None, out=None):
+    def fit(self, train_loader, valid_loader, epochs=1000, evaluator=None, monitor=None):
         pass
 
     @abstractmethod
@@ -110,7 +130,7 @@ class Generator(Model, ABC):
 
 class Explorer(Model, ABC):
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1):
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', n_samples=-1, repeat=1):
         super().__init__()
         self.batchSize = batch_size
         self.epsilon = epsilon
@@ -121,6 +141,7 @@ class Explorer(Model, ABC):
         self.agent = agent
         self.mutate = mutate
         self.crover = crover
+        self.nSamples = n_samples
 
     @abstractmethod
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
@@ -156,7 +177,7 @@ class TrainingMonitor(ModelProvider, ABC):
 
 class Trainer(ModelProvider, ABC):
 
-    def __init__(self, algorithm, gpus=(0,)):
+    def __init__(self, algorithm, gpus=(DEFAULT_DEVICE_ID,)):
         assert len(gpus) > 0
         self.availableGPUs = gpus
         os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
@@ -174,13 +195,13 @@ class Trainer(ModelProvider, ABC):
     def getDevices(self):
         return self.availableGPUs
 
-    def attachDevices(self, device_id=None):
+    def attachDevices(self, device_id=DEFAULT_DEVICE_ID, device=DEFAULT_DEVICE):
         if device_id and (device_id not in self.availableGPUs):
             raise RuntimeError(f"Unavailable device: {device_id}")
         if not device_id:
             device_id = self.availableGPUs[0]
         torch.cuda.set_device(device_id)
-        self.device = torch.device('cuda')
+        self.device = torch.device(device)
         self.deviceID = device_id
         self.model.attachToDevice(self.device)
         self.model.attachToDevices(self.availableGPUs)
@@ -190,7 +211,5 @@ class Trainer(ModelProvider, ABC):
     def fit(self, train_loader, valid_loader=None, training_monitor=None, epochs=None, args=None, kwargs=None):
         pass
 
-
-
-
-
+    def loadStatesFromFile(self, path):
+        self.model.loadStatesFromFile(path)

@@ -21,8 +21,8 @@ class VocSmiles(VocabularySequence):
     defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH2-]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
     )
 
-    # def __init__(self, words=defaultWords):
-    #     super().__init__(words)
+    def __init__(self, words=defaultWords, max_len=100, min_len=10):
+        super().__init__(words, max_len=max_len, min_len=min_len)
 
     def encode(self, tokens, frags=None):
         """
@@ -41,7 +41,7 @@ class VocSmiles(VocabularySequence):
                 output[i, j] = self.tk2ix[char]
         return output
 
-    def decode(self, tensor, is_tk=True):
+    def decode(self, tensor, is_tk=True, is_smiles=True):
         """Takes an array of indices and returns the corresponding SMILES
         Args:
             tensor(torch.LongTensor): a long tensor containing all of the indices of given tokens.
@@ -56,8 +56,12 @@ class VocSmiles(VocabularySequence):
             if token == 'EOS': break
             if token in self.control: continue
             tokens.append(token)
-        smiles = "".join(tokens)
-        return self.parseDecoded(smiles)
+        seqs = "".join(tokens)
+        if is_smiles:
+            seqs = self.parseDecoded(seqs)
+        else:
+            seqs = seqs.replace('|', '')
+        return seqs
 
     def parseDecoded(self, smiles):
         return smiles.replace('L', 'Cl').replace('R', 'Br')

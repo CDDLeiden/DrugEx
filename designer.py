@@ -11,7 +11,9 @@ from torch.utils.data import DataLoader
 import math
 
 import drugex.logs.utils
-from drugex import utils
+from drugex import utils, DEFAULT_DEVICE_ID, DEFAULT_DEVICE
+from drugex.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
+from drugex.logs.config import config_logger, get_runid
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
 import logging
@@ -81,7 +83,7 @@ def DesignArgParser(txt=None):
 def Design(args):
     
     # Get run id
-    runid = utils.get_runid(log_folder=os.path.join(args.base_dir, 'logs'),
+    runid = get_runid(log_folder=os.path.join(args.base_dir, 'logs'),
                             old=args.keep_runid,
                             id=args.pick_runid)
 
@@ -93,13 +95,13 @@ def Design(args):
         args.env_runid = runid
 
     # Configure logger
-    utils.config_logger('%s/logs/%s/train.log' % (args.base_dir, runid), args.debug)
+    config_logger('%s/logs/%s/train.log' % (args.base_dir, runid), args.debug)
 
     # Get logger, include this in every module
     log = logging.getLogger(__name__)
     
     utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
-    torch.cuda.set_device(utils.devices[0])
+    torch.cuda.set_device(DEFAULT_DEVICE_ID)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     
     if not os.path.exists(args.base_dir + '/new_molecules'):
@@ -108,24 +110,24 @@ def Design(args):
     # Initialize voc
     if args.algorithm == 'graph':
         try: 
-            voc = utils.VocGraph(args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
+            voc = VocGraph(args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
         except:
             log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
-            voc = utils.VocGraph(args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
+            voc = VocGraph(args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
     else:
         try:
             path = args.base_dir + '/data/voc_smiles_%s.txt' % runid
             if args.algorithm == 'gpt':
-                voc = utils.Voc(path, src_len=100, trg_len=100)
+                voc = VocGPT(path, src_len=100, trg_len=100)
             else:
-                voc = utils.VocSmiles(path, max_len=100)
+                voc = VocSmiles(path, max_len=100)
         except:
             log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
             path = args.base_dir + '/data/voc_smiles.txt' 
             if args.algorithm == 'gpt':
-                voc = utils.Voc(path, src_len=100, trg_len=100)
+                voc = VocGPT(path, src_len=100, trg_len=100)
             else:
-                voc = utils.VocSmiles(path, max_len=100)
+                voc = VocSmiles(path, max_len=100)
     
     # Load data (only done for encoder-decoder models)
     if args.algorithm == 'graph':
@@ -140,25 +142,25 @@ def Design(args):
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
-    agent.load_state_dict(torch.load(gen_path, map_location=utils.dev))
+    agent.load_state_dict(torch.load(gen_path, map_location=DEFAULT_DEVICE))
     # Set up environment-predictor
-    objs, keys, mods, ths = CreateDesirabilityFunction(args.base_dir, 
-                                                       args.env_alg, 
-                                                       args.env_task, 
-                                                       args.scheme, 
-                                                       args.env_runid,
-                                                       active_targets=args.active_targets,
-                                                       inactive_targets=args.inactive_targets,
-                                                       activity_threshold=args.activity_threshold, 
-                                                       qed=args.qed, 
-                                                       ra_score=args.ra_score, 
-                                                       ra_score_model=args.ra_score_model,
-                                                       mw=args.molecular_weight,
-                                                       mw_ths=args.mw_thresholds,
-                                                       logP=args.logP,
-                                                       logP_ths=args.logP_thresholds,
-                                                      )
-    env =  utils.Env(objs=objs, mods=None, keys=keys, ths=ths)
+    env = CreateDesirabilityFunction(
+        args.base_dir,
+        args.env_alg,
+        args.env_task,
+        args.scheme,
+        args.env_runid,
+        active_targets=args.active_targets,
+        inactive_targets=args.inactive_targets,
+        activity_threshold=args.activity_threshold,
+        qed=args.qed,
+        ra_score=args.ra_score,
+        ra_score_model=args.ra_score_model,
+        mw=args.molecular_weight,
+        mw_ths=args.mw_thresholds,
+        logP=args.logP,
+        logP_ths=args.logP_thresholds,
+    )
     
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     

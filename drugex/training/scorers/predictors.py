@@ -15,12 +15,11 @@ from drugex.training.scorers.properties import Property
 
 class Predictor(Scorer):
 
-    def __init__(self, model, type='CLS', name="Predictor", modifier=None):
+    def __init__(self, model, type='CLS', name=None, modifier=None):
         super().__init__(modifier)
         self.type = type
         self.model = model
-        self.name = name
-        self.key = f"{name}_{self.type}_{self.model.__class__.__name__}"
+        self.key = f"{self.type}_{self.model.__class__.__name__}" if not name else name
 
     @staticmethod
     def fromFile(path, type='CLS', name="Predictor", modifier=None):

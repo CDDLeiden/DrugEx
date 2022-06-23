@@ -4,9 +4,9 @@ interfaces
 Created by: Martin Sicho
 On: 06.04.22, 16:54
 """
-import logging
 from abc import ABC, abstractmethod
 
+from drugex.logs import logger
 from drugex.molecules.converters.interfaces import ConversionException
 
 
@@ -65,7 +65,7 @@ class MolSupplier(ABC):
         try:
             mol = self.convertMol(mol_data)
         except ConversionException as exp:
-            logging.warning(f"An exception occurred when converting molecule data: {mol_data}\n Cause: {exp.__class__}: {exp}")
+            logger.warning(f"An exception occurred when converting molecule data: {mol_data}\n Cause: {exp.__class__}: {exp}")
             return None
 
         # annotate the instance with metadata
@@ -73,7 +73,7 @@ class MolSupplier(ABC):
             try:
                 self.annotateMol(mol, key, annotations[key])
             except AnnotationException as exp:
-                logging.warning(f"An exception occurred when annotating molecule: {mol_data}\n with data: {key}={annotations[key]}\n {exp.__class__}: {exp}")
+                logger.warning(f"An exception occurred when annotating molecule: {mol_data}\n with data: {key}={annotations[key]}\n {exp.__class__}: {exp}")
                 continue
 
         return mol

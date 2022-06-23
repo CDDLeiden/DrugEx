@@ -112,7 +112,7 @@ class TrainingTestCase(TestCase):
         ft_smiles = self.getSmilesFinetune()
 
         # create and encode fragments
-        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True)
+        splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True, seed=42)
         encoder = FragmentEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
@@ -138,12 +138,14 @@ class TrainingTestCase(TestCase):
         ft_data_set_test.setVoc(vocabulary)
 
         pr_loader_train = pr_data_set_train.asDataLoader(32)
-        pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        pr_loader_test = pr_data_set_test.asDataLoader(32)
+        #pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
         ft_loader_train = pr_data_set_train.asDataLoader(32)
-        ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        ft_loader_test = pr_data_set_test.asDataLoader(32)
+        #ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 

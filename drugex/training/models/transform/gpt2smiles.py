@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.init import kaiming_normal_
 from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
 from .layer import pad_mask, tri_mask
-from drugex.training.models.encoderdecoder import Base
+from drugex.training.models.encoderdecoder import SmilesFragsGeneratorBase
 from drugex.utils import ScheduledOptim
 from torch import optim
 
@@ -50,9 +50,10 @@ class GPT2Layer(nn.Module):
         return hidden_states
 
 
-class GPT2Model(Base):
+class GPT2Model(SmilesFragsGeneratorBase):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=6, pad_idx=0):
         super(GPT2Model, self).__init__()
+        self.mol_type = 'smiles'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx
         self.gpt2 = GPT2Layer(self.voc_trg, d_emb=d_emb, d_model=d_model,

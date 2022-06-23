@@ -10,10 +10,6 @@ from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
 from torch import optim
-import time
-from tqdm import tqdm
-
-from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Block(nn.Module):
@@ -47,6 +43,7 @@ class AtomLayer(nn.Module):
 class GraphModel(Base):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0):
         super(GraphModel, self).__init__()
+        self.mol_type = 'graph'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx
         self.d_model = d_model
@@ -244,78 +241,51 @@ class GraphModel(Base):
                 exists[order, src[:, step, 2], src[:, step, 1]] = src[:, step, 3]
             out = src
         return out
-
-    def fit(self, train_loader, ind_loader=None, epochs=100, evaluator=None, monitor=None):
-        best = float('inf')
+    
+    def trainNet(self, loader):
+        
         net = nn.DataParallel(self, device_ids=self.devices)
-        t00 = time.time()
-        last_save = -1
-        # threshold for number of epochs without change that will trigger early stopping
-        max_interval = 50
-        for epoch in tqdm(range(epochs)):
-            t0 = time.time()
-            total_steps = len(train_loader)
-            for i, src in enumerate(train_loader):
-                src = src.to(self.device)
-                self.optim.zero_grad()
-                loss = net(src, is_train=True)
-                loss_train = [round(-l.mean().item(), 3) for l in loss]
-                loss = sum([-l.mean() for l in loss])
-                loss.backward()
-                self.optim.step()
-                del loss
-
-                monitor.saveProgress(i, epoch, total_steps, epochs)
-                monitor.savePerformanceInfo(i, epoch, sum(loss_train))
-                if sum(loss_train) < best:
-                    monitor.saveModel(self)
-                    best = sum(loss_train)
-                    last_save = epoch
-                    #print('New best - epoch : {} step : {} loss : {}'.format(epoch, i, loss_value))
+        for src in loader:
+            src = src.to(self.device)
+            self.optim.zero_grad()
+            loss = net(src, is_train=True)
+            loss = sum([-l.mean() for l in loss])   
+            loss.backward()
+            self.optim.step()
             
-            #t2 = time.time()
-            #print('Epoch {} - Train time: {}'.format(epoch, int(t2-t0)))
-            frags, smiles, scores = self.evaluate(ind_loader, method=evaluator)
-            loss_valid = [round(-l.mean().item(), 3) for l in net(src, is_train=True) for src in ind_loader] # temporary solution to get validation loss
-            t1 = time.time()
-            #print('Epoch {} - Eval time: {}'.format(epoch, int(t1-t2)))
-            valid = scores.VALID.mean()
-            dt = int(t1-t0)
-            #print("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
-            logger.info("Epoch: {} Train loss : {:.3f} Validation loss : {:.3f} Valid molecules: {:.3f} Time: {}\n" .format(epoch, sum(loss_train), sum(loss_valid), valid, dt))
-            for j, smile in enumerate(smiles):
-                logger.debug('%s\t%s\n' % (frags[j], smile))
-            t0 = t1
-            monitor.savePerformanceInfo(None, epoch, sum(loss_train), loss_valid=sum(loss_valid), valid=valid, smiles=smiles, frags=frags)
-            del loss_valid
-            monitor.endStep(None, epoch)
-            if epoch - last_save > max_interval: break
-        torch.cuda.empty_cache()
-        monitor.close()
-
-    def evaluate(self, loader, repeat=1, method=None):
-        #t0 = time.time()
-        smiles, frags = self.sample(loader, repeat)
-        #print('Eval net time:', time.time()-t0)
-        if method is None:
-            scores = SmilesChecker.checkSmiles(smiles, frags=frags)
-        else:
-            scores = method.getScores(smiles, frags=frags)
-        #print('Eval env time:', time.time()-t0)
-        return frags, smiles, scores
-
+        return loss
+                
+    def validate(self, loader, evaluator=None):
+        
+        net = nn.DataParallel(self, device_ids=self.devices)
+        
+        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+        valid = scores.VALID.mean() 
+        desired = scores.DESIRE.mean()
+                
+        with torch.no_grad():
+            loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=False)]) for src in loader ] )
+                
+        smiles_scores = []
+        for idx, smile in enumerate(smiles):
+            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
+            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+                
+        return valid, desired, loss_valid, smiles_scores
+    
     def sample(self, loader, repeat=1):
         net = nn.DataParallel(self, device_ids=self.devices)
         frags, smiles = [], []
         with torch.no_grad():
-            for _ in range(repeat):
+            for _ in range(repeat):                
                 for i, src in enumerate(loader):
                     trg = net(src.to(self.device))
                     f, s = self.voc_trg.decode(trg)
                     frags += f
                     smiles += s
-
+                        
         return smiles, frags
+
 
     def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
         standardizer = Standardization(n_proc=n_proc)
