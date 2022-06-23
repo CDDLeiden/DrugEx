@@ -239,9 +239,10 @@ class SmilesFragDataSet(DataSet):
                 self.fromFile(outpath)
             except Exception as exp:
                 logger.warning(f"{outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file? Initializing an empty data set instead...")
+                self.codes = []
         else:
             self.codes = []
-
+            
     def __call__(self, result):
         self.codes.extend(
                 [

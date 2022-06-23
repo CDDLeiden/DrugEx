@@ -382,7 +382,7 @@ class SmilesExplorer(Explorer):
         srcs, trgs = [], []
         for it in range(n_iters):
             last_save = -1
-            for epoch in range(epochs):
+            for epoch in tqdm(range(epochs), desc='Epoch'):
                 t0 = time.time()
 
                 if self.nSamples > 0:
@@ -390,7 +390,7 @@ class SmilesExplorer(Explorer):
                     valid_loader = self.sample_input(valid_loader, is_test=True)
 
                 logger.info('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
-                for i, (ix, src) in enumerate(tqdm(train_loader)):
+                for i, (ix, src) in enumerate(tqdm(train_loader, desc='Batch')):
                     with torch.no_grad():
                         # frag = data_loader.dataset.index[ix]
                         trg = net(src.to(self.device))
