@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from drugex.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
 from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
+from drugex.logs import logger
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
 from drugex.molecules.converters.standardizers import DrExStandardizer
@@ -234,7 +235,10 @@ class SmilesFragDataSet(DataSet):
         self.voc = VocSmiles()
         self.columns = columns
         if os.path.exists(outpath):
-            self.fromFile(outpath)
+            try:
+                self.fromFile(outpath)
+            except Exception as exp:
+                logger.warning(f"{outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file? Initializing an empty data set instead...")
         else:
             self.codes = []
 
