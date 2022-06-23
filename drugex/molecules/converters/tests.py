@@ -6,17 +6,21 @@ On: 22.04.22, 13:40
 """
 from unittest import TestCase
 
-from drugex.molecules.converters.standardizers import DrExStandardizer
+from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.mol import DrExMol
-from drugex.molecules.suppliers import StandardizedSupplier, TestSupplier
+from drugex.molecules.suppliers import StandardizedSupplier, ListSupplier
 
 
 class TestStandardizer(TestCase):
 
     def test_default(self):
-        mols = TestSupplier(["c1ccccc1CN(=O)", "CC(=O)[O-]", "CCCCn1cc[n+](c1)C.F[P-](F)(F)(F)(F)F"])
+        """
+        Tests whether the default standardizer is working as expected.
 
-        standardized_mols = StandardizedSupplier(mols, standardizer=DrExStandardizer())
+        Returns: None
+        """
+
+        standardized_mols = StandardizedSupplier(["c1ccccc1CN(=O)", "CC(=O)[O-]", "CCCCn1cc[n+](c1)C.F[P-](F)(F)(F)(F)F"], standardizer=DefaultStandardizer())
 
         expected = (
             "O=NCc1ccccc1", # canonical
@@ -26,12 +30,3 @@ class TestStandardizer(TestCase):
         )
         for mol, expected_mol in zip(standardized_mols, expected):
             self.assertTrue(mol == expected_mol)
-
-    def test_with_converter(self):
-        mols = TestSupplier(["c1ccccc1CN(=O)", "CC(=O)[O-]", "CCCCn1cc[n+](c1)C.F[P-](F)(F)(F)(F)F"])
-        standardized_mols = StandardizedSupplier(
-            mols,
-            standardizer=DrExStandardizer(output='DrExMol')
-        )
-        for mol in standardized_mols:
-            self.assertTrue(isinstance(mol, DrExMol))

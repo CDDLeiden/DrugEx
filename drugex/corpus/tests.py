@@ -11,8 +11,8 @@ from unittest import TestCase
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.corpus.vocabulary import VocGraph
 from drugex.corpus.writers import SequenceFileWriter
-from drugex.molecules.converters.standardizers import DrExStandardizer
-from drugex.molecules.suppliers import TestSupplier, StandardizedSupplier
+from drugex.molecules.converters.standardizers import DefaultStandardizer
+from drugex.molecules.suppliers import StandardizedSupplier
 
 
 class CorpusTest(TestCase):
@@ -23,10 +23,9 @@ class CorpusTest(TestCase):
 
     @staticmethod
     def getMols():
-        molecules  = TestSupplier(["CCO", "N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1", "CNN[C@@H]1N=CN(C)C(=O)[C@H]1[N+](=O)[O-]", "N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1"])
         smiles = StandardizedSupplier(
-            molecules,
-            standardizer=DrExStandardizer()
+            ["CCO", "N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1", "CNN[C@@H]1N=CN(C)C(=O)[C@H]1[N+](=O)[O-]", "N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1"],
+            standardizer=DefaultStandardizer()
         )
 
         return smiles

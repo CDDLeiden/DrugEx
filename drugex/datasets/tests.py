@@ -15,18 +15,17 @@ from drugex.datasets.fragments import FragmentPairsEncodedSupplier, SequenceFrag
 from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, SmilesFragDataSet, \
     GraphFragDataSet, SmilesDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.molecules.converters.standardizers import DrExStandardizer
+from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
-from drugex.molecules.suppliers import TestSupplier, StandardizedSupplier
+from drugex.molecules.suppliers import StandardizedSupplier
 
 
 class FragmentPairs(TestCase):
 
     def getPairs(self):
-        mols = TestSupplier(['CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'BrCCO'])
         smiles = StandardizedSupplier(
-            mols,
-            standardizer=DrExStandardizer()
+            ['CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'BrCCO'],
+            standardizer=DefaultStandardizer()
         )
 
         pairs = FragmentPairsSupplier(smiles, fragmenter=Fragmenter(4, 4, 'brics')).toList()
@@ -93,10 +92,10 @@ class ProcessingTests(TestCase):
         return mols_orig, mols_expected
 
     def getTestMols(self):
-        mols = TestSupplier(['CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1','CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1','CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1','CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1',])
+        mols = ['CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', 'CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC', 'N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1', ]
         smiles = StandardizedSupplier(
             mols,
-            standardizer=DrExStandardizer()
+            standardizer=DefaultStandardizer()
         ).toList()
         return smiles
 

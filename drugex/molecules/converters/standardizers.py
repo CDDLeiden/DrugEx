@@ -4,41 +4,42 @@ standardizers
 Created by: Martin Sicho
 On: 21.04.22, 12:19
 """
+
 from rdkit import Chem
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 from drugex.logs import logger
-from drugex.molecules.converters.default import DrExToSMILES, Identity, SmilesToDrEx
 from drugex.molecules.converters.interfaces import MolConverter, ConversionException
-from drugex.molecules.mol import DrExMol
 
+class StandardizationException(ConversionException):
+    """
+    Custom exception class to recognize and catch standardization errors.
+    """
 
-class DrExStandardizer(MolConverter):
+    pass
 
-    outputConvertors = {
-        'SMILES' : DrExToSMILES(),
-        'DrExMol' : Identity()
-    }
+class DefaultStandardizer(MolConverter):
+    """
+    Original standardization implementation from the original DrugEx v3.
 
-    inputConvertors = {
-        'SMILES' : SmilesToDrEx(),
-        'DrExMol' : Identity()
-    }
+    """
 
-    def __init__(self, output='SMILES', input='DrExMol'):
-        if callable(output):
-            self.outputConvertor = output
-        else:
-            self.outputConvertor = self.outputConvertors[output]
+    def __call__(self, smiles):
+        """
+        Takes smiles of the input molecule and converts it to a standardized represenation.
 
-        if callable(input):
-            self.inputConvertor = input
-        else:
-            self.inputConvertor = self.inputConvertors[input]
+        Raises:
+            StandardizationException: thrown when the standardizer encountered a failure
 
-    def __call__(self, mol):
-        mol = self.inputConvertor(mol)
-        rd_mol = mol.asRDKit()
+        Args:
+            smiles: input molecule as SMILES
+
+        Returns:
+            converted SMILES as `str`
+
+        """
+
+        rd_mol = Chem.MolFromSmiles(smiles)
         try:
             charger = rdMolStandardize.Uncharger()
             chooser = rdMolStandardize.LargestFragmentChooser()
@@ -59,20 +60,15 @@ class DrExStandardizer(MolConverter):
             # remove SMILES that still contain salts
             if len(rd_mol.GetSubstructMatches(salts)) > 0:
                 raise StandardizationException(f"Salt removal failed: {smileR}")
-            new_mol = DrExMol(Chem.MolFromSmiles(smileR))
-            for key in mol.getMetadata():
-                new_mol.annotate(key, mol.getAnnotation(key))
-            return self.outputConvertor(new_mol)
+            return smileR
         except Exception as exp:
             logger.exception(f'Parsing Error: {Chem.MolToSmiles(rd_mol)}')
             raise StandardizationException(exp)
 
-
-class StandardizationException(ConversionException):
-    pass
-
-
 class CleanSMILES(MolConverter):
+    """
+    Converter used to clean SMILES strings at some places. At the moment the reasons for its existence are unclear...
+    """
 
     def __init__(self, is_deep=True):
         self.deep  = is_deep
