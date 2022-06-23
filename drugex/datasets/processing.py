@@ -10,30 +10,57 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from drugex.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.corpus.vocabulary import VocGraph
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
-from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
+from drugex.datasets.interfaces import DataSet, DataLoaderCreator
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
-from drugex.molecules.converters.standardizers import DrExStandardizer
+from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.suppliers import StandardizedSupplier
 
 
 class Standardization(MoleculeProcessor):
+    """
+    Processor to standardize molecules in parallel.
+    """
 
-    def __init__(self, standardizer=DrExStandardizer(input='SMILES', output='SMILES'), n_proc=None, chunk_size=None):
+    def __init__(self, standardizer=DefaultStandardizer(), n_proc=None, chunk_size=None):
+        """
+        Initialize the standardization processor.
+
+        Args:
+            standardizer: The standardizer to use for conversion of input molecules.
+            n_proc: Number of processes to initialize. If `None`, it is set to the number of available CPUs by default.
+            chunk_size: Maximum size of a chunk of data submitted for processing. If `None`, the size will be determined from the input data as: floor(len(data) / n_proc).
+        """
+
         super().__init__(n_proc, chunk_size)
         self.standardizer = standardizer
 
-    def applyTo(self, data, collector=None):
+    def applyTo(self, mols, collector=None):
+        """
+        Transform molecules with the defined standardizer in parallel.
+
+        This method just automates initialization of a `ParallelSupplierEvaluator` on the given molecules. Molecules can be given
+        as a generator or a `MolSupplier`, but note that they will be evaluated before processing, which may add overhead. In such
+        a case consider evaluating the list with a `ParallelSupplierEvaluator` separately prior to processing.
+
+        Args:
+            mols: an iterable containing molecules to transform
+            collector: a callable to collect the results, passed as the 'result_collector' to `ParallelSupplierEvaluator`
+
+        Returns:
+            Standardized list of molecules. If 'collector' is specified, the result is None.
+        """
+
         standardizer = ParallelSupplierEvaluator(
             StandardizedSupplier,
             kwargs={
                 "standardizer": self.standardizer
             },
-            **self.getApplierArgs(data, collector)
+            **self.getApplierArgs(mols, collector)
         )
-        return standardizer.apply(np.asarray(list(data)))
+        return standardizer.apply(np.asarray(list(mols)))
 
 class MoleculeEncoder(MoleculeProcessor):
 
