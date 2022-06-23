@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from drugex.corpus.vocabulary import VocGraph
+from drugex.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
 from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
 from drugex.logs import logger
