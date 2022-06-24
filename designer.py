@@ -10,14 +10,10 @@ from torch.utils.data import DataLoader
 
 import math
 
-import drugex.logs.utils
-from drugex import utils, DEFAULT_DEVICE_ID, DEFAULT_DEVICE
 from drugex.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
-from drugex.logs.config import config_logger, get_runid
+from drugex.datasets.processing import GraphFragDataSet, SmilesFragDataSet, SmilesDataSet
+from drugex.logs.utils import commit_hash, enable_file_logger
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
-
-import logging
-import logging.config
 
 rdBase.DisableLog('rdApp.error')
 torch.set_num_threads(1)
@@ -35,8 +31,10 @@ def DesignArgParser(txt=None):
 
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
-    parser.add_argument('-i', '--input', type=str, default='ligand_4:4_brics_test',
+    parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
                         help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
+    parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
+                        help="Names of voc files to use as vocabulary.")
     parser.add_argument('-n', '--num', type=int, default=1,
                         help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
@@ -75,74 +73,96 @@ def DesignArgParser(txt=None):
     
     args.targets = args.active_targets + args.inactive_targets
 
-    if args.no_git is False:
-        args.git_commit = drugex.logs.utils.commit_hash(os.path.dirname(os.path.realpath(__file__)))
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     return args
 
+def DesignerFragsDataPreparation(
+    voc_files : list, 
+    data_path : str, 
+    input_file : str,
+    gen_alg : str, 
+    batch_size=128, 
+    n_samples=-1):
+
+    """
+    Reads and preprocesses the vocabulary and input data for a graph-based generator
+
+    Arguments:
+        voc_files (list)            : list of vocabulary file prefixes
+        data_path (str)             : name of the folder input files
+        input_file (str)            : name of file containing input fragments
+        gen_alg (str)               : generator algoritm
+        batch_size (int), opt       : batch size
+        n_samples (int), opt        : number of molecules to generate
+    Returns:
+        voc                         : atom vocabulary
+        loader                      : torch DataLoader containing input fragements
+    """
+
+    mol_type = 'graph' if gen_alg == 'graph' else 'smiles'
+
+    voc_paths = vocPaths(data_path, voc_files, mol_type)
+    logSettings.log.info(f'Loading vocabulary from {voc_paths}')
+
+    input_path = data_path + input_file
+    assert os.path.exists(input_path)
+    logSettings.log.info(f'Loading input fragments from {input_path}')
+
+    if gen_alg == 'graph' :
+        data_set = GraphFragDataSet(input_path)
+        data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
+    elif gen_alg == 'gpt' :
+        data_set = SmilesFragDataSet(input_path)
+        data_set.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)       
+    else:
+        data_set = SmilesFragDataSet(input_path)
+        data_set.readVocs(voc_paths, VocSmiles, max_len=100)
+    voc = data_set.getVoc()
+
+    loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples)
+    return voc, loader
+
+def vocPaths(data_path : str, voc_files : list, mol_type : str):
+
+    voc_paths = []
+    for v in voc_files:
+        path = data_path + f"{v}_{mol_type}_{logSettings.runID}.txt"
+        if not os.path.exists(path):
+            logSettings.log.warning(f'Reading voc_{mol_type}.txt instead of {path}')
+            path = data_path + "voc_{mol_type}.txt"
+        assert os.path.exists(path)
+        voc_paths.append(path)
+
+    return voc_paths
+
 def Design(args):
-    
-    # Get run id
-    runid = get_runid(log_folder=os.path.join(args.base_dir, 'logs'),
-                            old=args.keep_runid,
-                            id=args.pick_runid)
 
-    # Default input file prefix in case of pretraining and finetuning
-    if args.data_runid is None:
-        args.data_runid = runid  
-        
-    if args.env_runid is None:
-        args.env_runid = runid
+    log = logSettings.log
 
-    # Configure logger
-    config_logger('%s/logs/%s/train.log' % (args.base_dir, runid), args.debug)
+    args.gpu = [int(x) for x in args.gpu.split(',')]
 
-    # Get logger, include this in every module
-    log = logging.getLogger(__name__)
-    
-    utils.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
-    torch.cuda.set_device(DEFAULT_DEVICE_ID)
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    data_path = args.base_dir + '/data/'
     
     if not os.path.exists(args.base_dir + '/new_molecules'):
         os.makedirs(args.base_dir + '/new_molecules')
     
-    # Initialize voc
-    if args.algorithm == 'graph':
-        try: 
-            voc = VocGraph(args.base_dir + '/data/voc_graph_%s.txt' % runid, max_len=80, n_frags=4)
-        except:
-            log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
-            voc = VocGraph(args.base_dir + '/data/voc_graph.txt', max_len=80, n_frags=4)
+    if args.algorithm != 'rnn':
+        voc, loader = DesignerFragsDataPreparation(args.voc_files, 
+            data_path,
+            args.input_file, 
+            args.algorithm, 
+            args.batch_size, 
+            args.num
+            )
     else:
-        try:
-            path = args.base_dir + '/data/voc_smiles_%s.txt' % runid
-            if args.algorithm == 'gpt':
-                voc = VocGPT(path, src_len=100, trg_len=100)
-            else:
-                voc = VocSmiles(path, max_len=100)
-        except:
-            log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
-            path = args.base_dir + '/data/voc_smiles.txt' 
-            if args.algorithm == 'gpt':
-                voc = VocGPT(path, src_len=100, trg_len=100)
-            else:
-                voc = VocSmiles(path, max_len=100)
-    
-    # Load data (only done for encoder-decoder models)
-    if args.algorithm == 'graph':
-        data = pd.read_table(args.base_dir + '/data/' + args.input + '_graph.txt')
-        data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
-        loader = DataLoader(data, batch_size=args.batch_size)  
-    elif args.algorithm != 'rnn':
-        data = pd.read_table(args.base_dir + '/data/' + args.input + '_smi.txt')
-        data = voc.encode([seq.split(' ')[:-1] for seq in data.values])
-        loader = DataLoader(data, batch_size=args.batch_size)
+        voc_paths = vocPaths(data_path, args.voc_files, 'smiles')
+        voc = VocSmiles(voc_paths, max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
+    assert os.path.exists(gen_path)
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
-    agent.load_state_dict(torch.load(gen_path, map_location=DEFAULT_DEVICE))
+    agent.loadStatesFromFile(gen_path)
     # Set up environment-predictor
     env = CreateDesirabilityFunction(
         args.base_dir,
@@ -169,18 +189,36 @@ def Design(args):
         df = pd.DataFrame()
         repeat = 1
         batch_size = min(args.num, args.batch_size)
-        if args.num > 1048:
+        if args.num > args.batch_size:
             repeat = math.ceil(args.num / batch_size)
         df['Smiles'], scores = agent.evaluate(batch_size, repeat = repeat, method=env)
         scores = pd.concat([df, scores],axis=1)
     else:
-        # we are currently not saving the generated smiles (for encoder decoder models) only their scores
-        frags, smiles, scores = agent.evaluate(loader, repeat=args.num, method=env)
+        frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
         scores['Frags'], scores['SMILES'] = frags, smiles
     scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
 
 if __name__ == "__main__":
-    
+
     args = DesignArgParser()
+
+    logSettings = enable_file_logger(
+        os.path.join(args.base_dir,'logs'),
+        'design.log',
+        args.keep_runid,
+        args.pick_runid,
+        args.debug,
+        __name__,
+        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
+        vars(args)
+    )
+
+    # Default input file prefix in case of pretraining and finetuning
+    if args.data_runid is None:
+        args.data_runid = logSettings.runID
+        
+    if args.env_runid is None:
+        args.env_runid = logSettings.runID
+
     Design(args)

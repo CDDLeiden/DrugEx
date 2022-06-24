@@ -149,7 +149,7 @@ def Dataset(args):
             encoder = MoleculeEncoder(
                 GraphCorpus,
                 {
-                    'vocabulary': VocGraph(min_len=3),
+                    'vocabulary': VocGraph(),
                     'largest': max(smiles, key=len)
                 },
                 n_proc=args.n_proc
