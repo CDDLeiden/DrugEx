@@ -3,6 +3,8 @@
 # stop if anything goes wrong
 set -e
 
+rm -rf _build
+
 export PYTHONPATH=`pwd`/../
 
 # configure

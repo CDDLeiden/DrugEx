@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to DrugEx Documentation
-===============================
+Welcome
+=======
 
-DrugEx is a collection of deep learning models for directed generation of molecules. Here you will find the installation guide, links to tutorials and API documentation.
+DrugEx is a collection of deep learning models for directed generation of molecules. Here you will find the installation guide (:ref:`installation`), usage examples (:ref:`usage`) and API documentation (:ref:`api-docs`).
 
 .. toctree::
    :maxdepth: 2
@@ -14,6 +14,7 @@ DrugEx is a collection of deep learning models for directed generation of molecu
 
    self
    install
+   use
    api/modules
 
 

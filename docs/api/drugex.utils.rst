@@ -7,6 +7,14 @@ Submodules
 drugex.utils.fingerprints module
 --------------------------------
 
+.. automodule:: drugex.utils.gcmol
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+drugex.utils.fingerprints module
+--------------------------------
+
 .. automodule:: drugex.utils.fingerprints
    :members:
    :undoc-members:
@@ -28,26 +36,10 @@ drugex.utils.nsgaii module
    :undoc-members:
    :show-inheritance:
 
-drugex.utils.objective module
------------------------------
-
-.. automodule:: drugex.utils.objective
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 drugex.utils.optim module
 -------------------------
 
 .. automodule:: drugex.utils.optim
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-drugex.utils.vocab module
--------------------------
-
-.. automodule:: drugex.utils.vocab
    :members:
    :undoc-members:
    :show-inheritance:
