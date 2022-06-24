@@ -15,8 +15,13 @@ from drugex.logs.config import LogFileConfig
 
 
 def commit_hash(GIT_PATH):
-    repo = git.Repo.init(GIT_PATH)
-    return '#' + repo.head.object.hexsha[:8]
+    try:
+        repo = git.Repo.init(GIT_PATH)
+        repo_hash = '#' + repo.head.object.hexsha[:8]
+    except ValueError:
+        from drugex import __version__
+        repo_hash = __version__
+    return repo_hash
 
 def enable_file_logger(log_folder, filename, keep_old_runid=False, picked_runid=None, debug=False, log_name=None, git_hash=None, init_data=None):
 
