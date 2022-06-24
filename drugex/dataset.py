@@ -126,7 +126,7 @@ def Dataset(args):
     standardizer = Standardization(n_proc=args.n_proc)
     smiles = standardizer.applyTo(smiles)
 
-    file_base = os.path.join(args.base_dir, 'data')
+    file_base = os.path.join(args.base_dir, '../data')
     
     if args.smiles_corpus:
         # create sequence corpus and vocabulary (used only in v2 models)
