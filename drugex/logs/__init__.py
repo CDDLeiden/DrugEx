@@ -15,4 +15,3 @@ if not logger:
 
 def setLogger(log):
     setattr(sys.modules[__name__], 'logger', log)
-    print(logger)
