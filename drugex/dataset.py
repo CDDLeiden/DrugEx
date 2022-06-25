@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 
-from drugex.corpus.corpus import SequenceCorpus, GraphCorpus, ScaffoldCorpus
+from drugex.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
 from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataSet, \
     SmilesFragDataSet, GraphScaffoldDataSet, SmilesDataSet, SmilesScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
@@ -147,7 +147,7 @@ def Dataset(args):
         if args.mol_type == 'graph':
             data_set = GraphScaffoldDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
-                GraphCorpus,
+                ScaffoldGraphCorpus,
                 {
                     'vocabulary': VocGraph(),
                     'largest': max(smiles, key=len)
@@ -159,7 +159,7 @@ def Dataset(args):
         else:
             data_set = SmilesScaffoldDataSet('%s/data/%s_smi_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
-                ScaffoldCorpus,
+                ScaffoldSequenceCorpus,
                 {
                     'vocabulary': VocSmiles(min_len=3),
                     'largest': max(smiles, key=len)

@@ -37,13 +37,14 @@ class Vocabulary(ABC):
 
 class VocabularySequence(Vocabulary, ABC):
 
-    def __init__(self, words=None, max_len=100, min_len=10):
+    def __init__(self, words, max_len=100, min_len=10):
         """
         Args:
             words: iterable of words in this vocabulary
             max_len: the maximum number of tokens contained in one SMILES
         """
 
+        super().__init__(words)
         self.control = ('_', 'GO', 'EOS')
         self.special = list(self.control) + ['.']
         self.wordSet = set()
@@ -80,41 +81,20 @@ class VocabularySequence(Vocabulary, ABC):
         self.tk2ix = dict(zip(self.words, range(len(self.words))))
         self.ix2tk = {v: k for k, v in self.tk2ix.items()}
 
-class CorpusWriter(ABC):
-
-    @abstractmethod
-    def write(self, data):
-        pass
-
-    @abstractmethod
-    def close(self):
-        pass
-
 class Corpus(MolSupplier, ABC):
 
-    def __init__(self, molecules, out_writer=None):
+    def __init__(self, molecules):
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
-        self.outWriter = out_writer
 
     def next(self):
+        molecule = next(self.molecules)
         try:
-            molecule = next(self.molecules)
-            try:
-                ret = self.processMolecule(molecule)
-            except Exception as exp:
-                logger.warning(f'Exception occurred when processing data for molecule: {molecule}')
-                logger.exception(exp)
-                return next(self)
-            if ret:
-                if self.outWriter:
-                    self.outWriter.write(ret)
-                return ret
-            else:
-                return next(self)
-        except StopIteration as exp:
-            if self.outWriter:
-                self.outWriter.close()
-            raise exp
+            ret = self.processMolecule(molecule)
+        except Exception as exp:
+            logger.warning(f'Exception occurred when generating corpus data for molecule: {molecule}. Cause:')
+            logger.exception(exp)
+            return next(self)
+        return ret
 
     def convertMol(self, representation):
         return representation

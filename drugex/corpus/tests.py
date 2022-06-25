@@ -10,7 +10,6 @@ from unittest import TestCase
 
 from drugex.corpus.corpus import SequenceCorpus
 from drugex.corpus.vocabulary import VocGraph
-from drugex.corpus.writers import SequenceFileWriter
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.suppliers import StandardizedSupplier
 
@@ -42,23 +41,17 @@ class CorpusTest(TestCase):
 
     def test_sequence_corpus_file(self):
         smiles = self.getMols()
-        out_file = self.getTempFilePath("corpus.txt")
         corpus = SequenceCorpus(
-            smiles,
-            out_writer=SequenceFileWriter(out_file)
+            smiles
         )
 
-        lines = []
+        count = 0
         for line in corpus:
-            lines.append(line)
-
-        with open(out_file, "r", encoding="utf-8") as out:
-            next(out)
-            for idx,line in enumerate(out):
-                seq = lines[idx]['seq']
-                token = lines[idx]['token']
-                self.assertTrue(seq in line)
-                self.assertTrue(token in line)
+            seq = line['seq']
+            token = line['token']
+            self.assertTrue(token.replace(' ', '').startswith(seq))
+            count += 1
+        self.assertTrue(count > 0)
 
     def test_graph_voc(self):
         voc = VocGraph()

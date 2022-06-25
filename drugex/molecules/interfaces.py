@@ -66,7 +66,7 @@ class MolSupplier(ABC):
             mol = self.convertMol(mol_data)
         except ConversionException as exp:
             logger.warning(f"An exception occurred when converting molecule data: {mol_data}\n Cause: {exp.__class__}: {exp}")
-            return None
+            return next(self)
 
         # annotate the instance with metadata
         for key in annotations:

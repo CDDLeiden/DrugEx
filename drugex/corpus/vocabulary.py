@@ -146,12 +146,8 @@ class VocGraph(Vocabulary):
 
     defaultWords=('2O','3O+','1O-','4C','3C+','3C-','3N','4N+','2N-','1Cl','2S','6S','4S','3S+','5S+','1S-','1F','1I','5I','2I+','1Br','5P','3P','4P+','2Se','6Se','4Se','3Se+','4Si','3B','4B-','5As','3As','4As+','2Te','4Te','3Te+',)
 
-    def __init__(
-            self,
-            words=defaultWords,
-            max_len=80,
-            n_frags=4
-    ):
+    def __init__(self, words=defaultWords, max_len=80, n_frags=4):
+        super().__init__(words)
         self.control = ('EOS', 'GO')
         words = [x for x in words if x not in self.control]
         words_unique = []

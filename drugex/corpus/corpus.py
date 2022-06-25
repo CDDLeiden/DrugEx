@@ -12,8 +12,8 @@ from drugex.corpus.vocabulary import VocSmiles, VocGraph
 
 class SequenceCorpus(Corpus):
 
-    def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, out_writer=None, check_unique=True):
-        super().__init__(molecules, out_writer)
+    def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, check_unique=True):
+        super().__init__(molecules)
         self.vocabulary = vocabulary
         self.updateVoc = update_voc
         self.checkUnique = check_unique
@@ -42,10 +42,10 @@ class SequenceCorpus(Corpus):
         else:
             return None
 
-class ScaffoldCorpus(SequenceCorpus):
+class ScaffoldSequenceCorpus(SequenceCorpus):
 
-    def __init__(self, molecules, largest, vocabulary=VocSmiles(), update_voc=True, out_writer=None, check_unique=True):
-        super().__init__(molecules, vocabulary, update_voc, out_writer, check_unique)
+    def __init__(self, molecules, largest, vocabulary=VocSmiles(), update_voc=True, check_unique=True):
+        super().__init__(molecules, vocabulary, update_voc, check_unique)
         self.largest = largest
         self.largestToken = self.vocabulary.addWordsFromSeq(self.largest)
 
@@ -59,10 +59,10 @@ class ScaffoldCorpus(SequenceCorpus):
             "frag": processed['token'].split(' ')
         }
 
-class GraphCorpus(Corpus):
+class ScaffoldGraphCorpus(Corpus):
 
-    def __init__(self, molecules, largest, vocabulary=VocGraph(), out_writer=None):
-        super().__init__(molecules, out_writer)
+    def __init__(self, molecules, largest, vocabulary=VocGraph()):
+        super().__init__(molecules)
         self.largest = largest
         mol = Chem.MolFromSmiles(self.largest)
         total = mol.GetNumBonds()
