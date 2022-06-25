@@ -12,7 +12,7 @@ import math
 
 import drugex.logs.utils
 from drugex import utils, DEFAULT_DEVICE_ID, DEFAULT_DEVICE
-from drugex.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
+from drugex.data.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
 from drugex.logs.config import config_logger, get_runid
 from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 

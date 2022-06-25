@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from rdkit import Chem
 
-from drugex.corpus.interfaces import VocabularySequence, Vocabulary
+from drugex.data.corpus.interfaces import VocabularySequence, Vocabulary
 from drugex.molecules.converters.standardizers import CleanSMILES
 
 

@@ -4,9 +4,9 @@ import sys
 import json
 
 from drugex import VERSION
-from drugex.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
-from drugex.datasets.processing import GraphFragDataSet, SmilesFragDataSet, SmilesDataSet
-from drugex.datasets.splitters import RandomTrainTestSplitter
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
+from drugex.data.processing import RandomTrainTestSplitter
+from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.logs.utils import commit_hash, enable_file_logger
 import argparse
 

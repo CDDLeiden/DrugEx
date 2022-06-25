@@ -32,6 +32,9 @@ class DataSplitter(ABC):
         pass
 
 class DataLoaderCreator(ABC):
+    """
+    Responsible for the conversion of raw input data into data loaders used by the DrugEx models for training.
+    """
 
     def __init__(self, batch_size, vocabulary):
         self.voc = vocabulary

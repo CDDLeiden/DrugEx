@@ -3,15 +3,16 @@ import time
 
 import pandas as pd
 
-from drugex.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
-from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataSet, \
-    SmilesFragDataSet, GraphScaffoldDataSet, SmilesDataSet, SmilesScaffoldDataSet
+from drugex.data.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
+from drugex.data.processing import Standardization, MoleculeEncoder
+from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffoldDataSet, GraphFragDataSet, \
+    GraphScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
-from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
-    GraphFragmentEncoder
+from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
+    GraphFragmentEncoder, FragmentEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.files.suppliers import SDFSupplier
-from drugex.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 
 import argparse
 import json

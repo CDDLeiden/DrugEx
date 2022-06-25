@@ -6,8 +6,8 @@ On: 26.04.22, 16:47
 """
 from rdkit import Chem
 
-from drugex.corpus.interfaces import Corpus
-from drugex.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.data.corpus.interfaces import Corpus
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 
 
 class SequenceCorpus(Corpus):

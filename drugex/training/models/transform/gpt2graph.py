@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 
-from drugex.datasets.fragments import GraphFragmentEncoder
-from drugex.datasets.processing import Standardization, FragmentEncoder, GraphFragDataSet
+from drugex.data.fragments import GraphFragmentEncoder, FragmentEncoder
+from drugex.data.processing import Standardization
+from drugex.data.datasets import GraphFragDataSet
 from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding

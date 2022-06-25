@@ -8,8 +8,8 @@ import os.path
 import tempfile
 from unittest import TestCase
 
-from drugex.corpus.corpus import SequenceCorpus
-from drugex.corpus.vocabulary import VocGraph
+from drugex.data.corpus.corpus import SequenceCorpus
+from drugex.data.corpus.vocabulary import VocGraph
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.suppliers import StandardizedSupplier
 

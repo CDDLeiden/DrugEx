@@ -1,163 +1,17 @@
 """
-processing
+defaultdatasets
 
 Created by: Martin Sicho
-On: 27.05.22, 10:16
+On: 25.06.22, 19:42
 """
-
 import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from drugex.corpus.vocabulary import VocGraph, VocSmiles
-from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
-from drugex.datasets.interfaces import DataSet, DataLoaderCreator
-from drugex.parallel.evaluator import ParallelSupplierEvaluator
-from drugex.parallel.interfaces import MoleculeProcessor
-from drugex.molecules.converters.standardizers import DefaultStandardizer
-from drugex.molecules.suppliers import StandardizedSupplier
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.data.interfaces import DataSet, DataLoaderCreator
 
-
-class Standardization(MoleculeProcessor):
-    """
-    Processor to standardize molecules in parallel.
-    """
-
-    def __init__(self, standardizer=DefaultStandardizer(), n_proc=None, chunk_size=None):
-        """
-        Initialize the standardization processor.
-
-        Args:
-            standardizer: The standardizer to use for conversion of input molecules.
-            n_proc: Number of processes to initialize. If `None`, it is set to the number of available CPUs by default.
-            chunk_size: Maximum size of a chunk of data submitted for processing. If `None`, the size will be determined from the input data as: floor(len(data) / n_proc).
-        """
-
-        super().__init__(n_proc, chunk_size)
-        self.standardizer = standardizer
-
-    def applyTo(self, mols, collector=None):
-        """
-        Transform molecules with the defined standardizer in parallel.
-
-        This method just automates initialization of a `ParallelSupplierEvaluator` on the given molecules. Molecules can be given
-        as a generator or a `MolSupplier`, but note that they will be evaluated before processing, which may add overhead. In such
-        a case consider evaluating the list with a `ParallelSupplierEvaluator` separately prior to processing.
-
-        Args:
-            mols: an iterable containing molecules to transform
-            collector: a callable to collect the results, passed as the 'result_collector' to `ParallelSupplierEvaluator`
-
-        Returns:
-            Standardized list of molecules. If 'collector' is specified, the result is None.
-        """
-
-        standardizer = ParallelSupplierEvaluator(
-            StandardizedSupplier,
-            kwargs={
-                "standardizer": self.standardizer
-            },
-            **self.getApplierArgs(mols, collector)
-        )
-        return standardizer.apply(np.asarray(list(mols)))
-
-class MoleculeEncoder(MoleculeProcessor):
-
-    def __init__(self, corpus_class, corpus_options, n_proc=None, chunk_size=None):
-        super().__init__(n_proc, chunk_size)
-        self.corpus = corpus_class
-        self.options = corpus_options
-
-    def applyTo(self, mols, collector=None):
-        evaluator = ParallelSupplierEvaluator(
-            self.corpus,
-            kwargs=self.options,
-            return_suppliers=True,
-            **self.getApplierArgs(mols, collector)
-        )
-        results = evaluator.apply(mols)
-        if results:
-            data = []
-            voc = None
-            for result in results:
-                data.extend(result[0])
-                if not voc:
-                    voc = result[1].getVoc()
-                else:
-                    voc += result[1].getVoc()
-            return data, voc
-
-class FragmentEncoder(MoleculeProcessor):
-
-    def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
-        super().__init__(n_proc, chunk_size)
-        self.fragmenter = fragmenter
-        self.encoder = encoder
-        self.pairsSplitter = pairs_splitter if pairs_splitter else FragmentPairsSplitterBase()
-
-    def getFragmentPairs(self, mols, collector):
-        evaluator = ParallelSupplierEvaluator(
-            FragmentPairsSupplier,
-            kwargs={
-                "fragmenter" : self.fragmenter
-            },
-            return_unique=False,
-            always_return=True,
-            **self.getApplierArgs(mols, collector)
-        )
-        results = []
-        for result in evaluator.apply(mols):
-            results.extend(result)
-        return results
-
-    def splitFragmentPairs(self, pairs):
-        return self.pairsSplitter(pairs)
-
-    def encodeFragments(self, pairs, collector):
-        evaluator = ParallelSupplierEvaluator(
-            FragmentPairsEncodedSupplier,
-            kwargs={
-                'encoder': self.encoder,
-                'mol_col' : self.pairsSplitter.molCol,
-                'frags_col': self.pairsSplitter.fragsCol
-            },
-            return_unique=False,
-            return_suppliers=True,
-            **self.getApplierArgs(pairs, collector)
-        )
-        results = evaluator.apply(pairs)
-        if results:
-            voc = None
-            data = []
-            for result in results:
-                data.extend(result[0])
-                if not voc:
-                    voc = result[1].encoder.getVoc()
-                else:
-                    voc += result[1].encoder.getVoc()
-
-            return data, voc
-
-
-    def applyTo(self, mols, fragmentCollector=None, encodingCollectors=None):
-        pairs = self.getFragmentPairs(mols, fragmentCollector)
-        ret = []
-        ret_voc = None
-        splits = self.splitFragmentPairs(pairs)
-        if encodingCollectors and len(encodingCollectors) != len(splits):
-            raise RuntimeError(f'The number of encoding collectors must match the number of splits: {len(encodingCollectors)} != {len(splits)}')
-        for split_idx, split in enumerate(splits):
-            result = self.encodeFragments(split, encodingCollectors[split_idx] if encodingCollectors else None)
-            if result:
-                result, voc = result
-                ret.append(result)
-                if not ret_voc:
-                    ret_voc = voc
-                else:
-                    ret_voc += voc
-        if ret or ret_voc:
-            return ret, ret_voc
 
 class SmilesDataSet(DataSet):
 
@@ -208,6 +62,7 @@ class SmilesDataSet(DataSet):
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
 
+
 class SmilesFragDataSet(DataSet):
 
     class InOutSplitConverter(DataLoaderCreator):
@@ -257,7 +112,7 @@ class SmilesFragDataSet(DataSet):
     def __init__(self, path):
         super().__init__(path)
         self.voc = VocSmiles()
-            
+
     def __call__(self, result):
         self.data.extend(
                 [
@@ -298,6 +153,7 @@ class SmilesFragDataSet(DataSet):
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
 
+
 class SmilesScaffoldDataSet(SmilesFragDataSet):
 
     def __call__(self, result):
@@ -317,6 +173,7 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
                 self.voc = voc
             else:
                 self.voc += voc
+
 
 class GraphFragDataSet(DataSet):
 
@@ -365,6 +222,7 @@ class GraphFragDataSet(DataSet):
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
+
 
 class GraphScaffoldDataSet(GraphFragDataSet):
 

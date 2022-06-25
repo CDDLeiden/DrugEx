@@ -9,12 +9,11 @@ from unittest import TestCase
 
 import pandas as pd
 
-from drugex.corpus.corpus import SequenceCorpus
-from drugex.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
-from drugex.datasets.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder
-from drugex.datasets.splitters import RandomTrainTestSplitter
-from drugex.datasets.processing import MoleculeEncoder, SmilesDataSet, Standardization, FragmentEncoder, \
-    GraphFragDataSet, SmilesFragDataSet
+from drugex.data.corpus.corpus import SequenceCorpus
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
+from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentEncoder
+from drugex.data.processing import MoleculeEncoder, Standardization, RandomTrainTestSplitter
+from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor

@@ -8,12 +8,12 @@ from unittest import TestCase
 
 import pandas as pd
 
-from drugex.corpus.corpus import SequenceCorpus
-from drugex.corpus.vocabulary import VocSmiles, VocGraph
-from drugex.datasets.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder, \
-    FragmentPairsSplitter, FragmentPairsSupplier
-from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, SmilesFragDataSet, \
-    GraphFragDataSet, SmilesDataSet
+from drugex.data.corpus.corpus import SequenceCorpus
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
+from drugex.data.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder, \
+    FragmentPairsSplitter, FragmentPairsSupplier, FragmentEncoder
+from drugex.data.processing import Standardization, MoleculeEncoder
+from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
