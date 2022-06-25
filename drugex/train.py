@@ -3,6 +3,7 @@ import os
 import sys
 import json
 
+from drugex import VERSION
 from drugex.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
 from drugex.datasets.processing import GraphFragDataSet, SmilesFragDataSet, SmilesDataSet
 from drugex.datasets.splitters import RandomTrainTestSplitter
@@ -165,8 +166,10 @@ def DataPreparationGraph(voc_files,
         if not os.path.exists(path):
             logSettings.log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
             path = data_path + "voc_graph.txt"
-        assert os.path.exists(path)
-        voc_paths.append(path)
+        if os.path.exists(path):
+            voc_paths.append(path)
+        else:
+            logSettings.log.warning(f"No vocabulary files found. Using internal defaults for DrugEx v{VERSION}.")
         
     # If exact data path was given as input, that data is both used for training and testing
     if os.path.exists(data_path + input_prefix):
@@ -187,11 +190,13 @@ def DataPreparationGraph(voc_files,
 
     # Load train data
     data_set_train = GraphFragDataSet(train_path)
-    data_set_train.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
+    if voc_paths:
+        data_set_train.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
 
     # Load test data
     data_set_test = GraphFragDataSet(test_path)
-    data_set_test.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
+    if voc_paths:
+        data_set_test.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     
     voc = data_set_train.getVoc() + data_set_test.getVoc()
     train_loader = data_set_train.asDataLoader(batch_size=batch_size * 4, n_samples=n_samples)
@@ -476,7 +481,7 @@ def FineTune(args):
     """
     
     if args.pretrained_model :
-        pt_path = args.base_dir + '/generators/' + args.pretrained_model + f'_{args.algorithm}_{args.runid}.pkg'
+        pt_path = args.base_dir + '/generators/' + args.pretrained_model + f'_{args.algorithm}_{args.runid}.pkg' if not args.pretrained_model.endswith('.pkg') else os.path.join(args.base_dir, 'generators', args.pretrained_model)
     else:
         raise ValueError('Missing --pretrained_model argument')
     
