@@ -4,7 +4,6 @@ processing
 Created by: Martin Sicho
 On: 27.05.22, 10:16
 """
-import os.path
 
 import numpy as np
 import pandas as pd
@@ -13,8 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from drugex.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.datasets.fragments import FragmentPairsEncodedSupplier, FragmentPairsSupplier, FragmentPairsSplitterBase
-from drugex.datasets.interfaces import EncodingCollector, DataSet, DataConverter, DataLoaderCreator
-from drugex.logs import logger
+from drugex.datasets.interfaces import DataSet, DataLoaderCreator
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import MoleculeProcessor
 from drugex.molecules.converters.standardizers import DefaultStandardizer
@@ -171,19 +169,17 @@ class SmilesDataSet(DataSet):
             loader = DataLoader(tensor, batch_size=self.batchSize, shuffle=True)
             return loader
 
-    def __init__(self, outpath):
-        super().__init__(outpath)
-        self.voc = VocSmiles()
-        if os.path.exists(outpath):
-            self.fromFile(outpath)
-        else:
-            self.data = []
+    columns=('Smiles', 'Token')
 
-    def getDataFrame(self, columns=('Smiles', 'Token')):
-        return pd.DataFrame(self.data, columns=columns)
+    def __init__(self, path, voc=VocSmiles()):
+        super().__init__(path)
+        self.voc = voc
 
-    def save(self, columns=('Smiles', 'Token')):
-        self.getDataFrame(columns).to_csv(self.outpath, sep='\t', index=False)
+    def getDataFrame(self):
+        return pd.DataFrame(self.data, columns=self.columns)
+
+    def save(self):
+        self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
 
     def getVoc(self):
         return self.voc
@@ -256,22 +252,14 @@ class SmilesFragDataSet(DataSet):
             split = DataLoader(split, batch_size=self.batchSize, collate_fn=split.collate_fn)
             return split
 
+    columns=('Input', 'Output')
 
-    def __init__(self, outpath, columns=('Input', 'Output')):
-        super().__init__(outpath)
+    def __init__(self, path):
+        super().__init__(path)
         self.voc = VocSmiles()
-        self.columns = columns
-        if os.path.exists(outpath):
-            try:
-                self.fromFile(outpath)
-            except Exception as exp:
-                logger.warning(f"{outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file? Initializing an empty data set instead...")
-                self.codes = []
-        else:
-            self.codes = []
             
     def __call__(self, result):
-        self.codes.extend(
+        self.data.extend(
                 [
                     (
                         " ".join(x[1]),
@@ -287,13 +275,13 @@ class SmilesFragDataSet(DataSet):
             self.voc += voc
 
     def getDataFrame(self):
-        return pd.DataFrame(self.codes, columns=self.columns)
+        return pd.DataFrame(self.data, columns=self.columns)
 
-    def save(self,):
+    def save(self):
         self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
 
     def getData(self):
-        return self.codes
+        return self.data
 
     def getVoc(self):
        return self.voc
@@ -305,7 +293,7 @@ class SmilesFragDataSet(DataSet):
         self.voc = voc
 
     def fromFile(self, path, vocs=tuple(), voc_class=None):
-        self.codes = pd.read_csv(path, header=0, sep='\t', usecols=self.columns).values.tolist()
+        self.data = pd.read_csv(path, header=0, sep='\t', usecols=self.columns).values.tolist()
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
@@ -314,7 +302,7 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
 
     def __call__(self, result):
         if result[0]:
-            self.codes.extend(
+            self.data.extend(
                 [
                     (
                         " ".join(x['frag']),
@@ -330,7 +318,7 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
             else:
                 self.voc += voc
 
-class GraphDataSet(DataSet):
+class GraphFragDataSet(DataSet):
 
     class SplitConverter(DataLoaderCreator):
 
@@ -340,18 +328,12 @@ class GraphDataSet(DataSet):
             loader = DataLoader(split, batch_size=self.batchSize, drop_last=False, shuffle=True)
             return loader
 
-    def __init__(self, outpath):
-        super().__init__(outpath)
-        if os.path.exists(outpath):
-            self.fromFile(outpath)
-        else:
-            self.codes = []
+    def __init__(self, path):
+        super().__init__(path)
         self.voc = VocGraph()
 
     def __call__(self, result):
-        self.codes.extend(result[0])
-        # voc = result[1].getVoc()
-        # self.addVoc(voc)
+        self.data.extend(x[1] for x in result[0])
 
     def addVoc(self, voc):
         if not self.voc:
@@ -361,13 +343,13 @@ class GraphDataSet(DataSet):
 
     def getDataFrame(self):
         columns = ['C%d' % d for d in range(self.voc.max_len * 5)]
-        return pd.DataFrame(self.codes, columns=columns)
+        return pd.DataFrame(self.data, columns=columns)
 
     def save(self):
         self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
 
     def getData(self):
-        return self.codes
+        return self.data
 
     def getDefaultSplitConverter(self, batch_size, vocabulary):
         return self.SplitConverter(batch_size, vocabulary)
@@ -379,17 +361,12 @@ class GraphDataSet(DataSet):
         self.voc = voc
 
     def fromFile(self, path, vocs=tuple(), voc_class=None):
-        self.codes = pd.read_csv(path, header=0, sep='\t').values.tolist()
+        self.data = pd.read_csv(path, header=0, sep='\t').values.tolist()
 
         if vocs and voc_class:
             self.voc = self.readVocs(vocs, voc_class)
 
-class GraphFragDataSet(GraphDataSet):
-
-    def __init__(self, outpath):
-        super().__init__(outpath)
+class GraphScaffoldDataSet(GraphFragDataSet):
 
     def __call__(self, result):
-        self.codes.extend(x[1] for x in result[0])
-        # voc = result[1].encoder.getVoc()
-        # self.addVoc(voc)
+        self.data.extend(result[0])

@@ -1,12 +1,13 @@
 #!/bin/bash
 
+## Test some common command line options automatically.
+
 set -e
 
-# run unit tests first
-python -m unittest discover drugex
+export PYTHONPATH=".."
 
 # input data and base directory
-TEST_BASE=test_base
+TEST_BASE="."
 TEST_DATA_PRETRAINING='ZINC_raw_small.txt'
 TEST_DATA_FINETUNING='A2AR_raw_small.txt'
 TEST_DATA_ENVIRONMENT='A2AR_raw_small_env.txt'
@@ -42,8 +43,9 @@ cleanup
 DATASET_COMMON_ARGS="-b ${TEST_BASE} -k -d -mc ${MOL_COL} -sv -sif"
 DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nf ${N_COMBINATIONS} -nf ${N_FRAGS}"
 
+# pretraining data
 echo "Test: Generate data for pretraining the fragment-based graph transformer..."
-python dataset.py \
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
@@ -52,7 +54,7 @@ ${DATASET_COMMON_ARGS} \
 echo "Test: Done."
 
 echo "Test: Generate data for pretraining the fragment-based sequence models..."
-python dataset.py \
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
@@ -62,17 +64,19 @@ ${DATASET_FRAGMENT_ARGS} \
 echo "Test: Done."
 
 echo "Test: Generate data for pretraining the regular (no fragments) sequence model..."
-python dataset.py \
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
 -mt smiles \
+-sm \
 -nof \
 -vf "${PRETRAINING_PREFIX}_${VOC_PREFIX}"
 echo "Test: Done."
 
-echo "Test: Generate data for fine-tuning the fragment-based graph transformer..."
-python dataset.py \
+# finetuning data
+echo "Test: Generate data for finetuning the fragment-based graph transformer..."
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX} \
@@ -82,7 +86,7 @@ ${DATASET_FRAGMENT_ARGS} \
 echo "Test: Done."
 
 echo "Test: Generate data for pretraining the fragment-based sequence models..."
-python dataset.py \
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX} \
@@ -91,11 +95,12 @@ ${DATASET_FRAGMENT_ARGS} \
 -vf "${FINETUNING_PREFIX}_${VOC_PREFIX}"
 echo "Test: Done."
 
-echo "Test: Generate data for pretraining the regular (no fragments) sequence models..."
-python dataset.py \
+echo "Test: Generate data for finetuning the regular (no fragments) sequence model..."
+python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX} \
+-sm \
 -mt smiles \
 -nof \
 -vf "${FINETUNING_PREFIX}_${VOC_PREFIX}"
@@ -105,7 +110,7 @@ echo "Test: Done."
 # ENVIRONMENT #
 ###############
 ENVIRON_COMMON_ARGS="-b ${TEST_BASE} -k -d"
-python environ.py \
+python -m drugex.environ \
 ${ENVIRON_COMMON_ARGS} \
 -i ${TEST_DATA_ENVIRONMENT} \
 -l \
@@ -125,7 +130,7 @@ TRAIN_VOCAB_ARGS="-vfs ${PRETRAINING_PREFIX}_${VOC_PREFIX} ${FINETUNING_PREFIX}_
 # pretraining
 
 echo "Test: Pretrain fragment-based graph transformer..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -135,7 +140,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence encoder-decoder model..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -145,7 +150,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence encoder-decoder model with attention..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -155,7 +160,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Pretrain fragment-based sequence transformer model..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -165,7 +170,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Pretrain regular (no fragments) single-network RNN model..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}_corpus" \
@@ -177,7 +182,7 @@ echo "Test: Done."
 # fine-tuning
 
 echo "Test: Fine-tune fragment-based graph transformer..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -188,7 +193,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based vanilla sequence encoder-decoder..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -200,7 +205,7 @@ FT \
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based sequence encoder-decoder with attention..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -211,7 +216,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Fine-tune fragment-based sequence transformer..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_${N_COMBINATIONS}:${N_FRAGS}_${FRAG_METHOD}" \
@@ -222,7 +227,7 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 echo "Test: Fine-tune regular (no fragments) single-network RNN model..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}_corpus" \
@@ -241,7 +246,7 @@ ENVIRON_THRESHOLD=6.5
 TRAIN_RL_ARGS="-ta ${TARGET_ID} -et ${ENVIRON_MODE} -ea ${ENVIRON_ALG} -at ${ENVIRON_THRESHOLD}"
 
 echo "Test: RL for the fragment-based graph transformer..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
@@ -281,7 +286,7 @@ echo "Test: Done."
 #echo "Test: Done."
 
 echo "Test: RL for the fragment-based sequence transformer..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
@@ -294,7 +299,7 @@ ${TRAIN_RL_ARGS} \
 echo "Test: Done."
 
 echo "Test: RL for the regular (no fragments) single-network RNN model..."
-python train.py \
+python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \

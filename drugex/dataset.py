@@ -5,7 +5,7 @@ import pandas as pd
 
 from drugex.corpus.corpus import SequenceCorpus, GraphCorpus, ScaffoldCorpus
 from drugex.datasets.processing import Standardization, MoleculeEncoder, FragmentEncoder, GraphFragDataSet, \
-    SmilesFragDataSet, GraphDataSet, SmilesDataSet, SmilesScaffoldDataSet
+    SmilesFragDataSet, GraphScaffoldDataSet, SmilesDataSet, SmilesScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.datasets.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder
@@ -145,11 +145,11 @@ def Dataset(args):
     if args.no_fragmentation:
         # encode inputs to single fragment-molecule pair without fragmentation and splitting to subsets (only v3 models)
         if args.mol_type == 'graph':
-            data_set = GraphDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
+            data_set = GraphScaffoldDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
             encoder = MoleculeEncoder(
                 GraphCorpus,
                 {
-                    'vocabulary': VocGraph(min_len=3),
+                    'vocabulary': VocGraph(),
                     'largest': max(smiles, key=len)
                 },
                 n_proc=args.n_proc

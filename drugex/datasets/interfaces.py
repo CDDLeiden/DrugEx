@@ -4,6 +4,7 @@ splitting
 Created by: Martin Sicho
 On: 07.05.22, 15:54
 """
+import os
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -11,11 +12,47 @@ import numpy as np
 from drugex.logs import logger
 from drugex.parallel.interfaces import ResultCollector
 
+class DataSplitter(ABC):
+    """
+    Splits input data into multiple parts.
+    """
 
-class EncodingCollector(ResultCollector, ABC):
+    @abstractmethod
+    def __call__(self, data):
+        """
 
-    def __init__(self, outpath):
-        self.outpath = outpath
+        Args:
+            data: input data to split
+
+        Returns:
+            a tuple of splits
+
+        """
+
+        pass
+
+class DataLoaderCreator(ABC):
+
+    def __init__(self, batch_size, vocabulary):
+        self.voc = vocabulary
+        self.batchSize = batch_size
+
+    @abstractmethod
+    def __call__(self, data):
+        pass
+
+class DataSet(ResultCollector, ABC):
+
+    def __init__(self, path):
+        self.outpath = path
+        self.data = []
+        if os.path.exists(self.outpath):
+            try:
+                self.fromFile(self.outpath)
+                logger.info("Reading existing file")
+            except Exception as exp:
+                logger.warning(f"{self.outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file? Initializing an empty data set instead...")
+
 
     @abstractmethod
     def getDataFrame(self):
@@ -28,26 +65,6 @@ class EncodingCollector(ResultCollector, ABC):
     @abstractmethod
     def getVoc(self):
         pass
-
-class DataSplitter(ABC):
-
-    @abstractmethod
-    def __call__(self, data):
-        pass
-
-class DataConverter(ABC):
-
-    @abstractmethod
-    def __call__(self, data):
-        pass
-
-class DataLoaderCreator(DataConverter, ABC):
-
-    def __init__(self, batch_size,vocabulary):
-        self.voc = vocabulary
-        self.batchSize = batch_size
-
-class DataSet(EncodingCollector, ABC):
 
     @abstractmethod
     def fromFile(self, path, vocs=tuple(), voc_class=None):
@@ -107,10 +124,6 @@ class DataSet(EncodingCollector, ABC):
 
     @abstractmethod
     def setVoc(self, voc):
-        pass
-
-    @abstractmethod
-    def getVoc(self):
         pass
 
 class FragmentPairEncoder(ABC):
