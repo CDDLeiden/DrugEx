@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from drugex.data.fragments import GraphFragmentEncoder, FragmentEncoder
+from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
 from drugex.logs import logger
@@ -293,7 +293,7 @@ class GraphModel(Base):
         smiles = standardizer.apply(smiles)
 
         fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
-        encoder = FragmentEncoder(
+        encoder = FragmentCorpusEncoder(
             fragmenter=fragmenter,
             encoder=GraphFragmentEncoder(
                 self.voc_trg

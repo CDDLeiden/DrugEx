@@ -11,7 +11,7 @@ import pandas as pd
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.data.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder, \
-    FragmentPairsSplitter, FragmentPairsSupplier, FragmentEncoder
+    FragmentPairsSplitter, FragmentPairsSupplier, FragmentCorpusEncoder
 from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
@@ -136,7 +136,7 @@ class ProcessingTests(TestCase):
     def test_smiles_frag_encoder(self):
         mols = self.getTestMols()
         mols.append('NC1CC1C(=O)NCCN1CCNCC1CCBr') # add smiles with new element
-        encoder = FragmentEncoder(
+        encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
                 VocSmiles()
@@ -163,7 +163,7 @@ class ProcessingTests(TestCase):
 
     def test_graph_frag_encoder(self):
         mols = self.getTestMols()
-        encoder = FragmentEncoder(
+        encoder = FragmentCorpusEncoder(
                 fragmenter=Fragmenter(4, 4, 'brics'),
                 encoder=GraphFragmentEncoder(
                     VocGraph(n_frags=4)

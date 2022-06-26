@@ -122,7 +122,7 @@ class FragmentPairsSupplier(MolSupplier):
         return mol
 
 
-class FragmentEncoder(ParallelProcessor):
+class FragmentCorpusEncoder(ParallelProcessor):
 
     def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
         super().__init__(n_proc, chunk_size)

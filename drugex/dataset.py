@@ -9,7 +9,7 @@ from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffol
     GraphScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
-    GraphFragmentEncoder, FragmentEncoder
+    GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -188,7 +188,7 @@ def Dataset(args):
         splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
 
         if args.mol_type == 'graph':
-            encoder = FragmentEncoder(
+            encoder = FragmentCorpusEncoder(
                 fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
                 encoder=GraphFragmentEncoder(
                     VocGraph(n_frags=args.n_frags)
@@ -204,7 +204,7 @@ def Dataset(args):
         elif args.mol_type == 'smiles':
             data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
                                ] if splitter else [SmilesFragDataSet(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
-            encoder = FragmentEncoder(
+            encoder = FragmentCorpusEncoder(
                 fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
                 encoder=SequenceFragmentEncoder(
                     VocSmiles()

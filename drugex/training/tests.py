@@ -11,7 +11,7 @@ import pandas as pd
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
-from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentEncoder
+from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
@@ -112,7 +112,7 @@ class TrainingTestCase(TestCase):
 
         # create and encode fragments
         splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True, seed=42)
-        encoder = FragmentEncoder(
+        encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
                 VocSmiles()
@@ -138,13 +138,13 @@ class TrainingTestCase(TestCase):
 
         pr_loader_train = pr_data_set_train.asDataLoader(32)
         pr_loader_test = pr_data_set_test.asDataLoader(32)
-        #pr_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        # pr_loader_test = pr_data_set_test.asDataLoader(32, split_converter=SmilesFragDataSet.TargetCreator())
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
         ft_loader_train = pr_data_set_train.asDataLoader(32)
         ft_loader_test = pr_data_set_test.asDataLoader(32)
-        #ft_loader_test = pr_data_set_test.asDataLoader(split_converter=SmilesFragDataSet.TargetSplitConverter(32, vocabulary))
+        # ft_loader_test = pr_data_set_test.asDataLoader(32, split_converter=SmilesFragDataSet.TargetCreator())
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
@@ -216,7 +216,7 @@ class TrainingTestCase(TestCase):
 
         # create and encode fragments
         splitter = FragmentPairsSplitter(0.1, 1e4, unique_only=True)
-        encoder = FragmentEncoder(
+        encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=GraphFragmentEncoder(
                 VocGraph(n_frags=4)

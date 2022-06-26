@@ -7,21 +7,13 @@ On: 25.06.22, 19:42
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, Dataset
 
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
-from drugex.data.interfaces import DataSet, DataLoaderCreator
+from drugex.data.interfaces import DataSet, DataToLoader
 
 
 class SmilesDataSet(DataSet):
-
-    class SplitConverter(DataLoaderCreator):
-
-        def __call__(self, split):
-            split = np.asarray(split)[:,1]
-            tensor = torch.LongTensor(self.voc.encode([seq.split(' ') for seq in split]))
-            loader = DataLoader(tensor, batch_size=self.batchSize, shuffle=True)
-            return loader
 
     columns=('Smiles', 'Token')
 
@@ -44,8 +36,12 @@ class SmilesDataSet(DataSet):
     def setVoc(self, voc):
         self.voc = voc
 
-    def getDefaultSplitConverter(self, batch_size, vocabulary):
-        return self.SplitConverter(batch_size, vocabulary)
+    @staticmethod
+    def dataToLoader(data, batch_size, vocabulary):
+        split = np.asarray(data)[:,1]
+        tensor = torch.LongTensor(vocabulary.encode([seq.split(' ') for seq in split]))
+        loader = DataLoader(tensor, batch_size=batch_size, shuffle=True)
+        return loader
 
     def __call__(self, result):
         self.data.extend([(x['seq'], x['token']) for x in result[0]])
@@ -65,19 +61,12 @@ class SmilesDataSet(DataSet):
 
 class SmilesFragDataSet(DataSet):
 
-    class InOutSplitConverter(DataLoaderCreator):
+    class TargetCreator(DataToLoader):
+        """
+        Old creator that currently is not being used. Saved here just for reference.
+        """
 
-        def __call__(self, split):
-            split = np.asarray(split)
-            split_in = self.voc.encode([seq.split(' ') for seq in split[:,0]])
-            split_out = self.voc.encode([seq.split(' ') for seq in split[:,1]])
-            split_set = TensorDataset(split_in, split_out)
-            split_loader = DataLoader(split_set, batch_size=self.batchSize, shuffle=True)
-            return split_loader
-
-    class TargetSplitConverter(DataLoaderCreator):
-
-        class TgtData:
+        class TgtData(Dataset):
             def __init__(self, seqs, ix, max_len=100):
                 self.max_len = max_len
                 self.index = np.array(ix)
@@ -99,13 +88,14 @@ class SmilesFragDataSet(DataSet):
                     collated_seq[i, :] = tgt
                 return collated_ix, collated_seq
 
-        def __call__(self, split):
-            split = np.asarray(split)
-            split = pd.Series(split[:,0]).drop_duplicates()
-            split = self.voc.encode([seq.split(' ') for seq in split])
-            split = self.TgtData(split, ix=[self.voc.decode(seq, is_tk=False) for seq in split])
-            split = DataLoader(split, batch_size=self.batchSize, collate_fn=split.collate_fn)
-            return split
+        def __call__(self, data, batch_size, vocabulary):
+            dataset = np.asarray(data)[:,0]
+            dataset = pd.Series(dataset).drop_duplicates()
+            dataset = [seq.split(' ') for seq in dataset]
+            dataset = vocabulary.encode(dataset)
+            dataset = self.TgtData(dataset, ix=[vocabulary.decode(seq, is_tk=False) for seq in dataset])
+            dataset = DataLoader(dataset, batch_size=batch_size, collate_fn=dataset.collate_fn)
+            return dataset
 
     columns=('Input', 'Output')
 
@@ -141,8 +131,14 @@ class SmilesFragDataSet(DataSet):
     def getVoc(self):
        return self.voc
 
-    def getDefaultSplitConverter(self, batch_size, vocabulary):
-        return self.InOutSplitConverter(batch_size, vocabulary)
+    @staticmethod
+    def dataToLoader(data, batch_size, vocabulary):
+        arr = np.asarray(data)
+        _in = vocabulary.encode([seq.split(' ') for seq in arr[:,0]])
+        _out = vocabulary.encode([seq.split(' ') for seq in arr[:,1]])
+        del arr
+        dataset = TensorDataset(_in, _out)
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     def setVoc(self, voc):
         self.voc = voc
@@ -177,14 +173,6 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
 
 class GraphFragDataSet(DataSet):
 
-    class SplitConverter(DataLoaderCreator):
-
-        def __call__(self, split):
-            split = np.asarray(split)
-            split = torch.from_numpy(split).long().view(len(split), self.voc.max_len, -1)
-            loader = DataLoader(split, batch_size=self.batchSize, drop_last=False, shuffle=True)
-            return loader
-
     def __init__(self, path):
         super().__init__(path)
         self.voc = VocGraph()
@@ -208,8 +196,12 @@ class GraphFragDataSet(DataSet):
     def getData(self):
         return self.data
 
-    def getDefaultSplitConverter(self, batch_size, vocabulary):
-        return self.SplitConverter(batch_size, vocabulary)
+    @staticmethod
+    def dataToLoader(data, batch_size, vocabulary):
+        dataset = np.asarray(data)
+        dataset = torch.from_numpy(dataset).long().view(len(dataset), vocabulary.max_len, -1)
+        loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
+        return loader
 
     def getVoc(self):
        return self.voc

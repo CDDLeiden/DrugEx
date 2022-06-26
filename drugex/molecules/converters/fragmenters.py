@@ -25,19 +25,28 @@ class Fragmenter(CleanSMILES):
         if self.method not in ('recap', 'brics'):
             raise ConversionException(f"Unknown fragmentation method: {self.method}")
 
-
-    def __call__(self, smiles):
-        ret_frags = []
-        smiles = super().__call__(smiles)
-        mol = Chem.MolFromSmiles(smiles)
-        # break SMILES up into leaf fragments
+    def getFragments(self, mol):
+        # break molecule into leaf fragments
         if self.method == 'recap':
             frags = np.array(sorted(Recap.RecapDecompose(mol).GetLeaves().keys()))
         else:
             frags = BRICS.BRICSDecompose(mol)
             frags = np.array(sorted({re.sub(r'\[\d+\*\]', '*', f) for f in frags}))
+
         if len(frags) == 1:
             return None
+
+        return frags
+
+    def __call__(self, smiles):
+        ret_frags = []
+        smiles = super().__call__(smiles)
+        mol = Chem.MolFromSmiles(smiles)
+
+        frags = self.getFragments(mol)
+        if frags is None:
+            return None
+
         # replace connection tokens with [H]
         du, hy = Chem.MolFromSmiles('*'), Chem.MolFromSmiles('[H]')
         subs = np.array([Chem.MolFromSmiles(f) for f in frags])
