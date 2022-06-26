@@ -8,7 +8,7 @@ from drugex.molecules.converters.interfaces import ConversionException
 from drugex.molecules.interfaces import AnnotationException, MolSupplier
 from drugex.molecules.suppliers import DataFrameSupplier
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
-from drugex.parallel.interfaces import MoleculeProcessor
+from drugex.parallel.interfaces import ParallelProcessor
 
 class SequenceFragmentEncoder(FragmentPairEncoder):
 
@@ -122,7 +122,7 @@ class FragmentPairsSupplier(MolSupplier):
         return mol
 
 
-class FragmentEncoder(MoleculeProcessor):
+class FragmentEncoder(ParallelProcessor):
 
     def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
         super().__init__(n_proc, chunk_size)
@@ -138,7 +138,9 @@ class FragmentEncoder(MoleculeProcessor):
             },
             return_unique=False,
             always_return=True,
-            **self.getApplierArgs(mols, collector)
+            chunk_size=self.chunkSize,
+            chunks=self.chunks,
+            result_collector=collector
         )
         results = []
         for result in evaluator.apply(mols):
@@ -158,7 +160,9 @@ class FragmentEncoder(MoleculeProcessor):
             },
             return_unique=False,
             return_suppliers=True,
-            **self.getApplierArgs(pairs, collector)
+            chunk_size=self.chunkSize,
+            chunks=self.chunks,
+            result_collector=collector
         )
         results = evaluator.apply(pairs)
         if results:
@@ -174,7 +178,7 @@ class FragmentEncoder(MoleculeProcessor):
             return data, voc
 
 
-    def applyTo(self, mols, fragmentCollector=None, encodingCollectors=None):
+    def apply(self, mols, fragmentCollector=None, encodingCollectors=None):
         pairs = self.getFragmentPairs(mols, fragmentCollector)
         ret = []
         ret_voc = None

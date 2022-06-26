@@ -290,7 +290,7 @@ class GraphModel(Base):
 
     def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
         standardizer = Standardization(n_proc=n_proc)
-        smiles = standardizer.applyTo(smiles)
+        smiles = standardizer.apply(smiles)
 
         fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
         encoder = FragmentEncoder(
@@ -301,7 +301,7 @@ class GraphModel(Base):
             n_proc=n_proc
         )
         out_data = GraphFragDataSet("dataset_graph_frag.txt")
-        encoder.applyTo(smiles, encodingCollectors=[out_data])
+        encoder.apply(smiles, encodingCollectors=[out_data])
 
         smiles, frags = [], []
         while not len(smiles) >= min_samples:

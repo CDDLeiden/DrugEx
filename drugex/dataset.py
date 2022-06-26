@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 from drugex.data.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
-from drugex.data.processing import Standardization, MoleculeEncoder
+from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffoldDataSet, GraphFragDataSet, \
     GraphScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash
@@ -32,7 +32,6 @@ def load_molecules(base_dir, input_file):
     file_path = base_dir + '/data/' + input_file
 
     if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
-        # TODO: could be parallel as well
         mols = SDFSupplier(file_path, hide_duplicates=True)
         mols = [x.smiles for x in mols.toList()]
     else:
@@ -125,13 +124,13 @@ def Dataset(args):
 
     print("Standardizing molecules...")
     standardizer = Standardization(n_proc=args.n_proc)
-    smiles = standardizer.applyTo(smiles)
+    smiles = standardizer.apply(smiles)
 
     file_base = os.path.join(args.base_dir, 'data')
     
     if args.smiles_corpus:
         # create sequence corpus and vocabulary (used only in v2 models)
-        encoder = MoleculeEncoder(
+        encoder = CorpusEncoder(
             SequenceCorpus,
             {
                 'vocabulary': VocSmiles()
@@ -139,7 +138,7 @@ def Dataset(args):
             n_proc=args.n_proc
         )
         data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
-        encoder.applyTo(smiles, collector=data_collector)
+        encoder.apply(smiles, collector=data_collector)
 
         save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         
@@ -147,7 +146,7 @@ def Dataset(args):
         # encode inputs to single fragment-molecule pair without fragmentation and splitting to subsets (only v3 models)
         if args.mol_type == 'graph':
             data_set = GraphScaffoldDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
-            encoder = MoleculeEncoder(
+            encoder = CorpusEncoder(
                 ScaffoldGraphCorpus,
                 {
                     'vocabulary': VocGraph(),
@@ -155,11 +154,11 @@ def Dataset(args):
                 },
                 n_proc=args.n_proc
             )
-            encoder.applyTo(smiles, collector=data_set)
+            encoder.apply(smiles, collector=data_set)
             save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         else:
             data_set = SmilesScaffoldDataSet('%s/data/%s_smi_%s.txt' % (args.base_dir, args.output, logSettings.runID))
-            encoder = MoleculeEncoder(
+            encoder = CorpusEncoder(
                 ScaffoldSequenceCorpus,
                 {
                     'vocabulary': VocSmiles(min_len=3),
@@ -167,7 +166,7 @@ def Dataset(args):
                 },
                 n_proc=args.n_proc
             )
-            encoder.applyTo(smiles, collector=data_set)
+            encoder.apply(smiles, collector=data_set)
             save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)            
 
     else:
@@ -199,7 +198,7 @@ def Dataset(args):
             )
 
             data_collectors = [GraphFragDataSet(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train' + '_graph_%s.txt' % logSettings.runID)]
-            encoder.applyTo(smiles, encodingCollectors=data_collectors)
+            encoder.apply(smiles, encodingCollectors=data_collectors)
 
             save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         elif args.mol_type == 'smiles':
@@ -213,7 +212,7 @@ def Dataset(args):
                 pairs_splitter=splitter,
                 n_proc=args.n_proc
             )
-            encoder.applyTo(smiles, encodingCollectors=data_collectors)
+            encoder.apply(smiles, encodingCollectors=data_collectors)
 
             save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
         else:

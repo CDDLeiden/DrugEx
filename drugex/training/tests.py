@@ -12,7 +12,7 @@ import pandas as pd
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
 from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentEncoder
-from drugex.data.processing import MoleculeEncoder, Standardization, RandomTrainTestSplitter
+from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
@@ -104,7 +104,7 @@ class TrainingTestCase(TestCase):
         return self.standardize(pd.read_csv(self.finetuning_file, header=0, sep='\t')['CANONICAL_SMILES'].tolist())
 
     def standardize(self, smiles):
-        return Standardization(n_proc=self.N_PROC).applyTo(smiles)
+        return Standardization(n_proc=self.N_PROC).apply(smiles)
 
     def setUpSmilesFragData(self):
         pre_smiles = self.getSmilesPretrain()
@@ -124,10 +124,10 @@ class TrainingTestCase(TestCase):
         # get training data
         pr_data_set_test = SmilesFragDataSet('pretrain')
         pr_data_set_train = SmilesFragDataSet('pretrain')
-        encoder.applyTo(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
+        encoder.apply(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
         ft_data_set_test = SmilesFragDataSet('finetune')
         ft_data_set_train = SmilesFragDataSet('finetune')
-        encoder.applyTo(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
+        encoder.apply(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
 
         # get vocabulary (we will join all generated vocabularies to make sure the one used to create data loaders contains all tokens)
         vocabulary = pr_data_set_test.getVoc() + pr_data_set_train.getVoc() + ft_data_set_train.getVoc() + ft_data_set_test.getVoc()
@@ -158,7 +158,7 @@ class TrainingTestCase(TestCase):
         ft_smiles = self.getSmilesFinetune()
 
         # get training data
-        encoder = MoleculeEncoder(
+        encoder = CorpusEncoder(
                 SequenceCorpus,
                 {
                     'vocabulary': VocSmiles()
@@ -166,9 +166,9 @@ class TrainingTestCase(TestCase):
                 n_proc=self.N_PROC
         )
         pre_data_set = SmilesDataSet('pretrain')
-        encoder.applyTo(pre_smiles, pre_data_set)
+        encoder.apply(pre_smiles, pre_data_set)
         ft_data_set = SmilesDataSet('finetune')
-        encoder.applyTo(ft_smiles, ft_data_set)
+        encoder.apply(ft_smiles, ft_data_set)
 
         # get common vocabulary
         vocabulary = pre_data_set.getVoc() + ft_data_set.getVoc()
@@ -228,10 +228,10 @@ class TrainingTestCase(TestCase):
         # get training data
         pr_data_set_test = GraphFragDataSet('pretrain')
         pr_data_set_train = GraphFragDataSet('pretrain')
-        encoder.applyTo(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
+        encoder.apply(pre_smiles, encodingCollectors=[pr_data_set_test, pr_data_set_train])
         ft_data_set_test = GraphFragDataSet('finetune')
         ft_data_set_train = GraphFragDataSet('finetune')
-        encoder.applyTo(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
+        encoder.apply(ft_smiles, encodingCollectors=[ft_data_set_test, ft_data_set_train])
 
         # get vocabulary -> for graph models it is always the default one
         vocabulary = VocGraph()

@@ -7,16 +7,16 @@ On: 29.05.22, 18:12
 import multiprocessing
 
 from drugex.logs import logger
-from drugex.parallel.interfaces import DataSplitter, ArraySplitter, ParallelException
+from drugex.parallel.interfaces import ArraySplitter, ParallelException, ParallelProcessor
 
 
-class ParallelSupplierEvaluator:
+class ParallelSupplierEvaluator(ParallelProcessor):
     """
     Class implementing parallel evaluation of `MolSupplier` instances on input data (see `ParallelSupplierEvaluator.apply`).
 
     """
 
-    def __init__(self, supplier_class, n_proc=None, chunks=None, return_unique=True, return_suppliers=False, result_collector=None, always_return=False, args=None, kwargs=None):
+    def __init__(self, supplier_class, n_proc=None, chunk_size=None, chunks=None, return_unique=True, return_suppliers=False, result_collector=None, always_return=False, args=None, kwargs=None):
         """
         Initialize this instance with a `MolSupplier` and other parameters. Note that the supplier is passed as a class and not an instance. This helps to avoid some issues with serialization between processes and, thus, `ParallelSupplierEvaluator` serves only as a template for execution. Also note that the `ParallelSupplierEvaluator` assumes that the first argument of the `MolSupplier` constructor accepts the data to be processed.
 
@@ -24,8 +24,6 @@ class ParallelSupplierEvaluator:
 
         Args:
             supplier_class: Class of the `MolSupplier` to use for evaluation.
-            n_proc: Number of processes to initialize. Defaults to all available CPUs.
-            chunks: Number of chunks to divide the input data into. Defaults to 'n_proc'.
             return_unique: Attempt to only extract unique results from the result set. This is achieved by converting the results to a `set` first.
             return_suppliers: Return the created suppliers along with the results. This implies 'return_unique=False' and cancels concatenation of results. In this case the return value is a list of tuples where the first item is the list returned from the process and the second is the associated `MolSupplier` instance. Note that some `MolSupplier` implementations might not allow serialization between processes so this may fail in some cases.
             result_collector: A `callable` that will handle processing of results from each process. If it is set, the `ParallelSupplierEvaluator.apply` method returns `None`. This can be reverted by setting 'always_return=False'
@@ -34,12 +32,9 @@ class ParallelSupplierEvaluator:
             kwargs:
         """
 
-        self.nProc = n_proc if n_proc else multiprocessing.cpu_count()
+        super().__init__(n_proc, chunk_size, chunks)
         self.makeUnique = return_unique
         self.includeSuppliers = return_suppliers
-        self.chunks = self.nProc if not chunks else chunks
-        if type(chunks) != DataSplitter:
-            self.chunks = ArraySplitter(self.chunks)
         self.args = [] if not args else args
         self.kwargs = dict() if not kwargs else kwargs
         self.supplier = supplier_class
@@ -68,7 +63,7 @@ class ParallelSupplierEvaluator:
         Args:
             chunk: Current chunk of data.
             chunk_id: ID of the current chunk.
-            total_chunks: Total number of chunks to be processed by this `ParallelSupplierEvaluator`.
+            total_chunks: Total number of chunkSize to be processed by this `ParallelSupplierEvaluator`.
 
         Returns:
             result of the `MolSupplier.toList()` method that is used for evaluation.
@@ -76,7 +71,7 @@ class ParallelSupplierEvaluator:
 
         sup = self.initSupplier(self.supplier, chunk)
         ret = sup.toList()
-        logger.info(f"Finished {chunk_id}/{total_chunks} chunks for supplier: {sup}")
+        logger.info(f"Finished {chunk_id}/{total_chunks} chunkSize for supplier: {sup}")
         if self.includeSuppliers:
             return ret, sup
         else:
@@ -139,7 +134,7 @@ class ParallelSupplierEvaluator:
         pool = multiprocessing.Pool(self.nProc)
 
         tasks = []
-        chunks = self.chunks(data)
+        chunks = self.getChunks(data)
         for idx, chunk in enumerate(chunks):
             tasks.append(pool.apply_async(
                 self.run, args=(chunk, idx+1, len(chunks)),

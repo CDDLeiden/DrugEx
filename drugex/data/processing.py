@@ -12,32 +12,30 @@ from sklearn.model_selection import train_test_split
 from drugex.data.interfaces import DataSplitter
 from drugex.logs import logger
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
-from drugex.parallel.interfaces import MoleculeProcessor
+from drugex.parallel.interfaces import ParallelProcessor
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.suppliers import StandardizedSupplier
 
 
-class Standardization(MoleculeProcessor):
+class Standardization(ParallelProcessor):
     """
     Processor to standardize molecules in parallel.
     """
 
-    def __init__(self, standardizer=DefaultStandardizer(), n_proc=None, chunk_size=None):
+    def __init__(self, standardizer=DefaultStandardizer(), **kwargs):
         """
         Initialize the standardization processor.
 
         Args:
             standardizer: The standardizer to use for conversion of input molecules.
-            n_proc: Number of processes to initialize. If `None`, it is set to the number of available CPUs by default.
-            chunk_size: Maximum size of a chunk of data submitted for processing. If `None`, the size will be determined from the input data as: floor(len(data) / n_proc).
         """
 
-        super().__init__(n_proc, chunk_size)
+        super().__init__(**kwargs)
         self.standardizer = standardizer
 
-    def applyTo(self, mols, collector=None):
+    def apply(self, mols, collector=None):
         """
-        Transform molecules with the defined standardizer in parallel.
+        Apply defined standardization to an iterable of molecules.
 
         This method just automates initialization of a `ParallelSupplierEvaluator` on the given molecules. Molecules can be given
         as a generator or a `MolSupplier`, but note that they will be evaluated before processing, which may add overhead. In such
@@ -56,23 +54,27 @@ class Standardization(MoleculeProcessor):
             kwargs={
                 "standardizer": self.standardizer
             },
-            **self.getApplierArgs(mols, collector)
+            chunk_size=self.chunkSize,
+            chunks=self.chunks,
+            result_collector=collector
         )
         return standardizer.apply(np.asarray(list(mols)))
 
-class MoleculeEncoder(MoleculeProcessor):
+class CorpusEncoder(ParallelProcessor):
 
     def __init__(self, corpus_class, corpus_options, n_proc=None, chunk_size=None):
         super().__init__(n_proc, chunk_size)
         self.corpus = corpus_class
         self.options = corpus_options
 
-    def applyTo(self, mols, collector=None):
+    def apply(self, mols, collector=None):
         evaluator = ParallelSupplierEvaluator(
             self.corpus,
             kwargs=self.options,
             return_suppliers=True,
-            **self.getApplierArgs(mols, collector)
+            chunk_size=self.chunkSize,
+            chunks=self.chunks,
+            result_collector=collector
         )
         results = evaluator.apply(mols)
         if results:

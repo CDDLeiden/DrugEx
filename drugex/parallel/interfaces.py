@@ -49,23 +49,40 @@ class ResultCollector(ABC):
         pass
 
 
-class MoleculeProcessor(ABC):
+class ParallelProcessor(ABC):
+    """
+    Simple interface to define parameters for parallel processing of data.
+    """
 
-    def __init__(self, n_proc=None, chunk_size=None):
+    def __init__(self, n_proc=None, chunk_size=None, chunks=None):
+        """
+        Initialize parameters.
+
+        Args:
+            n_proc: Number of processes to initialize. Defaults to all available CPUs.
+            chunk_size: Maximum size of a chunk to process by a single CPU (can help bring down memory usage, but more processing overhead). If `None`, it is set to "len(data) / n_proc".
+            chunks: Number of chunks to divide the input data into. Defaults to 'n_proc'. You can also provide a `DataSplitter` that produces the chunks of data to be processed itself. If "chunks" is present, "chunkSize" is ignored.
+        """
         self.nProc = n_proc if n_proc else multiprocessing.cpu_count()
         self.chunkSize = chunk_size
+        self.chunks = chunks
 
     def getChunks(self, data):
-        if self.chunkSize:
-            return (len(data) // self.chunkSize) + (len(data) % self.chunkSize)
+        method = None
 
-    def getApplierArgs(self, data, collector):
-        return {
-            "chunks" : self.getChunks(data),
-            "n_proc" : self.nProc,
-            "result_collector" : collector
-        }
+        if self.chunks:
+            if type(self.chunks) == int:
+                method = ArraySplitter(self.chunks)
+            else:
+                method = self.chunks
+        elif self.chunkSize:
+            n_chunks = (len(data) // self.chunkSize) + (1 if len(data) % self.chunkSize != 0 else 0)
+            method = ArraySplitter(n_chunks)
+        else:
+            method = ArraySplitter(self.nProc)
+
+        return method(data)
 
     @abstractmethod
-    def applyTo(self, data):
+    def apply(self, data):
         pass

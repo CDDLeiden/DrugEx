@@ -12,7 +12,7 @@ from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.data.fragments import FragmentPairsEncodedSupplier, SequenceFragmentEncoder, GraphFragmentEncoder, \
     FragmentPairsSplitter, FragmentPairsSupplier, FragmentEncoder
-from drugex.data.processing import Standardization, MoleculeEncoder
+from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DefaultStandardizer
@@ -102,7 +102,7 @@ class ProcessingTests(TestCase):
     def test_standardization(self):
         originals, expected = self.getStandardizationMols()
         standardizer = Standardization(n_proc=2, chunk_size=2)
-        standardized = standardizer.applyTo(originals)
+        standardized = standardizer.apply(originals)
         self.assertTrue(len(standardized) == len(originals))
         for mol in standardized:
             self.assertTrue(mol in expected)
@@ -110,7 +110,7 @@ class ProcessingTests(TestCase):
     def test_smiles_encoder(self):
         mols = self.getTestMols()
         mols.append('NC1CC1C(=O)NCCN1CCNCC1CCBr') # add smiles with new element
-        encoder = MoleculeEncoder(
+        encoder = CorpusEncoder(
             SequenceCorpus,
             {
                 "vocabulary" : VocSmiles()
@@ -118,7 +118,7 @@ class ProcessingTests(TestCase):
             n_proc=2, chunk_size=2
         )
 
-        results, voc = encoder.applyTo(mols)
+        results, voc = encoder.apply(mols)
         self.assertTrue('R' in voc.words)
         self.assertTrue(len(results) == len(mols))
         for result in results:
@@ -127,7 +127,7 @@ class ProcessingTests(TestCase):
 
         # with collector
         collector = SmilesDataSet('a')
-        encoder.applyTo(mols, collector=collector)
+        encoder.apply(mols, collector=collector)
         voc = collector.getVoc()
         self.assertTrue('R' in voc.words)
         df = collector.getDataFrame()
@@ -147,7 +147,7 @@ class ProcessingTests(TestCase):
         )
 
         # without collectors
-        splits, voc = encoder.applyTo(mols)
+        splits, voc = encoder.apply(mols)
         self.assertTrue('R' in voc.words)
         for split in splits:
             for result in split:
@@ -155,7 +155,7 @@ class ProcessingTests(TestCase):
 
         # with collectors
         collectors = [SmilesFragDataSet(x) for x in ('a', 'b', 'c')]
-        encoder.applyTo(mols, encodingCollectors=collectors)
+        encoder.apply(mols, encodingCollectors=collectors)
         for collector in collectors:
             df = collector.getDataFrame()
             self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
@@ -175,13 +175,13 @@ class ProcessingTests(TestCase):
 
         # with collectors
         collectors = [GraphFragDataSet(x) for x in ('a', 'b', 'c')]
-        encoder.applyTo(mols, encodingCollectors=collectors)
+        encoder.apply(mols, encodingCollectors=collectors)
         for collector in collectors:
             df = collector.getDataFrame()
             self.assertTrue(df.columns[0][0] == 'C')
 
         # without collectors
-        results_splits, voc = encoder.applyTo(mols)
+        results_splits, voc = encoder.apply(mols)
         self.assertTrue(type(voc) == VocGraph)
         for split in results_splits:
             for result in split:

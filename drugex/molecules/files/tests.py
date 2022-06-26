@@ -112,7 +112,7 @@ class TestFileParsers(TestCase):
         para_supplier = ParallelSupplierEvaluator(
             DataFrameSupplier,
             n_proc=2,
-            chunks=int(df.shape[0] / 2),
+            chunk_size=int(df.shape[0] / 2),
             kwargs={"mol_col" : "CANONICAL_SMILES", "extra_cols": cols}
         )
 
