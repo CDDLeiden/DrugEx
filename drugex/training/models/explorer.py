@@ -16,8 +16,8 @@ from drugex.logs import logger
 from drugex.training.interfaces import Explorer    
 
 class GraphExplorer(Explorer):
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1, optim=None):
-        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None):
+        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat)
         self.voc_trg = agent.voc_trg
         self.mutate = mutate
         self.bestState = None
@@ -182,7 +182,7 @@ class GraphExplorer(Explorer):
                 progress.saveProgress(step_idx, None, total_steps, None)
             src = src.to(self.device)
             frags, smiles = self.voc_trg.decode(src)
-            reward = self.env.getRewards(smiles, self.scheme, frags=frags)
+            reward = self.env.getRewards(smiles, frags=frags)
             reward = torch.Tensor(reward).to(src.device)
 
             self.optim.zero_grad()
@@ -289,8 +289,8 @@ class GraphExplorer(Explorer):
 
 class SmilesExplorer(Explorer):
 
-    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1, optim=None):
-        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None):
+        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
         self.bestState = None
@@ -333,7 +333,7 @@ class SmilesExplorer(Explorer):
             self.optim.zero_grad()
             smiles = [self.agent.voc_trg.decode(s, is_tk=False) for s in trg]
             frags = [self.agent.voc_trg.decode(s, is_tk=False) for s in src]
-            reward = self.env.getRewards(smiles, self.scheme, frags=frags)
+            reward = self.env.getRewards(smiles, frags=frags)
             reward = torch.Tensor(reward).to(src.device)
             loss = net(src, trg) * reward
             if progress:
@@ -452,8 +452,8 @@ class PGLearner(Explorer, ABC):
         prior: The auxiliary model which is defined differently in each methods.
     """
     def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, mean_func='geometric', batch_size=128, epsilon=1e-3,
-                 sigma=0.0, scheme='PR', repeat=1, n_samples=-1):
-        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, scheme, n_samples, repeat)
+                 sigma=0.0, repeat=1, n_samples=-1):
+        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat)
         self.replay = 10
         self.n_samples = 128  # * 8
         self.penalty = 0
@@ -514,8 +514,8 @@ class SmilesExplorerNoFrag(PGLearner):
         mutate (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, scheme='PR', repeat=1, n_samples=-1):
-        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, scheme=scheme, repeat=repeat, n_samples=n_samples)
+    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1):
+        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples)
         self.bestState = None
  
     def forward(self, crover=None, memory=None, epsilon=None):
@@ -538,7 +538,7 @@ class SmilesExplorerNoFrag(PGLearner):
    
     def policy_gradient(self, smiles=None, seqs=None, memory=None, progress=None):
         # function need to get smiles
-        scores = self.env.getRewards(smiles, self.scheme, frags=None)
+        scores = self.env.getRewards(smiles, frags=None)
         if memory is not None:
             scores[:len(memory), 0] = 1
             ix = scores[:, 0].argsort()[-self.batchSize * 4:]

@@ -1,8 +1,5 @@
 import numpy as np
-from rdkit import DataStructs
 import torch
-
-from drugex import DEFAULT_DEVICE
 
 
 def dominate(ind1: np.ndarray, ind2: np.ndarray):
@@ -89,82 +86,3 @@ def cpu_non_dominated_sort(swarm: np.ndarray):
         fronts.append(np.sort(temp))
     del fronts[len(fronts) - 1]
     return fronts
-
-
-def similarity_sort(swarm, fps, is_gpu=False):
-    """
-    Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.
-    Args:
-        swarm (np.ndarray): m x n scoring matrix, where m is the number of samples
-            and n is the number of objectives.
-        fps (np.ndarray): m-d vector as fingerprints for all the molecules
-
-        is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,
-            it will be implemented by Numpy and ran on CPUs.
-
-    Returns:
-        rank (np.array): m-d vector as the index of well-ranked solutions.
-    """
-    if is_gpu:
-        swarm = torch.Tensor(swarm).to(DEFAULT_DEVICE)
-        fronts = gpu_non_dominated_sort(swarm)
-    else:
-        fronts = cpu_non_dominated_sort(swarm)
-    rank = []
-    for i, front in enumerate(fronts):
-        fp = [fps[f] for f in front]
-        if len(front) > 2 and None not in fp:
-            dist = np.zeros(len(front))
-            for j in range(len(front)):
-                tanimoto = 1 - np.array(DataStructs.BulkTanimotoSimilarity(fp[j], fp))
-                order = tanimoto.argsort()
-                dist[order[0]] += 0
-                dist[order[-1]] += 10 ** 4
-                for k in range(1, len(order)-1):
-                    dist[order[k]] += tanimoto[order[k+1]] - tanimoto[order[k-1]]
-            fronts[i] = front[dist.argsort()]
-        rank.extend(fronts[i].tolist())
-    return rank
-
-
-def nsgaii_sort(swarm, is_gpu=False):
-    """
-    Crowding distance algorithm to rank the solutions in the same fronter.
-    Args:
-        swarm (np.ndarray): m x n scoring matrix, where m is the number of samples
-            and n is the number of objectives.
-
-        is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,
-            it will be implemented by Numpy and ran on CPUs.
-
-    Returns:
-        rank (np.array): m-d vector as the index of well-ranked solutions.
-    """
-    if is_gpu:
-        swarm = torch.Tensor(swarm).to(DEFAULT_DEVICE)
-        fronts = gpu_non_dominated_sort(swarm)
-    else:
-        fronts = cpu_non_dominated_sort(swarm)
-    rank = []
-    #sort all fronts by crowding distance
-    for t, front in enumerate(fronts):
-        distance = np.zeros(len(front))
-        for i in range(swarm.shape[1]):
-            #sort front small to large for value objective i
-            order = swarm[front, i].argsort()
-            front = front[order]
-            #set distance value smallest and largest value objective i to large value
-            distance[order[0]] = 10 ** 4
-            distance[order[-1]] = 10 ** 4
-            #get all values of objective i in current front
-            m_values = [swarm[j, i] for j in front]
-            #scale for crowding distance by difference between max and min of objective i in front
-            scale = max(m_values) - min(m_values)
-            if scale == 0: scale = 1
-            #calculate crowding distance
-            for j in range(1, len(front) - 1):
-                distance[order[j]] += (swarm[front[j + 1], i] - swarm[front[j - 1], i]) / scale
-        #replace front by front sorted according to crowding distance
-        fronts[t] = front[np.argsort(distance)]
-        rank.extend(fronts[t].tolist())
-    return rank

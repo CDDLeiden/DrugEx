@@ -18,6 +18,7 @@ from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, Smile
 import warnings
 
 from drugex.training.monitors import FileMonitor
+from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property
@@ -316,11 +317,11 @@ def InitializeEvolver(agent, env, prior, algorithm, batch_size, epsilon, beta, s
     
     if algorithm == 'graph':
         # FIXME:  sigma=beta? strange...
-        evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, scheme=scheme, repeat=1, n_samples=n_samples)
+        evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
     elif algorithm == 'rnn':
-        evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, scheme=scheme, repeat=1, n_samples=n_samples)
+        evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
     else:
-        evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, scheme=scheme, repeat=1, n_samples=n_samples)
+        evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
     
     return evolver
     
@@ -366,7 +367,12 @@ def CreateDesirabilityFunction(base_dir,
         ths (lst)                   : list desirability thresholds per scorer
         
     """
-    
+
+    schemes = {
+        "PR" : ParetoSimilarity(),
+        "CD" : ParetoCrowdingDistance(),
+        "WS" : WeightedSum()
+    }
     objs = []
     ths = []
     targets = active_targets + inactive_targets
@@ -419,7 +425,7 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(Property('logP', modifier=ClippedScore(lower_x=logP_ths[1], upper_x=logP_ths[0])))
         ths.append(0.5)
     
-    return DrugExEnvironment(objs, ths)
+    return DrugExEnvironment(objs, ths, schemes[scheme])
 
 def SetGeneratorAlgorithm(voc, alg):
     

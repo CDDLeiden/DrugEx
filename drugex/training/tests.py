@@ -19,6 +19,7 @@ from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.models import GPT2Model, EncDec, Seq2Seq, RNN, GraphModel
 from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
+from drugex.training.rewards import ParetoCrowdingDistance, ParetoSimilarity, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property
@@ -95,7 +96,8 @@ class TrainingTestCase(TestCase):
     thresholds = [0.5, 0.99]
 
     def getTestEnvironment(self):
-        return DrugExEnvironment(self.scorers, thresholds=self.thresholds)
+        scheme = ParetoSimilarity()
+        return DrugExEnvironment(self.scorers, thresholds=self.thresholds, reward_scheme=scheme)
 
     def getSmilesPretrain(self):
         return self.standardize(pd.read_csv(self.pretraining_file, header=0, sep='\t')['CANONICAL_SMILES'].tolist())
