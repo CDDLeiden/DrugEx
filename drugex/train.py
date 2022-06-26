@@ -164,7 +164,7 @@ def DataPreparationGraph(voc_files,
     for v in voc_files:
         path = data_path + f"{v}_graph_{logSettings.runID}.txt"
         if not os.path.exists(path):
-            logSettings.log.warning('Reading voc_graph.txt instead of voc_graph_%s.txt' % runid)
+            logSettings.log.warning('Reading voc_graph.txt instead of %s' % path)
             path = data_path + "voc_graph.txt"
         if os.path.exists(path):
             voc_paths.append(path)

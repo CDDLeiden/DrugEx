@@ -269,6 +269,7 @@ class GraphExplorer(Explorer):
                 if epoch - last_save > 50: break
 
                 smiles_scores = []
+                logger.debug(f'Epoch: {epoch}')
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))

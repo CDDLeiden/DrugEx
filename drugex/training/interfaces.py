@@ -116,7 +116,7 @@ class Model(nn.Module, ABC):
         pass
 
     def loadStatesFromFile(self, path):
-        self.load_state_dict(torch.load(path, map_location=self.device))
+        self.load_state_dict(torch.load(path, map_location=self.device), strict=False)
 
 class Generator(Model, ABC):
 
