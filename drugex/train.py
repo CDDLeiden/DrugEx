@@ -95,6 +95,8 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-qed', '--qed', action='store_true',
                         help="If on, QED is used in desirability function")
+    parser.add_argument('-sas', '--sa_score', action='store_true',
+                        help="If on, Synthetic Accessibility score is used in desirability function")       
     parser.add_argument('-ras', '--ra_score', action='store_true',
                         help="If on, Retrosynthesis Accessibility score is used in desirability function")
     parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
@@ -335,6 +337,7 @@ def CreateDesirabilityFunction(base_dir,
                                inactive_targets=[], 
                                activity_threshold=6.5, 
                                qed=False, 
+                               sa_score=False,
                                ra_score=False, 
                                ra_score_model='XBG',
                                mw=False,
@@ -414,6 +417,9 @@ def CreateDesirabilityFunction(base_dir,
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
+    if sa_score:
+        objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
+        ths.append(0.5)
     if ra_score:
         from drugex.training.scorers.ra_scorer import RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -552,6 +558,7 @@ def RLTrain(args):
         inactive_targets=args.inactive_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
+        sa_score=args.sa_score,
         ra_score=args.ra_score,
         ra_score_model=args.ra_score_model,
         mw=args.molecular_weight,
