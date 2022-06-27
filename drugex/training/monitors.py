@@ -14,14 +14,14 @@ from drugex.training.interfaces import TrainingMonitor
 
 class FileMonitor(TrainingMonitor):
 
-    def __init__(self, path):
+    def __init__(self, path, verbose=False):
         self.path = path
         self.directory = os.path.dirname(path)
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         self.out = open(path + '.log', 'w', encoding='utf-8')
         self.bestState = None
-        self.verbose = False
+        self.verbose = verbose
 
     def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
         self.out.write(f"Current loss: {loss} \n")
@@ -32,7 +32,7 @@ class FileMonitor(TrainingMonitor):
         if 'smiles_scores' in kwargs:
             smiles_scores = kwargs['smiles_scores']
             for item in smiles_scores:
-                self.out.write('%d\t%.3f\t%s\t%s\n' % (item[1], item[2], item[3], item[0]))
+                self.out.write('\t'.join([str(x) for x in item]) + '\n')
         self.out.write(f"Other data: \n\t args=\n{args} \n\t kwargs=\n{kwargs} \n")
         self.out.flush()
 

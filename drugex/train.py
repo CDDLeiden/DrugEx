@@ -474,7 +474,7 @@ def PreTrain(args):
     
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     trainer = Pretrainer(agent, gpus=args.gpu)
-    monitor = FileMonitor(pt_path)
+    monitor = FileMonitor(pt_path, verbose=True)
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
         
 def FineTune(args):
@@ -505,7 +505,7 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.algorithm)
     trainer = FineTuner(agent, gpus=args.gpu)
     trainer.loadStatesFromFile(pt_path)
-    monitor = FileMonitor(ft_path)
+    monitor = FileMonitor(ft_path, verbose=True)
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
                               
 def RLTrain(args):
@@ -564,7 +564,7 @@ def RLTrain(args):
     ## first difference for v2 needs to be adapted
     explorer = InitializeEvolver(agent, environment, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme, args.n_samples)
     trainer = Reinforcer(explorer)
-    monitor = FileMonitor(rl_path)
+    monitor = FileMonitor(rl_path, verbose=True)
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
     
     with open(rl_path + '.json', 'w') as fp:
