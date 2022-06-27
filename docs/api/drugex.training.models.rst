@@ -44,6 +44,14 @@ drugex.training.models.explorer module
    :undoc-members:
    :show-inheritance:
 
+drugex.training.models.ra\_scorer module
+----------------------------------------
+
+.. automodule:: drugex.training.models.ra_scorer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 drugex.training.models.single\_network module
 ---------------------------------------------
 

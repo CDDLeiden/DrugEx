@@ -7,15 +7,15 @@ Submodules
 drugex.utils.fingerprints module
 --------------------------------
 
-.. automodule:: drugex.utils.gcmol
+.. automodule:: drugex.utils.fingerprints
    :members:
    :undoc-members:
    :show-inheritance:
 
-drugex.utils.fingerprints module
---------------------------------
+drugex.utils.gcmol module
+-------------------------
 
-.. automodule:: drugex.utils.fingerprints
+.. automodule:: drugex.utils.gcmol
    :members:
    :undoc-members:
    :show-inheritance:

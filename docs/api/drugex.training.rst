@@ -37,6 +37,14 @@ drugex.training.monitors module
    :undoc-members:
    :show-inheritance:
 
+drugex.training.rewards module
+------------------------------
+
+.. automodule:: drugex.training.rewards
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 drugex.training.tests module
 ----------------------------
 
