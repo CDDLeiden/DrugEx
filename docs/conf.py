@@ -22,7 +22,12 @@ copyright = '2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde S
 author = 'Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho'
 
 # The full version, including alpha/beta/rc tags
-release = '3.1.0'
+import importlib.util
+spec = importlib.util.spec_from_file_location("drugex.about", "../drugex/about.py")
+about = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(about)
+release = about.VERSION
+version = f'v{release}'
 
 
 # -- General configuration ---------------------------------------------------
