@@ -55,6 +55,7 @@ def DesignArgParser(txt=None):
     args.inactive_targets = g_params['inactive_targets']
     args.activity_threshold = g_params['activity_threshold']
     args.qed = g_params['qed']
+    args.sa_score = g_params['sa_score']
     args.ra_score = g_params['ra_score']
     args.ra_score_model = g_params['ra_score_model']
     args.env_runid = g_params['env_runid']
@@ -167,6 +168,7 @@ def Design(args):
         inactive_targets=args.inactive_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
+        sa_score=args.sa_score,
         ra_score=args.ra_score,
         ra_score_model=args.ra_score_model,
         mw=args.molecular_weight,
