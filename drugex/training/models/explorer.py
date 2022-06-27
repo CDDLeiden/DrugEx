@@ -237,8 +237,11 @@ class GraphExplorer(Explorer):
                 t0 = time.time()
                               
                 if self.nSamples > 0:
-                    train_loader = self.sample_input(train_loader)
-                    valid_loader = self.sample_input(valid_loader, is_test=True)
+                    if epoch == 0 :
+                        train_loader_original = train_loader
+                        valid_loader_original = valid_loader
+                    train_loader = self.sample_input(train_loader_original)
+                    valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
                 total_batches = len(train_loader)
                 for i, src in enumerate(train_loader):
@@ -256,9 +259,10 @@ class GraphExplorer(Explorer):
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.getScorerKeys()].values.mean()
                 valid = scores.VALID.mean()
+                unique = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Time: {t1-t0:.1f}s")   
+                logger.info(f"Epoch: {epoch} Mean Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
         
                 if best_score < desire:
                     monitor.saveModel(self)
@@ -266,6 +270,7 @@ class GraphExplorer(Explorer):
                     best_score = desire
                     last_save = epoch
                     last_it = it
+                    logger.info(f"Model saved at epoch {epoch}")
                 if epoch - last_save > 50: break
 
                 smiles_scores = []
@@ -387,8 +392,11 @@ class SmilesExplorer(Explorer):
                 t0 = time.time()
 
                 if self.nSamples > 0:
-                    train_loader = self.sample_input(train_loader)
-                    valid_loader = self.sample_input(valid_loader, is_test=True)
+                    if epoch == 0 :
+                        train_loader_original = train_loader
+                        valid_loader_original = valid_loader
+                    train_loader = self.sample_input(train_loader_original)
+                    valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
                 logger.info('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
                 for i, (ix, src) in enumerate(tqdm(train_loader, desc='Batch')):
