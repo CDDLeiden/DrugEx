@@ -11,8 +11,21 @@ from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 
 
 class SequenceCorpus(Corpus):
+    """
+    A `Corpus` to encode molecules for the sequence-based models.
+    """
 
     def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, check_unique=True):
+        """
+        Create a sequence corpus.
+
+        Args:
+            molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply sequence representations of molecules (i.e. SMILES strings)
+            vocabulary: a `SequenceVocabulary` instance to be used for encoding and collecting tokens
+            update_voc: `True` if the tokens in the vocabulary should be updated with new tokens derived from the data (the `SequenceVocabulary.addWordsFromSeq()` method is used for splitting instead of doing simply `SequenceVocabulary.splitSequence()`)
+            check_unique: Skip identical sequences in "molecules".
+        """
+
         super().__init__(molecules)
         self.vocabulary = vocabulary
         self.updateVoc = update_voc
@@ -20,12 +33,39 @@ class SequenceCorpus(Corpus):
         self._unique = set()
 
     def saveVoc(self, path):
+        """
+        Save the current state of the vocabulary to a file.
+
+        Args:
+            path: Path to the generated file.
+
+        Returns:
+            `None`
+        """
+
         self.vocabulary.toFile(path)
 
     def getVoc(self):
+        """
+        Return current vocabulary.
+
+        Returns:
+            Current vocabulary as a `SequenceVocabulary` instance.
+        """
+
         return self.vocabulary
 
     def processMolecule(self, seq):
+        """
+        Generate encoding information for the given molecule sequence.
+
+        Args:
+            seq: molecule as a sequence (i.e. SMILES string)
+
+        Returns:
+            a `dict` where "seq" is the key to the original sequence and "token" to the generated encoding of this sequence
+        """
+
         if self.checkUnique and seq in self._unique:
             return None
 

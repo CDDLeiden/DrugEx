@@ -16,8 +16,21 @@ from drugex.molecules.converters.standardizers import CleanSMILES
 
 
 class Fragmenter(CleanSMILES):
+    """
+    Reference implementation of the original fragmenter used in DrugEx v3.
+
+    """
 
     def __init__(self, n_frags, n_combs, method='recap', deep_clean=True):
+        """
+
+        Args:
+            n_frags: number of fragments to generate per compound
+            n_combs: maximum number of combinations of the found leaf fragments
+            method: fragmentation method to use. Possible values: ('recap', 'brics')
+            deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)
+        """
+
         super().__init__(deep_clean)
         self.nFrags = n_frags
         self.nCombs = n_combs
@@ -26,6 +39,16 @@ class Fragmenter(CleanSMILES):
             raise ConversionException(f"Unknown fragmentation method: {self.method}")
 
     def getFragments(self, mol):
+        """
+        Get fragments form an RDKit molecule
+
+        Args:
+            mol: instance of `rdkit.Chem.Mol`
+
+        Returns:
+            `numpy.array` of generated fragments
+        """
+
         # break molecule into leaf fragments
         if self.method == 'recap':
             frags = np.array(sorted(Recap.RecapDecompose(mol).GetLeaves().keys()))
@@ -39,6 +62,16 @@ class Fragmenter(CleanSMILES):
         return frags
 
     def __call__(self, smiles):
+        """
+        Generate fragment-molecule pairs for a given SMILES string.
+
+        Args:
+            smiles: SMILES of the molecule to fragment
+
+        Returns:
+            a list of `tuple`s of format  (fragment, smiles), smiles is the same as the input in "smiles"
+        """
+
         ret_frags = []
         smiles = super().__call__(smiles)
         mol = Chem.MolFromSmiles(smiles)

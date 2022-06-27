@@ -186,10 +186,11 @@ def Dataset(args):
             pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
             pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
         splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
+        fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method)
 
         if args.mol_type == 'graph':
             encoder = FragmentCorpusEncoder(
-                fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
+                fragmenter=fragmenter,
                 encoder=GraphFragmentEncoder(
                     VocGraph(n_frags=args.n_frags)
                 ),
@@ -205,7 +206,7 @@ def Dataset(args):
             data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
                                ] if splitter else [SmilesFragDataSet(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
             encoder = FragmentCorpusEncoder(
-                fragmenter=Fragmenter(args.n_frags, args.n_combs, args.frag_method),
+                fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
                     VocSmiles()
                 ),

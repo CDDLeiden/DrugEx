@@ -11,6 +11,9 @@ from drugex.molecules.interfaces import MolSupplier
 
 
 class Vocabulary(ABC):
+    """
+    Definition of the vocabulary interface. All vocabularies contain "words" that are used for encoding and decoding molecules.
+    """
 
     def __init__(self, words):
         self.words = words
@@ -35,7 +38,10 @@ class Vocabulary(ABC):
     def toFile(self, path):
         pass
 
-class VocabularySequence(Vocabulary, ABC):
+class SequenceVocabulary(Vocabulary, ABC):
+    """
+    Generic vocabulary for sequence-based models.
+    """
 
     def __init__(self, words, max_len=100, min_len=10):
         """
@@ -82,8 +88,16 @@ class VocabularySequence(Vocabulary, ABC):
         self.ix2tk = {v: k for k, v in self.tk2ix.items()}
 
 class Corpus(MolSupplier, ABC):
+    """
+    A `MolSupplier` that generates encoded molecule data from the given input.
+    """
 
     def __init__(self, molecules):
+        """
+
+        Args:
+            molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply molecules
+        """
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
 
     def next(self):
@@ -104,10 +118,27 @@ class Corpus(MolSupplier, ABC):
 
     @abstractmethod
     def processMolecule(self, molecule):
+        """
+        Process one molecule.
+
+        Args:
+            molecule: a molecule instance (representation depend on the implementation).
+
+        Returns:
+            encoded data of the molecule (i.e. data associated with one input sample to the desired DrugEx model)
+        """
+
         pass
 
     @abstractmethod
     def getVoc(self):
+        """
+        Corpus should keep track of the 'Vocabulary' used to encode molecules. This method should return its current state.
+
+        Returns:
+            currently used `Vocabulary`
+        """
+
         pass
 
 

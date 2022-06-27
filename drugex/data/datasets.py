@@ -14,8 +14,11 @@ from drugex.data.interfaces import DataSet, DataToLoader
 
 
 class SmilesDataSet(DataSet):
+    """
+    `DataSet` that holds the encoded SMILES representations of molecules for sequence-based DrugEx models.
+    """
 
-    columns=('Smiles', 'Token')
+    columns=('Smiles', 'Token') # column names to use for the data frame
 
     def __init__(self, path, voc=VocSmiles()):
         super().__init__(path)
@@ -44,6 +47,16 @@ class SmilesDataSet(DataSet):
         return loader
 
     def __call__(self, result):
+        """
+        Collect results from `SequenceCorpus`.
+
+        Args:
+            result: A list of items generated from `SequenceCorpus` to be added to the current `DataSet`.
+
+        Returns:
+            `None`
+        """
+
         self.data.extend([(x['seq'], x['token']) for x in result[0]])
 
         voc = result[1].getVoc()
@@ -52,18 +65,33 @@ class SmilesDataSet(DataSet):
         else:
             self.voc += voc
 
-    def fromFile(self, path, vocs=tuple(), voc_class=None, smiles_col='Smiles', token_col='Token'):
+    def fromFile(self, path, vocs=tuple(), voc_class=None, smiles_col=columns[0], token_col=columns[1]):
+        """
+
+        Args:
+            path: see `DataSet.fromFile()`
+            vocs: see `DataSet.fromFile()`
+            voc_class: see `DataSet.fromFile()`
+            smiles_col: column in the input file with the SMILES strings of molecules
+            token_col: column in the input file with the generated tokens
+
+        Returns:
+            `None`
+        """
+
         self.data = pd.read_csv(path, header=0, sep='\t', usecols=[smiles_col, token_col]).values.tolist()
-
-        if vocs and voc_class:
-            self.voc = self.readVocs(vocs, voc_class)
-
+        self.voc = self.readVocs(vocs, voc_class)
 
 class SmilesFragDataSet(DataSet):
+    """
+    `DataSet` that holds the encoded SMILES representations of fragment-molecule pairs for the sequence-based DrugEx models.
+    """
+
+    columns=('Input', 'Output')
 
     class TargetCreator(DataToLoader):
         """
-        Old creator that currently is not being used. Saved here just for reference.
+        Old creator for test data that currently is no longer being used. Saved here for future reference.
         """
 
         class TgtData(Dataset):
@@ -97,13 +125,21 @@ class SmilesFragDataSet(DataSet):
             dataset = DataLoader(dataset, batch_size=batch_size, collate_fn=dataset.collate_fn)
             return dataset
 
-    columns=('Input', 'Output')
-
     def __init__(self, path):
         super().__init__(path)
         self.voc = VocSmiles()
 
     def __call__(self, result):
+        """
+        Collect encoded data from the given results. Designated to be used as the collector of encodings for `FragmentCorpusEncoder`.
+
+        Args:
+            result: `tuple` with two items -- a `list` of `tuple`s as supplied by: `FragmentPairsEncodedSupplier` and the `FragmentPairsEncodedSupplier` itself
+
+        Returns:
+            `None`
+        """
+
         self.data.extend(
                 [
                     (
@@ -113,7 +149,7 @@ class SmilesFragDataSet(DataSet):
                     for x in result[0] if x[0] and x[1]
                 ]
             )
-        voc = result[1].encoder.getVoc()
+        voc = result[1].encoder.getVoc() # get vocabulary from the result as well and append to the current one if it exists
         if not self.voc:
             self.voc = voc
         else:
@@ -172,12 +208,25 @@ class SmilesScaffoldDataSet(SmilesFragDataSet):
 
 
 class GraphFragDataSet(DataSet):
+    """
+    `DataSet` to manage the fragment-molecule pair encodings for the graph-based model (`GraphModel`).
+    """
 
     def __init__(self, path):
         super().__init__(path)
         self.voc = VocGraph()
 
     def __call__(self, result):
+        """
+        Collect encoded data from the given results. Designated to be used as the collector of encodings for `FragmentCorpusEncoder`.
+
+        Args:
+            result: `tuple` with two items -- a `list` of `tuple`s as supplied by: `FragmentPairsEncodedSupplier` and the `FragmentPairsEncodedSupplier` itself
+
+        Returns:
+            `None`
+        """
+
         self.data.extend(x[1] for x in result[0])
 
     def addVoc(self, voc):

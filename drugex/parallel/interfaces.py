@@ -84,5 +84,16 @@ class ParallelProcessor(ABC):
         return method(data)
 
     @abstractmethod
-    def apply(self, data):
+    def apply(self, data, collector=None):
+        """
+        Apply the processor on the given data.
+
+        Args:
+            data: input data (format depends on the implementation)
+            collector: a `ResultCollector` that can be used to collect data instead of returning the result
+
+        Returns:
+            the concatenated result from the parallel operations (it should be `None` if the "collector" is not `None`).
+        """
+
         pass

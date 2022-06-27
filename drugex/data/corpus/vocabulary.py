@@ -11,11 +11,11 @@ import pandas as pd
 import torch
 from rdkit import Chem
 
-from drugex.data.corpus.interfaces import VocabularySequence, Vocabulary
+from drugex.data.corpus.interfaces import SequenceVocabulary, Vocabulary
 from drugex.molecules.converters.standardizers import CleanSMILES
 
 
-class VocSmiles(VocabularySequence):
+class VocSmiles(SequenceVocabulary):
     """A class for handling encoding/decoding from SMILES to an array of indices"""
 
     defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH2-]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
@@ -106,6 +106,10 @@ class VocSmiles(VocabularySequence):
         return fps
 
 class VocGPT(VocSmiles):
+    """
+    Modified version of `VocSmiles` adjusted for the sequence transformer (`GPT2Model`).
+
+    """
 
     def __init__(self, words, src_len=1000, trg_len=100, max_len=100, min_len=10):
         super(VocGPT, self).__init__(words, max_len=max_len, min_len=min_len)
