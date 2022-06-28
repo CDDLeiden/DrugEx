@@ -460,9 +460,8 @@ def SetGeneratorAlgorithm(voc, alg):
     return agent
 
 def PreTrain(args):
-    
     """
-    Wrapper to pretrain a generator
+    Wrapper to pretrain a generator.
     
     Arguments:
         args (NameSpace): namespace containing command line arguments
@@ -484,7 +483,6 @@ def PreTrain(args):
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
         
 def FineTune(args):
-    
     """
     Wrapper to finetune a generator
     

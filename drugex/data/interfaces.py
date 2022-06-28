@@ -121,7 +121,7 @@ class DataSet(ResultCollector, ABC):
 
         Args:
             batch_size: the desired batch size
-            splitter: If a split of the data is required (i.e. training/validation set) a custom `DataSplitter` can be supplied. Otherwise, only a single `DataLoader` is created.
+            splitter: If a split of the data is required (i.e. training/validation set) a custom `ChunkSplitter` can be supplied. Otherwise, only a single `DataLoader` is created.
             split_converter: a custom `DataToLoader` implementation can be supplied to convert each split to a `DataLoader`. By default, the `DataSet.dataToLoader()` method is used instead.
             n_samples: Number of desired samples in the supplied data before splitting. If "n_samples > 0" and "len(data) < n_samples", the data of the `DataSet` is oversampled to match "len(data) == n_samples"
             n_samples_ratio: If supplied only "n_samples*n_samples_ratio" samples are generated from this `DataSet` before splitting.
@@ -187,7 +187,7 @@ class DataSet(ResultCollector, ABC):
         Args:
             data: data to convert
             batch_size: batch size
-            splitter: the `DataSplitter` to use
+            splitter: the `ChunkSplitter` to use
             converter: the `DataToLoader` instance to convert with
 
         Returns:

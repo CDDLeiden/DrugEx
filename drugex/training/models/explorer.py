@@ -16,10 +16,13 @@ from drugex.logs import logger
 from drugex.training.interfaces import Explorer    
 
 class GraphExplorer(Explorer):
+    """
+    Graph-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
+    """
+
     def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None):
         super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat)
         self.voc_trg = agent.voc_trg
-        self.mutate = mutate
         self.bestState = None
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
@@ -293,6 +296,9 @@ class GraphExplorer(Explorer):
 
 
 class SmilesExplorer(Explorer):
+    """
+    Smiles-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
+    """
 
     def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None):
         super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat)

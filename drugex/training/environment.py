@@ -12,21 +12,12 @@ from drugex.training.scorers.smiles import SmilesChecker
 
 
 class DrugExEnvironment(Environment):
+    """
+    Original implementation of the environment scoring strategy for DrugEx v3.
 
-    def getScores(self, smiles, is_modified=True, frags=None):
-        """
-        Calculate the scores of all objectives for all of samples
-        Args:
-            mols (List): a list of molecules
-            is_smiles (bool): if True, the type of element in mols should be SMILES sequence, otherwise
-                it should be the Chem.Mol
-            is_modified (bool): if True, the function of modifiers will work, otherwise
-                the modifiers will ignore.
+    """
 
-        Returns:
-            preds (DataFrame): The scores of all objectives for all of samples which also includes validity
-                and desirability for each SMILES.
-        """
+    def getScores(self, smiles, frags=None):
         preds = {}
         mols = [Chem.MolFromSmiles(s) for s in smiles]
         for scorer in self.scorers:

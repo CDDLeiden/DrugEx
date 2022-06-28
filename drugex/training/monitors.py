@@ -13,6 +13,10 @@ from drugex.training.interfaces import TrainingMonitor
 
 
 class FileMonitor(TrainingMonitor):
+    """
+    A simple `TrainingMonitor` implementation with file outputs.
+
+    """
 
     def __init__(self, path, verbose=False):
         self.path = path
@@ -23,7 +27,7 @@ class FileMonitor(TrainingMonitor):
         self.bestState = None
         self.verbose = verbose
 
-    def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
+    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
         self.out.write(f"Current loss: {loss} \n")
         if not self.verbose:
             for key in ('smiles_scores', 'smiles', 'frags'):
@@ -40,7 +44,7 @@ class FileMonitor(TrainingMonitor):
         self.bestState = deepcopy(model.state_dict())
         torch.save(self.bestState, self.path + '.pkg')
 
-    def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
+    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         self.out.write(f"Epoch {current_epoch+1 if current_epoch else '--'}/{total_epochs if total_epochs else '--'}, Step {current_step+1 if current_step else '--'}/{total_steps if total_steps else '--'}\n")
         self.out.flush()
 

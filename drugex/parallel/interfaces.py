@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class DataSplitter(ABC):
+class ChunkSplitter(ABC):
 
     def __init__(self, chunks):
         self.chunks = chunks
@@ -20,7 +20,7 @@ class DataSplitter(ABC):
         pass
 
 
-class ArraySplitter(DataSplitter):
+class ArraySplitter(ChunkSplitter):
 
     @staticmethod
     def isIter(chunk):
@@ -61,7 +61,7 @@ class ParallelProcessor(ABC):
         Args:
             n_proc: Number of processes to initialize. Defaults to all available CPUs.
             chunk_size: Maximum size of a chunk to process by a single CPU (can help bring down memory usage, but more processing overhead). If `None`, it is set to "len(data) / n_proc".
-            chunks: Number of chunks to divide the input data into. Defaults to 'n_proc'. You can also provide a `DataSplitter` that produces the chunks of data to be processed itself. If "chunks" is present, "chunkSize" is ignored.
+            chunks: Number of chunks to divide the input data into. Defaults to 'n_proc'. You can also provide a `ChunkSplitter` that produces the chunks of data to be processed itself. If "chunks" is present, "chunkSize" is ignored.
         """
         self.nProc = n_proc if n_proc else multiprocessing.cpu_count()
         self.chunkSize = chunk_size

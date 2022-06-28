@@ -15,7 +15,7 @@ from drugex.data.interfaces import DataSet, DataToLoader
 
 class SmilesDataSet(DataSet):
     """
-    `DataSet` that holds the encoded SMILES representations of molecules for sequence-based DrugEx models.
+    `DataSet` that holds the encoded SMILES representations of molecules for the single-network sequence-based DrugEx model (`RNN`).
     """
 
     columns=('Smiles', 'Token') # column names to use for the data frame
@@ -84,7 +84,7 @@ class SmilesDataSet(DataSet):
 
 class SmilesFragDataSet(DataSet):
     """
-    `DataSet` that holds the encoded SMILES representations of fragment-molecule pairs for the sequence-based DrugEx models.
+    `DataSet` that holds the encoded SMILES representations of fragment-molecule pairs for the sequence-based encoder-decoder type of DrugEx models.
     """
 
     columns=('Input', 'Output')

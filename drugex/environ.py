@@ -709,7 +709,7 @@ def EnvironmentArgParser(txt=None):
     return args
 
 
-def Environment(args, runid):
+def Environ(args, runid):
     """ 
         Optimize, evaluate and train estimators
     """
@@ -797,4 +797,4 @@ if __name__ == '__main__':
     N_EPOCH = args.epochs
     
     #Optimize, evaluate and train estimators according to environment arguments
-    Environment(args, runid)
+    Environ(args, runid)

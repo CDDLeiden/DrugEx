@@ -175,7 +175,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
         Args:
             fragmenter: a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. The reference implementation is `Fragmenter`.
             encoder:  a `FragmentPairEncoder` that handles how molecules and fragments are encoded in the final result
-            pairs_splitter: a `DataSplitter` that divides the generated molecule-fragment pairs from the "fragmenter" to splits (i.e. test and train)
+            pairs_splitter: a `ChunkSplitter` that divides the generated molecule-fragment pairs from the "fragmenter" to splits (i.e. test and train)
             n_proc: number of processes to use for parallel operations
             chunk_size: maximum size of data chunks processed by a single process (can save memory)
         """
@@ -299,7 +299,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
 
 class FragmentPairsSplitter(DataSplitter):
     """
-    A `DataSplitter` to be used to split molecule-fragment pairs into training and test data.
+    A `ChunkSplitter` to be used to split molecule-fragment pairs into training and test data.
     """
 
     def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles", unique_only=False, seed=None):

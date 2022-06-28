@@ -42,14 +42,14 @@ class TestModelMonitor(TrainingMonitor):
         self.model = model
         self.execution['model'] = True
 
-    def saveProgress(self, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs):
+    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
         print(current_step, current_epoch, total_steps, total_epochs)
         print(args)
         print(kwargs)
         self.execution['progress'] = True
 
-    def savePerformanceInfo(self, current_step, current_epoch, loss, *args, **kwargs):
+    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
         print("Test Performance Monitor:")
         print(current_step, current_epoch, loss)
         print(args)
