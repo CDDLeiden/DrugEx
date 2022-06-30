@@ -45,7 +45,7 @@ class DataSet(ResultCollector, ABC):
     Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.
     """
 
-    def __init__(self, path, no_file_init=False):
+    def __init__(self, path, autoload=False):
         """
         Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.
 
@@ -58,7 +58,7 @@ class DataSet(ResultCollector, ABC):
 
         self.outpath = path
         self.data = []
-        if not no_file_init and os.path.exists(self.outpath):
+        if autoload and os.path.exists(self.outpath):
             try:
                 self.fromFile(self.outpath)
                 logger.info(f"Reading data set from an existing file: {self.outpath}. If it is not desired, disable it with: no_file_init=True")

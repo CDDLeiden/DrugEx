@@ -192,12 +192,12 @@ def DataPreparationGraph(voc_files,
     logSettings.log.info(f'Loading validation data from {test_path}')
 
     # Load train data
-    data_set_train = GraphFragDataSet(train_path)
+    data_set_train = GraphFragDataSet(train_path, autoload=True)
     if voc_paths:
         data_set_train.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
 
     # Load test data
-    data_set_test = GraphFragDataSet(test_path)
+    data_set_test = GraphFragDataSet(test_path, autoload=True)
     if voc_paths:
         data_set_test.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     
@@ -265,11 +265,11 @@ def DataPreparationSmiles(voc_files,
     valid_loader = None
     if args.algorithm == 'gpt':
         # GPT with fragments
-        data_set_train = SmilesFragDataSet(train_path)
+        data_set_train = SmilesFragDataSet(train_path, autoload=True)
         data_set_train.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        data_set_test = SmilesFragDataSet(test_path)
+        data_set_test = SmilesFragDataSet(test_path, autoload=True)
         data_set_test.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
@@ -277,7 +277,7 @@ def DataPreparationSmiles(voc_files,
     elif args.algorithm == 'rnn':
         # Without input fragments
         # we need to generate the split
-        data_set = SmilesDataSet(data_path + f'{input_prefix}_{runid}.txt')
+        data_set = SmilesDataSet(data_path + f'{input_prefix}_{runid}.txt', autoload=True)
         data_set.readVocs(voc_paths, VocSmiles, max_len=100)
 
         train_loader, valid_loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples, splitter=RandomTrainTestSplitter(0.1))
@@ -285,11 +285,11 @@ def DataPreparationSmiles(voc_files,
         voc = data_set.getVoc()
     else:
         # all smiles-based with fragments
-        data_set_train = SmilesFragDataSet(train_path)
+        data_set_train = SmilesFragDataSet(train_path, autoload=True)
         data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        data_set_test = SmilesFragDataSet(test_path)
+        data_set_test = SmilesFragDataSet(test_path, autoload=True)
         data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
