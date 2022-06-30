@@ -169,6 +169,14 @@ class FragmentCorpusEncoder(ParallelProcessor):
 
     """
 
+    class DefaultPairsSplitter(DataSplitter):
+
+        molCol = "Smiles"
+        fragsCol = "Frags"
+
+        def __call__(self, pairs):
+            return [pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])]
+
     def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
         """
 
@@ -183,7 +191,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
         super().__init__(n_proc, chunk_size)
         self.fragmenter = fragmenter
         self.encoder = encoder
-        self.pairsSplitter = pairs_splitter if pairs_splitter else FragmentPairsSplitter()
+        self.pairsSplitter = pairs_splitter if pairs_splitter else self.DefaultPairsSplitter()
 
     def getFragmentPairs(self, mols, collector):
         """

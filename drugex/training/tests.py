@@ -252,6 +252,12 @@ class TrainingTestCase(TestCase):
         self.assertTrue(monitor.allMethodsExecuted())
         pr_model = monitor.getModel()
 
+        # test molecule generation
+        pr_model.sampleFromSmiles([
+            "c1ccncc1CCC",
+            "CCO"
+        ], min_samples=1)
+
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(128)
         ft_loader_test = ft_data_set_test.asDataLoader(256)

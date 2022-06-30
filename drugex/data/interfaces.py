@@ -133,6 +133,8 @@ class DataSet(ResultCollector, ABC):
         split_converter = split_converter if split_converter else self.dataToLoader
 
         data = self.getData()
+        if len(data) == 0:
+            raise ValueError("DataSet is not initialized. Cannot convert to data loader.")
 
         if n_samples_ratio:
             n_samples = int(n_samples*n_samples_ratio)

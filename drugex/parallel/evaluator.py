@@ -7,7 +7,7 @@ On: 29.05.22, 18:12
 import multiprocessing
 
 from drugex.logs import logger
-from drugex.parallel.interfaces import ArraySplitter, ParallelException, ParallelProcessor
+from drugex.parallel.interfaces import ParallelException, ParallelProcessor
 
 
 class ParallelSupplierEvaluator(ParallelProcessor):
@@ -120,7 +120,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
         logger.exception(data)
         raise ParallelException(data)
 
-    def apply(self, data):
+    def apply(self, data, collector=None):
         """
         Apply the `ParallelSupplierEvaluator.run()` across a `Pool` of workers.
 

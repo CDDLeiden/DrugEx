@@ -288,7 +288,7 @@ class GraphModel(Base):
         return smiles, frags
 
 
-    def sampleFromSmiles(self, smiles, repeat=1, min_samples=None, n_proc=1, fragmenter=None):
+    def sampleFromSmiles(self, smiles, repeat=1, min_samples=100, n_proc=1, fragmenter=None):
         standardizer = Standardization(n_proc=n_proc)
         smiles = standardizer.apply(smiles)
 
