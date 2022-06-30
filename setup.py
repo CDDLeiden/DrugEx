@@ -13,4 +13,4 @@ ver_path = convert_path('drugex/about.py')
 with open(ver_path) as ver_file:
     exec(ver_file.read(), main_ns)
 
-setup(version=main_ns['VERSION'])
+setup(version=main_ns['VERSION'], scripts=['scripts/drugex'])
