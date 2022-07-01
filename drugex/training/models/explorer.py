@@ -436,7 +436,7 @@ class SmilesExplorer(Explorer):
 
                 if best_score < desire:
                     monitor.saveModel(self)
-                    self.bestState = deepcopy(self.state_dict())
+                    self.bestState = deepcopy(self.agent.state_dict())
                     best_score = desire
                     last_save = epoch
                     last_it = it
