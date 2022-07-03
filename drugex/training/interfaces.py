@@ -479,7 +479,7 @@ class Trainer(ModelProvider, ABC):
 
         assert len(gpus) > 0
         self.availableGPUs = gpus
-        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
+        # os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
         self.device = None
         self.deviceID = None
         self.model = algorithm
