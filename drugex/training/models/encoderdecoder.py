@@ -11,6 +11,8 @@ from drugex.logs import logger
 from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
+from ..monitors import NullMonitor
+
 
 class Base(Generator, ABC):
 
@@ -19,18 +21,23 @@ class Base(Generator, ABC):
         self.to(self.device)
 
     @abstractmethod
-    def trainNet(self, loader):
+    def trainNet(self, loader, monitor=None):
+        pass
+
+    @abstractmethod
+    def validate(self, loader, evaluator=None):
         pass
         
     def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
         max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
          
         for epoch in tqdm(range(epochs)):
-            
+            epoch += 1
             t0 = time.time()
-            loss_train = self.trainNet(train_loader)
+            self.trainNet(train_loader, monitor)
             valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator)
             t1 = time.time()
             
@@ -43,8 +50,8 @@ class Base(Generator, ABC):
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
                 
-            monitor.savePerformanceInfo(None, epoch, loss_train, loss_valid=loss_valid, valid=valid, best=best, smiles_scores=smiles_scores)
-            del loss_train, loss_valid
+            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, best_loss=best, smiles_scores=smiles_scores)
+            del loss_valid
             monitor.endStep(None, epoch)
                 
             if epoch - last_save > max_interval : break
@@ -69,8 +76,11 @@ class Base(Generator, ABC):
         
 class SmilesFragsGeneratorBase(Base):
         
-    def trainNet(self, loader):
-        net = nn.DataParallel(self, device_ids=self.devices) 
+    def trainNet(self, loader, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
+        net = nn.DataParallel(self, device_ids=self.devices)
+        total_steps = len(loader)
+        current_step = 0
         for src, trg in loader:
             src, trg = src.to(self.device), trg.to(self.device)
             self.optim.zero_grad()
@@ -78,8 +88,9 @@ class SmilesFragsGeneratorBase(Base):
             loss = -loss.mean()     
             loss.backward()
             self.optim.step()
-            
-        return loss
+            current_step += 1
+            monitor.saveProgress(current_step, None, total_steps, None)
+            monitor.savePerformanceInfo(current_step, None, loss.item())
             
     def validate(self, loader, evaluator=None):
         

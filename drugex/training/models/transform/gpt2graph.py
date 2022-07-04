@@ -12,6 +12,8 @@ from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
 from torch import optim
 
+from ...monitors import NullMonitor
+
 
 class Block(nn.Module):
     def __init__(self, d_model, n_head, d_inner):
@@ -243,9 +245,11 @@ class GraphModel(Base):
             out = src
         return out
     
-    def trainNet(self, loader):
-        
+    def trainNet(self, loader, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
         net = nn.DataParallel(self, device_ids=self.devices)
+        total_steps = len(loader)
+        current_step = 0
         for src in loader:
             src = src.to(self.device)
             self.optim.zero_grad()
@@ -253,8 +257,9 @@ class GraphModel(Base):
             loss = sum([-l.mean() for l in loss])   
             loss.backward()
             self.optim.step()
-            
-        return loss
+            current_step += 1
+            monitor.saveProgress(current_step, None, total_steps, None)
+            monitor.savePerformanceInfo(current_step, None, loss.item())
                 
     def validate(self, loader, evaluator=None):
         

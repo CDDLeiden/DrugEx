@@ -13,7 +13,9 @@ from tqdm import tqdm
 import numpy as np
 
 from drugex.logs import logger
-from drugex.training.interfaces import Explorer    
+from drugex.training.interfaces import Explorer
+from drugex.training.monitors import NullMonitor
+
 
 class GraphExplorer(Explorer):
     """
@@ -177,12 +179,12 @@ class GraphExplorer(Explorer):
             exists[order, src[:, step, 2], src[:, step, 1]] = src[:, step, 3]
         return src
 
-    def policy_gradient(self, loader, progress=None):
+    def policy_gradient(self, loader, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
         net = nn.DataParallel(self.agent, device_ids=self.devices)
         total_steps = len(loader)
         for step_idx, src in enumerate(loader):
-            if progress:
-                progress.saveProgress(step_idx, None, total_steps, None)
+            monitor.saveProgress(step_idx, None, total_steps, None)
             src = src.to(self.device)
             frags, smiles = self.voc_trg.decode(src)
             reward = self.env.getRewards(smiles, frags=frags)
@@ -193,8 +195,7 @@ class GraphExplorer(Explorer):
             loss = sum(loss).squeeze(dim=-1) * reward
             loss = -loss.mean()
             loss.backward()
-            if progress:
-                progress.savePerformanceInfo(step_idx, None, loss.item())
+            monitor.savePerformanceInfo(step_idx, None, loss.item())
             self.optim.step()
             del loss
             
@@ -225,6 +226,7 @@ class GraphExplorer(Explorer):
         
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
         best_score = 0
         self.bestState = deepcopy(self.agent.state_dict())
         monitor.saveModel(self.agent)
@@ -235,8 +237,10 @@ class GraphExplorer(Explorer):
         logger.info(' ')
         for it in range(n_iters):
             last_save = -1
-            logger.info('\n----------\nITERATION %d/ %d\n----------' % (it, n_iters))
+            if n_iters > 1:
+                logger.info('\n----------\nITERATION %d/%d\n----------' % (it, n_iters))
             for epoch in tqdm(range(epochs)):
+                epoch += 1
                 t0 = time.time()
                               
                 if self.nSamples > 0:
@@ -255,13 +259,13 @@ class GraphExplorer(Explorer):
                         trgs.append(trg.detach().cpu())
                 trgs = torch.cat(trgs, dim=0)
                 loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=True)
-                self.policy_gradient(loader, progress=monitor)
+                self.policy_gradient(loader, monitor=monitor)
                 trgs = []
 
                 frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.getScorerKeys()].values.mean()
-                valid = scores.VALID.mean()
+                valid = scores.VALID.sum() / len(smiles)
                 unique = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
@@ -277,13 +281,15 @@ class GraphExplorer(Explorer):
                 if epoch - last_save > 50: break
 
                 smiles_scores = []
+                smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
                 logger.debug(f'Epoch: {epoch}')
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
                     smiles_scores.append((smile, score, frags[i]))
 
-                monitor.saveProgress(None, epoch, None, epochs, score=score, valid=valid, desire=desire, smiles_scores=smiles_scores)
+                monitor.savePerformanceInfo(None, epoch, valid_ratio=valid, desire_ratio=desire, unique_ratio=unique, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+                monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
 
             if self.crover is not None:
@@ -335,7 +341,8 @@ class SmilesExplorer(Explorer):
             if is_end.all(): break
         return out[:, self.agent.voc_trg.max_len:].detach()
 
-    def policy_gradient(self, loader, progress=None):
+    def policy_gradient(self, loader, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
         net = nn.DataParallel(self.agent, device_ids=self.devices)
         total_steps = len(loader)
         step_idx = 0
@@ -347,10 +354,9 @@ class SmilesExplorer(Explorer):
             reward = self.env.getRewards(smiles, frags=frags)
             reward = torch.Tensor(reward).to(src.device)
             loss = net(src, trg) * reward
-            if progress:
-                progress.saveProgress(step_idx, None, total_steps, None)
-                progress.savePerformanceInfo(step_idx, None, loss.mean().item())
             loss = -loss.mean()
+            monitor.saveProgress(step_idx, None, total_steps, None)
+            monitor.savePerformanceInfo(step_idx, None, loss.item())
             loss.backward()
             self.optim.step()
             del loss
@@ -417,22 +423,23 @@ class SmilesExplorer(Explorer):
 
                 dataset = TensorDataset(srcs, trgs)
                 loader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True, drop_last=True)
-                self.policy_gradient(loader, progress=monitor)
+                self.policy_gradient(loader, monitor=monitor)
                 srcs, trgs = [], []
 
                 frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env)
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.getScorerKeys()].values.mean()
-                valid = scores.VALID.mean()
+                valid = scores.VALID.sum() / len(smiles)
 
                 t1 = time.time()
                 logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Time: {t1-t0:.1f}s")  
 
                 smiles_scores = []
+                smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
-                    smiles_scores.append((smile, score))
+                    smiles_scores.append((smile, score, frags[i]))
 
                 if best_score < desire:
                     monitor.saveModel(self.agent)
@@ -440,7 +447,7 @@ class SmilesExplorer(Explorer):
                     best_score = desire
                     last_save = epoch
                     last_it = it
-                monitor.savePerformanceInfo(None, epoch, None, score=score, valid=valid, desire=desire, smiles_scores=smiles_scores)
+                monitor.savePerformanceInfo(None, epoch, None, valid_ratio=valid, desire_ratio=desire, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
                 if epoch - last_save > 50: break

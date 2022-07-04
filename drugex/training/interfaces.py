@@ -405,7 +405,7 @@ class TrainingMonitor(ModelProvider, ABC):
     @abstractmethod
     def saveModel(self, model):
         """
-        Save the `Model` instance currently being trained.
+        Save the state dictionary of the `Model` instance currently being trained or serialize the model any other way.
 
         Args:
             model: a DrugEx `Model`
