@@ -226,8 +226,8 @@ class GraphExplorer(Explorer):
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
         best_score = 0
-        self.bestState = deepcopy(self.state_dict())
-        monitor.saveModel(self)
+        self.bestState = deepcopy(self.agent.state_dict())
+        monitor.saveModel(self.agent)
         last_it = -1
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=self.devices)
@@ -268,7 +268,7 @@ class GraphExplorer(Explorer):
                 logger.info(f"Epoch: {epoch} Mean Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
         
                 if best_score < desire:
-                    monitor.saveModel(self)
+                    monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
                     best_score = desire
                     last_save = epoch
@@ -385,8 +385,8 @@ class SmilesExplorer(Explorer):
         return loader
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
-        self.bestState = deepcopy(self.state_dict())
-        monitor.saveModel(self)
+        self.bestState = deepcopy(self.agent.state_dict())
+        monitor.saveModel(self.agent)
         best_score = 0
         last_it = -1
         n_iters = 1 if self.crover is None else 10
@@ -435,7 +435,7 @@ class SmilesExplorer(Explorer):
                     smiles_scores.append((smile, score))
 
                 if best_score < desire:
-                    monitor.saveModel(self)
+                    monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
                     best_score = desire
                     last_save = epoch
