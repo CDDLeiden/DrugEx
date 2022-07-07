@@ -135,14 +135,16 @@ class FileMonitor(DictMonitor):
         self.out.write(f"Current training loss: {loss} \n")
         if 'smiles_scores' in kwargs:
             smiles_scores = kwargs['smiles_scores']
-            smiles_scores_key = kwargs['smiles_scores_key']
+            smiles_scores_key = kwargs['smiles_scores_key'] if 'smiles_scores_key' in kwargs else [str(x+1) for x in range(len(smiles_scores[0]))]
             if not self.outSmilesHeaderDone:
-                self.outSmiles.write('\t'.join(['Epoch'] + smiles_scores_key) + '\n')
+                header = '\t'.join(['Epoch'] + list(smiles_scores_key)) + '\n'
+                self.outSmiles.write(header)
                 self.outSmilesHeaderDone = True
             for item in smiles_scores:
                 self.outSmiles.write('\t'.join([f'{self.currentEpoch}'] + [str(x) for x in item]) + '\n')
             del kwargs['smiles_scores']
-            del kwargs['smiles_scores_key']
+            if 'smiles_scores_key' in kwargs:
+                del kwargs['smiles_scores_key']
         self.out.write(f"Other data: \n\t args=\n{args} \n\t kwargs=\n{kwargs} \n")
         self.out.flush()
 
