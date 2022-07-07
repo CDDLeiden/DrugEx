@@ -119,17 +119,57 @@ The new compounds are saved to :code:`./new_molecules/arl_graph_trans_RL.tsv`.
     Scaffold-based Reinforcement learning
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    All options
-    -----------
+All options
+-----------
 
-    dataset
-    ^^^^^^^
+Data preparation
+^^^^^^^^^^^^^^^^
 
-    environ
-    ^^^^^^^
+Molecule type
+"""""""""""""
+Depeding on the generator algorithm, molecules reprentation can be either :code:`smiles`- (default) or :code:`graph`-based. This set with :code:`-mt, --mol_type <mol_type>`.
 
-    train
-    ^^^^^
+Input fragments
+"""""""""""""""
 
-    designer
-    ^^^^^^^^
+DrugEx includes generator algroithms that use (v3: :code:`'trans'`, :code:`'ved'` and :code:`'attn'`) or not (v2: :code:`rnn`).
+
+The :code:`-sm, --smiles_corpus` flag should be used in the case of using :code:`rnn` to corpus file without fragmentation of the input ligands.
+
+   
+If input fragments are used, the compound fragmentation can be controlled by several parameters.
+
+**Fragmentation method**: By default, fragmentation is done with :code:`'brics'` (for REF/DEF) but can also be :code:`'recap'` (for REF/DEF). This can be specified with :code:`-fm, --frag_method <method>`.
+
+**Number of fragments**: By default, for each compound, the 4 largest leaf-fragments are considered. Another number can be specified with :code:`-nf, --n_frags <n>`.
+
+**Number of combinations**: By default, for each compound, up to a maximum of :code:`<n_frags>` leaf-fragments are combined for each fragment-combinations. A lower number can be specified with :code:`-nc, --n_combs <n>`.
+
+It is also possible to use a selected scaffold as an input fragment during RL training and the design of new compounds. 
+In that case, the input scaffold is encoded in fragment-style while keeping the whole compound as a fragment.
+This can be specified with :code:`-nof, --no_fragmenatation`.
+
+Saving the Vocabulary
+"""""""""""""""""""""
+
+During the encoding of the input compounds, DrugEx creates Vocabulary tokens (in the case of SMILES representation)
+or atoms (in the case of graph representation). 
+This Vocabulary can be saved to a file to be used during training instead of a default Vocabulary with :code:`-sv, --save_voc`. 
+This is recommended if you expect your data to contain features not present in ChEMBL.
+
+Other
+"""""
+By default,
+    * the name of the column in the input file containing is :code:`'SMILES'`. Another name can be specified with :code:`-mc, --molecule_column <name>`
+    * the preprocessing is parallelized on 8 multi-core tasks. Another number of processes can be specified with :code:`-np, --n_proc <n>`
+    * no intermediate files are saved. They can be written by specifying :code:`-sif, --save_intermediate_files`
+    * the git hash is retrieved. To skip this, specify :code:`-ng, -no_git`
+
+environ
+^^^^^^^
+
+train
+^^^^^
+
+designer
+^^^^^^^^
