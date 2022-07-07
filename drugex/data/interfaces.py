@@ -216,6 +216,8 @@ class DataSet(ResultCollector, ABC):
         Returns:
             `None`
         """
+        if not paths:
+            raise ValueError(f'Invalid paths: {paths}.')
 
         vocs = [voc_class.fromFile(path, *args, **kwargs) for path in paths]
         if len(vocs) > 1:
