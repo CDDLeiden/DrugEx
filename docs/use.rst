@@ -119,18 +119,18 @@ The new compounds are saved to :code:`./new_molecules/arl_graph_trans_RL.tsv`.
     Scaffold-based Reinforcement learning
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All options
------------
+CLI Options
+===========
 
 Data preparation
-^^^^^^^^^^^^^^^^
+----------------
 
 Molecule type
-"""""""""""""
+^^^^^^^^^^^^^
 Depeding on the generator algorithm, molecules reprentation can be either :code:`smiles`- (default) or :code:`graph`-based. This set with :code:`-mt, --mol_type <mol_type>`.
 
 Input fragments
-"""""""""""""""
+^^^^^^^^^^^^^^^
 
 DrugEx includes generator algroithms that use (v3: :code:`'trans'`, :code:`'ved'` and :code:`'attn'`) or not (v2: :code:`rnn`).
 
@@ -150,7 +150,7 @@ In that case, the input scaffold is encoded in fragment-style while keeping the 
 This can be specified with :code:`-nof, --no_fragmenatation`.
 
 Saving the Vocabulary
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 
 During the encoding of the input compounds, DrugEx creates Vocabulary tokens (in the case of SMILES representation)
 or atoms (in the case of graph representation). 
@@ -158,7 +158,8 @@ This Vocabulary can be saved to a file to be used during training instead of a d
 This is recommended if you expect your data to contain features not present in ChEMBL.
 
 Other
-"""""
+^^^^^
+
 By default,
     * the name of the column in the input file containing is :code:`'SMILES'`. Another name can be specified with :code:`-mc, --molecule_column <name>`
     * the preprocessing is parallelized on 8 multi-core tasks. Another number of processes can be specified with :code:`-np, --n_proc <n>`
@@ -166,10 +167,10 @@ By default,
     * the git hash is retrieved. To skip this, specify :code:`-ng, -no_git`
 
 environ
-^^^^^^^
+-------
 
 train
-^^^^^
+-----
 
 designer
-^^^^^^^^
+--------
