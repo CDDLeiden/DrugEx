@@ -244,7 +244,7 @@ class GraphExplorer(Explorer):
                 t0 = time.time()
                               
                 if self.nSamples > 0:
-                    if epoch == 0 :
+                    if epoch == 1:
                         train_loader_original = train_loader
                         valid_loader_original = valid_loader
                     train_loader = self.sample_input(train_loader_original)
