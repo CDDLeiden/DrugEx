@@ -50,7 +50,7 @@ class Base(Generator, ABC):
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
                 
-            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, best_loss=best, smiles_scores=smiles_scores)
+            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Frags'))
             del loss_valid
             monitor.endStep(None, epoch)
                 
