@@ -1,21 +1,20 @@
 import os
+import json
 import time
+import argparse
 
 import pandas as pd
 
 from drugex.data.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
-from drugex.data.processing import Standardization, CorpusEncoder
+from drugex.data.processing import Standardization, CorpusEncoder, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffoldDataSet, GraphFragDataSet, \
     GraphScaffoldDataSet
-from drugex.logs.utils import enable_file_logger, commit_hash
+from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
-
-import argparse
-import json
 
 def load_molecules(base_dir, input_file):
     """
@@ -46,8 +45,6 @@ def DatasetArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
-    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
-    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
                         help="Input file containing raw data. tsv or sdf.gz format")   
@@ -70,8 +67,6 @@ def DatasetArgParser(txt=None):
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
     parser.add_argument('-np', '--n_proc', type=int, default=8,
                         help="Number of parallel processes to use for multi-core tasks. If not specified, this number is set to the number of available CPUs on the system.")
-    parser.add_argument('-vf', '--voc_file', type=str, default='voc',
-                        help="Name for voc file, used to save voc tokens")
     parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
                         help="Name of the column in CSV files that contains molecules.")
     parser.add_argument('-sv', '--save_voc', action='store_true',
@@ -93,14 +88,17 @@ def DatasetArgParser(txt=None):
         
     return args
 
-def save_encoded_data(collectors, file_base, mol_type, save_voc, voc_file, runid):
+def save_encoded_data(collectors, file_base, mol_type, save_voc, output):
     for collector in collectors:
-        collector.save()
+        if type(collector) == pd.DataFrame:
+            collector.to_csv(os.path.join(file_base, f'{output}_{collector.name}_{mol_type if mol_type != "smiles" else "smi"}.txt'), header=True, index=False, sep='\t')
+        else:
+            collector.save()
 
-    vocs = [x.getVoc() for x in collectors]
+    vocs = [x.getVoc() for x in collectors if hasattr(x, 'getVoc')]
     voc = sum(vocs[1:], start=vocs[0])
     if save_voc:
-        voc.toFile(os.path.join(file_base, f'{voc_file}_{mol_type}_{runid}.txt'))
+        voc.toFile(os.path.join(file_base, f'{output}_{mol_type}_voc.txt'))
 
 def Dataset(args):
     """ 
@@ -137,15 +135,21 @@ def Dataset(args):
             },
             n_proc=args.n_proc
         )
-        data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus_{logSettings.runID}.txt'))
+        data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'))
         encoder.apply(smiles, collector=data_collector)
 
-        save_encoded_data([data_collector], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+        df_data_collector = data_collector.getDataFrame()
+        splitter = RandomTrainTestSplitter(0.1, 1e4)
+        train, test = splitter(df_data_collector)
+        train.name = 'train'
+        test.name = 'test'
+        mol_type = 'smiles'
+        save_encoded_data([train, test, data_collector], file_base, mol_type, args.save_voc, args.output)
         
-    if args.no_fragmentation:
+    elif args.no_fragmentation:
         # encode inputs to single fragment-molecule pair without fragmentation and splitting to subsets (only v3 models)
         if args.mol_type == 'graph':
-            data_set = GraphScaffoldDataSet('%s/data/%s_graph_%s.txt' % (args.base_dir, args.output, logSettings.runID))
+            data_set = GraphScaffoldDataSet(os.path.join(file_base, f'{args.output}_graph.txt' ))
             encoder = CorpusEncoder(
                 ScaffoldGraphCorpus,
                 {
@@ -155,9 +159,9 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
             encoder.apply(smiles, collector=data_set)
-            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.output)
         else:
-            data_set = SmilesScaffoldDataSet('%s/data/%s_smi_%s.txt' % (args.base_dir, args.output, logSettings.runID))
+            data_set = SmilesScaffoldDataSet(os.path.join(file_base, f'{args.output}_smi.txt' ))
             encoder = CorpusEncoder(
                 ScaffoldSequenceCorpus,
                 {
@@ -167,12 +171,11 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
             encoder.apply(smiles, collector=data_set)
-            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)            
+            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.output)            
 
     else:
         # create encoded fragment-molecule pair files for train and test set (only v3 models)
-        file_name = f'%s_%d:%d_%s' % (args.output, args.n_frags, args.n_combs, args.frag_method)
-        file_prefix = os.path.join(file_base, file_name)
+        file_prefix = os.path.join(file_base, f'{args.output}')
 
         if args.n_combs > 1 :
             print('Breaking molecules to leaf fragments, making combinations and encoding...')
@@ -182,9 +185,9 @@ def Dataset(args):
         # prepare splitter and collect intermediate files if required
         pair_collectors = dict()
         if args.save_intermediate_files:
-            pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + f'_train_{logSettings.runID}.txt', sep='\t', index=False)
-            pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + f'_test_{logSettings.runID}.txt', sep='\t', index=False)
-            pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + f'_unique_{logSettings.runID}.txt', sep='\t', index=False)
+            pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + '_train.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + '_test.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
         splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
         fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method)
 
@@ -198,13 +201,12 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
 
-            data_collectors = [GraphFragDataSet(file_prefix + f'_{split}' + '_graph_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train' + '_graph_%s.txt' % logSettings.runID)]
+            data_collectors = [GraphFragDataSet(file_prefix + f'_{split}_graph.txt') for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train_graph.txt') ]
             encoder.apply(smiles, encodingCollectors=data_collectors)
 
-            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.output)
         elif args.mol_type == 'smiles':
-            data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}' + '_smi_%s.txt' % logSettings.runID) for split in ('test', 'train', 'unique')
-                               ] if splitter else [SmilesFragDataSet(file_prefix + f'_train' + '_smi_%s.txt' % logSettings.runID)]
+            data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}_smi.txt') for split in ('test', 'train', 'unique')] if splitter else [SmilesFragDataSet(file_prefix + f'_train_smi.txt')]
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
@@ -215,33 +217,35 @@ def Dataset(args):
             )
             encoder.apply(smiles, encodingCollectors=data_collectors)
 
-            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.voc_file, logSettings.runID)
+            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.output)
         else:
             raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(args.mol_type))
 
     tm_finish = time.perf_counter()
 
     print(f"Dataset finished. Execution time: {tm_finish - tm_start:0.4f} seconds")
+     
 
 if __name__ == '__main__':
 
     args = DatasetArgParser()
 
-    # enable logger and get logSettings
+    backup_msg = backUpFiles(args.base_dir, 'data', (args.output,))
+    
     logSettings = enable_file_logger(
-        os.path.join(args.base_dir,'logs'),
+        os.path.join(args.base_dir, 'data'),
         'dataset.log',
-        args.keep_runid,
-        args.pick_runid,
         args.debug,
         __name__,
         commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
+    log = logSettings.log
+    log.info(backup_msg)
 
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open('%s/logs/%s/data_args.json' % (args.base_dir, logSettings.runID), 'w') as f:
+    with open(os.path.join(args.base_dir, 'data', 'dataset.json'), 'w') as f:
         json.dump(vars(args), f)
 
     Dataset(args)

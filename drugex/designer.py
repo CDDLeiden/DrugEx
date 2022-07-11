@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import os
 import json
+import math
 import argparse
 import pandas as pd
 
-import math
-
 from drugex.data.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
-from drugex.logs.utils import enable_file_logger, commit_hash
-from train import SetGeneratorAlgorithm, CreateDesirabilityFunction
+from drugex.data.utils import getVocPaths
+from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
+from drugex.train import SetGeneratorAlgorithm, CreateDesirabilityFunction
 
 def DesignArgParser(txt=None):
     """ Define and read command line arguments """
@@ -18,8 +18,6 @@ def DesignArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
-    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
-    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
 
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
@@ -40,30 +38,20 @@ def DesignArgParser(txt=None):
         args = parser.parse_args(txt)
     else:
         args = parser.parse_args()
+
+    
         
     # Load parameters generator/environment from trained model
+    designer_args = vars(args)
+    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task', 
+        'active_targets', 'inactive_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 'ra_score_model',
+        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
-        g_params = json.load(f)
-    
-    args.algorithm = g_params['algorithm']
-    args.epsilon = g_params['epsilon']
-    args.beta = g_params['beta']
-    args.scheme = g_params['scheme']
-    args.env_alg = g_params['env_alg']
-    args.env_task = g_params['env_task']
-    args.active_targets = g_params['active_targets']
-    args.inactive_targets = g_params['inactive_targets']
-    args.activity_threshold = g_params['activity_threshold']
-    args.qed = g_params['qed']
-    args.sa_score = g_params['sa_score']
-    args.ra_score = g_params['ra_score']
-    args.ra_score_model = g_params['ra_score_model']
-    args.env_runid = g_params['env_runid']
-    args.data_runid = g_params['data_runid']
-    args.molecular_weight = g_params['molecular_weight']
-    args.mw_thresholds = g_params['mw_thresholds']
-    args.logP = g_params['logP']
-    args.logP_thresholds = g_params['logP_thresholds']
+        train_args = json.load(f)
+    for k, v in train_args.items():
+        if k in train_parameters:
+            designer_args[k] = v
+    args = argparse.Namespace(**designer_args)
     
     args.targets = args.active_targets + args.inactive_targets
 
@@ -74,7 +62,8 @@ def DesignerFragsDataPreparation(
     voc_files : list, 
     data_path : str, 
     input_file : str,
-    gen_alg : str, 
+    mol_type : str,
+    alg : str, 
     batch_size=128, 
     n_samples=-1):
 
@@ -85,7 +74,8 @@ def DesignerFragsDataPreparation(
         voc_files (list)            : list of vocabulary file prefixes
         data_path (str)             : name of the folder input files
         input_file (str)            : name of file containing input fragments
-        gen_alg (str)               : generator algoritm
+        mol_type (str)              : molecule type
+        alg (str)                   : generator algoritm
         batch_size (int), opt       : batch size
         n_samples (int), opt        : number of molecules to generate
     Returns:
@@ -93,41 +83,33 @@ def DesignerFragsDataPreparation(
         loader                      : torch DataLoader containing input fragements
     """
 
-    mol_type = 'graph' if gen_alg == 'graph' else 'smiles'
+    voc_paths = getVocPaths(data_path, voc_files, mol_type)
 
-    voc_paths = vocPaths(data_path, voc_files, mol_type)
-    logSettings.log.info(f'Loading vocabulary from {voc_paths}')
-
-    input_path = data_path + input_file
-    assert os.path.exists(input_path)
+    try:
+        input_path = data_path + input_file
+        assert os.path.exists(input_path)
+    except:
+        input_path = data_path + '_'.join(input_file, 'test', mol_type,) + '.txt'
+        assert os.path.exists(input_path)
     logSettings.log.info(f'Loading input fragments from {input_path}')
 
-    if gen_alg == 'graph' :
+    if mol_type == 'graph' :
         data_set = GraphFragDataSet(input_path)
-        data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
-    elif gen_alg == 'gpt' :
-        data_set = SmilesFragDataSet(input_path)
-        data_set.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)       
+        if voc_paths:
+            data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     else:
-        data_set = SmilesFragDataSet(input_path)
-        data_set.readVocs(voc_paths, VocSmiles, max_len=100)
+        if gen_alg == 'trans' :
+            data_set = SmilesFragDataSet(input_path)
+            if voc_paths:
+                data_set.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)       
+        else:
+            data_set = SmilesFragDataSet(input_path)
+            if voc_paths:
+                data_set.readVocs(voc_paths, VocSmiles, max_len=100)
     voc = data_set.getVoc()
 
     loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples)
     return voc, loader
-
-def vocPaths(data_path : str, voc_files : list, mol_type : str):
-
-    voc_paths = []
-    for v in voc_files:
-        path = data_path + f"{v}_{mol_type}_{logSettings.runID}.txt"
-        if not os.path.exists(path):
-            logSettings.log.warning(f'Reading voc_{mol_type}.txt instead of {path}')
-            path = data_path + "voc_{mol_type}.txt"
-        assert os.path.exists(path)
-        voc_paths.append(path)
-
-    return voc_paths
 
 def Design(args):
 
@@ -144,18 +126,19 @@ def Design(args):
         voc, loader = DesignerFragsDataPreparation(args.voc_files, 
             data_path,
             args.input_file, 
+            args.mol_type,
             args.algorithm, 
             args.batch_size, 
             args.num
             )
     else:
-        voc_paths = vocPaths(data_path, args.voc_files, 'smiles')
+        voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
         voc = VocSmiles(voc_paths, max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     assert os.path.exists(gen_path)
-    agent = SetGeneratorAlgorithm(voc, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
     agent.loadStatesFromFile(gen_path)
     # Set up environment-predictor
     env = CreateDesirabilityFunction(
@@ -163,7 +146,6 @@ def Design(args):
         args.env_alg,
         args.env_task,
         args.scheme,
-        args.env_runid,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
         activity_threshold=args.activity_threshold,
@@ -198,22 +180,21 @@ if __name__ == "__main__":
 
     args = DesignArgParser()
 
+    backup_msg = backUpFiles(args.base_dir, 'new_molecules', (args.generator,))
+
+    if not os.path.exists(f'{args.base_dir}/new_molecules'):
+        os.mkdir(f'{args.base_dir}/new_molecules')
+
     logSettings = enable_file_logger(
-        os.path.join(args.base_dir,'logs'),
+        os.path.join(args.base_dir,'new_molecules'),
         'design.log',
-        args.keep_runid,
-        args.pick_runid,
         args.debug,
         __name__,
         commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
 
-    # Default input file prefix in case of pretraining and finetuning
-    if args.data_runid is None:
-        args.data_runid = logSettings.runID
-        
-    if args.env_runid is None:
-        args.env_runid = logSettings.runID
+    log = logSettings.log
+    log.info(backup_msg)
 
     Design(args)

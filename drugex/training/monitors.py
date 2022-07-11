@@ -125,7 +125,7 @@ class FileMonitor(DictMonitor):
         self.directory = os.path.dirname(path)
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
-        self.out = open(path + '.log', 'w', encoding='utf-8')
+        self.out = open(path + '_fit.log', 'w', encoding='utf-8')
         self.outSmiles = open(path + '_smiles.tsv', 'w', encoding='utf-8')
         self.outSmilesHeaderDone = False
         self.bestState = None
