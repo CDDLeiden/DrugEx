@@ -114,7 +114,7 @@ def config_logger(log_file_path, debug=None, no_exist_log=True):
     
     config.dictConfig(LOGGING_CONFIG)
 
-def init_logfile(log, runid, githash=None, args=None):
+def init_logfile(log, githash=None, args=None):
     """
         Put some intial information in the logfile
         ...
@@ -127,7 +127,6 @@ def init_logfile(log, runid, githash=None, args=None):
     """
     if os.path.getsize(log.root.handlers[1].baseFilename) == 0:
         logging.info('Creation date: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        logging.info('run id: %s' % runid)
     else: 
         logging.info('\nContinued at: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     logging.info('git hash: %s \n' % githash)
@@ -182,8 +181,7 @@ def get_runid(log_folder='logs', old=True, id=None):
 
 class LogFileConfig:
 
-    def __init__(self, path, logger, debug, run_id):
+    def __init__(self, path, logger, debug):
         self.path = path
         self.log = logger
         self.debug = debug
-        self.runID = run_id

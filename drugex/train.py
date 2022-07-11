@@ -2,20 +2,21 @@
 import os
 import sys
 import json
+import argparse
+import warnings
 
-from drugex import VERSION
+from cgi import test
+
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
 from drugex.data.processing import RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
-from drugex.logs.utils import commit_hash, enable_file_logger
-import argparse
+from drugex.data.utils import getDataPaths, getVocPaths
+from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.models import GPT2Model, GraphModel, single_network
 from drugex.training.models import encoderdecoder
 from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
-
-import warnings
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
@@ -33,17 +34,13 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' (and 'envs')")
-    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
-    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
     
     
-    parser.add_argument('-did', '--data_runid', type=str, default=None,
-                        help="Run id of the input data files, defaults to current runid")
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
-    parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
-                        help="Names of voc files to use as vocabulary.")
+    parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=None,
+                        help="Names of voc files to use as vocabulary. If None, uses the input prefix.")
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first word of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
@@ -61,10 +58,12 @@ def GeneratorArgParser(txt=None):
                          help="DrugEx version")
     
     # General parameters
-    parser.add_argument('-a', '--algorithm', type=str, default='graph',
-                        help="Generator algorithm: 'graph' for graph-based algorithm (transformer),or "\
-                             "'gpt' (transformer), 'ved' (lstm-based encoder-decoder)or "\
-                             "'attn' (lstm-based encoder-decoder with attention mechanism) for SMILES-based algorithm ")
+    parser.add_argument('-mt', '--mol_type', type=str, default='graph',
+                        help="Molecule encoding type: 'smiles' or 'graph'")    
+    parser.add_argument('-a', '--algorithm', type=str, default='trans',
+                        help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
+                             "'ved' (smiles, lstm-based encoder-decoder) or "\
+                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) ")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -84,8 +83,6 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-s', '--scheme', type=str, default='PR',
                         help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
 
-    parser.add_argument('-eid', '--env_runid', type=str, default=None,
-                        help='Run id of the environment-predictor models, defaults to current runid')
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, default='RF',
@@ -131,14 +128,18 @@ def GeneratorArgParser(txt=None):
 
     if args.version == 2:
         args.algorithm = 'rnn'
+
+    if args.voc_files is None:
+        args.voc_files = [args.input.split('_')[0]]
     
     args.targets = args.active_targets + args.inactive_targets
+
+    args.output_long = '_'.join([args.output, args.mol_type, args.algorithm, args.mode])
 
     return args
 
 def DataPreparationGraph(voc_files,
                          base_dir,
-                         runid,
                          input_prefix,
                          batch_size=128,
                          unique_frags=False,
@@ -150,7 +151,6 @@ def DataPreparationGraph(voc_files,
 
     Arguments:
         base_dir (str)              : name of the folder containing 'data' folder with input files
-        runid (str)                 : runid, suffix of the input files
         input_prefix (str)          : prefix of input files
         batch_size (int), opt       : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
@@ -163,33 +163,8 @@ def DataPreparationGraph(voc_files,
     data_path = base_dir + '/data/'
     mol_type = 'graph'
 
-    voc_paths = []
-    for v in voc_files:
-        path = data_path + f"{v}_graph_{logSettings.runID}.txt"
-        if not os.path.exists(path):
-            logSettings.log.warning('Reading voc_graph.txt instead of %s' % path)
-            path = data_path + "voc_graph.txt"
-        if os.path.exists(path):
-            voc_paths.append(path)
-        else:
-            logSettings.log.warning(f"No vocabulary files found. Using internal defaults for DrugEx v{VERSION}.")
-        
-    # If exact data path was given as input, that data is both used for training and testing
-    if os.path.exists(data_path + input_prefix):
-        train_path = data_path + input_prefix
-        test_path = train_path
-    # Else if prefix was given, read separate train and test sets
-    else:
-        # This is temporary fix before changing RUNID system to backing up files
-        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
-        if os.path.exists(train_path):
-            test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'     
-        else:
-            train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type]) + '.txt'
-            test_path = data_path + '_'.join([input_prefix, 'test', mol_type]) + '.txt'                 
-        
-    logSettings.log.info(f'Loading training data from {train_path}')
-    logSettings.log.info(f'Loading validation data from {test_path}')
+    voc_paths = getVocPaths(data_path, voc_files, mol_type)
+    train_path, test_path = getDataPaths(data_path, input_prefix, mol_type, unique_frags)
 
     # Load train data
     data_set_train = GraphFragDataSet(train_path, autoload=True)
@@ -208,7 +183,6 @@ def DataPreparationGraph(voc_files,
 
 def DataPreparationSmiles(voc_files,
                           base_dir, 
-                          runid, 
                           input_prefix, 
                           batch_size=128, 
                           unique_frags=False, 
@@ -220,7 +194,6 @@ def DataPreparationSmiles(voc_files,
     
     Arguments:
         base_dir (str)              : name of the folder containing 'data' folder with input files
-        runid (str)                 : runid, suffix of the input files
         input_prefix (str)          : prefix of input files
         batch_size (int), optional  : batch size
         unique_frags (bool), opt    : if True, uses reduced training set containing only unique fragment-combinations
@@ -232,33 +205,9 @@ def DataPreparationSmiles(voc_files,
     
     data_path = base_dir + '/data/'
     mol_type = 'smi'
-    
-    # Set vocabulary
-    voc_paths = []
-    for v in voc_files:
-        path = data_path + f"{v}_smiles_{logSettings.runID}.txt"
-        if not os.path.exists(path):
-            logSettings.log.warning('Reading voc_smiles.txt instead of voc_smiles_%s.txt' % runid)
-            path = data_path + "voc_smiles.txt"
-        assert os.path.exists(path)
-        voc_paths.append(path)
-    
-    # If exact data path was given as input, that data is both used for training and testing
-    if os.path.exists(data_path + input_prefix):
-        train_path = data_path + input_prefix
-        test_path = train_path
-    # Else if prefix was given, read separate train and test sets
-    else:
-        # This is temporary fix before changing RUNID system to backing up files
-        train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type, runid]) + '.txt'
-        if os.path.exists(train_path):
-            test_path = data_path + '_'.join([input_prefix, 'test', mol_type, runid]) + '.txt'     
-        else:
-            train_path = data_path + '_'.join([input_prefix, 'unique' if unique_frags else 'train', mol_type]) + '.txt'
-            test_path = data_path + '_'.join([input_prefix, 'test', mol_type]) + '.txt'                 
-        
-    logSettings.log.info(f'Loading training data from {train_path}')
-    logSettings.log.info(f'Loading validation data from {test_path}')
+
+    voc_paths = getVocPaths(data_path, voc_files, 'smiles')
+    train_path, test_path = getDataPaths(data_path, input_prefix, mol_type, unique_frags)
 
     voc = None
     train_loader = None
@@ -275,14 +224,15 @@ def DataPreparationSmiles(voc_files,
 
         voc = data_set_train.getVoc() + data_set_test.getVoc()
     elif args.algorithm == 'rnn':
-        # Without input fragments
-        # we need to generate the split
-        data_set = SmilesDataSet(data_path + f'{input_prefix}_{runid}.txt', autoload=True)
-        data_set.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_train = SmilesDataSet(train_path, autoload=True)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
+        train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        train_loader, valid_loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples, splitter=RandomTrainTestSplitter(0.1))
+        data_set_test = SmilesDataSet(test_path, autoload=True)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
+        valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
-        voc = data_set.getVoc()
+        voc = data_set_train.getVoc()
     else:
         # all smiles-based with fragments
         data_set_train = SmilesFragDataSet(train_path, autoload=True)
@@ -298,33 +248,34 @@ def DataPreparationSmiles(voc_files,
     return voc, train_loader, valid_loader
 
 
-def InitializeEvolver(agent, env, prior, algorithm, batch_size, epsilon, beta, scheme, n_samples):
+def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilon, beta, n_samples):
     
     """
     Sets up the evolver composed of two generators.
     
     Arguments:        
         agent (torch model)         : main generator that is optimized during training
-        agent (Environment)         : environment used by the reinforcer to do RL
+        env (Environment)           : environment used by the reinforcer to do RL
         prior (torch model)         : mutation generator is kept frozen during the process
+        mol_type (str)              : molecule type
         algorithm (str)             : name of the generator algorithm
         batch_size (int)            : batch size
         epsilon (float)             : exploration rate
         beta (float)                : reward baseline
-        scheme (str)                : name of optimization scheme
         n_samples (int)             : number train and test (0.2*n_samples) of molecules generated at each epoch
     Returns:
         evolver (torch model)       : evolver composed of two generators
     """
     
-    if algorithm == 'graph':
+    if mol_type == 'graph':
         # FIXME:  sigma=beta? strange...
         evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
-    elif algorithm == 'rnn':
-        evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
-    else:
-        evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
-    
+    else :
+        if algorithm == 'rnn':
+            evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
+        else:
+            evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
+        
     return evolver
     
 
@@ -332,7 +283,6 @@ def CreateDesirabilityFunction(base_dir,
                                alg, 
                                task, 
                                scheme, 
-                               env_runid,
                                active_targets=[], 
                                inactive_targets=[], 
                                activity_threshold=6.5, 
@@ -353,7 +303,6 @@ def CreateDesirabilityFunction(base_dir,
         alg (str)                   : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
-        env_runid (str)             : runid of the environment-predictor model
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
         activity_threshold (float), opt : activety threshold in case of 'CLS'
@@ -407,12 +356,12 @@ def CreateDesirabilityFunction(base_dir,
             sys.exit('TO DO: using multitask model')
         else:
             try :
-                path = base_dir + '/envs/single/' + '_'.join([alg, task, t, env_runid]) + '.pkg'
+                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
             except FileNotFoundError:
-                path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t, env_runid]) + '.pkg'
+                path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
                 path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                logSettings.log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                log.warning('Using model from {} instead of model from {}'.format(path, path_false))
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -433,29 +382,31 @@ def CreateDesirabilityFunction(base_dir,
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
-def SetGeneratorAlgorithm(voc, alg):
+def SetGeneratorAlgorithm(voc, mol_type, alg):
     
     """
     Initializes the generator algorithm
     
     Arguments:
         voc (): vocabulary
-        alg (str): molecule format type: 'ved', 'attn', 'gpt' or 'graph'
+        mol_type (str) : molecule type
+        alg (str): agent algorithm type
     Return:
         agent (torch model): molecule generator 
     """
     
-    if alg == 'ved':
-        agent = encoderdecoder.EncDec(voc, voc)
-    elif alg == 'attn':
-        agent = encoderdecoder.Seq2Seq(voc, voc)
-    elif alg == 'gpt':
-        agent = GPT2Model(voc, n_layer=12)
-    elif alg == 'graph':
+    if mol_type == 'graph':
         agent = GraphModel(voc)
-    elif alg == 'rnn':
-        # TODO: add argument for is_lstm
-        agent = single_network.RNN(voc, is_lstm=True)
+    else :
+        if alg == 'ved':
+            agent = encoderdecoder.EncDec(voc, voc)
+        elif alg == 'attn':
+            agent = encoderdecoder.Seq2Seq(voc, voc)
+        elif alg == 'trans':
+            agent = GPT2Model(voc, n_layer=12)
+        elif alg == 'rnn':
+            # TODO: add argument for is_lstm
+            agent = single_network.RNN(voc, is_lstm=True)
     
     return agent
 
@@ -465,19 +416,19 @@ def PreTrain(args):
     
     Arguments:
         args (NameSpace): namespace containing command line arguments
+
     """
-    
-    pt_path = args.base_dir + '/generators/' + args.output + '_' + args.algorithm + '_' + args.runid
         
     print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
-    if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
-        print('Pretraining graph-based model ...')
+    if args.mol_type == 'graph':
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.input, args.batch_size)
+        print('Pretraining graph-based ({}) model ...'.format(args.algorithm))
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size)
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
-    
-    agent = SetGeneratorAlgorithm(voc, args.algorithm)
+
+    pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
     trainer = Pretrainer(agent, gpus=args.gpu)
     monitor = FileMonitor(pt_path, verbose=True)
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
@@ -491,22 +442,24 @@ def FineTune(args):
     """
     
     if args.pretrained_model :
-        pt_path = args.base_dir + '/generators/' + args.pretrained_model + f'_{args.algorithm}_{args.runid}.pkg' if not args.pretrained_model.endswith('.pkg') else os.path.join(args.base_dir, 'generators', args.pretrained_model)
+        if args.pretrained_model.endswith('.pkg'):
+            pt_path = os.path.join(args.base_dir, 'generators', args.pretrained_model)
+        else:
+            pt_path = os.path.join(args.base_dir, 'generators', '_'.join([args.pretrained_model, args.mol_type, args.algorithm, 'PT']) +'.pkg')
+        assert os.path.exists(pt_path), f'{pt_path} does not exist'
     else:
-        raise ValueError('Missing --pretrained_model argument')
-    
-    args.finetuned_model = args.output + '_' + args.algorithm + '_' + args.runid
-    ft_path = args.base_dir + '/generators/' + args.finetuned_model
-        
-    print('Loading data from {}/data/{}'.format(args.base_dir, args.input))
-    if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
+        raise ValueError('Missing --pretrained_model')
+
+    ft_path = os.path.join(args.base_dir, 'generators', args.output_long)
+            
+    if args.mol_type == 'graph':
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.input, args.batch_size)
         print('Fine-tuning graph-based model ...')
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size)
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
-    agent = SetGeneratorAlgorithm(voc, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
     trainer = FineTuner(agent, gpus=args.gpu)
     trainer.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
@@ -523,27 +476,21 @@ def RLTrain(args):
 
     if not args.targets:
         raise ValueError('At least on active or inactive target should be given for RL.')
-
-    # This is temporary fix before changing RUNID system to backing up files
-    ag_path = args.base_dir + '/generators/' + args.agent_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
-    pr_path = args.base_dir + '/generators/' + args.prior_model + f'_{args.algorithm}_{logSettings.runID}.pkg'
-    if not os.path.exists(ag_path):
-        ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'
-    if not os.path.exists(pr_path):
-        pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
-
-    rl_path = args.base_dir + '/generators/' + '_'.join([args.output, args.algorithm, 'RL', logSettings.runID])
                                                          
-    if args.algorithm == 'graph':
-        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, n_samples=args.n_samples)
+    if args.mol_type == 'graph':
+        voc, train_loader, valid_loader = DataPreparationGraph(args.voc_files, args.base_dir, args.input, args.batch_size, unique_frags=True, n_samples=args.n_samples)
     else:
-        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.data_runid, args.input, args.batch_size, unique_frags=True, n_samples=args.n_samples)
+        voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size, unique_frags=True if args.algorithm != 'rnn' else False, n_samples=args.n_samples)
     
     # Initialize agent and prior by loading pretrained model
-    agent = SetGeneratorAlgorithm(voc, args.algorithm)        
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm) 
+    ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'       
     agent.loadStatesFromFile(ag_path)
-    prior = SetGeneratorAlgorithm(voc, args.algorithm)
+    prior = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
+    pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
     prior.loadStatesFromFile(pr_path)
+
+    rl_path = args.base_dir + '/generators/' + args.output_long
     
     # Create the desirability function
     environment = CreateDesirabilityFunction(
@@ -551,7 +498,6 @@ def RLTrain(args):
         args.env_alg,
         args.env_task,
         args.scheme,
-        args.env_runid,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
         activity_threshold=args.activity_threshold,
@@ -567,13 +513,10 @@ def RLTrain(args):
 
     # Initialize evolver algorithm
     ## first difference for v2 needs to be adapted
-    explorer = InitializeEvolver(agent, environment, prior, args.algorithm, args.batch_size, args.epsilon, args.beta, args.scheme, args.n_samples)
+    explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples)
     trainer = Reinforcer(explorer)
     monitor = FileMonitor(rl_path, verbose=True)
     trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
-    
-    with open(rl_path + '.json', 'w') as fp:
-        json.dump(vars(args), fp, indent=4)
 
 
 def TrainGenerator(args):
@@ -584,20 +527,12 @@ def TrainGenerator(args):
     Arguments:
         args (NameSpace): namespace containing command line arguments
     """
-   
-    # if args.no_git is False:
-    #     args.git_commit = commit_hash(os.path.dirname(os.path.realpath(__file__)))
-    # print(json.dumps(vars(args), sort_keys=False, indent=2))
     
     args.gpu = [int(x) for x in args.gpu.split(',')]
     
     if not os.path.exists(args.base_dir + '/generators'):
         os.makedirs(args.base_dir + '/generators')  
-        
-    # with open(args.base_dir + '/logs/{}/{}_{}_{}.json'.format(args.runid, args.output, args.algorithm, args.runid), 'w') as f:
-    #     json.dump(vars(args), f)
     
-    log = logSettings.log
     if args.mode == 'PT':
         log.info("Pretraining started.")
         try:
@@ -628,28 +563,26 @@ def TrainGenerator(args):
 if __name__ == "__main__":
     args = GeneratorArgParser()
 
+    backup_msg = backUpFiles(args.base_dir, 'generators', (args.output_long,))
+    
+
+    if not os.path.exists(f'{args.base_dir}/generators'):
+        os.mkdir(f'{args.base_dir}/generators')
+
     logSettings = enable_file_logger(
-        os.path.join(args.base_dir,'logs'),
-        'train.log',
-        args.keep_runid,
-        args.pick_runid,
+        os.path.join(args.base_dir,'generators'),
+        args.output_long + '.log',
         args.debug,
         __name__,
         commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
-
-    # Default input file prefix in case of pretraining and finetuning
-    if args.data_runid is None:
-        args.data_runid = logSettings.runID
-        
-    if args.env_runid is None:
-        args.env_runid = logSettings.runID
+    log = logSettings.log
+    log.info(backup_msg)
 
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open('%s/logs/%s/train_args.json' % (args.base_dir, logSettings.runID), 'w') as f:
+    with open(os.path.join(args.base_dir, 'generators', args.output_long + '.json'), 'w') as f:
         json.dump(vars(args), f)
 
-    args.runid = logSettings.runID
     TrainGenerator(args)

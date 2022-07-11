@@ -1,14 +1,24 @@
 #!/usr/bin/env python
-import logging.config
-from datetime import datetime
 
-from drugex import DEFAULT_DEVICE_ID
-from drugex.training import models
+import os
+import os.path
+import sys
+import json
+import random
+import optuna
+import joblib
+import argparse
+
 import numpy as np
 import pandas as pd
+
 from rdkit import Chem
+from xgboost import XGBRegressor, XGBClassifier
+from datetime import datetime
+
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
@@ -18,19 +28,14 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC, SVR
 from sklearn.model_selection import StratifiedKFold, KFold
-from xgboost import XGBRegressor, XGBClassifier
-import optuna
-import joblib
-import os
-import os.path
-import sys
-import argparse
-import json
-import random
 
-from drugex.logs.config import get_runid, config_logger
+from drugex import DEFAULT_DEVICE_ID
+from drugex.logs.utils import backUpFiles, enable_file_logger, commit_hash
+# from drugex.environment.data import QSARDataset
+# from drugex.environment.models import 
+
+from drugex.training import models
 from drugex.training.scorers.predictors import Predictor
-
 
 class QSARDataset:
     """
@@ -173,7 +178,6 @@ class QSARModel:
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance QSARDataset
         alg:  instance of estimator
         parameters (dict): dictionary of algorithm specific parameters
@@ -191,8 +195,7 @@ class QSARModel:
         grid_search: optimization of hyperparameters using grid_search
 
     """
-    def __init__(self, runid, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
-        self.runid = runid
+    def __init__(self, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
         self.data = data
         self.alg = alg
         self.parameters = parameters
@@ -201,10 +204,8 @@ class QSARModel:
         self.save_m = save_m
         self.model = None
 
-        d = '%s/envs/single' % data.base_dir
-        if not os.path.exists(d):
-            os.makedirs(d)  
-        self.out = '%s/%s_%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target, self.runid)
+        d = '%s/envs' % data.base_dir
+        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
         log.info('Model intialized: %s' % self.out)
 
     def init_model(self):
@@ -374,13 +375,12 @@ class RF(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): random forest specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
         self.parameters=parameters if parameters != None else {'n_estimators': 1000}
 
@@ -405,7 +405,7 @@ class RF(QSARModel):
             'min_samples_split': [2, 5, 12],
             'n_estimators': [100, 200, 300, 1000]
         }
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class XGB(QSARModel):
     """ 
@@ -415,13 +415,12 @@ class XGB(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): XGboost specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:logistic',use_label_encoder=False, eval_metric='logloss')
         self.parameters=parameters if parameters != None else {'nthread': 4, 'n_estimators': 1000}
         self.search_space_bs = {
@@ -437,7 +436,7 @@ class XGB(QSARModel):
             'n_estimators': [100, 500, 1000],
             'colsample_bytree': [0.3, 0.5, 0.7]
         }
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class SVM(QSARModel):
     """ Support vector regressor and classifier initialization. Here the model instance is created 
@@ -446,13 +445,12 @@ class SVM(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): SVM specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         self.alg = SVR() if data.reg else SVC(probability=True)
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
@@ -478,7 +476,7 @@ class SVM(QSARModel):
             'gamma'       : [0.001,0.01,0.1,1,10,100,1000],
             'degree'      : [1,2,3,4,5]
             }]
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class KNN(QSARModel):
     """ K-nearest neighbor regressor and classifier initialization. Here the model instance is created 
@@ -487,13 +485,12 @@ class KNN(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): KNN specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
         self.parameters=parameters if parameters != None else {}
         #parameter dictionary for bayesian optimization
@@ -508,7 +505,7 @@ class KNN(QSARModel):
             'n_neighbors' : list(range(1,31)),
             'weights'      : ['uniform', 'distance']
             }
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class NB(QSARModel):
     """ 
@@ -518,13 +515,12 @@ class NB(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): NB specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         if data.reg:
             raise ValueError("NB should be constructed only with classification.")
         self.alg = GaussianNB()
@@ -537,7 +533,7 @@ class NB(QSARModel):
         self.search_space_gs = {
             'var_smoothing': np.logspace(0,-9, num=100)
         }
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
 
 class PLS(QSARModel):
     """ 
@@ -547,13 +543,12 @@ class PLS(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): PLS specific parameters
         save_m (bool): if true, save final model
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None):
+    def __init__(self, data, save_m=True, parameters=None):
         if not data.reg:
             raise ValueError("PLS should be constructed only with regression.")
         self.alg = PLSRegression()
@@ -565,7 +560,7 @@ class PLS(QSARModel):
         self.search_space_gs = {
             'n_components': list(range(1, 100, 20))
         }
-        super().__init__(runid, data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
 
 class DNN(QSARModel):
     """ 
@@ -575,7 +570,6 @@ class DNN(QSARModel):
 
         Attributes
         ----------
-        runid (str): run identifier
         data: instance of QSARDataset
         parameters (dict): DNN specific parameters
         save_m (bool): if true, save final model
@@ -584,10 +578,10 @@ class DNN(QSARModel):
         n_epoch (int): number of epochs
 
     """
-    def __init__(self, runid, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
+    def __init__(self, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
         self.alg = models.STFullyConnected
         self.parameters = parameters if parameters != None else {}
-        super().__init__(runid, data, self.alg, self.parameters, None, None, save_m=save_m)
+        super().__init__(data, self.alg, self.parameters, None, None, save_m=save_m)
         self.batch_size = batch_size
         self.lr = lr
         self.n_epoch = n_epoch
@@ -645,8 +639,6 @@ def EnvironmentArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
-    parser.add_argument('-k', '--keep_runid', action='store_true', help="If included, continue from last run")
-    parser.add_argument('-p', '--pick_runid', type=int, default=None, help="Used to specify a specific run id")
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-ran', '--random_state', type=int, default=1, help="Seed for the random state")
     parser.add_argument('-i', '--input', type=str, default='dataset',
@@ -709,7 +701,7 @@ def EnvironmentArgParser(txt=None):
     return args
 
 
-def Environ(args, runid):
+def Environ(args):
     """ 
         Optimize, evaluate and train estimators
     """
@@ -720,10 +712,10 @@ def Environ(args, runid):
     os.environ['OMP_NUM_THREADS'] = str(args.ncpu)
     
     if not os.path.exists(args.base_dir + '/envs'):
-        os.makedirs(args.base_dir + '/envs')  
+        os.makedirs(args.base_dir + '/envs') 
     
     for reg in args.regression:
-        args.learning_rate = 1e-4 if reg else 1e-5
+        args.learning_rate = 1e-4 if reg else 1e-5 
         for target in args.targets:
             #prepare dataset for training QSAR model
             mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size, th = args.activity_threshold, keep_low_quality=args.keep_low_quality)
@@ -743,7 +735,7 @@ def Environ(args, runid):
 
                 #Create QSAR model object
                 mymodel_class = getattr(sys.modules[__name__], model_type)
-                mymodel = mymodel_class(runid, mydataset)
+                mymodel = mymodel_class(mydataset)
 
                 #if desired run parameter optimization
                 if args.optimization == 'grid':
@@ -770,16 +762,28 @@ if __name__ == '__main__':
     torch.manual_seed(args.random_state)
     os.environ['TF_DETERMINISTIC_OPS'] = str(args.random_state)
 
-    # Get run id
-    runid = get_runid(log_folder=os.path.join(args.base_dir,'logs'),
-                            old=args.keep_runid,
-                            id=args.pick_runid)
+    # Backup files
+    tasks = [ 'REG' if reg == True else 'CLS' for reg in args.regression ]
+    file_prefixes = [ f'{alg}_{task}_{target}' for alg in args.model_types for task in tasks for target in args.targets]
+    backup_msg = backUpFiles(args.base_dir, 'envs', tuple(file_prefixes), cp_suffix='_params')
 
-    # Configure logger
-    config_logger('%s/logs/%s/environ.log' % (args.base_dir, runid), args.debug)
+    if not os.path.exists(f'{args.base_dir}/envs'):
+        os.mkdir(f'{args.base_dir}/envs')
 
-    # Get logger, include this in every module
-    log = logging.getLogger(__name__)
+    logSettings = enable_file_logger(
+        os.path.join(args.base_dir, 'envs'),
+        'environ.log',
+        args.debug,
+        __name__,
+        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
+        vars(args)
+    )   
+
+    log = logSettings.log
+    log.info(backup_msg)
+
+    # # Get logger, include this in every module
+    # log = logging.getLogger(__name__)
 
     #Add optuna logging
     optuna.logging.enable_propagation()  # Propagate logs to the root logger.
@@ -788,7 +792,7 @@ if __name__ == '__main__':
 
     # Create json log file with used commandline arguments 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
-    with open('%s/logs/%s/env_args.json' % (args.base_dir, runid), 'w') as f:
+    with open(f'{args.base_dir}/envs/environ.json', 'w') as f:
         json.dump(vars(args), f)
         
     # logSettings for DNN model
@@ -797,4 +801,4 @@ if __name__ == '__main__':
     N_EPOCH = args.epochs
     
     #Optimize, evaluate and train estimators according to environment arguments
-    Environ(args, runid)
+    Environ(args)
