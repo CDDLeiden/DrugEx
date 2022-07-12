@@ -5,22 +5,20 @@ Created by: Martin Sicho
 On: 06.06.22, 20:17
 """
 import re
-
-import numpy as np
-from rdkit import Chem, DataStructs
-from rdkit.Chem.GraphDescriptors import BertzCT
-
-from drugex.training.interfaces import Scorer
-
-from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
-from rdkit.Chem.QED import qed
-
-from drugex.training.scorers.sascorer import calculateScore
 import tqdm
 
-from drugex.training.scorers.modifiers import Gaussian
-from drugex.utils.fingerprints import get_fingerprint
+import numpy as np
+from typing import List
 
+from rdkit import Chem, DataStructs
+from rdkit.Chem.QED import qed
+from rdkit.Chem.GraphDescriptors import BertzCT
+from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
+
+from drugex.utils.fingerprints import get_fingerprint
+from drugex.training.interfaces import Scorer
+from drugex.training.scorers.sascorer import calculateScore
+from drugex.training.scorers.modifiers import Gaussian
 
 class Property(Scorer):
 
@@ -199,3 +197,22 @@ class Scaffold(Scorer):
 
     def getKey(self):
         return f"Scaffold(smart={self.smart},is_match={self.is_match})"
+
+
+class Uniqueness(Scorer):
+
+    """
+    Calculates the ratio of occurence of a molecule in a set of molecules
+    """
+
+    def __init__(self, modifier=None):
+        super().__init__(modifier)
+
+    def getScores(self, mols : List[str], frags=None):
+        scores = np.zeros(len(mols))
+        for i, mol in enumerate(mols):
+            scores[i] = (mols.count(mol)-1) / (len(mols)-1)
+        return scores
+
+    def getKey(self):
+        return "Unique"

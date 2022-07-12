@@ -182,3 +182,21 @@ class ThresholdedLinear(ScoreModifier):
 
     def __call__(self, x):
         return np.minimum(x, self.threshold) / self.threshold
+
+class SmoothHump(ScoreModifier):
+    """
+    Score modifier that reproduces a smooth bump function.
+    The function is 1.0 for x between (lower_x, upper_x) and decreases to zero with a half Gaussian for x < lower_x and x > upper_x.
+    """
+
+    def __init__(self, lower_x : float, upper_x : float, sigma: float ) -> None:
+        self.sigma = sigma
+        self.lower_x = lower_x
+        self.upper_x = upper_x
+        self._maximize_gaussian = MinMaxGaussian(mu=lower_x, sigma=sigma, minimize=False)
+        self._minimize_gaussian = MinMaxGaussian(mu=upper_x, sigma=sigma, minimize=True)
+
+    def __call__(self, x):
+        y_maximize = self._maximize_gaussian(x)
+        y_minimize = self._minimize_gaussian(x)
+        return np.minimum(y_maximize, y_minimize) 
