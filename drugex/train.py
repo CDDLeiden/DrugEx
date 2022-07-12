@@ -20,9 +20,9 @@ from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, Smile
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
-from drugex.training.scorers.modifiers import ClippedScore
+from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
 from drugex.training.scorers.predictors import Predictor
-from drugex.training.scorers.properties import Property
+from drugex.training.scorers.properties import Property, Uniqueness
 from drugex.training.trainers import Pretrainer, FineTuner, Reinforcer
 
 warnings.filterwarnings("ignore")
@@ -92,6 +92,8 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-qed', '--qed', action='store_true',
                         help="If on, QED is used in desirability function")
+    parser.add_argument('-unq', '--uniqueness', action='store_true',
+                        help="If on, molecule uniqueness is used in desirability function")
     parser.add_argument('-sas', '--sa_score', action='store_true',
                         help="If on, Synthetic Accessibility score is used in desirability function")       
     parser.add_argument('-ras', '--ra_score', action='store_true',
@@ -99,12 +101,12 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
                         help="RAScore model: 'XBG'")
     parser.add_argument('-mw', '--molecular_weight', action='store_true',
-                        help='If on, large compounds are penalized in the desirability function')
-    parser.add_argument('-mw_ths', '--mw_thresholds', type=int, nargs='*', default=[500, 1000],
-                        help='Thresholds used calculate molecular weight clipped scores in the desirability function.')
+                        help='If on, compounds with molecular weights outside a range set by mw_thersholds are penalized in the desirability function')
+    parser.add_argument('-mw_ths', '--mw_thresholds', type=int, nargs='*', default=[200, 600],
+                        help='Thresholds used calculate molecular weights clipped scores in the desirability function.')
     parser.add_argument('-logP', '--logP', action='store_true',
-                        help='If on, compounds with large logP values are penalized in the desirability function')
-    parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[4, 6],
+                        help='If on, compounds with logP values outside a range set by mw_thersholds are penalized in the desirability function')
+    parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[-5, 5],
                         help='Thresholds used calculate logP clipped scores in the desirability function')
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
@@ -287,13 +289,14 @@ def CreateDesirabilityFunction(base_dir,
                                inactive_targets=[], 
                                activity_threshold=6.5, 
                                qed=False, 
+                               unique=False,
                                sa_score=False,
                                ra_score=False, 
                                ra_score_model='XBG',
                                mw=False,
-                               mw_ths=[500,1000],
+                               mw_ths=[200,600],
                                logP=False,
-                               logP_ths=[4,6]):
+                               logP_ths=[0,5]):
     
     """
     Sets up the objectives of the desirability function.
@@ -307,6 +310,7 @@ def CreateDesirabilityFunction(base_dir,
         inactive_targets (lst), opt : list of inactive target IDs
         activity_threshold (float), opt : activety threshold in case of 'CLS'
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
+        unique (bool), opt          : if Trye, molecule uniqueness in an epoch included in the desirability function
         ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
         ra_score_model (str), opt   : RAscore algorithm: 'NN' or 'XGB'
         mw (bool), opt              : if True, large molecules are penalized in the desirability function
@@ -363,9 +367,13 @@ def CreateDesirabilityFunction(base_dir,
                 path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
                 log.warning('Using model from {} instead of model from {}'.format(path, path_false))
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+    
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
+    if unique:
+        objs.append(Uniqueness(modifier=ClippedScore(lower_x=1.0, upper_x=0.0)))
+        ths.append(0.2)
     if sa_score:
         objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
         ths.append(0.5)
@@ -374,11 +382,11 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
-        objs.append(Property('MW', modifier=ClippedScore(lower_x=mw_ths[1], upper_x=mw_ths[0])))
-        ths.append(0.5)
+        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[1], upper_x=mw_ths[0], sigma=100)))
+        ths.append(0.99)
     if logP:
-        objs.append(Property('logP', modifier=ClippedScore(lower_x=logP_ths[1], upper_x=logP_ths[0])))
-        ths.append(0.5)
+        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[1], upper_x=logP_ths[0], sigma=1)))
+        ths.append(0.99)
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
@@ -502,6 +510,7 @@ def RLTrain(args):
         inactive_targets=args.inactive_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
+        unique=args.uniqueness, 
         sa_score=args.sa_score,
         ra_score=args.ra_score,
         ra_score_model=args.ra_score_model,
