@@ -106,7 +106,7 @@ def backUpFiles(base_dir : str, folder : str, output_prefixes : tuple, cp_suffix
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'))
         elif folder == 'envs':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'), cp_suffix=cp_suffix )
-       elif folder == 'generators':
+        elif folder == 'generators':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes)
         elif folder == 'new_molecules':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'))

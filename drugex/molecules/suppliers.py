@@ -46,7 +46,7 @@ class DataFrameSupplier(BaseMolSupplier):
              hide_duplicates=False
      ):
         super().__init__(converter=converter, hide_duplicates=hide_duplicates)
-        # df.drop(df.columns.difference(extra_cols + (mol_col,)), 1, inplace=True)
+        df.drop(df.columns.difference(extra_cols + (mol_col,)), 1, inplace=True)
         self.mols = df.iterrows()
         self.mol_col = mol_col
         self.extra_cols = extra_cols

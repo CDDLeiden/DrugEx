@@ -4,6 +4,9 @@ defaultdatasets
 Created by: Martin Sicho
 On: 25.06.22, 19:42
 """
+import os
+import time
+
 import numpy as np
 import pandas as pd
 import torch
@@ -227,7 +230,18 @@ class GraphFragDataSet(DataSet):
             `None`
         """
 
-        self.data.extend(x[1] for x in result[0])
+        header_written = os.path.isfile(self.outpath)
+        open_mode = 'a' if header_written else 'w'
+        pd.DataFrame((x[1] for x in result[0]), columns=self.getColumns()).to_csv(
+            self.outpath,
+            sep='\t',
+            index=False,
+            header=not header_written,
+            mode=open_mode,
+            encoding='utf-8'
+        )
+
+        self.addVoc(result[1].encoder.getVoc())
 
     def addVoc(self, voc):
         if not self.voc:
@@ -235,14 +249,18 @@ class GraphFragDataSet(DataSet):
         else:
             self.voc += voc
 
+    def getColumns(self):
+        return ['C%d' % d for d in range(self.voc.max_len * 5)]
+
     def getDataFrame(self):
-        columns = ['C%d' % d for d in range(self.voc.max_len * 5)]
-        return pd.DataFrame(self.data, columns=columns)
+        return pd.read_table(self.outpath, sep='\t', header=0)
 
     def save(self):
         self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
 
     def getData(self):
+        if not self.data:
+            self.fromFile(self.outpath)
         return self.data
 
     @staticmethod

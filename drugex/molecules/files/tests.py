@@ -97,7 +97,7 @@ class TestFileParsers(TestCase):
 
     def test_df(self):
         df = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0)
-        cols = ("LOGP", "MWT",)
+        cols = ("LOGP",)
         df_supplier = DataFrameSupplier(df, mol_col="CANONICAL_SMILES", extra_cols=cols)
 
         for mol in df_supplier:
@@ -116,27 +116,34 @@ class TestFileParsers(TestCase):
             kwargs={"mol_col" : "CANONICAL_SMILES", "extra_cols": cols}
         )
 
-        results = para_supplier.apply(df)
-        self.assertTrue(len(results) == 10)
-        for mol in results:
-            self.assertTrue(isinstance(mol, DrExMol))
-            for col in cols:
-                self.assertTrue(mol.getAnnotation(col))
-                self.assertTrue(col in mol.getMetadata())
+        ret = []
+        def collect(results):
+            results = results[0]
+            for mol in results:
+                ret.append(mol)
+                self.assertTrue(isinstance(mol, DrExMol))
+                for col in cols:
+                    self.assertTrue(mol.getAnnotation(col))
+                    self.assertTrue(col in mol.getMetadata())
+
+        para_supplier.apply(df, collect)
+        self.assertTrue(len(ret) == 10)
 
     def test_parallel_with_suppliers(self):
         df = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0)
         para_supplier = ParallelSupplierEvaluator(
             DataFrameSupplier,
             n_proc=2,
-            return_suppliers=True,
             kwargs={"mol_col" : "CANONICAL_SMILES"}
         )
 
-        results = para_supplier.apply(df)
-        self.assertTrue(len(results) == 2)
-        for result in results:
-            self.assertTrue(len(result[0]) == 5)
-            self.assertTrue(isinstance(result[1], DataFrameSupplier))
-            for mol in result[0]:
+        def collect(ret):
+            result = ret[0]
+            supplier = ret[1]
+            self.assertTrue(len(result) > 0)
+            self.assertTrue(isinstance(supplier, DataFrameSupplier))
+            self.assertTrue(len(result) == 5)
+            for mol in result:
                 self.assertTrue(isinstance(mol, DrExMol))
+
+        para_supplier.apply(df, collect)

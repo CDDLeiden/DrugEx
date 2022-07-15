@@ -39,8 +39,8 @@ class DefaultStandardizer(MolConverter):
 
         """
 
-        rd_mol = Chem.MolFromSmiles(smiles)
         try:
+            rd_mol = Chem.MolFromSmiles(smiles)
             charger = rdMolStandardize.Uncharger()
             chooser = rdMolStandardize.LargestFragmentChooser()
             disconnector = rdMolStandardize.MetalDisconnector()
@@ -61,8 +61,10 @@ class DefaultStandardizer(MolConverter):
             if len(rd_mol.GetSubstructMatches(salts)) > 0:
                 raise StandardizationException(f"Salt removal failed: {smileR}")
             return smileR
+        except StandardizationException as exp:
+            raise exp
         except Exception as exp:
-            logger.exception(f'Parsing Error: {Chem.MolToSmiles(rd_mol)}')
+            logger.exception(f'Unexpected error during standardization: {smiles}')
             raise StandardizationException(exp)
 
 class CleanSMILES(MolConverter):

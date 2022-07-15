@@ -185,10 +185,10 @@ def Dataset(args):
         # prepare splitter and collect intermediate files if required
         pair_collectors = dict()
         if args.save_intermediate_files:
-            pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + '_train.txt', sep='\t', index=False)
-            pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + '_test.txt', sep='\t', index=False)
-            pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
-        splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
+            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_train.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_test.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
+        splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) if not args.no_fragment_split else None
         fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method)
 
         if args.mol_type == 'graph':

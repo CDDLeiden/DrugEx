@@ -45,20 +45,40 @@ class Molecule(ABC):
         pass
 
 class MolSupplier(ABC):
+    """
+    Generic class that defines the interface for data suppliers from molecules. Implementations of this class
+    are used to wrap functionality that can be reused and evaluated in parallel with the `ParallelSupplierEvaluator`.
+
+    Suppliers are simply just Python generators that produce the desired output one item at a time.
+    """
+
+    def __init__(self, direct=False):
+        self.direct = direct
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        next_item = self.next()
+        next_item = None
         while not next_item:
-            next_item = self.next()
+            try:
+                next_item = self.next()
+            except ConversionException as exp:
+                logger.warning(f"Failed to generate next item in {repr(self)}\n\t Cause: {repr(exp)}")
+
+        if self.direct:
+            # TODO: remove this parameter and get rid of `convertMol` and `annotateMol` and make this the default behaviour
+            return next_item
+
 
         mol_data = next_item
         annotations = dict()
         if type(mol_data) is tuple:
             mol_data = next_item[0]
-            annotations = next_item[1]
+            if type(next_item[1]) == dict:
+                annotations = next_item[1]
+            else:
+                annotations = {idx: item for idx, item in enumerate(next_item[1:len(next_item)])}
 
         # use the converter to convert data to molecule
         mol =  None
@@ -93,7 +113,6 @@ class MolSupplier(ABC):
 
         pass
 
-    @abstractmethod
     def convertMol(self, representation):
         """
         Use this to convert a molecule from the supplied representation to a different one. This method is called automatically on the first output of `self.next()`.
@@ -111,9 +130,8 @@ class MolSupplier(ABC):
 
         """
 
-        pass
+        return representation
 
-    @abstractmethod
     def annotateMol(self, mol, key, value):
         """
         Use to add metadata to the molecule after conversion. The converted representation will have different mechanisms to store metadata so you might want to override this to match.
@@ -128,7 +146,7 @@ class MolSupplier(ABC):
         -------
 
         """
-        pass
+        return mol
 
     def toList(self):
         return [x for x in self]
@@ -141,6 +159,7 @@ class BaseMolSupplier(MolSupplier, ABC):
             converter, # instance returned by converter should implement the Molecule interface
             hide_duplicates=False
     ):
+        super().__init__()
         self.converter = converter
         self.hide_duplicates = hide_duplicates
         self._prev_ids = set()

@@ -1,3 +1,5 @@
+import tempfile
+
 import torch
 import torch.nn as nn
 
@@ -305,7 +307,7 @@ class GraphModel(Base):
             ),
             n_proc=n_proc
         )
-        out_data = GraphFragDataSet("dataset_graph_frag.txt")
+        out_data = GraphFragDataSet(tempfile.NamedTemporaryFile().name)
         encoder.apply(smiles, encodingCollectors=[out_data])
 
         smiles, frags = [], []

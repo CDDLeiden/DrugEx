@@ -98,6 +98,7 @@ class Corpus(MolSupplier, ABC):
         Args:
             molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply molecules
         """
+        super().__init__()
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
 
     def next(self):

@@ -5,10 +5,7 @@ import json
 import argparse
 import warnings
 
-from cgi import test
-
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
-from drugex.data.processing import RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
@@ -364,7 +361,7 @@ def CreateDesirabilityFunction(base_dir,
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
             except FileNotFoundError:
                 path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg, task, t]) + '.pkg'
                 log.warning('Using model from {} instead of model from {}'.format(path, path_false))
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
     

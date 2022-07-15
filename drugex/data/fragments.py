@@ -5,10 +5,11 @@ from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger
 from drugex.data.interfaces import DataSplitter, FragmentPairEncoder
 from drugex.molecules.converters.interfaces import ConversionException
-from drugex.molecules.interfaces import AnnotationException, MolSupplier
-from drugex.molecules.suppliers import DataFrameSupplier
+from drugex.molecules.interfaces import MolSupplier
+from drugex.parallel.collectors import ListExtend
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import ParallelProcessor
+
 
 class SequenceFragmentEncoder(FragmentPairEncoder):
     """
@@ -69,18 +70,13 @@ class GraphFragmentEncoder(FragmentPairEncoder):
     def getVoc(self):
         return self.vocabulary
 
-class FragmentPairsEncodedSupplier(DataFrameSupplier):
+class FragmentPairsEncodedSupplier(MolSupplier):
     """
-    Supplies the encoded fragment-molecule pairs for the fragment-based DrugEx models.
+    Transforms fragment-molecule pairs to the encoded representation used by the fragment-based DrugEx models.
 
-    For each molecule found in the input, it returns a `tuple`:
-    (
-        smiles, # original molecule smiles
-        encoding # encoded fragments for this molecule
-    )
     """
 
-    class FragmentEncodingException(AnnotationException):
+    class FragmentEncodingException(ConversionException):
         """
         Raise this when a fragment failed to encode.
         """
@@ -94,74 +90,80 @@ class FragmentPairsEncodedSupplier(DataFrameSupplier):
 
         pass
 
-    def __init__(self, df_pairs, encoder, mol_col='Smiles', frags_col='Frags'):
+    def __init__(self, pairs, encoder):
         """
         Initialize from a `DataFrame` containing the fragment-molecule pairs.
 
         Args:
-            df_pairs: data frame to extract fragment-molecule pairs from
+            pairs (list): list of (fragment, molecule) `tuple`s that each denotes one fragment-molecule pair
             encoder: a `FragmentPairEncoder` handling encoding of molecules and fragments
-            mol_col: the column in "df_pairs" where molecules are stored as SMILES
-            frags_col: the column in "df_pairs" where fragments are stored as SMARTS
+        """
+        super().__init__(direct=True)
+        self.encoder = encoder
+        self.pairs = iter(pairs)
+
+    def next(self):
+        """
+        Get the next pair and encode it with the encoder.
+
+        Returns:
+            `tuple`: (str, str) encoded form of the molecule and one of the encoded fragments
         """
 
-        super().__init__(
-            df_pairs,
-            mol_col,
-            extra_cols=(frags_col,),
-            converter=self.conversion)
-        self.encoder = encoder
-        self.fragsCol = frags_col
+        pair = next(self.pairs)
 
-    def conversion(self, seq):
-        encoded = self.encoder.encodeMol(seq)
-        if not encoded:
-            raise self.MoleculeEncodingException(f'Failed to encode molecule: {seq}')
+        # encode molecule
+        encoded_mol = self.encoder.encodeMol(pair[1])
+        if not encoded_mol:
+            raise self.MoleculeEncodingException(f'Failed to encode molecule: {pair[1]}')
 
-        return {
-            'mol' : seq,
-            'mol_encoded' : encoded
-        }
+        # encode fragment
+        encoded_frag = self.encoder.encodeFrag(encoded_mol, pair[0])
+        if not encoded_frag:
+            raise self.FragmentEncodingException(f'Failed to encode fragment {pair[0]} from molecule: {pair[1]}')
 
-    def __next__(self):
-        ret = super().__next__()
-        try:
-            if len(ret) == 2:
-                return ret
-            return ret['mol_encoded'], ret['frag_encoded']
-        except KeyError:
-            logger.warning(f"Failed to encode fragment {ret['frag']} for molecule: {ret['mol']}")
-            return next(self)
-
-    def annotateMol(self, mol, key, value):
-        if key == self.fragsCol:
-            mol['frag'] = value
-            encoded = self.encoder.encodeFrag(mol['mol'], value)
-            if encoded:
-                mol['frag_encoded'] = encoded
-            else:
-                raise self.FragmentEncodingException(f'Failed to encode fragment {value} from molecule: {mol["mol"]}')
+        return encoded_mol, encoded_frag
 
 
 class FragmentPairsSupplier(MolSupplier):
+    """
+    Produces fragment-molecule pairs from input molecules.
+
+    """
 
     def __init__(self, molecules, fragmenter):
+        """
+
+        Args:
+            molecules: the input molecules as a `list`-like object or an iterator
+            fragmenter: an instance of `Fragmenter
+        """
+
+        super().__init__(True)
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
         self.fragmenter = fragmenter
+        self.currentBatch = None
 
     def next(self):
-        ret = self.fragmenter(next(self.molecules))
-        if ret:
-            return ret
-        else:
+        """
+        Generate the next fragment-molecule pair.
+
+        Returns:
+            a (fragment, molecule) `tuple`
+        """
+
+        if not self.currentBatch:
+            batch = None
+            while not batch:
+                # the fragmenter generates multiple pairs at once from one molecule, we use batching to return them one by one
+                batch = self.fragmenter(next(self.molecules))
+            self.currentBatch = iter(batch)
+        try:
+            frags = next(self.currentBatch)
+        except StopIteration:
+            self.currentBatch = None
             return None
-
-    def convertMol(self, representation):
-        return representation
-
-    def annotateMol(self, mol, key, value):
-        return mol
-
+        return frags
 
 class FragmentCorpusEncoder(ParallelProcessor):
     """
@@ -169,13 +171,24 @@ class FragmentCorpusEncoder(ParallelProcessor):
 
     """
 
-    class DefaultPairsSplitter(DataSplitter):
+    class FragmentPairsCollector(ListExtend):
+        """
+        A simple `ResultCollector` that extends an internal `list`. It can also wrap another instance of itself.
+        """
 
-        molCol = "Smiles"
-        fragsCol = "Frags"
+        def __init__(self, other=None):
+            """
 
-        def __call__(self, pairs):
-            return [pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])]
+            Args:
+                other: another instance of `FragmentPairsCollector` to call after extending
+            """
+            super().__init__()
+            self.other = other
+
+        def __call__(self, result):
+            self.items.extend(result[0])
+            if self.other:
+                self.other(result)
 
     def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
         """
@@ -191,7 +204,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
         super().__init__(n_proc, chunk_size)
         self.fragmenter = fragmenter
         self.encoder = encoder
-        self.pairsSplitter = pairs_splitter if pairs_splitter else self.DefaultPairsSplitter()
+        self.pairsSplitter = pairs_splitter
 
     def getFragmentPairs(self, mols, collector):
         """
@@ -202,7 +215,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
             collector: The `ResultCollector` to apply to fetch the result per process.
 
         Returns:
-            `list` of (fragment, molecule) `tuple`s generated from the "fragmenter" by all processes.
+            `None`
         """
 
         evaluator = ParallelSupplierEvaluator(
@@ -210,16 +223,11 @@ class FragmentCorpusEncoder(ParallelProcessor):
             kwargs={
                 "fragmenter" : self.fragmenter
             },
-            return_unique=False,
-            always_return=True,
             chunk_size=self.chunkSize,
             chunks=self.chunks,
-            result_collector=collector
+            n_proc=self.nProc
         )
-        results = []
-        for result in evaluator.apply(mols):
-            results.extend(result)
-        return results
+        evaluator.apply(mols, collector)
 
     def splitFragmentPairs(self, pairs):
         """
@@ -233,7 +241,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
 
         """
 
-        return self.pairsSplitter(pairs)
+        return self.pairsSplitter(pairs) if self.pairsSplitter else [pairs]
 
     def encodeFragments(self, pairs, collector):
         """
@@ -244,73 +252,47 @@ class FragmentCorpusEncoder(ParallelProcessor):
             collector: The `ResultCollector` to apply to fetch encoding data from each process.
 
         Returns:
-            `None` if a collector is specified. Otherwise, a (data, `Vocabulary`) `tuple` is returned with the data encoded in the format as supplied by the `FragmentPairEncoder` and the generated `Vocabulary` as the two items.
+            `None`
         """
 
         evaluator = ParallelSupplierEvaluator(
             FragmentPairsEncodedSupplier,
             kwargs={
                 'encoder': self.encoder,
-                'mol_col' : self.pairsSplitter.molCol,
-                'frags_col': self.pairsSplitter.fragsCol
             },
-            return_unique=False,
-            return_suppliers=True,
             chunk_size=self.chunkSize,
             chunks=self.chunks,
-            result_collector=collector
+            n_proc=self.nProc
         )
-        results = evaluator.apply(pairs)
-        if results:
-            voc = None
-            data = []
-            for result in results:
-                data.extend(result[0])
-                if not voc:
-                    voc = result[1].encoder.getVoc()
-                else:
-                    voc += result[1].encoder.getVoc()
+        evaluator.apply(pairs, collector)
 
-            return data, voc
-
-
-    def apply(self, mols, fragmentCollector=None, encodingCollectors=None):
+    def apply(self, mols, fragmentPairsCollector=None, encodingCollectors=None):
         """
         Apply fragmentation and encoding to the given molecules represented as SMILES strings. Collectors can be used to fetch fragment-molecule pairs and the final encoding with vocabulary.
 
         Args:
             mols: `list` of molecules as SMILES strings
-            fragmentCollector: a `ResultCollector` to collect results of the fragmentation (the generated fragment-molecule `tuple`s from the given "fragmenter").
+            fragmentPairsCollector: an instance of `ResultCollector` to collect results of the fragmentation (the generated fragment-molecule `tuple`s from the given "fragmenter").
             encodingCollectors: a `list` of `ResultCollector` instances matching in length the number of splits given by the "pairs_splitter". Each `ResultCollector` receives a (data, `FragmentPairsEncodedSupplier`) `tuple` of the currently finished process.
 
         Returns:
-            `None` if "encodingCollectors" are specified. Otherwise, the method directly returns a `tuple` containing the encoded data for all "mols" as the first item and the associated vocabulary as the second.
+            `None`
         """
 
-        pairs = self.getFragmentPairs(mols, fragmentCollector)
-        ret = []
-        ret_voc = None
-        splits = self.splitFragmentPairs(pairs)
+        pairs_collector = self.FragmentPairsCollector(fragmentPairsCollector)
+        self.getFragmentPairs(mols, pairs_collector)
+        splits = self.splitFragmentPairs(pairs_collector.getList())
         if encodingCollectors and len(encodingCollectors) != len(splits):
             raise RuntimeError(f'The number of encoding collectors must match the number of splits: {len(encodingCollectors)} != {len(splits)}')
-        for split_idx, split in enumerate(splits):
-            result = self.encodeFragments(split, encodingCollectors[split_idx] if encodingCollectors else None)
-            if result:
-                result, voc = result
-                ret.append(result)
-                if not ret_voc:
-                    ret_voc = voc
-                else:
-                    ret_voc += voc
-        if ret or ret_voc:
-            return ret, ret_voc
+        for split_idx in range(len(splits)):
+            self.encodeFragments(splits[split_idx], encodingCollectors[split_idx] if encodingCollectors else None)
 
 class FragmentPairsSplitter(DataSplitter):
     """
-    A `ChunkSplitter` to be used to split molecule-fragment pairs into training and test data.
+    A `DataSplitter` to be used to split molecule-fragment pairs into training and test data.
     """
 
-    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, frags_col="Frags", mol_col="Smiles", unique_only=False, seed=None):
+    def __init__(self, ratio=0.2, max_test_samples=1e4, train_collector=None, test_collector=None, unique_collector=None, make_unique=False, seed=None):
         """
         Set settings for the splitter.
 
@@ -320,20 +302,16 @@ class FragmentPairsSplitter(DataSplitter):
             train_collector: a `ResultCollector` to collect the training set
             test_collector: a `ResultCollector` to collect the test set
             unique_collector: a `ResultCollector` to collect the 'unique' data set (only one example per unique fragment)
-            frags_col: name of the fragment column in the output
-            mol_col: name of the molecule column in the output
-            unique_only: return only the "unique" data set (implies only the "unique_collector" is used)
+            make_unique: make the training set with only unique fragments in addition
             seed: fix the random seed to always get the same split
         """
 
-        self.fragsCol = frags_col
-        self.molCol = mol_col
         self.ratio = ratio
         self.maxTestSamples = max_test_samples
         self.uniqueCollect = unique_collector
         self.trainCollect = train_collector
         self.testCollect = test_collector
-        self.uniqueOnly = unique_only
+        self.makeUnique = make_unique
         self.seed = seed
 
     def __call__(self, pairs):
@@ -347,7 +325,7 @@ class FragmentPairsSplitter(DataSplitter):
             a `tuple` with three pandas `DataFrame` instances corresponding to the test, train and uniqe sets, respectively if "unique_only" is `False`.  If "unique_only" is `True`, only the unique data set is created.
         """
 
-        df = pd.DataFrame(pairs, columns=[self.fragsCol, self.molCol])
+        df = pd.DataFrame(pairs, columns=["Frags", "Smiles"])
         frags = set(df.Frags)
         test_len = int(len(frags) * self.ratio)
         if self.seed:
@@ -359,9 +337,11 @@ class FragmentPairsSplitter(DataSplitter):
             test_in = test_in.sample(int(self.maxTestSamples), random_state=self.seed)
         else:
             test_in = test_in.sample(test_len, random_state=self.seed)
-        test = df[df.Frags.isin(test_in)]
-        train = df[~df.Frags.isin(test_in)]
-        unique = df.drop_duplicates(subset=self.fragsCol)
+        test = df[df.Frags.isin(test_in)].values.tolist()
+        train = df[~df.Frags.isin(test_in)].values.tolist()
+        unique = None
+        if self.makeUnique:
+            unique = df.drop_duplicates(subset="Frags").values.tolist()
 
         if self.trainCollect:
             self.trainCollect(train)
@@ -370,7 +350,7 @@ class FragmentPairsSplitter(DataSplitter):
         if self.uniqueCollect:
             self.uniqueCollect(unique)
 
-        if self.uniqueOnly:
-            return test, unique
-
-        return test, train, unique
+        if unique:
+            return test, train, unique
+        else:
+            return test, train
