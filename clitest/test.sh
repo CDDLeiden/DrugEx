@@ -5,9 +5,9 @@
 source env.sh
 
 ./test_graph.sh
-./test_gpt.sh
 ./test_ved.sh
 ./test_attn.sh
 ./test_single.sh
+./test_gpt.sh
 
 cleanup
