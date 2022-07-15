@@ -272,7 +272,7 @@ class GraphModel(Base):
         desired = scores.DESIRE.mean()
                 
         with torch.no_grad():
-            loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=False)]) for src in loader ] )
+            loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )
                 
         smiles_scores = []
         for idx, smile in enumerate(smiles):
