@@ -35,11 +35,12 @@ Therefore, we place the compounds that will serve as a template for the finetuni
 
 ..  code-block:: bash
 
-    # input is in ./data/AR_ligands.tsv
-    drugex dataset -i AR_ligands.tsv -mc CANONICAL_SMILES -o arl -mt graph
+    # input is in ./data/LIGAND_RAW_small.tsv
+    drugex dataset -i LIGAND_RAW_small.tsv -mc CANONICAL_SMILES -o arl -mt graph
 
-This will tell DrugEx to preprocess compounds saved in the :code:`CANONICAL_SMILES` column of the :code:`AR_ligands.tsv` file 
-(the file can be found in :code:`tutorial/jupyter/data`).
+This will tell DrugEx to preprocess compounds saved in the :code:`CANONICAL_SMILES` column of the :code:`LIGAND_RAW_small.tsv` file 
+(You can download example data sets from `this link <https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view>`_).
+
 The resulting input files will be saved in the data folder and given a prefix (:code:`arl`). 
 You can then finetune the pretrained molecule generator preprocessed molecules with the :code:`train` script:
 
@@ -66,10 +67,10 @@ First, we create the QSAR models used in the environment-predictor with
 
 .. code-block:: bash
 
-    # input is in ./data/AR_ligands.tsv
+    # input is in ./data/LIGAND_RAW_small.tsv
     drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -c -s 
 
-This tells DrugEx to use data from :code:`AR_ligands.tsv` to create and train two Random Forrest (:code:`-m RF`) QSAR models
+This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create and train two Random Forrest (:code:`-m RF`) QSAR models
 for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions. 
 The model will be saved to :code:`./envs/single/RF_CLS_P29274.pkg` and model evalution to :code:`./envs/single/RF_CLS_P29274.[cv/ind].tsv`.
 
@@ -122,8 +123,8 @@ The new compounds are saved to :code:`./new_molecules/arl_graph_trans_RL.tsv`.
 CLI Options
 ===========
 
-Data preparation
-----------------
+Dataset
+-------
 
 Molecule type
 ^^^^^^^^^^^^^
@@ -166,11 +167,11 @@ By default,
     * no intermediate files are saved. They can be written by specifying :code:`-sif, --save_intermediate_files`
     * the git hash is retrieved. To skip this, specify :code:`-ng, -no_git`
 
-environ
--------
+..  Environ
+    -------
 
-train
------
+    train
+    -----
 
-designer
---------
+    designer
+    --------
