@@ -4,8 +4,7 @@ evaluator
 Created by: Martin Sicho
 On: 29.05.22, 18:12
 """
-from contextlib import closing
-from multiprocessing import Pool
+import concurrent
 from tqdm.auto import tqdm
 
 from drugex.parallel.interfaces import ParallelException, ParallelProcessor
@@ -91,15 +90,14 @@ class ParallelSupplierEvaluator(ParallelProcessor):
 
         error = error if error else self.error
         chunk_size = self.getChunkSize(data)
-        data = [(data[i: i+chunk_size], error) for i in range(0, len(data), chunk_size)]
+        data = [data[i: i+chunk_size] for i in range(0, len(data), chunk_size)]
         batch_size = 4 * self.nProc
         results = []
-        with closing(Pool(processes=self.nProc)) as pool:
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.nProc) as executor:
             batches = [data[i: i+batch_size] for i in range(0, len(data), batch_size)]
             for batch in tqdm(batches, desc=f"Evaluating: {self.supplier.__name__}"):
-                for res in [pool.apply_async(self.run, i) for i in batch]:
-                    res = res.get()
-                    res = collector(res)
-                    results.append(res)
+                for result in executor.map(self.run, batch, len(batch) * [error]):
+                    results.append(collector(result))
 
         return results
