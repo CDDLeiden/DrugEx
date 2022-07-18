@@ -102,20 +102,16 @@ class Corpus(MolSupplier, ABC):
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
 
     def next(self):
-        molecule = next(self.molecules)
+        return next(self.molecules)
+
+    def convert(self, representation):
         try:
-            ret = self.processMolecule(molecule)
+            ret = self.processMolecule(representation)
         except Exception as exp:
             logger.warning(f'Exception occurred when generating corpus data for molecule: {molecule}. Cause:')
             logger.exception(exp)
             return next(self)
         return ret
-
-    def convertMol(self, representation):
-        return representation
-
-    def annotateMol(self, mol, key, value):
-        return mol
 
     @abstractmethod
     def processMolecule(self, molecule):

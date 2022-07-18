@@ -93,9 +93,13 @@ class ParallelSupplierEvaluator(ParallelProcessor):
         chunk_size = self.getChunkSize(data)
         data = [(data[i: i+chunk_size], error) for i in range(0, len(data), chunk_size)]
         batch_size = 4 * self.nProc
+        results = []
         with closing(Pool(processes=self.nProc)) as pool:
             batches = [data[i: i+batch_size] for i in range(0, len(data), batch_size)]
             for batch in tqdm(batches, desc=f"Evaluating: {self.supplier.__name__}"):
                 for res in [pool.apply_async(self.run, i) for i in batch]:
                     res = res.get()
-                    collector(res)
+                    res = collector(res)
+                    results.append(res)
+
+        return results

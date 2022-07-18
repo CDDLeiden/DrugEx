@@ -19,7 +19,7 @@ class StandardizedSupplier(BaseMolSupplier):
 
         Args:
             mols: A set of input molecules. It will be converted to an iterator if not one already.
-            standardizer: a `MolConverter` to transform items in 'mols' to the standardized form.
+            standardizer: a `MolConverter` to transform items in 'mols' to the standardized form. It should return the same representation as in the original 'mols' (i.e. SMILES if the original input was SMILES).
         """
 
         super().__init__(converter=standardizer)
@@ -41,7 +41,7 @@ class  ListSupplier(BaseMolSupplier):
 
     """
 
-    def __init__(self, mols, converter=SmilesToDrEx()):
+    def __init__(self, mols, converter=SmilesToDrEx(), hide_duplicates=False):
         """
         Initialize list supplier.
 
@@ -49,7 +49,7 @@ class  ListSupplier(BaseMolSupplier):
             mols (list): A list of molecules. By default, representation as SMILES is assumed.
             converter (MolConverter): Converter to transform molecules in 'mols' to the desired representation, `SmilesToDrEx` by default.
         """
-        super().__init__(converter=converter, hide_duplicates=False)
+        super().__init__(converter=converter, hide_duplicates=hide_duplicates)
         self.mols = iter(mols)
 
 

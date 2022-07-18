@@ -98,7 +98,6 @@ class FragmentPairsEncodedSupplier(MolSupplier):
             pairs (list): list of (fragment, molecule) `tuple`s that each denotes one fragment-molecule pair
             encoder: a `FragmentPairEncoder` handling encoding of molecules and fragments
         """
-        super().__init__(direct=True)
         self.encoder = encoder
         self.pairs = iter(pairs)
 
@@ -138,8 +137,6 @@ class FragmentPairsSupplier(MolSupplier):
             molecules: the input molecules as a `list`-like object or an iterator
             fragmenter: an instance of `Fragmenter
         """
-
-        super().__init__(True)
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
         self.fragmenter = fragmenter
         self.currentBatch = None

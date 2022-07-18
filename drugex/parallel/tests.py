@@ -25,7 +25,10 @@ class TestFileParsers(TestCase):
         para_supplier = ParallelSupplierEvaluator(
             ListSupplier,
             n_proc=2,
-            chunk_size=int(len(smiles) / 2)
+            chunk_size=int(len(smiles) / 2),
+            kwargs={
+                "hide_duplicates": True
+            }
         )
 
         ret = []
@@ -42,7 +45,10 @@ class TestFileParsers(TestCase):
         smiles = pd.read_csv(self.getTestFile('test.tsv'), sep="\t", header=0).CANONICAL_SMILES.tolist()
         para_supplier = ParallelSupplierEvaluator(
             ListSupplier,
-            n_proc=2
+            n_proc=2,
+            kwargs={
+                "hide_duplicates": True
+            }
         )
 
         def collect(ret):
@@ -50,8 +56,11 @@ class TestFileParsers(TestCase):
             supplier = ret[1]
             self.assertTrue(len(result) > 0)
             self.assertTrue(isinstance(supplier, ListSupplier))
-            self.assertTrue(len(result) == 5)
+            #
             for mol in result:
                 self.assertTrue(isinstance(mol, DrExMol))
 
-        para_supplier.apply(smiles, collect)
+            return len(result)
+
+        ret = para_supplier.apply(smiles, collect)
+        self.assertTrue(sum(ret) == 10)
