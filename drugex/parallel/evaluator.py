@@ -15,7 +15,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
 
     """
 
-    def __init__(self, supplier_class, n_proc=None, chunk_size=None, chunks=None, args=None, kwargs=None):
+    def __init__(self, supplier_class, n_proc=None, chunk_size=1000, chunks=None, args=None, kwargs=None):
         """
         Initialize this instance with a `MolSupplier` and other parameters. Note that the supplier is passed as a class and not an instance. This helps to avoid some issues with serialization between processes and, thus, `ParallelSupplierEvaluator` serves only as a template for execution. Also note that the `ParallelSupplierEvaluator` assumes that the first argument of the `MolSupplier` constructor accepts the data to be processed.
 
