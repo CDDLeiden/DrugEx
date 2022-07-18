@@ -21,8 +21,8 @@ class SmilesDataSet(DataSet):
 
     columns=('Smiles', 'Token') # column names to use for the data frame
 
-    def __init__(self, path, voc=None):
-        super().__init__(path)
+    def __init__(self, path, voc=None, rewrite=False):
+        super().__init__(path, rewrite=rewrite)
         self.voc = self.setVoc(voc if voc else VocSmiles())
 
     @staticmethod
@@ -89,9 +89,9 @@ class SmilesFragDataSet(DataSet):
             dataset = DataLoader(dataset, batch_size=batch_size, collate_fn=dataset.collate_fn)
             return dataset
 
-    def __init__(self, path):
-        super().__init__(path)
-        self.voc = VocSmiles()
+    def __init__(self, path, voc=None, rewrite=False):
+        super().__init__(path, rewrite=rewrite)
+        self.voc = voc if voc else VocSmiles()
 
     def __call__(self, result):
         """
@@ -147,9 +147,9 @@ class GraphFragDataSet(DataSet):
     `DataSet` to manage the fragment-molecule pair encodings for the graph-based model (`GraphModel`).
     """
 
-    def __init__(self, path):
-        super().__init__(path)
-        self.voc = VocGraph()
+    def __init__(self, path, voc=None, rewrite=False):
+        super().__init__(path, rewrite=rewrite)
+        self.voc = voc if voc else VocGraph()
 
     def __call__(self, result):
         """

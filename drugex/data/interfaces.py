@@ -46,7 +46,7 @@ class DataSet(ResultCollector, ABC):
     Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, rewrite=False):
         """
         Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.
 
@@ -60,8 +60,25 @@ class DataSet(ResultCollector, ABC):
         self.voc = None
         try:
             self.fromFile(self.outpath)
+            if rewrite:
+                self.reset()
         except FileNotFoundError:
-            logger.warning(f"The data set file does not exist: {self.outpath}. This data set is empty. Initialize it with data by calling it.")
+            logger.warning(f"The data set file does not exist: {self.outpath}. This data set is empty. You can add data by calling it.")
+
+    def reset(self):
+        logger.info(f"Initializing new {self.__class__.__name__} at {self.outpath}...")
+        if os.path.exists(self.outpath):
+            os.remove(self.outpath)
+            logger.info(f"Removed: {self.outpath}")
+        voc_path = self.getVocPath()
+        if os.path.exists(voc_path):
+            os.remove(voc_path)
+            logger.info(f"Removed: {voc_path}")
+
+        logger.info(f"{self} initialized.")
+
+    def getVocPath(self):
+        return f"{self.outpath}.vocab"
 
     def sendDataToFile(self, data, columns=None):
         header_written = os.path.isfile(self.outpath)
@@ -105,6 +122,8 @@ class DataSet(ResultCollector, ABC):
             self.voc = voc
         else:
             self.voc += voc
+
+        self.voc.toFile(self.getVocPath())
 
     def getVoc(self):
         """
