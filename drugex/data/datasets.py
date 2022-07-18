@@ -4,8 +4,6 @@ defaultdatasets
 Created by: Martin Sicho
 On: 25.06.22, 19:42
 """
-import os
-import time
 
 import numpy as np
 import pandas as pd
@@ -23,24 +21,9 @@ class SmilesDataSet(DataSet):
 
     columns=('Smiles', 'Token') # column names to use for the data frame
 
-    def __init__(self, path, voc=VocSmiles(), autoload=False):
-        super().__init__(path, autoload)
-        self.voc = voc
-
-    def getDataFrame(self):
-        return pd.DataFrame(self.data, columns=self.columns)
-
-    def save(self):
-        self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
-
-    def getVoc(self):
-        return self.voc
-
-    def getData(self):
-        return self.data
-
-    def setVoc(self, voc):
-        self.voc = voc
+    def __init__(self, path, voc=None):
+        super().__init__(path)
+        self.voc = self.setVoc(voc if voc else VocSmiles())
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
@@ -60,30 +43,8 @@ class SmilesDataSet(DataSet):
             `None`
         """
 
-        self.data.extend([(x['seq'], x['token']) for x in result[0]])
-
-        voc = result[1].getVoc()
-        if not self.voc:
-            self.voc = voc
-        else:
-            self.voc += voc
-
-    def fromFile(self, path, vocs=tuple(), voc_class=None, smiles_col=columns[0], token_col=columns[1]):
-        """
-
-        Args:
-            path: see `DataSet.fromFile()`
-            vocs: see `DataSet.fromFile()`
-            voc_class: see `DataSet.fromFile()`
-            smiles_col: column in the input file with the SMILES strings of molecules
-            token_col: column in the input file with the generated tokens
-
-        Returns:
-            `None`
-        """
-
-        self.data = pd.read_csv(path, header=0, sep='\t', usecols=[smiles_col, token_col]).values.tolist()
-        self.voc = self.readVocs(vocs, voc_class)
+        self.updateVoc(result[1].getVoc())
+        self.sendDataToFile([(x['seq'], x['token']) for x in result[0]], columns=self.columns)
 
 class SmilesFragDataSet(DataSet):
     """
@@ -128,8 +89,8 @@ class SmilesFragDataSet(DataSet):
             dataset = DataLoader(dataset, batch_size=batch_size, collate_fn=dataset.collate_fn)
             return dataset
 
-    def __init__(self, path, autoload=True):
-        super().__init__(path, autoload)
+    def __init__(self, path):
+        super().__init__(path)
         self.voc = VocSmiles()
 
     def __call__(self, result):
@@ -143,32 +104,17 @@ class SmilesFragDataSet(DataSet):
             `None`
         """
 
-        self.data.extend(
+        self.updateVoc(result[1].encoder.getVoc())
+        self.sendDataToFile(
                 [
                     (
                         " ".join(x[1]),
                         " ".join(x[0])
                     )
                     for x in result[0] if x[0] and x[1]
-                ]
+                ],
+                columns=self.columns
             )
-        voc = result[1].encoder.getVoc() # get vocabulary from the result as well and append to the current one if it exists
-        if not self.voc:
-            self.voc = voc
-        else:
-            self.voc += voc
-
-    def getDataFrame(self):
-        return pd.DataFrame(self.data, columns=self.columns)
-
-    def save(self):
-        self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
-
-    def getData(self):
-        return self.data
-
-    def getVoc(self):
-       return self.voc
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
@@ -179,35 +125,21 @@ class SmilesFragDataSet(DataSet):
         dataset = TensorDataset(_in, _out)
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    def setVoc(self, voc):
-        self.voc = voc
-
-    def fromFile(self, path, vocs=tuple(), voc_class=None):
-        self.data = pd.read_csv(path, header=0, sep='\t', usecols=self.columns).values.tolist()
-
-        if vocs and voc_class:
-            self.voc = self.readVocs(vocs, voc_class)
-
-
 class SmilesScaffoldDataSet(SmilesFragDataSet):
 
     def __call__(self, result):
         if result[0]:
-            self.data.extend(
+            self.updateVoc(result[1].getVoc())
+            self.sendDataToFile(
                 [
                     (
                         " ".join(x['frag']),
                         " ".join(x['mol'])
                     )
                     for x in result[0] if x['mol'] and x['frag']
-                ]
+                ],
+                columns=self.columns
             )
-
-            voc = result[1].getVoc()
-            if not self.voc:
-                self.voc = voc
-            else:
-                self.voc += voc
 
 
 class GraphFragDataSet(DataSet):
@@ -215,8 +147,8 @@ class GraphFragDataSet(DataSet):
     `DataSet` to manage the fragment-molecule pair encodings for the graph-based model (`GraphModel`).
     """
 
-    def __init__(self, path, autoload=True):
-        super().__init__(path, autoload)
+    def __init__(self, path):
+        super().__init__(path)
         self.voc = VocGraph()
 
     def __call__(self, result):
@@ -230,38 +162,11 @@ class GraphFragDataSet(DataSet):
             `None`
         """
 
-        header_written = os.path.isfile(self.outpath)
-        open_mode = 'a' if header_written else 'w'
-        pd.DataFrame((x[1] for x in result[0]), columns=self.getColumns()).to_csv(
-            self.outpath,
-            sep='\t',
-            index=False,
-            header=not header_written,
-            mode=open_mode,
-            encoding='utf-8'
-        )
-
-        self.addVoc(result[1].encoder.getVoc())
-
-    def addVoc(self, voc):
-        if not self.voc:
-            self.voc = voc
-        else:
-            self.voc += voc
+        self.updateVoc(result[1].encoder.getVoc())
+        self.sendDataToFile([x[1] for x in result[0]], columns=self.getColumns())
 
     def getColumns(self):
-        return ['C%d' % d for d in range(self.voc.max_len * 5)]
-
-    def getDataFrame(self):
-        return pd.read_table(self.outpath, sep='\t', header=0)
-
-    def save(self):
-        self.getDataFrame().to_csv(self.outpath, sep='\t', index=False)
-
-    def getData(self):
-        if not self.data:
-            self.fromFile(self.outpath)
-        return self.data
+        return ['C%d' % d for d in range(self.getVoc().max_len * 5)]
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
@@ -270,20 +175,8 @@ class GraphFragDataSet(DataSet):
         loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader
 
-    def getVoc(self):
-       return self.voc
-
-    def setVoc(self, voc):
-        self.voc = voc
-
-    def fromFile(self, path, vocs=tuple(), voc_class=None):
-        self.data = pd.read_csv(path, header=0, sep='\t').values.tolist()
-
-        if vocs and voc_class:
-            self.voc = self.readVocs(vocs, voc_class)
-
 
 class GraphScaffoldDataSet(GraphFragDataSet):
 
     def __call__(self, result):
-        self.data.extend(result[0])
+        self.sendDataToFile(result[0], columns=self.getColumns())

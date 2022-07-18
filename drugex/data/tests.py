@@ -132,7 +132,7 @@ class ProcessingTests(TestCase):
         encoder.apply(mols, collector=collector)
         voc = collector.getVoc()
         self.assertTrue('R' in voc.words)
-        df = collector.getDataFrame()
+        df = collector.getData()
         self.assertTrue(df.shape == (11, 2))
 
     def test_smiles_frag_encoder(self):
@@ -152,7 +152,7 @@ class ProcessingTests(TestCase):
         collectors = [SmilesFragDataSet(x) for x in (self.getRandomFile(), self.getRandomFile())]
         encoder.apply(mols, encodingCollectors=collectors)
         for collector in collectors:
-            df = collector.getDataFrame()
+            df = collector.getData()
             self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
 
     def test_frag_suppliers(self):
@@ -185,5 +185,5 @@ class ProcessingTests(TestCase):
         encoder.apply(mols, fragmentPairsCollector=fragment_collector, encodingCollectors=collectors)
         self.assertTrue(len(fragment_collector.getList()) == (len(collectors[0].getData()) + len(collectors[1].getData())))
         for collector in collectors:
-            df = collector.getDataFrame()
+            df = collector.getData()
             self.assertTrue(df.columns[0][0] == 'C')
