@@ -10,7 +10,7 @@ from copy import deepcopy
 import torch
 from torch import nn
 
-from drugex import DEFAULT_DEVICE_ID, DEFAULT_DEVICE
+from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.utils import gpu_non_dominated_sort, cpu_non_dominated_sort
 
 
@@ -285,19 +285,19 @@ class ModelProvider(ABC):
 
 class Model(nn.Module, ModelProvider, ABC):
     """
-    Generic base class for all PyTorch models in DrugEx. Manages the GPU or CPU devices available to the model.
+    Generic base class for all PyTorch models in DrugEx. Manages the GPU or CPU gpus available to the model.
     """
 
-    def __init__(self, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super().__init__()
         self.device = None
-        self.devices = None # TODO: change name to GPUs
+        self.gpus = None
         self.updateDevices(device, use_gpus)
 
     def updateDevices(self, device, gpus):
         if device.type == 'cpu':
             self.device = device
-            self.devices = (-1,)
+            self.gpus = (-1,)
         elif device.type == 'cuda':
             self.device = device
             self.attachToGPUs(gpus)
@@ -308,6 +308,8 @@ class Model(nn.Module, ModelProvider, ABC):
     def attachToGPUs(self, gpus):
         """
         Use this method to handle a request to change the used GPUs. This method is automatically called when the class is instantiated, but may need to be called again in subclasses to move all data to the required devices.
+
+        Subclasses should also make sure to set "self.device" to the currently used device and "self.gpus" to GPU ids of the currently used GPUs
 
         Args:
             gpus: a `tuple` of new GPU IDs
@@ -386,7 +388,7 @@ class Explorer(Model, ABC):
     """
 
     def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, n_samples=-1,
-                 repeat=1, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+                 repeat=1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super().__init__(device=device, use_gpus=use_gpus)
         self.agent = agent
         self.mutate = mutate
@@ -399,13 +401,13 @@ class Explorer(Model, ABC):
         self.nSamples = n_samples
 
     def attachToGPUs(self, gpus):
-        self.devices = gpus
         if hasattr(self, 'agent'):
             self.agent.attachToGPUs(gpus)
         if hasattr(self, 'mutate') and self.mutate:
             self.mutate.attachToGPUs(gpus)
         if hasattr(self, 'crover') and self.crover:
             self.crover.attachToGPUs(gpus)
+        self.gpus = gpus
 
     @abstractmethod
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):

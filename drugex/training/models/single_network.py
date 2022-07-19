@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch import optim
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_DEVICE_ID
+from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 
 from drugex.logs import logger
 from drugex.training.interfaces import Generator
@@ -12,7 +12,7 @@ from drugex.training.scorers.smiles import SmilesChecker
 
 
 class RNN(Generator):
-    def __init__(self, voc, embed_size=128, hidden_size=512, is_lstm=True, lr=1e-3, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, voc, embed_size=128, hidden_size=512, is_lstm=True, lr=1e-3, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(RNN, self).__init__(device=device, use_gpus=use_gpus)
         self.voc = voc
         self.embed_size = embed_size
@@ -25,7 +25,7 @@ class RNN(Generator):
         self.rnn = rnn_layer(embed_size, hidden_size, num_layers=3, batch_first=True)
         self.linear = nn.Linear(hidden_size, voc.size)
         self.optim = optim.Adam(self.parameters(), lr=lr)
-        self.attachToGPUs(self.devices)
+        self.attachToGPUs(self.gpus)
 
     def attachToGPUs(self, gpus):
         """
@@ -39,7 +39,7 @@ class RNN(Generator):
         """
         self.device = torch.device(f'cuda:{gpus[0]}')
         self.to(self.device)
-        self.devices = (gpus[0],)
+        self.gpus = (gpus[0],)
 
     def getModel(self):
         """

@@ -6,7 +6,7 @@ import random
 import torch
 from torch import nn
 from torch.optim import Adam
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_DEVICE_ID
+from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 import time
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -22,7 +22,7 @@ class GraphExplorer(Explorer):
     Graph-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
         self.voc_trg = agent.voc_trg
         self.bestState = None
@@ -181,7 +181,7 @@ class GraphExplorer(Explorer):
 
     def policy_gradient(self, loader, monitor=None):
         monitor = monitor if monitor else NullMonitor()
-        net = nn.DataParallel(self.agent, device_ids=self.devices)
+        net = nn.DataParallel(self.agent, device_ids=self.gpus)
         total_steps = len(loader)
         for step_idx, src in enumerate(loader):
             monitor.saveProgress(step_idx, None, total_steps, None)
@@ -232,7 +232,7 @@ class GraphExplorer(Explorer):
         monitor.saveModel(self.agent)
         last_it = -1
         n_iters = 1 if self.crover is None else 10
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         trgs = []
         logger.info(' ')
         for it in range(n_iters):
@@ -306,7 +306,7 @@ class SmilesExplorer(Explorer):
     Smiles-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
     """
 
-    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
@@ -343,7 +343,7 @@ class SmilesExplorer(Explorer):
 
     def policy_gradient(self, loader, monitor=None):
         monitor = monitor if monitor else NullMonitor()
-        net = nn.DataParallel(self.agent, device_ids=self.devices)
+        net = nn.DataParallel(self.agent, device_ids=self.gpus)
         total_steps = len(loader)
         step_idx = 0
         for src, trg in loader:
@@ -396,7 +396,7 @@ class SmilesExplorer(Explorer):
         best_score = 0
         last_it = -1
         n_iters = 1 if self.crover is None else 10
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         srcs, trgs = [], []
         for it in range(n_iters):
             last_save = -1
@@ -473,7 +473,7 @@ class PGLearner(Explorer, ABC):
         prior: The auxiliary model which is defined differently in each methods.
     """
     def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, mean_func='geometric', batch_size=128, epsilon=1e-3,
-                 sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+                 sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
         self.replay = 10
         self.n_samples = 128  # * 8
@@ -535,7 +535,7 @@ class SmilesExplorerNoFrag(PGLearner):
         mutate (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
         self.bestState = None
  

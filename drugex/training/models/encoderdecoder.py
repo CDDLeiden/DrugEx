@@ -7,7 +7,7 @@ import time
 from tqdm import tqdm
 from torch import nn
 
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_DEVICE_ID
+from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.logs import logger
 from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
@@ -26,7 +26,7 @@ class Base(Generator, ABC):
         pass
 
     def attachToGPUs(self, gpus):
-        self.devices = gpus
+        self.gpus = gpus
         self.to(self.device)
 
     def getModel(self):
@@ -76,13 +76,13 @@ class Base(Generator, ABC):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        self.attachToGPUs(self.devices)
+        self.attachToGPUs(self.gpus)
         
 class SmilesFragsGeneratorBase(Base):
         
     def trainNet(self, loader, monitor=None):
         monitor = monitor if monitor else NullMonitor()
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
         for src, trg in loader:
@@ -98,7 +98,7 @@ class SmilesFragsGeneratorBase(Base):
             
     def validate(self, loader, evaluator=None):
         
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         
         frags, smiles, scores = self.evaluate(loader, method=evaluator)
         valid = scores.VALID.mean() 
@@ -115,7 +115,7 @@ class SmilesFragsGeneratorBase(Base):
         return valid, desired, loss_valid, smiles_scores
     
     def sample(self, loader, repeat=1):
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():
             for _ in range(repeat):                
@@ -128,7 +128,7 @@ class SmilesFragsGeneratorBase(Base):
 
 
 class Seq2Seq(SmilesFragsGeneratorBase):
-    def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(Seq2Seq, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
         self.voc_size = 128
@@ -170,7 +170,7 @@ class Seq2Seq(SmilesFragsGeneratorBase):
 
 
 class EncDec(SmilesFragsGeneratorBase):
-    def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(EncDec, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
         self.voc_size = 128

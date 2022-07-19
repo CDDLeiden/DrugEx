@@ -3,7 +3,7 @@ import tempfile
 import torch
 import torch.nn as nn
 
-from drugex import DEFAULT_DEVICE_ID, DEFAULT_DEVICE
+from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
@@ -47,7 +47,7 @@ class AtomLayer(nn.Module):
 
 
 class GraphModel(Base):
-    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(GraphModel, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'
         self.voc_trg = voc_trg
@@ -250,7 +250,7 @@ class GraphModel(Base):
     
     def trainNet(self, loader, monitor=None):
         monitor = monitor if monitor else NullMonitor()
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
         for src in loader:
@@ -266,7 +266,7 @@ class GraphModel(Base):
                 
     def validate(self, loader, evaluator=None):
         
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         
         frags, smiles, scores = self.evaluate(loader, method=evaluator)
         valid = scores.VALID.mean() 
@@ -283,7 +283,7 @@ class GraphModel(Base):
         return valid, desired, loss_valid, smiles_scores
     
     def sample(self, loader, repeat=1):
-        net = nn.DataParallel(self, device_ids=self.devices)
+        net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():
             for _ in range(repeat):                
