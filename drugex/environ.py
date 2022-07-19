@@ -208,7 +208,7 @@ class QSARModel:
         self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
         log.info('Model intialized: %s' % self.out)
 
-    def init_model(self):
+    def init_model(self, n_jobs=-1):
         """
             initialize model from saved or default hyperparameters
         """
@@ -217,7 +217,7 @@ class QSARModel:
             with open('%s_params.json' % self.out) as j:
                 self.parameters = json.loads(j.read())
             log.info('loaded model parameters from file: %s_params.json' % self.out)
-        self.model = self.alg.set_params(**self.parameters)
+        self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
         log.info('parameters: %s' % self.parameters)
 
     def fit_model(self):
@@ -744,7 +744,7 @@ def Environ(args):
                     mymodel.bayes_optimization(n_trials=20)
                 
                 #initialize models from saved or default parameters
-                mymodel.init_model()
+                mymodel.init_model(n_jobs=args.ncpu)
 
                 if args.optimization is None and args.save_model:
                     mymodel.fit_model()
