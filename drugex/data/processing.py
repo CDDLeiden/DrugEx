@@ -61,6 +61,7 @@ class Standardization(ParallelProcessor):
             },
             chunk_size=self.chunkSize,
             chunks=self.chunks,
+            n_proc=self.nProc
         )
 
         collector = collector if collector else self.Collector()
