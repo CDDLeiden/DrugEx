@@ -90,7 +90,7 @@ def backUpFilesInFolder(_dir, backup_id, output_prefixes, output_extensions='dum
             backup_log = open(os.path.join(backup_dir, 'backuplog.log'), 'w')
             backup_log.write(f'[{datetime.datetime.now()}] : {file} was moved from {os.path.abspath(_dir)}' )
             message += f"Already existing '{file}' was copied to {os.path.abspath(backup_dir)}\n"
-            if cp_suffix != None and old_file.split('.')[0].endswith(cp_suffix):
+            if cp_suffix != None and file.split('.')[0].endswith(cp_suffix):
                 shutil.copyfile(os.path.join(_dir, file), os.path.join(backup_dir, file))
             else:
                 os.rename(os.path.join(_dir, file), os.path.join(backup_dir, file))
@@ -106,7 +106,7 @@ def backUpFiles(base_dir : str, folder : str, output_prefixes : tuple, cp_suffix
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'))
         elif folder == 'envs':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'), cp_suffix=cp_suffix )
-       elif folder == 'generators':
+        elif folder == 'generators':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes)
         elif folder == 'new_molecules':
             message = backUpFilesInFolder(dir, backup_id, output_prefixes, output_extensions=('json', 'log'))
