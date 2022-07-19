@@ -3,6 +3,7 @@ import tempfile
 import torch
 import torch.nn as nn
 
+from drugex import DEFAULT_DEVICE_ID, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
@@ -46,8 +47,8 @@ class AtomLayer(nn.Module):
 
 
 class GraphModel(Base):
-    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0):
-        super(GraphModel, self).__init__()
+    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+        super(GraphModel, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx

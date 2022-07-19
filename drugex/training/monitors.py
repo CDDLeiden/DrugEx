@@ -6,7 +6,6 @@ On: 02.06.22, 13:59
 """
 import os.path
 from abc import ABC
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -50,7 +49,7 @@ class DictMonitor(TrainingMonitor, ABC):
         return pd.DataFrame(evaluation)
 
     def saveModel(self, model):
-        self.bestState = deepcopy(model.state_dict())
+        self.bestState = model.getModel()
 
     def changeEpoch(self, epoch):
         current_epoch = max([epoch, max(self.dict.keys())]) if epoch else max([self.currentEpoch, max(self.dict.keys())])

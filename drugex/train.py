@@ -20,7 +20,6 @@ from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, We
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
 from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property, Uniqueness
-from drugex.training.trainers import Pretrainer, FineTuner, Reinforcer
 
 warnings.filterwarnings("ignore")
     
@@ -247,7 +246,7 @@ def DataPreparationSmiles(voc_files,
     return voc, train_loader, valid_loader
 
 
-def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilon, beta, n_samples):
+def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilon, beta, n_samples, gpus):
     
     """
     Sets up the evolver composed of two generators.
@@ -262,18 +261,19 @@ def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilo
         epsilon (float)             : exploration rate
         beta (float)                : reward baseline
         n_samples (int)             : number train and test (0.2*n_samples) of molecules generated at each epoch
+        gpus (tuple)                : IDs of GPUs to use for training
     Returns:
         evolver (torch model)       : evolver composed of two generators
     """
     
     if mol_type == 'graph':
         # FIXME:  sigma=beta? strange...
-        evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
+        evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
     else :
         if algorithm == 'rnn':
-            evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
+            evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
         else:
-            evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples)
+            evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
         
     return evolver
     
@@ -387,7 +387,7 @@ def CreateDesirabilityFunction(base_dir,
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
-def SetGeneratorAlgorithm(voc, mol_type, alg):
+def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
     
     """
     Initializes the generator algorithm
@@ -396,23 +396,26 @@ def SetGeneratorAlgorithm(voc, mol_type, alg):
         voc (): vocabulary
         mol_type (str) : molecule type
         alg (str): agent algorithm type
+        gpus (tuple): a tuple of GPU IDs to use with the initialized model
     Return:
         agent (torch model): molecule generator 
     """
     
+    agent = None
     if mol_type == 'graph':
-        agent = GraphModel(voc)
+        agent = GraphModel(voc, use_gpus=gpus)
     else :
         if alg == 'ved':
-            agent = encoderdecoder.EncDec(voc, voc)
+            agent = encoderdecoder.EncDec(voc, voc, use_gpus=gpus)
         elif alg == 'attn':
-            agent = encoderdecoder.Seq2Seq(voc, voc)
+            agent = encoderdecoder.Seq2Seq(voc, voc, use_gpus=gpus)
         elif alg == 'trans':
-            agent = GPT2Model(voc, n_layer=12)
+            agent = GPT2Model(voc, use_gpus=gpus)
         elif alg == 'rnn':
             # TODO: add argument for is_lstm
-            agent = single_network.RNN(voc, is_lstm=True)
+            agent = single_network.RNN(voc, is_lstm=True, use_gpus=gpus)
     
+    assert agent
     return agent
 
 def PreTrain(args):
@@ -433,10 +436,9 @@ def PreTrain(args):
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
 
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
-    trainer = Pretrainer(agent, gpus=args.gpu)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     monitor = FileMonitor(pt_path, verbose=True)
-    trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
         
 def FineTune(args):
     """
@@ -464,11 +466,10 @@ def FineTune(args):
         voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size)
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
-    trainer = FineTuner(agent, gpus=args.gpu)
-    trainer.loadStatesFromFile(pt_path)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    agent.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
-    trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
                               
 def RLTrain(args):
     
@@ -488,10 +489,10 @@ def RLTrain(args):
         voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size, unique_frags=True if args.algorithm != 'rnn' else False, n_samples=args.n_samples)
     
     # Initialize agent and prior by loading pretrained model
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm) 
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'       
     agent.loadStatesFromFile(ag_path)
-    prior = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
+    prior = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
     prior.loadStatesFromFile(pr_path)
 
@@ -519,10 +520,9 @@ def RLTrain(args):
 
     # Initialize evolver algorithm
     ## first difference for v2 needs to be adapted
-    explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples)
-    trainer = Reinforcer(explorer)
+    explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples, args.gpu)
     monitor = FileMonitor(rl_path, verbose=True)
-    trainer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    explorer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
 
 
 def TrainGenerator(args):

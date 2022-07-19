@@ -4,8 +4,8 @@ interfaces
 Created by: Martin Sicho
 On: 01.06.22, 11:29
 """
-import os
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import torch
 from torch import nn
@@ -267,44 +267,56 @@ class Environment(ModelEvaluator):
     def getScorerKeys(self):
         return [x.getKey() for x in self.scorers]
 
+class ModelProvider(ABC):
+    """
+    Any instance that contains a DrugEx `Model` or its serialized form (i.e a state dictionary).
+    """
 
-class Model(nn.Module, ABC):
+    @abstractmethod
+    def getModel(self):
+        """
+        Return the current model as a `Model` instance or in serialized form.
+
+        Returns:
+            model (`Model` or serialized states)
+        """
+
+        pass
+
+class Model(nn.Module, ModelProvider, ABC):
     """
     Generic base class for all PyTorch models in DrugEx. Manages the GPU or CPU devices available to the model.
     """
 
-    def __init__(self):
+    def __init__(self, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
         super().__init__()
         self.device = None
-        self.devices = None
-        self.attachToDevice(DEFAULT_DEVICE)
-        self.attachToDevices([DEFAULT_DEVICE_ID])
+        self.devices = None # TODO: change name to GPUs
+        self.updateDevices(device, use_gpus)
 
-    def attachToDevice(self, device):
+    def updateDevices(self, device, gpus):
+        if device.type == 'cpu':
+            self.device = device
+            self.devices = (-1,)
+        elif device.type == 'cuda':
+            self.device = device
+            self.attachToGPUs(gpus)
+        else:
+            raise ValueError(f"Unknown device: {device}")
+
+    @abstractmethod
+    def attachToGPUs(self, gpus):
         """
-        Attach this model to the given device.
+        Use this method to handle a request to change the used GPUs. This method is automatically called when the class is instantiated, but may need to be called again in subclasses to move all data to the required devices.
 
         Args:
-            device: result of "torch.device('cpu')" or "torch.device('gpu')"
+            gpus: a `tuple` of new GPU IDs
 
         Returns:
             `None`
         """
 
-        self.device = device
-
-    def attachToDevices(self, device_ids):
-        """
-        Attach this model to multiple devices by giving their device ids.
-
-        Args:
-            device_ids: a `list` of devices to use for calculations
-
-        Returns:
-
-        """
-
-        self.devices = device_ids
+        pass
 
     @abstractmethod
     def fit(self, train_loader, valid_loader, epochs=1000, monitor=None):
@@ -331,7 +343,11 @@ class Model(nn.Module, ABC):
             path: path to file
         """
 
-        self.load_state_dict(torch.load(path, map_location=self.device), strict=False)
+        self.loadStates(torch.load(path, map_location=self.device))
+
+
+    def loadStates(self, state_dict, strict=True):
+        self.load_state_dict(state_dict, strict=strict)
 
 class Generator(Model, ABC):
     """
@@ -360,42 +376,49 @@ class Generator(Model, ABC):
     def evaluate(self, n_samples, method=None, drop_duplicates=True):
         pass
 
+    @abstractmethod
+    def sample(self, *args, **kwargs):
+        pass
+
 class Explorer(Model, ABC):
     """
     Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, n_samples=-1, repeat=1):
-        super().__init__()
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, n_samples=-1,
+                 repeat=1, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+        super().__init__(device=device, use_gpus=use_gpus)
+        self.agent = agent
+        self.mutate = mutate
+        self.crover = crover
         self.batchSize = batch_size
         self.epsilon = epsilon
         self.sigma = sigma
         self.repeat = repeat
         self.env = env
-        self.agent = agent
-        self.mutate = mutate
-        self.crover = crover
         self.nSamples = n_samples
+
+    def attachToGPUs(self, gpus):
+        self.devices = gpus
+        if hasattr(self, 'agent'):
+            self.agent.attachToGPUs(gpus)
+        if hasattr(self, 'mutate') and self.mutate:
+            self.mutate.attachToGPUs(gpus)
+        if hasattr(self, 'crover') and self.crover:
+            self.crover.attachToGPUs(gpus)
 
     @abstractmethod
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
         pass
 
-class ModelProvider(ABC):
-    """
-    Any instance that contains a DrugEx `Model`.
-    """
-
-    @abstractmethod
     def getModel(self):
         """
-        Return the current model.
+        Returns the current state of the agent
 
         Returns:
-            model (`Model`)
-        """
 
-        pass
+        """
+        return deepcopy(self.agent.state_dict())
 
 class TrainingMonitor(ModelProvider, ABC):
     """
@@ -462,104 +485,3 @@ class TrainingMonitor(ModelProvider, ABC):
         """
 
         pass
-
-class Trainer(ModelProvider, ABC):
-    """
-    A convenience class that unifies training of the DrugEx models. Mostly to hold information and settings about the CPU and GPU devices used.
-    """
-
-    def __init__(self, algorithm, gpus=(DEFAULT_DEVICE_ID,)):
-        """
-        Direct the training of a DrugEx `Model`.
-
-        Args:
-            algorithm: the initialized `Model` to train
-            gpus: IDs of GPUs to use for training.
-        """
-
-        assert len(gpus) > 0
-        self.availableGPUs = gpus
-        # os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in self.availableGPUs)
-        self.device = None
-        self.deviceID = None
-        self.model = algorithm
-        self.attachDevices()
-
-    def loadModel(self, provider):
-        """
-        Load a model from provider.
-
-        Args:
-            provider: a `ModelProvider`
-        """
-
-        self.model = provider.getModel()
-
-    def getModel(self):
-        """
-        Get the currently trained model.
-
-        Returns:
-            model (`Model`)
-        """
-
-        return self.model
-
-    def getDevices(self):
-        """
-        Get the list of used GPUs.
-        """
-
-        return self.availableGPUs
-
-    def attachDevices(self, device_id=DEFAULT_DEVICE_ID, device=DEFAULT_DEVICE):
-        """
-        Attach the specified devices to the underlying model.
-
-        Args:
-            device_id: ID of the device
-            device: either "torch.device('cpu')" or "torch.device('gpu')"
-
-        Returns:
-            device: currently set device
-        """
-
-        if device_id and (device_id not in self.availableGPUs):
-            raise RuntimeError(f"Unavailable device: {device_id}")
-        if not device_id:
-            device_id = self.availableGPUs[0]
-        torch.cuda.set_device(device_id)
-        self.device = torch.device(device)
-        self.deviceID = device_id
-        self.model.attachToDevice(self.device)
-        self.model.attachToDevices(self.availableGPUs)
-        return self.device
-
-    @abstractmethod
-    def fit(self, train_loader, valid_loader=None, training_monitor=None, epochs=None, args=None, kwargs=None):
-        """
-        Custom fit method.
-
-        Args:
-            train_loader: loader with training data (see `DataSet`)
-            valid_loader: loader with validation data (see `DataSet`)
-            training_monitor: `TrainingMonitor` to use
-            epochs: maximum number of epochs to train
-            args: custom positional arguments for the `Model.fit()` method
-            kwargs: custom keyword arguments for the `Model.fit()` method
-
-        Returns:
-            output: the output of `Model.fit()` of the algorithm in "self.model"
-        """
-
-        pass
-
-    def loadStatesFromFile(self, path):
-        """
-        Load model states from the given path.
-
-        Args:
-            path: file path
-        """
-
-        self.model.loadStatesFromFile(path)

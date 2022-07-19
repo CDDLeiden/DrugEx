@@ -6,6 +6,7 @@ On: 31.05.22, 10:20
 """
 import os.path
 import tempfile
+from collections import OrderedDict
 from unittest import TestCase
 
 import pandas as pd
@@ -24,7 +25,6 @@ from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property
-from drugex.training.trainers import Pretrainer, FineTuner, Reinforcer
 
 
 class TestModelMonitor(TrainingMonitor):
@@ -40,7 +40,7 @@ class TestModelMonitor(TrainingMonitor):
         }
 
     def saveModel(self, model):
-        self.model = model
+        self.model = model.getModel()
         self.execution['model'] = True
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
@@ -199,6 +199,15 @@ class TrainingTestCase(TestCase):
 
         return tempfile.NamedTemporaryFile().name
 
+    def fitTestModel(self, model, train_loader, test_loader):
+        monitor = TestModelMonitor()
+        model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
+        pr_model = monitor.getModel()
+        self.assertTrue(type(pr_model) == OrderedDict)
+        self.assertTrue(monitor.allMethodsExecuted())
+        model.loadStates(pr_model) # initialize from the best state
+        return model, monitor
+
     def test_rnn_nofrags(self):
         """
         Test single network RNN.
@@ -232,13 +241,8 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        algorithm = RNN(vocabulary, is_lstm=True)
-        pretrainer = Pretrainer(algorithm)
-        monitor = TestModelMonitor()
-        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        pr_model = monitor.getModel()
+        pretrained = RNN(vocabulary, is_lstm=True)
+        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
         splitter = RandomTrainTestSplitter(0.1)
@@ -246,20 +250,16 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuner = FineTuner(algorithm)
-        monitor = TestModelMonitor()
-        finetuner.fit(ft_loader_train, ft_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        ft_model = monitor.getModel()
+        finetuned = RNN(vocabulary, is_lstm=True)
+        finetuned.loadStates(pretrained.getModel())
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorerNoFrag(pr_model, env=environment, mutate=ft_model, crover=pr_model)
-        reinforcer = Reinforcer(explorer)
+        explorer = SmilesExplorerNoFrag(pretrained, env=environment, mutate=finetuned, crover=pretrained)
         monitor = TestModelMonitor()
-        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        self.assertTrue(type(monitor.getModel()) == OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
     def test_graph_frags(self):
@@ -301,16 +301,11 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        algorithm = GraphModel(vocabulary)
-        pretrainer = Pretrainer(algorithm)
-        monitor = TestModelMonitor()
-        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        pr_model = monitor.getModel()
+        pretrained = GraphModel(vocabulary)
+        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # test molecule generation
-        pr_model.sampleFromSmiles([
+        pretrained.sampleFromSmiles([
             "c1ccncc1CCC",
             "CCO"
         ], min_samples=1)
@@ -321,19 +316,15 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        tuner = FineTuner(pretrainer.getModel())
-        monitor = TestModelMonitor()
-        tuner.fit(ft_loader_train, ft_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        ft_model = monitor.getModel()
+        finetuned = GraphModel(vocabulary)
+        finetuned.loadStates(pretrained.getModel())
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = GraphExplorer(pr_model, environment, mutate=ft_model)
-        reinforcer = Reinforcer(explorer)
+        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
-        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
@@ -341,19 +332,13 @@ class TrainingTestCase(TestCase):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
 
         # pretraining
-        algorithm = EncDec(vocabulary, vocabulary)
-        pretrainer = Pretrainer(algorithm)
-        monitor = TestModelMonitor()
-        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
+        pretrained = EncDec(vocabulary, vocabulary)
+        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuner = FineTuner(pretrainer.getModel())
-        monitor = TestModelMonitor()
-        finetuner.fit(ft_loader_train, ft_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
+        finetuned = EncDec(vocabulary, vocabulary)
+        finetuned.loadStates(pretrained.getModel())
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # FIXME: RL for these models currently not working
 
@@ -361,19 +346,15 @@ class TrainingTestCase(TestCase):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
 
         # pretraining
-        algorithm = Seq2Seq(vocabulary, vocabulary)
-        pretrainer = Pretrainer(algorithm)
-        monitor = TestModelMonitor()
-        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
+        pretrained = Seq2Seq(vocabulary, vocabulary)
+        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuner = FineTuner(pretrainer.getModel())
-        monitor = TestModelMonitor()
-        finetuner.fit(ft_loader_train, ft_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
+        finetuned = Seq2Seq(vocabulary, vocabulary)
+        finetuned.loadStates(pretrained.getModel())
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+        self.assertTrue(finetuned)
         self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
 
         # FIXME: RL for these models currently not working
 
@@ -382,28 +363,19 @@ class TrainingTestCase(TestCase):
 
         # pretraining
         vocab_gpt = VocGPT(vocabulary.words)
-        algorithm = GPT2Model(vocab_gpt, n_layer=12)
-        pretrainer = Pretrainer(algorithm)
-        monitor = TestModelMonitor()
-        pretrainer.fit(pr_loader_train, pr_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        pr_model = monitor.getModel()
+        pretrained = GPT2Model(vocab_gpt)
+        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuner = FineTuner(pretrainer.getModel())
-        monitor = TestModelMonitor()
-        finetuner.fit(ft_loader_train, ft_loader_test, epochs=self.N_EPOCHS, monitor=monitor)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-        ft_model = monitor.getModel()
+        finetuned = GPT2Model(vocab_gpt)
+        finetuned.loadStates(pretrained.getModel())
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorer(pr_model, environment, mutate=ft_model, batch_size=self.BATCH_SIZE)
-        reinforcer = Reinforcer(explorer)
+        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
-        reinforcer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 

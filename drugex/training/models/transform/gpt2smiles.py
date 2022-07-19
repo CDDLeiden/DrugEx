@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.init import kaiming_normal_
+
+from drugex import DEFAULT_DEVICE, DEFAULT_DEVICE_ID
 from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
 from .layer import pad_mask, tri_mask
 from drugex.training.models.encoderdecoder import SmilesFragsGeneratorBase
@@ -51,8 +53,8 @@ class GPT2Layer(nn.Module):
 
 
 class GPT2Model(SmilesFragsGeneratorBase):
-    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=6, pad_idx=0):
-        super(GPT2Model, self).__init__()
+    def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=(DEFAULT_DEVICE_ID,)):
+        super(GPT2Model, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx
