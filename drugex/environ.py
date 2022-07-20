@@ -29,7 +29,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC, SVR
 from sklearn.model_selection import StratifiedKFold, KFold
 
-from drugex import DEFAULT_DEVICE_ID
+from drugex import DEFAULT_GPUS
 from drugex.logs.utils import backUpFiles, enable_file_logger, commit_hash
 # from drugex.environment.data import QSARDataset
 # from drugex.environment.models import 
@@ -706,7 +706,7 @@ def Environ(args):
         Optimize, evaluate and train estimators
     """
     args.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
-    torch.cuda.set_device(DEFAULT_DEVICE_ID)
+    torch.cuda.set_device(DEFAULT_GPUS[0])
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
     os.environ['OMP_NUM_THREADS'] = str(args.ncpu)
