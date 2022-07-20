@@ -125,7 +125,7 @@ class FragmentPairsSupplier(MolSupplier):
 
     """
 
-    def __init__(self, molecules, fragmenter):
+    def __init__(self, molecules, fragmenter, max_bonds=None):
         """
 
         Args:
@@ -135,6 +135,7 @@ class FragmentPairsSupplier(MolSupplier):
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
         self.fragmenter = fragmenter
         self.currentBatch = None
+        self.maxBonds = max_bonds
 
     def next(self):
         """
@@ -148,18 +149,7 @@ class FragmentPairsSupplier(MolSupplier):
             batch = None
             while not batch:
                 # the fragmenter generates multiple pairs at once from one molecule, we use batching to return them one by one
-                mol = None
-                while mol is None:
-                    smiles = next(self.molecules)
-                    total = Chem.MolFromSmiles(smiles).GetNumBonds()
-                    ths = 75
-                    if total >= ths:
-                        mol = None
-                        logger.warning(f"Molecule skipped due to threshold on bond count ({ths}): {smiles}")
-                    else:
-                        mol = smiles
-
-                batch = self.fragmenter(mol)
+                batch = self.fragmenter(next(self.molecules))
             self.currentBatch = iter(batch)
         try:
             frags = next(self.currentBatch)

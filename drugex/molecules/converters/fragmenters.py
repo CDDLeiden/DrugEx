@@ -11,6 +11,7 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Chem import Recap, BRICS
 
+from drugex.logs import logger
 from drugex.molecules.converters.interfaces import ConversionException
 from drugex.molecules.converters.standardizers import CleanSMILES
 
@@ -21,7 +22,7 @@ class Fragmenter(CleanSMILES):
 
     """
 
-    def __init__(self, n_frags, n_combs, method='recap', deep_clean=True):
+    def __init__(self, n_frags, n_combs, method='recap', deep_clean=True, max_bonds=75):
         """
 
         Args:
@@ -29,12 +30,14 @@ class Fragmenter(CleanSMILES):
             n_combs: maximum number of combinations of the found leaf fragments
             method: fragmentation method to use. Possible values: ('recap', 'brics')
             deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)
+            max_bonds: only accept molecules with the number of bonds above or equal to this threshold
         """
 
         super().__init__(deep_clean)
         self.nFrags = n_frags
         self.nCombs = n_combs
         self.method = method
+        self.maxBonds = max_bonds
         if self.method not in ('recap', 'brics'):
             raise ConversionException(f"Unknown fragmentation method: {self.method}")
 
@@ -57,6 +60,7 @@ class Fragmenter(CleanSMILES):
             frags = np.array(sorted({re.sub(r'\[\d+\*\]', '*', f) for f in frags}))
 
         if len(frags) == 1:
+            logger.warning(f"Only one retrieved fragment for molecule: {Chem.MolToSmiles(mol)}. Skipping...")
             return None
 
         return frags
@@ -75,6 +79,10 @@ class Fragmenter(CleanSMILES):
         ret_frags = []
         smiles = super().__call__(smiles)
         mol = Chem.MolFromSmiles(smiles)
+
+        if self.maxBonds and mol.GetNumBonds() >= self.maxBonds:
+            logger.warning(f"Molecule skipped due to threshold on maximum bond count ({self.maxBonds}): {smiles}")
+            return None
 
         frags = self.getFragments(mol)
         if frags is None:
