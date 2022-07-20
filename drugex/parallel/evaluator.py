@@ -76,7 +76,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
         self.errors.append(data)
         raise ParallelException(data)
 
-    def apply(self, data, collector, error=None):
+    def apply(self, data, collector, error=None, desc_string=None):
         """
         Apply the `ParallelSupplierEvaluator.run()` across a `Pool` of workers.
 
@@ -84,6 +84,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
             data: input data to divide into chunks and process in parallel
             collector: a `ResultCollector` that receives results of parallel processes
             error: a callable to handle errors during evaluation of each parallel supplier
+            desc_string: progress bar description string
         Returns:
             `None`
         """
@@ -96,7 +97,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.nProc) as executor:
             batches = [data[i: i+batch_size] for i in range(0, len(data), batch_size)]
-            for batch in tqdm(batches, desc=f"Evaluating: {self.supplier.__name__}"):
+            for batch in tqdm(batches, desc=f"{self.supplier.__name__ if not desc_string else desc_string} (batch processing)"):
                 for result in executor.map(self.run, batch, len(batch) * [error]):
                     results.append(collector(result))
 

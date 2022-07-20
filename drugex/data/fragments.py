@@ -220,7 +220,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
             chunks=self.chunks,
             n_proc=self.nProc
         )
-        evaluator.apply(mols, collector)
+        evaluator.apply(mols, collector, desc_string="Creating fragment-molecule pairs")
 
     def splitFragmentPairs(self, pairs):
         """
@@ -257,7 +257,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
             chunks=self.chunks,
             n_proc=self.nProc
         )
-        evaluator.apply(pairs, collector)
+        evaluator.apply(pairs, collector, desc_string="Encoding fragment-molecule pairs.")
 
     def apply(self, mols, fragmentPairsCollector=None, encodingCollectors=None):
         """

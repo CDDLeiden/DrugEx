@@ -65,7 +65,7 @@ class Standardization(ParallelProcessor):
         )
 
         collector = collector if collector else self.Collector()
-        standardizer.apply(np.asarray(list(mols)), collector)
+        standardizer.apply(np.asarray(list(mols)), collector, desc_string="Standardizing molecules")
         return collector.getList() if hasattr(collector, 'getList') else None
 
 class CorpusEncoder(ParallelProcessor):
