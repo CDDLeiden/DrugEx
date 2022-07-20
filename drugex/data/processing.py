@@ -11,16 +11,21 @@ from sklearn.model_selection import train_test_split
 
 from drugex.data.interfaces import DataSplitter
 from drugex.logs import logger
+from drugex.parallel.collectors import ListExtend
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.parallel.interfaces import ParallelProcessor
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.suppliers import StandardizedSupplier
 
-
 class Standardization(ParallelProcessor):
     """
     Processor to standardize molecules in parallel.
     """
+
+    class Collector(ListExtend):
+
+        def __call__(self, result):
+            self.items.extend(result[0])
 
     def __init__(self, standardizer=DefaultStandardizer(), **kwargs):
         """
@@ -46,7 +51,7 @@ class Standardization(ParallelProcessor):
             collector: a callable to collect the results, passed as the 'result_collector' to `ParallelSupplierEvaluator`
 
         Returns:
-            Standardized list of molecules. If 'collector' is specified, the result is None.
+            `None`
         """
 
         standardizer = ParallelSupplierEvaluator(
@@ -56,9 +61,12 @@ class Standardization(ParallelProcessor):
             },
             chunk_size=self.chunkSize,
             chunks=self.chunks,
-            result_collector=collector
+            n_proc=self.nProc
         )
-        return standardizer.apply(np.asarray(list(mols)))
+
+        collector = collector if collector else self.Collector()
+        standardizer.apply(np.asarray(list(mols)), collector)
+        return collector.getList() if hasattr(collector, 'getList') else None
 
 class CorpusEncoder(ParallelProcessor):
     """
@@ -80,7 +88,7 @@ class CorpusEncoder(ParallelProcessor):
         self.corpus = corpus_class
         self.options = corpus_options
 
-    def apply(self, mols, collector=None):
+    def apply(self, mols, collector):
         """
         Apply the encoder to given molecules.
 
@@ -89,29 +97,16 @@ class CorpusEncoder(ParallelProcessor):
             collector: custom `ResultCollector` to use as a callback to customize how results are collected. If it is specified, this method returns None. A `tuple` with two items is passed to the collector: the encoded data and the associated `Corpus` instance used to calculate it.
 
         Returns:
-            a `tuple`, first item is the concatenated encoded data and second is the associated vocabulary from the `Corpus` instances used for calculations.
+            `None`
         """
 
         evaluator = ParallelSupplierEvaluator(
             self.corpus,
             kwargs=self.options,
-            return_suppliers=True,
             chunk_size=self.chunkSize,
-            chunks=self.chunks,
-            result_collector=collector
+            chunks=self.chunks
         )
-        results = evaluator.apply(mols)
-        if results:
-            data = []
-            voc = None
-            for result in results:
-                data.extend(result[0])
-                if not voc:
-                    voc = result[1].getVoc()
-                else:
-                    voc += result[1].getVoc()
-            return data, voc
-
+        evaluator.apply(mols, collector)
 
 class RandomTrainTestSplitter(DataSplitter):
     """

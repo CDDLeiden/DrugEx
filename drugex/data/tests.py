@@ -4,6 +4,7 @@ tests
 Created by: Martin Sicho
 On: 18.05.22, 11:49
 """
+import tempfile
 from unittest import TestCase
 
 import pandas as pd
@@ -28,17 +29,13 @@ class FragmentPairs(TestCase):
             standardizer=DefaultStandardizer()
         )
 
-        pairs = FragmentPairsSupplier(smiles, fragmenter=Fragmenter(4, 4, 'brics')).toList()
-        pairs_flat = []
-        for lst in pairs:
-            pairs_flat.extend(lst)
-        return pd.DataFrame(pairs_flat, columns=['Frags', 'Smiles'])
+        return FragmentPairsSupplier(smiles, fragmenter=Fragmenter(4, 4, 'brics')).toList()
 
     def test_pair_encode_smiles(self):
-        pairs_df = self.getPairs()
+        pairs = self.getPairs()
         encoder = SequenceFragmentEncoder()
         encoded_pairs = FragmentPairsEncodedSupplier(
-            pairs_df,
+            pairs,
             encoder=encoder
         )
 
@@ -49,14 +46,13 @@ class FragmentPairs(TestCase):
             self.assertTrue(encoded[1][-1] == 'EOS')
 
     def test_pair_encode_smiles_parallel(self):
-        pairs_df = self.getPairs().sample(100, replace=True)
+        pairs_df = pd.Series(self.getPairs()).sample(100, replace=True)
         evaluator = ParallelSupplierEvaluator(
             FragmentPairsEncodedSupplier,
-            kwargs={'encoder': SequenceFragmentEncoder()},
-            return_suppliers=True
+            kwargs={'encoder': SequenceFragmentEncoder()}
         )
 
-        for result in evaluator.apply(pairs_df):
+        def collect(result):
             data = result[0]
             for item in data:
                 self.assertTrue(item[0][-1] == 'EOS')
@@ -64,18 +60,26 @@ class FragmentPairs(TestCase):
             voc = result[1].encoder.getVoc()
             self.assertTrue('Br' not in voc.words)
 
+        evaluator.apply(pairs_df, collect)
+
     def test_pair_encode_graph(self):
-        pairs_df = self.getPairs().sample(100, replace=True)
+        pairs_df = pd.Series(self.getPairs()).sample(100, replace=True)
         evaluator = ParallelSupplierEvaluator(
             FragmentPairsEncodedSupplier,
             kwargs={'encoder': GraphFragmentEncoder()},
-            return_unique=False
         )
 
-        for result in evaluator.apply(pairs_df):
-            self.assertTrue(type(result[1]) == list)
+        def collect(result):
+            self.assertTrue(type(result[0]) == list)
+            self.assertTrue(type(result[1]) == FragmentPairsEncodedSupplier)
+
+        evaluator.apply(pairs_df, collect)
 
 class ProcessingTests(TestCase):
+
+    @staticmethod
+    def getRandomFile():
+        return tempfile.NamedTemporaryFile().name
 
     def getStandardizationMols(self):
         mols_orig = [
@@ -102,10 +106,15 @@ class ProcessingTests(TestCase):
     def test_standardization(self):
         originals, expected = self.getStandardizationMols()
         standardizer = Standardization(n_proc=2, chunk_size=2)
-        standardized = standardizer.apply(originals)
-        self.assertTrue(len(standardized) == len(originals))
-        for mol in standardized:
-            self.assertTrue(mol in expected)
+
+        def collect(result):
+            standardized = result[0]
+            sup = result[1]
+            self.assertTrue(type(sup) == StandardizedSupplier)
+            for mol in standardized:
+                self.assertTrue(mol in expected)
+
+        standardizer.apply(originals, collect)
 
     def test_smiles_encoder(self):
         mols = self.getTestMols()
@@ -118,19 +127,12 @@ class ProcessingTests(TestCase):
             n_proc=2, chunk_size=2
         )
 
-        results, voc = encoder.apply(mols)
-        self.assertTrue('R' in voc.words)
-        self.assertTrue(len(results) == len(mols))
-        for result in results:
-            self.assertTrue(result['token'].endswith("EOS"))
-            self.assertTrue(result['seq'])
-
         # with collector
-        collector = SmilesDataSet('a')
+        collector = SmilesDataSet(self.getRandomFile())
         encoder.apply(mols, collector=collector)
         voc = collector.getVoc()
         self.assertTrue('R' in voc.words)
-        df = collector.getDataFrame()
+        df = collector.getData()
         self.assertTrue(df.shape == (11, 2))
 
     def test_smiles_frag_encoder(self):
@@ -146,20 +148,24 @@ class ProcessingTests(TestCase):
             chunk_size=2
         )
 
-        # without collectors
-        splits, voc = encoder.apply(mols)
-        self.assertTrue('R' in voc.words)
-        for split in splits:
-            for result in split:
-                self.assertTrue(result[0][-1] == result[1][-1] == 'EOS')
-
         # with collectors
-        collectors = [SmilesFragDataSet(x) for x in ('a', 'b', 'c')]
+        collectors = [SmilesFragDataSet(x) for x in (self.getRandomFile(), self.getRandomFile())]
         encoder.apply(mols, encodingCollectors=collectors)
         for collector in collectors:
-            df = collector.getDataFrame()
+            df = collector.getData()
             self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
 
+    def test_frag_suppliers(self):
+        pairs = FragmentPairsSupplier(self.getTestMols(), Fragmenter(4, 4, 'brics')).toList()
+        encoded = FragmentPairsEncodedSupplier(pairs, GraphFragmentEncoder(VocGraph(n_frags=4)))
+        count = 0
+        for item in encoded:
+            self.assertTrue(len(item) == 2)
+            self.assertTrue(type(item[0]) == str)
+            self.assertTrue(type(item[1]) == list)
+            self.assertTrue(type(item[1][0]) == int)
+            count+=1
+        self.assertTrue(count == len(pairs))
 
     def test_graph_frag_encoder(self):
         mols = self.getTestMols()
@@ -174,16 +180,10 @@ class ProcessingTests(TestCase):
         )
 
         # with collectors
-        collectors = [GraphFragDataSet(x) for x in ('a', 'b', 'c')]
-        encoder.apply(mols, encodingCollectors=collectors)
+        collectors = [GraphFragDataSet(x) for x in (self.getRandomFile(), self.getRandomFile())]
+        fragment_collector = FragmentCorpusEncoder.FragmentPairsCollector()
+        encoder.apply(mols, fragmentPairsCollector=fragment_collector, encodingCollectors=collectors)
+        self.assertTrue(len(fragment_collector.getList()) == (len(collectors[0].getData()) + len(collectors[1].getData())))
         for collector in collectors:
-            df = collector.getDataFrame()
+            df = collector.getData()
             self.assertTrue(df.columns[0][0] == 'C')
-
-        # without collectors
-        results_splits, voc = encoder.apply(mols)
-        self.assertTrue(type(voc) == VocGraph)
-        for split in results_splits:
-            for result in split:
-                self.assertTrue(type(result[0]) == str)
-                self.assertTrue(len(result[1]) == 400)

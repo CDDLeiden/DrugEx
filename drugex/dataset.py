@@ -13,7 +13,6 @@ from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.molecules.files.suppliers import SDFSupplier
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 
 def load_molecules(base_dir, input_file):
@@ -23,21 +22,12 @@ def load_molecules(base_dir, input_file):
         base_dir (str)            : base directory, needs to contain a folder data with input file
         input_file  (str)         : file containing SMILES, can be 'sdf.gz' or (compressed) 'tsv' or 'csv' file
     Returns:
-        mols (lst)                : list of SMILES extracted from input_file
+        mols (list)                : list of SMILES extracted from input_file
     """
     
     print('Loading molecules...')
-    
-    file_path = base_dir + '/data/' + input_file
-
-    if input_file.endswith('.sdf.gz') or input_file.endswith('.sdf'):
-        mols = SDFSupplier(file_path, hide_duplicates=True)
-        mols = [x.smiles for x in mols.toList()]
-    else:
-        df = pd.read_csv(file_path, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
-        mols = df[args.molecule_column].tolist()
-        
-    return mols
+    df = pd.read_csv(base_dir + '/data/' + input_file, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
+    return df[args.molecule_column].tolist()
     
 def DatasetArgParser(txt=None):
     
@@ -88,17 +78,22 @@ def DatasetArgParser(txt=None):
         
     return args
 
-def save_encoded_data(collectors, file_base, mol_type, save_voc, output):
-    for collector in collectors:
-        if type(collector) == pd.DataFrame:
-            collector.to_csv(os.path.join(file_base, f'{output}_{collector.name}_{mol_type if mol_type != "smiles" else "smi"}.txt'), header=True, index=False, sep='\t')
-        else:
-            collector.save()
+def save_vocabulary(vocs, file_base, mol_type, output):
+    """
+    Combines and saves vocabularies obtained during encoding into one single file.
 
-    vocs = [x.getVoc() for x in collectors if hasattr(x, 'getVoc')]
+    Args:
+        vocs: `Vocabulary` instances that are to be combined and saved
+        file_base: the base directory of the outputs
+        mol_type: molecule input type ('smiles' or 'graph')
+        output: output prefix
+
+    Returns:
+        `None`
+    """
+
     voc = sum(vocs[1:], start=vocs[0])
-    if save_voc:
-        voc.toFile(os.path.join(file_base, f'{output}_{mol_type}_voc.txt'))
+    voc.toFile(os.path.join(file_base, f'{output}_{mol_type}_voc.txt'))
 
 def Dataset(args):
     """ 
@@ -135,21 +130,21 @@ def Dataset(args):
             },
             n_proc=args.n_proc
         )
-        data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'))
+        data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'), rewrite=True)
         encoder.apply(smiles, collector=data_collector)
 
-        df_data_collector = data_collector.getDataFrame()
+        df_data_collector = data_collector.getData()
         splitter = RandomTrainTestSplitter(0.1, 1e4)
         train, test = splitter(df_data_collector)
-        train.name = 'train'
-        test.name = 'test'
-        mol_type = 'smiles'
-        save_encoded_data([train, test, data_collector], file_base, mol_type, args.save_voc, args.output)
-        
+        for df, name in zip([train, test], ['train', 'test']):
+            df.to_csv(os.path.join(file_base, f'{args.output}_{name}_smi.txt'), header=True, index=False, sep='\t')
+
+        if args.save_voc:
+            save_vocabulary([data_collector.getVoc()], file_base, args.mol_type, args.output)
     elif args.no_fragmentation:
         # encode inputs to single fragment-molecule pair without fragmentation and splitting to subsets (only v3 models)
         if args.mol_type == 'graph':
-            data_set = GraphScaffoldDataSet(os.path.join(file_base, f'{args.output}_graph.txt' ))
+            data_set = GraphScaffoldDataSet(os.path.join(file_base, f'{args.output}_graph.txt' ), rewrite=True)
             encoder = CorpusEncoder(
                 ScaffoldGraphCorpus,
                 {
@@ -159,9 +154,10 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
             encoder.apply(smiles, collector=data_set)
-            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.output)
+            if args.save_voc:
+                save_vocabulary([data_set.getVoc()], file_base, args.mol_type, args.output)
         else:
-            data_set = SmilesScaffoldDataSet(os.path.join(file_base, f'{args.output}_smi.txt' ))
+            data_set = SmilesScaffoldDataSet(os.path.join(file_base, f'{args.output}_smi.txt' ), rewrite=True)
             encoder = CorpusEncoder(
                 ScaffoldSequenceCorpus,
                 {
@@ -171,8 +167,8 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
             encoder.apply(smiles, collector=data_set)
-            save_encoded_data([data_set], file_base, args.mol_type, args.save_voc, args.output)            
-
+            if args.save_voc:
+                save_vocabulary([data_set.getVoc()], file_base, args.mol_type, args.output)
     else:
         # create encoded fragment-molecule pair files for train and test set (only v3 models)
         file_prefix = os.path.join(file_base, f'{args.output}')
@@ -185,10 +181,10 @@ def Dataset(args):
         # prepare splitter and collect intermediate files if required
         pair_collectors = dict()
         if args.save_intermediate_files:
-            pair_collectors['train_collector'] = lambda x : x.to_csv(file_prefix + '_train.txt', sep='\t', index=False)
-            pair_collectors['test_collector'] = lambda x : x.to_csv(file_prefix + '_test.txt', sep='\t', index=False)
-            pair_collectors['unique_collector'] = lambda x : x.to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
-        splitter = FragmentPairsSplitter(0.1, 1e4, **pair_collectors) if not args.no_fragment_split else None
+            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_train.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_test.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
+        splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) if not args.no_fragment_split else None
         fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method)
 
         if args.mol_type == 'graph':
@@ -201,12 +197,12 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
 
-            data_collectors = [GraphFragDataSet(file_prefix + f'_{split}_graph.txt') for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train_graph.txt') ]
+            data_collectors = [GraphFragDataSet(file_prefix + f'_{split}_graph.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train_graph.txt', rewrite=True) ]
             encoder.apply(smiles, encodingCollectors=data_collectors)
-
-            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.output)
+            if args.save_voc:
+                save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
         elif args.mol_type == 'smiles':
-            data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}_smi.txt') for split in ('test', 'train', 'unique')] if splitter else [SmilesFragDataSet(file_prefix + f'_train_smi.txt')]
+            data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}_smi.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [SmilesFragDataSet(file_prefix + f'_train_smi.txt')]
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
@@ -216,8 +212,8 @@ def Dataset(args):
                 n_proc=args.n_proc
             )
             encoder.apply(smiles, encodingCollectors=data_collectors)
-
-            save_encoded_data(data_collectors, file_base, args.mol_type, args.save_voc, args.output)
+            if args.save_voc:
+                save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
         else:
             raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(args.mol_type))
 

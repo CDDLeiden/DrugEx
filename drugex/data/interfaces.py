@@ -8,6 +8,7 @@ import os
 from abc import ABC, abstractmethod
 
 import numpy as np
+import pandas as pd
 
 from drugex.logs import logger
 from drugex.parallel.interfaces import ResultCollector
@@ -45,7 +46,7 @@ class DataSet(ResultCollector, ABC):
     Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.
     """
 
-    def __init__(self, path, autoload=False):
+    def __init__(self, path, rewrite=False):
         """
         Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.
 
@@ -53,42 +54,77 @@ class DataSet(ResultCollector, ABC):
 
         Args:
             path: path to the output file.
-            no_file_init: if `True`, do not initialize data from an existing file.
         """
 
         self.outpath = path
-        self.data = []
-        if autoload and os.path.exists(self.outpath):
-            try:
-                self.fromFile(self.outpath)
-                logger.info(f"Reading data set from an existing file: {self.outpath}. If it is not desired, disable it with: no_file_init=True")
-            except Exception as exp:
-                logger.warning(f"{self.outpath} -- File already exists, but failed to initialize due to error: {exp}.\n Are you sure you have the right file?\n Initializing an empty data set instead...")
+        self.voc = None
+        try:
+            self.fromFile(self.outpath)
+            if rewrite:
+                self.reset()
+        except FileNotFoundError:
+            logger.warning(f"The data set file does not exist: {self.outpath}. This data set is empty. You can add data by calling it.")
 
+    def reset(self):
+        logger.info(f"Initializing new {self.__class__.__name__} at {self.outpath}...")
+        if os.path.exists(self.outpath):
+            os.remove(self.outpath)
+            logger.info(f"Removed: {self.outpath}")
+        voc_path = self.getVocPath()
+        if os.path.exists(voc_path):
+            os.remove(voc_path)
+            logger.info(f"Removed: {voc_path}")
 
-    @abstractmethod
-    def getDataFrame(self):
+        logger.info(f"{self} initialized.")
+
+    def getVocPath(self):
+        return f"{self.outpath}.vocab"
+
+    def sendDataToFile(self, data, columns=None):
+        header_written = os.path.isfile(self.outpath)
+        open_mode = 'a' if header_written else 'w'
+        pd.DataFrame(data, columns=columns if columns else [f'Col{x+1}' for x in range(len(data[0]))]).to_csv(
+            self.outpath,
+            sep='\t',
+            index=False,
+            header=not header_written,
+            mode=open_mode,
+            encoding='utf-8'
+        )
+
+    def getData(self, chunk_size=None):
         """
         Get this `DataSet` as a pandas `DataFrame`.
 
+        Args:
+            chunk_size: the size of the chunk to load at a time
+
         Returns:
-            pandas `DataFrame` representing this instance.
+            pandas `DataFrame` representing this instance. If "chunks" is specified an iterator is returned that supplies the chunks.
         """
+        kwargs = dict()
+        if chunk_size:
+            kwargs['chunksize'] = chunk_size
 
-        pass
+        return pd.read_csv(self.outpath, sep='\t', header=0, **kwargs)
 
-    @abstractmethod
-    def save(self):
+    def updateVoc(self, voc):
         """
-        Save the data set to its associated file.
+        Accept a `Vocabulary` instance and add it to the existing one.
+
+        Args:
+            voc: vocabulary to add
 
         Returns:
             `None`
         """
+        if not self.voc:
+            self.voc = voc
+        else:
+            self.voc += voc
 
-        pass
+        self.voc.toFile(self.getVocPath())
 
-    @abstractmethod
     def getVoc(self):
         """
         Return the `Vocabulary` associated with this data set (should comprise all tokens within it). The vocabulary can be generated from the results collected from `CorpusEncoder` or `FragmentCorpusEncoder` on which this class acts as a collector. Or it can be loaded from files with `DataSet.readVocs()`.
@@ -97,9 +133,11 @@ class DataSet(ResultCollector, ABC):
             the associated `Vocabulary` instance.
         """
 
-        pass
+        return self.voc
 
-    @abstractmethod
+    def setVoc(self, voc):
+        self.voc = voc
+
     def fromFile(self, path, vocs=tuple(), voc_class=None):
         """
         Initialize this `DataSet` from file and load the associated vocabulary.
@@ -113,7 +151,12 @@ class DataSet(ResultCollector, ABC):
             `None`
         """
 
-        pass
+        self.outpath = path
+        if os.path.exists(self.outpath):
+            if vocs:
+                self.readVocs(vocs, voc_class)
+        else:
+            raise FileNotFoundError(f"The specified data file does not exist: {self.outpath}")
 
     def asDataLoader(self, batch_size, splitter=None, split_converter=None, n_samples=-1, n_samples_ratio=None):
         """
@@ -171,17 +214,6 @@ class DataSet(ResultCollector, ABC):
 
         pass
 
-    @abstractmethod
-    def getData(self):
-        """
-        Gets the data from this `DataSet` that should be converted to a PyToch `DataLoader`.
-
-        Returns:
-            data convertible by the appropriate `DataToLoader` or `DataSet.dataToLoader()`
-        """
-
-        pass
-
     def createLoaders(self, data, batch_size, splitter=None, converter=None):
         """
         Facilitates splitting and conversion of data to `DataLoader`s.
@@ -226,20 +258,6 @@ class DataSet(ResultCollector, ABC):
             voc = vocs[0]
 
         return self.setVoc(voc)
-
-    @abstractmethod
-    def setVoc(self, voc):
-        """
-        Explicitly set the vocabulary for this `DataSet`.
-
-        Args:
-            voc: the new vocabulary
-
-        Returns:
-            `None`
-        """
-
-        pass
 
 class FragmentPairEncoder(ABC):
     """

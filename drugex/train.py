@@ -5,10 +5,7 @@ import json
 import argparse
 import warnings
 
-from cgi import test
-
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
-from drugex.data.processing import RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
@@ -169,12 +166,12 @@ def DataPreparationGraph(voc_files,
     train_path, test_path = getDataPaths(data_path, input_prefix, mol_type, unique_frags)
 
     # Load train data
-    data_set_train = GraphFragDataSet(train_path, autoload=True)
+    data_set_train = GraphFragDataSet(train_path)
     if voc_paths:
         data_set_train.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
 
     # Load test data
-    data_set_test = GraphFragDataSet(test_path, autoload=True)
+    data_set_test = GraphFragDataSet(test_path)
     if voc_paths:
         data_set_test.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     
@@ -216,32 +213,32 @@ def DataPreparationSmiles(voc_files,
     valid_loader = None
     if args.algorithm == 'gpt':
         # GPT with fragments
-        data_set_train = SmilesFragDataSet(train_path, autoload=True)
+        data_set_train = SmilesFragDataSet(train_path)
         data_set_train.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        data_set_test = SmilesFragDataSet(test_path, autoload=True)
+        data_set_test = SmilesFragDataSet(test_path)
         data_set_test.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc() + data_set_test.getVoc()
     elif args.algorithm == 'rnn':
-        data_set_train = SmilesDataSet(train_path, autoload=True)
+        data_set_train = SmilesDataSet(train_path)
         data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        data_set_test = SmilesDataSet(test_path, autoload=True)
+        data_set_test = SmilesDataSet(test_path)
         data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc()
     else:
         # all smiles-based with fragments
-        data_set_train = SmilesFragDataSet(train_path, autoload=True)
+        data_set_train = SmilesFragDataSet(train_path)
         data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
-        data_set_test = SmilesFragDataSet(test_path, autoload=True)
+        data_set_test = SmilesFragDataSet(test_path)
         data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
@@ -364,7 +361,7 @@ def CreateDesirabilityFunction(base_dir,
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
             except FileNotFoundError:
                 path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg, task, t]) + '.pkg'
                 log.warning('Using model from {} instead of model from {}'.format(path, path_false))
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
     
