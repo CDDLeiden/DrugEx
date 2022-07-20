@@ -45,12 +45,7 @@ class GraphFragmentEncoder(FragmentPairEncoder):
         self.vocabulary = vocabulary
 
     def encodeMol(self, smiles):
-        mol = Chem.MolFromSmiles(smiles)
-        total = mol.GetNumBonds()
-        if total >= 75:
-            return None
-        else:
-            return smiles
+        return smiles
 
     def encodeFrag(self, mol, frag):
         if mol == frag:
@@ -153,7 +148,18 @@ class FragmentPairsSupplier(MolSupplier):
             batch = None
             while not batch:
                 # the fragmenter generates multiple pairs at once from one molecule, we use batching to return them one by one
-                batch = self.fragmenter(next(self.molecules))
+                mol = None
+                while mol is None:
+                    smiles = next(self.molecules)
+                    total = Chem.MolFromSmiles(smiles).GetNumBonds()
+                    ths = 75
+                    if total >= ths:
+                        mol = None
+                        logger.warning(f"Molecule skipped due to threshold on bond count ({ths}): {smiles}")
+                    else:
+                        mol = smiles
+
+                batch = self.fragmenter(mol)
             self.currentBatch = iter(batch)
         try:
             frags = next(self.currentBatch)
