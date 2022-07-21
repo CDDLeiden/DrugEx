@@ -185,9 +185,9 @@ def Dataset(args):
             pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_test.txt', sep='\t', index=False)
             pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
         splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) if not args.no_fragment_split else None
-        fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method)
 
         if args.mol_type == 'graph':
+            fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=GraphFragmentEncoder(
@@ -202,6 +202,7 @@ def Dataset(args):
             if args.save_voc:
                 save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
         elif args.mol_type == 'smiles':
+            fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=None)
             data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}_smi.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [SmilesFragDataSet(file_prefix + f'_train_smi.txt')]
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,

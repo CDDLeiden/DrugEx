@@ -30,7 +30,7 @@ class ParallelProcessor(ABC):
     Simple interface to define parameters for parallel processing of data.
     """
 
-    def __init__(self, n_proc=None, chunk_size=None, chunks=None):
+    def __init__(self, n_proc=None, chunk_size=1000, chunks=None):
         """
 
         Args:

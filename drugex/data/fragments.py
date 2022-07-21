@@ -45,12 +45,7 @@ class GraphFragmentEncoder(FragmentPairEncoder):
         self.vocabulary = vocabulary
 
     def encodeMol(self, smiles):
-        mol = Chem.MolFromSmiles(smiles)
-        total = mol.GetNumBonds()
-        if total >= 75:
-            return None
-        else:
-            return smiles
+        return smiles
 
     def encodeFrag(self, mol, frag):
         if mol == frag:
@@ -130,7 +125,7 @@ class FragmentPairsSupplier(MolSupplier):
 
     """
 
-    def __init__(self, molecules, fragmenter):
+    def __init__(self, molecules, fragmenter, max_bonds=None):
         """
 
         Args:
@@ -140,6 +135,7 @@ class FragmentPairsSupplier(MolSupplier):
         self.molecules = molecules if hasattr(molecules, "__next__") else iter(molecules)
         self.fragmenter = fragmenter
         self.currentBatch = None
+        self.maxBonds = max_bonds
 
     def next(self):
         """
@@ -224,7 +220,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
             chunks=self.chunks,
             n_proc=self.nProc
         )
-        evaluator.apply(mols, collector)
+        evaluator.apply(mols, collector, desc_string="Creating fragment-molecule pairs")
 
     def splitFragmentPairs(self, pairs):
         """
@@ -261,7 +257,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
             chunks=self.chunks,
             n_proc=self.nProc
         )
-        evaluator.apply(pairs, collector)
+        evaluator.apply(pairs, collector, desc_string="Encoding fragment-molecule pairs.")
 
     def apply(self, mols, fragmentPairsCollector=None, encodingCollectors=None):
         """
