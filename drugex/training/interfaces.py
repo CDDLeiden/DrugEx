@@ -296,7 +296,7 @@ class Model(nn.Module, ModelProvider, ABC):
 
     def updateDevices(self, device, gpus):
         if device.type == 'cpu':
-            self.device = device
+            self.device = torch.device('cpu')
             self.gpus = (-1,)
         elif device.type == 'cuda':
             self.device = torch.device(f'cuda:{gpus[0]}')
