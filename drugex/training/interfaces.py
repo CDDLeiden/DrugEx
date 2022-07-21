@@ -299,7 +299,7 @@ class Model(nn.Module, ModelProvider, ABC):
             self.device = device
             self.gpus = (-1,)
         elif device.type == 'cuda':
-            self.device = device
+            self.device = torch.device(f'cuda:{gpus[0]}')
             self.attachToGPUs(gpus)
         else:
             raise ValueError(f"Unknown device: {device}")
