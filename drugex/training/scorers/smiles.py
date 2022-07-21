@@ -18,7 +18,7 @@ class SmilesChecker:
             # 1. Check if SMILES can be parsed by rdkit
             try:
                 mol = Chem.MolFromSmiles(smile)
-                valids[j, 0] = 0 if mol is None else 1
+                valids[j, 0] = 0 if mol is None or not smile else 1
             except:
                 valids[j, 0] = 0
             if frags is not None:
@@ -26,7 +26,7 @@ class SmilesChecker:
                 try:
                     subs = frags[j].split('.')
                     subs = [Chem.MolFromSmiles(sub) for sub in subs]
-                    valids[j, 1] = np.all([mol.HasSubstructMatch(sub) for sub in subs])
+                    valids[j, 1] = np.all([mol.HasSubstructMatch(sub) for sub in subs])[0]
                 except:
                     valids[j, 1] = 0
         return pd.DataFrame(valids, columns=['VALID', 'DESIRE']) if frags is not None else valids
