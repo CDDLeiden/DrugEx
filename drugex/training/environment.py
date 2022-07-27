@@ -28,5 +28,5 @@ class DrugExEnvironment(Environment):
         preds['DESIRE'] = (undesire.sum(axis=1) == 0).astype(int)
         preds['VALID'] = SmilesChecker.checkSmiles(smiles, frags=frags).all(axis=1).astype(int)
 
-        preds[preds.VALID == 0] = 0
+        preds[preds['VALID'] == 0] = 0
         return preds
