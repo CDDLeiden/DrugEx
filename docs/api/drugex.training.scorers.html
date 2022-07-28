@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.scorers package &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="drugex.utils package" href="drugex.utils.html" />
+    <link rel="prev" title="drugex.training.models.transform package" href="drugex.training.models.transform.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="drugex.training.html">drugex.training package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
+      <li>drugex.training.scorers package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="drugex-training-scorers-package">
+<h1>drugex.training.scorers package<a class="headerlink" href="#drugex-training-scorers-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.training.scorers.modifiers">
+<span id="drugex-training-scorers-modifiers-module"></span><h2>drugex.training.scorers.modifiers module<a class="headerlink" href="#module-drugex.training.scorers.modifiers" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.AbsoluteScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">AbsoluteScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#AbsoluteScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.AbsoluteScore" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that has a maximum at a given target value, and decreases
+linearly with increasing distance from the target value.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.Chained">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">Chained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modifiers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><span class="pre">ScoreModifier</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#Chained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.Chained" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<dl class="simple">
+<dt>Calls several modifiers one after the other, for instance:</dt><dd><p>score = modifier3(modifier2(modifier1(raw_score)))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.ClippedScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">ClippedScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upper_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#ClippedScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.ClippedScore" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Clips a score between specified low and high scores, and does a linear interpolation in between.
+The function looks like this:</p>
+<blockquote>
+<div><p>upper_x &lt; lower_x                 lower_x &lt; upper_x</p>
+</div></blockquote>
+<dl class="simple">
+<dt>__________                                   ____________</dt><dd><dl class="simple">
+<dt>                                /</dt><dd><dl class="simple">
+<dt>                              /</dt><dd><p>__________          _________/</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>This class works as follows:
+First the input is mapped onto a linear interpolation between both specified points.
+Then the generated values are clipped between low and high scores.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.Gaussian">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">Gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#Gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.Gaussian" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that reproduces a Gaussian bell shape.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.Linear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">Linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#Linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.Linear" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that multiplies the score by a scalar (default: 1, i.e. do nothing).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.MinMaxGaussian">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">MinMaxGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#MinMaxGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.MinMaxGaussian" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that reproduces a half Gaussian bell shape.
+For minimize==True, the function is 1.0 for x &lt;= mu and decreases to zero for x &gt; mu.
+For minimize==False, the function is 1.0 for x &gt;= mu and decreases to zero for x &lt; mu.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.SmoothClippedScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">SmoothClippedScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upper_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#SmoothClippedScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.SmoothClippedScore" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Smooth variant of ClippedScore.
+Implemented as a logistic function that has the same steepness as ClippedScore in the
+center of the logistic function.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.SmoothHump">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">SmoothHump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#SmoothHump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.SmoothHump" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that reproduces a smooth bump function.
+The function is 1.0 for x between (lower_x, upper_x) and decreases to zero with a half Gaussian for x &lt; lower_x and x &gt; upper_x.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.Squared">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">Squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#Squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.Squared" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Score modifier that has a maximum at a given target value, and decreases
+quadratically with increasing distance from the target value.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.modifiers.ThresholdedLinear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.modifiers.</span></span><span class="sig-name descname"><span class="pre">ThresholdedLinear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/modifiers.html#ThresholdedLinear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.modifiers.ThresholdedLinear" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ScoreModifier" title="drugex.training.interfaces.ScoreModifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a></p>
+<p>Returns a value of min(input, threshold)/threshold.</p>
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.scorers.predictors">
+<span id="drugex-training-scorers-predictors-module"></span><h2>drugex.training.scorers.predictors module<a class="headerlink" href="#module-drugex.training.scorers.predictors" title="Permalink to this heading"></a></h2>
+<p>predictors</p>
+<p>Created by: Martin Sicho
+On: 06.06.22, 20:15</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.predictors.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CLS'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.calc_ecfp">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_ecfp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.calc_ecfp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.calc_ecfp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.calc_ecfp_rd">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_ecfp_rd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.calc_ecfp_rd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.calc_ecfp_rd" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.calc_physchem">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_physchem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.calc_physchem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.calc_physchem" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.calculateDescriptors">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculateDescriptors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.calculateDescriptors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.calculateDescriptors" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.fromFile">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fromFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CLS'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Predictor'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.fromFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.fromFile" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.predictors.Predictor.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/predictors.html#Predictor.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.predictors.Predictor.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.scorers.properties">
+<span id="drugex-training-scorers-properties-module"></span><h2>drugex.training.scorers.properties module<a class="headerlink" href="#module-drugex.training.scorers.properties" title="Permalink to this heading"></a></h2>
+<p>properties</p>
+<p>Created by: Martin Sicho
+On: 06.06.22, 20:17</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.AtomCounter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">AtomCounter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#AtomCounter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.AtomCounter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.AtomCounter.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#AtomCounter.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.AtomCounter.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.AtomCounter.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#AtomCounter.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.AtomCounter.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Count the number of atoms of a given type.
+:param mol: molecule</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of atoms of the given type.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Isomer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">Isomer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'geometric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<p>Scoring function for closeness to a molecular formula.
+The score penalizes deviations from the required number of atoms for each element type, and for the total
+number of atoms.
+F.i., if the target formula is C2H4, the scoring function is the average of three contributions:
+- number of C atoms with a Gaussian modifier with mu=2, sigma=1
+- number of H atoms with a Gaussian modifier with mu=4, sigma=1
+- total number of atoms with a Gaussian modifier with mu=6, sigma=2</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Isomer.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Isomer.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Isomer.parse_molecular_formula">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_molecular_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.parse_molecular_formula"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.parse_molecular_formula" title="Permalink to this definition"></a></dt>
+<dd><p>Parse a molecular formulat to get the element types and counts.
+:param formula: molecular formula, f.i. “C8H3F3Br”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of tuples containing element types and number of occurrences.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Isomer.scoring_functions">
+<span class="sig-name descname"><span class="pre">scoring_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.scoring_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.scoring_functions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Property">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">Property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MW'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Property" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Property.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Property.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Property.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Property.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Property.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Property.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Scaffold">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">Scaffold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_match</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Scaffold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Scaffold" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Scaffold.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Scaffold.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Scaffold.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Scaffold.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Scaffold.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Scaffold.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Similarity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">Similarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Similarity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Similarity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Similarity.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Similarity.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Similarity.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Similarity.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Similarity.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Similarity.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Uniqueness">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.properties.</span></span><span class="sig-name descname"><span class="pre">Uniqueness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Uniqueness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Uniqueness" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Scorer" title="drugex.training.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<p>Calculates the ratio of occurence of a molecule in a set of molecules</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Uniqueness.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Uniqueness.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Uniqueness.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.properties.Uniqueness.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Uniqueness.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Uniqueness.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – molecules to score</p></li>
+<li><p><strong>frags</strong> – input fragments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of scores for “mols”</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scores (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="drugex-training-scorers-ra-scorer-module">
+<h2>drugex.training.scorers.ra_scorer module<a class="headerlink" href="#drugex-training-scorers-ra-scorer-module" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.training.scorers.sascorer">
+<span id="drugex-training-scorers-sascorer-module"></span><h2>drugex.training.scorers.sascorer module<a class="headerlink" href="#module-drugex.training.scorers.sascorer" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.training.scorers.sascorer.calculateScore">
+<span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.sascorer.</span></span><span class="sig-name descname"><span class="pre">calculateScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/sascorer.html#calculateScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.sascorer.calculateScore" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.training.scorers.sascorer.numBridgeheadsAndSpiro">
+<span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.sascorer.</span></span><span class="sig-name descname"><span class="pre">numBridgeheadsAndSpiro</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/sascorer.html#numBridgeheadsAndSpiro"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.sascorer.numBridgeheadsAndSpiro" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.training.scorers.sascorer.processMols">
+<span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.sascorer.</span></span><span class="sig-name descname"><span class="pre">processMols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/sascorer.html#processMols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.sascorer.processMols" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.training.scorers.sascorer.readFragmentScores">
+<span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.sascorer.</span></span><span class="sig-name descname"><span class="pre">readFragmentScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fpscores'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/sascorer.html#readFragmentScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.sascorer.readFragmentScores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-drugex.training.scorers.smiles">
+<span id="drugex-training-scorers-smiles-module"></span><h2>drugex.training.scorers.smiles module<a class="headerlink" href="#module-drugex.training.scorers.smiles" title="Permalink to this heading"></a></h2>
+<p>scorers</p>
+<p>Created by: Martin Sicho
+On: 03.06.22, 13:28</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.smiles.SmilesChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.smiles.</span></span><span class="sig-name descname"><span class="pre">SmilesChecker</span></span><a class="reference internal" href="../_modules/drugex/training/scorers/smiles.html#SmilesChecker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.smiles.SmilesChecker" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.smiles.SmilesChecker.checkSmiles">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">checkSmiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/smiles.html#SmilesChecker.checkSmiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.smiles.SmilesChecker.checkSmiles" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.scorers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-drugex.training.scorers" title="Permalink to this heading"></a></h2>
+<p>__init__.py</p>
+<p>Created by: Martin Sicho
+On: 06.06.22, 20:00</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="drugex.training.models.transform.html" class="btn btn-neutral float-left" title="drugex.training.models.transform package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.utils.html" class="btn btn-neutral float-right" title="drugex.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.monitors &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.monitors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.training.monitors</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">monitors</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 02.06.22, 13:59</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">TrainingMonitor</span>
+
+<div class="viewcode-block" id="DictMonitor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor">[docs]</a><span class="k">class</span> <span class="nc">DictMonitor</span><span class="p">(</span><span class="n">TrainingMonitor</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clean_after_epoch</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span> <span class="p">:</span> <span class="p">[]}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentStep</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalSteps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalEpochs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cleanAfterEpoch</span> <span class="o">=</span> <span class="n">clean_after_epoch</span>
+
+<div class="viewcode-block" id="DictMonitor.getDict"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getDict">[docs]</a>    <span class="k">def</span> <span class="nf">getDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span></div>
+
+<div class="viewcode-block" id="DictMonitor.getEpochSummary"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getEpochSummary">[docs]</a>    <span class="k">def</span> <span class="nf">getEpochSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">evaluation</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;loss_valid&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;valid_ratio&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;unique_ratio&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;desire_ratio&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;mean_train_loss&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">:</span>
+            <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+            <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="n">epoch</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                    <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;final&#39;</span><span class="p">:</span>
+                    <span class="n">kwargs</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
+                    <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;loss_valid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;loss_valid&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;loss_valid&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">])</span>
+                    <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;desire_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;desire_ratio&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;desire_ratio&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;unique_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;unique_ratio&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;unique_ratio&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;mean_train_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">losses</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DictMonitor.getMoleculeSummary"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getMoleculeSummary">[docs]</a>    <span class="k">def</span> <span class="nf">getMoleculeSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="n">epoch</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;final_smiles&#39;</span> <span class="o">==</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;scores&#39;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;keys&#39;</span><span class="p">])</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">epoch</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="DictMonitor.saveModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.saveModel">[docs]</a>    <span class="k">def</span> <span class="nf">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">getModel</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DictMonitor.changeEpoch"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.changeEpoch">[docs]</a>    <span class="k">def</span> <span class="nf">changeEpoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+        <span class="n">current_epoch</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">epoch</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())])</span> <span class="k">if</span> <span class="n">epoch</span> <span class="k">else</span> <span class="nb">max</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span> <span class="o">=</span> <span class="n">current_epoch</span></div>
+
+<div class="viewcode-block" id="DictMonitor.changeStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.changeStep">[docs]</a>    <span class="k">def</span> <span class="nf">changeStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">step</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currentStep</span> <span class="o">=</span> <span class="n">step</span></div>
+
+<div class="viewcode-block" id="DictMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">is_final_step</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s1">&#39;smiles_scores&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">is_final_step</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;smiles_scores&#39;</span><span class="p">,</span> <span class="s1">&#39;smiles&#39;</span><span class="p">,</span> <span class="s1">&#39;frags&#39;</span><span class="p">,</span> <span class="s1">&#39;smiles_scores_key&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changeEpoch</span><span class="p">(</span><span class="n">current_epoch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changeStep</span><span class="p">(</span><span class="n">current_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;step&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentStep</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_final_step</span> <span class="k">else</span> <span class="s1">&#39;final&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;loss_train&#39;</span> <span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+            <span class="s1">&#39;args&#39;</span> <span class="p">:</span> <span class="n">args</span><span class="p">,</span>
+            <span class="s1">&#39;kwargs&#39;</span> <span class="p">:</span> <span class="n">kwargs</span>
+        <span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">is_final_step</span> <span class="ow">and</span> <span class="s1">&#39;smiles_scores&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">smiles_scores</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;smiles_scores&#39;</span><span class="p">]</span>
+            <span class="n">smiles_scores_key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;smiles_scores_key&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;smiles_scores_key&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">smiles_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;step&#39;</span> <span class="p">:</span> <span class="s1">&#39;final_smiles&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;epoch&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="p">,</span>
+                    <span class="s1">&#39;scores&#39;</span> <span class="p">:</span> <span class="n">smiles_scores</span><span class="p">,</span>
+                    <span class="s1">&#39;keys&#39;</span> <span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">smiles_scores_key</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DictMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.saveProgress">[docs]</a>    <span class="k">def</span> <span class="nf">saveProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">totalSteps</span> <span class="ow">and</span> <span class="n">total_steps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">totalSteps</span> <span class="o">=</span> <span class="n">total_steps</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">totalEpochs</span> <span class="ow">and</span> <span class="n">total_epochs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">totalEpochs</span> <span class="o">=</span> <span class="n">total_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changeEpoch</span><span class="p">(</span><span class="n">current_epoch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changeStep</span><span class="p">(</span><span class="n">current_step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DictMonitor.endStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.endStep">[docs]</a>    <span class="k">def</span> <span class="nf">endStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">step</span> <span class="ow">and</span> <span class="n">epoch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">epoch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveEpochData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getEpochSummary</span><span class="p">())</span>
+            <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMoleculeSummary</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">mols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">saveMolecules</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanAfterEpoch</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="p">[]}</span></div>
+
+<div class="viewcode-block" id="DictMonitor.getModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span></div>
+
+<div class="viewcode-block" id="DictMonitor.saveEpochData"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.saveEpochData">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">saveEpochData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DictMonitor.saveMolecules"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.saveMolecules">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">saveMolecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="NullMonitor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor">[docs]</a><span class="k">class</span> <span class="nc">NullMonitor</span><span class="p">(</span><span class="n">TrainingMonitor</span><span class="p">):</span>
+
+<div class="viewcode-block" id="NullMonitor.saveModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.saveModel">[docs]</a>    <span class="k">def</span> <span class="nf">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NullMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NullMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.saveProgress">[docs]</a>    <span class="k">def</span> <span class="nf">saveProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NullMonitor.endStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.endStep">[docs]</a>    <span class="k">def</span> <span class="nf">endStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NullMonitor.close"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NullMonitor.getModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.NullMonitor.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="FileMonitor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor">[docs]</a><span class="k">class</span> <span class="nc">FileMonitor</span><span class="p">(</span><span class="n">DictMonitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple `TrainingMonitor` implementation with file outputs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clean_after_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">clean_after_epoch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;_fit.log&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outDF</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;_fit.tsv&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outSmiles</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;_smiles.tsv&#39;</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outSmilesHeaderDone</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="FileMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">loss</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current training loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileMonitor.saveModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveModel">[docs]</a>    <span class="k">def</span> <span class="nf">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">saveModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveProgress">[docs]</a>    <span class="k">def</span> <span class="nf">saveProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">total_epochs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentEpoch</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">totalEpochs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">totalEpochs</span> <span class="k">else</span> <span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">, Step </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currentStep</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">totalSteps</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileMonitor.endStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.endStep">[docs]</a>    <span class="k">def</span> <span class="nf">endStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">endStep</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileMonitor.close"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c1"># df_out = pd.read_csv(self.outDF, sep=&#39;\t&#39;, header=0)</span>
+        <span class="c1"># df_smiles = pd.read_csv(self.outSmiles, sep=&#39;\t&#39;, header=0)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileMonitor.saveEpochData"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveEpochData">[docs]</a>    <span class="k">def</span> <span class="nf">saveEpochData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">appendTableToFile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outDF</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileMonitor.saveMolecules"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveMolecules">[docs]</a>    <span class="k">def</span> <span class="nf">saveMolecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">outSmiles</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">appendTableToFile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outSmiles</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileMonitor.appendTableToFile"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.appendTableToFile">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">appendTableToFile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="n">header_written</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
+        <span class="n">open_mode</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span> <span class="k">if</span> <span class="n">header_written</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">outfile</span><span class="p">,</span>
+            <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">header</span><span class="o">=</span><span class="ow">not</span> <span class="n">header_written</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">open_mode</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+            <span class="n">na_rep</span><span class="o">=</span><span class="s1">&#39;NA&#39;</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

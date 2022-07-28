@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.models package &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="drugex.training.models.transform package" href="drugex.training.models.transform.html" />
+    <link rel="prev" title="drugex.training package" href="drugex.training.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="drugex.training.html">drugex.training package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
+      <li>drugex.training.models package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="drugex-training-models-package">
+<h1>drugex.training.models package<a class="headerlink" href="#drugex-training-models-package" title="Permalink to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="drugex.training.models.transform.html">drugex.training.models.transform package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform.attn">drugex.training.models.transform.attn module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform.gpt2graph">drugex.training.models.transform.gpt2graph module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform.gpt2smiles">drugex.training.models.transform.gpt2smiles module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform.layer">drugex.training.models.transform.layer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform.vanilla">drugex.training.models.transform.vanilla module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.models.transform.html#module-drugex.training.models.transform">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.training.models.attention">
+<span id="drugex-training-models-attention-module"></span><h2>drugex.training.models.attention module<a class="headerlink" href="#module-drugex.training.models.attention" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.attention.</span></span><span class="sig-name descname"><span class="pre">Attention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'general'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#Attention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.Attention" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#Attention.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.Attention.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attention.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.attention.Attention.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attn">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.attention.</span></span><span class="sig-name descname"><span class="pre">Attn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#Attn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.Attn" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attn.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#Attn.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.Attn.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.attention.Attn.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.attention.Attn.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.attention.DecoderAttn">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.attention.</span></span><span class="sig-name descname"><span class="pre">DecoderAttn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#DecoderAttn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.DecoderAttn" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.attention.DecoderAttn.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#DecoderAttn.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.DecoderAttn.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.attention.DecoderAttn.init_h">
+<span class="sig-name descname"><span class="pre">init_h</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/attention.html#DecoderAttn.init_h"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.attention.DecoderAttn.init_h" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.attention.DecoderAttn.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.attention.DecoderAttn.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.models.classifier">
+<span id="drugex-training-models-classifier-module"></span><h2>drugex.training.models.classifier module<a class="headerlink" href="#module-drugex.training.models.classifier" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Base">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">Base</span></span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>This class is the base structure for all of classification/regression DNN models.
+Mainly, it provides the general methods for training, evaluating model and predcting the given data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluating the performance of the DNN model.
+:param loader: data loader for test set,</p>
+<blockquote>
+<div><p>including m X n target FloatTensor and l X n label FloatTensor
+(m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the average loss value based on the calculation of loss function with given test set.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>loss (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Training the DNN model, similar to the scikit-learn or Keras style.
+In the end, the optimal value of parameters will also be persisted on the hard drive.
+:param train_loader: Data loader for training set,</p>
+<blockquote>
+<div><p>including m X n target FloatTensor and m X l label FloatTensor
+(m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>valid_loader</strong> (<em>DataLoader</em>) – Data loader for validation set.
+The data structure is as same as loader_train.</p></li>
+<li><p><strong>out</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – the file path for the model file (suffix with ‘.pkg’)
+and log file (suffix with ‘.log’).</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The maximum of training epochs (default: 100)</p></li>
+<li><p><strong>lr</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – learning rate (default: 1e-4)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Predicting the probability of each sample in the given dataset.
+:param loader: data loader for test set,</p>
+<blockquote>
+<div><p>only including m X n target FloatTensor
+(m is the No. of sample, n is the No. of features)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>probability of each sample in the given dataset,</dt><dd><p>it is a m X l FloatTensor (m is the No. of sample, l is the No. of classes or tasks.)</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>score (ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.Base.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">Discriminator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_sizes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+<p>A CNN for text classification
+architecture: Embedding &gt;&gt; Convolution &gt;&gt; Max-pooling &gt;&gt; Softmax</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – (batch_size * seq_len)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.init_parameters">
+<span class="sig-name descname"><span class="pre">init_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator.init_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.init_parameters" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">MTFullyConnected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#MTFullyConnected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+<p>Multi-task DNN classification/regression model. It contains four fully connected layers
+between which are dropout layer for robustness.
+:param n_dim: the No. of columns (features) for input tensor
+:type n_dim: int
+:param n_task: the No. of columns (tasks) for output tensor.
+:type n_task: int
+:param is_reg: Regression model (True) or Classification model (False)
+:type is_reg: bool, optional</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#MTFullyConnected.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Invoke the class directly as a function
+:param X: m X n FloatTensor, m is the No. of samples, n is the No. of features.
+:type X: FloatTensor
+:param istrain: is it invoked during training process (True)</p>
+<blockquote>
+<div><p>or just for prediction (False)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>m X l FloatTensor, m is the No. of samples, n is the No. of tasks</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>y (FloatTensor)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">STFullyConnected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#STFullyConnected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+<dl class="simple">
+<dt>Single task DNN classification/regression model. It contains four fully connected layers between which</dt><dd><p>are dropout layer for robustness.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_dim</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the No. of columns (features) for input tensor</p></li>
+<li><p><strong>n_class</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the No. of columns (classes) for output tensor.</p></li>
+<li><p><strong>is_reg</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Regression model (True) or Classification model (False)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#STFullyConnected.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Invoke the class directly as a function
+:param X: m X n FloatTensor, m is the No. of samples, n is the No. of features.
+:type X: FloatTensor
+:param istrain: is it invoked during training process (True) or just for prediction (False)
+:type istrain: bool, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>m X l FloatTensor, m is the No. of samples, n is the No. of classes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>y (FloatTensor)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.models.encoderdecoder">
+<span id="drugex-training-models-encoderdecoder-module"></span><h2>drugex.training.models.encoderdecoder module<a class="headerlink" href="#module-drugex.training.models.encoderdecoder" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Generator" title="drugex.training.interfaces.Generator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.attachToGPUs">
+<span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.attachToGPUs" title="Permalink to this definition"></a></dt>
+<dd><p>Use this method to handle a request to change the used GPUs. This method is automatically called when the class is instantiated, but may need to be called again in subclasses to move all data to the required devices.</p>
+<p>Subclasses should also make sure to set “self.device” to the currently used device and “self.gpus” to GPU ids of the currently used GPUs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gpus</strong> – a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a> of new GPU IDs</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.evaluate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Start training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – training data loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>)</p></li>
+<li><p><strong>valid_loader</strong> – testing data loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>)</p></li>
+<li><p><strong>epochs</strong> – maximum number of epochs for which to train</p></li>
+<li><p><strong>evaluator</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelEvaluator" title="drugex.training.interfaces.ModelEvaluator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ModelEvaluator</span></code></a></p></li>
+<li><p><strong>monitor</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.getModel">
+<span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.getModel" title="Permalink to this definition"></a></dt>
+<dd><p>Return the current model as a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> instance or in serialized form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>model (<a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> or serialized states)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.init_states">
+<span class="sig-name descname"><span class="pre">init_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.init_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.init_states" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.trainNet">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.trainNet" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.validate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.validate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.DecoderRNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">DecoderRNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#DecoderRNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.DecoderRNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.DecoderRNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#DecoderRNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.DecoderRNN.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.DecoderRNN.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.DecoderRNN.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncDec">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">EncDec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_trg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncDec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncDec" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase" title="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmilesFragsGeneratorBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncDec.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncDec.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncDec.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncDec.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncDec.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncoderRNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">EncoderRNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_emb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_hid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncoderRNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncoderRNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncoderRNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncoderRNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncoderRNN.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncoderRNN.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncoderRNN.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Seq2Seq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">Seq2Seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_trg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Seq2Seq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Seq2Seq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase" title="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmilesFragsGeneratorBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Seq2Seq.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Seq2Seq.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Seq2Seq.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Seq2Seq.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.Seq2Seq.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">SmilesFragsGeneratorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#SmilesFragsGeneratorBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.encoderdecoder.Base" title="drugex.training.models.encoderdecoder.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#SmilesFragsGeneratorBase.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.sample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.trainNet">
+<span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#SmilesFragsGeneratorBase.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.trainNet" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#SmilesFragsGeneratorBase.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase.validate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.ValueNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">ValueNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_objs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#ValueNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.ValueNet" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.ValueNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#ValueNet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.ValueNet.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.ValueNet.init_h">
+<span class="sig-name descname"><span class="pre">init_h</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#ValueNet.init_h"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.ValueNet.init_h" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.ValueNet.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_pareto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#ValueNet.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.ValueNet.sample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.ValueNet.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.encoderdecoder.ValueNet.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.models.explorer">
+<span id="drugex-training-models-explorer-module"></span><h2>drugex.training.models.explorer module<a class="headerlink" href="#module-drugex.training.models.explorer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.explorer.</span></span><span class="sig-name descname"><span class="pre">GraphExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a></p>
+<p>Graph-based <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a  graph-based agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with training data.</p></li>
+<li><p><strong>valid_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with validation data.</p></li>
+<li><p><strong>epochs</strong> – number of epochs for training the model</p></li>
+<li><p><strong>monitor</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.policy_gradient">
+<span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.sample_input">
+<span class="sig-name descname"><span class="pre">sample_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.sample_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.sample_input" title="Permalink to this definition"></a></dt>
+<dd><p>Samples n_samples molecule-fargement pairs from the original input loader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> – torch dataloader</p></li>
+<li><p><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if true, reduced sample size and increased batch size</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>loader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.PGLearner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.explorer.</span></span><span class="sig-name descname"><span class="pre">PGLearner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'geometric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#PGLearner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.PGLearner" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<dl class="simple">
+<dt>Reinforcement learning framework with policy gradient. This class is the base structure for the</dt><dd><p>drugex v1 and v2 policy gradient-based  deep reinforcement learning models.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>models.Generator</em>) – The agent which generates the desired molecules</p></li>
+<li><p><strong>env</strong> (<em>utils.Env</em>) – The environment which provides the reward and judge
+if the generated molecule is valid and desired.</p></li>
+<li><p><strong>prior</strong> – The auxiliary model which is defined differently in each methods.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.PGLearner.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#PGLearner.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.PGLearner.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with training data.</p></li>
+<li><p><strong>valid_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with validation data.</p></li>
+<li><p><strong>epochs</strong> – number of epochs for training the model</p></li>
+<li><p><strong>monitor</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.PGLearner.policy_gradient">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#PGLearner.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.PGLearner.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.PGLearner.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.explorer.PGLearner.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.explorer.</span></span><span class="sig-name descname"><span class="pre">SmilesExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a></p>
+<p>Smiles-based <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a  graph-based agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with training data.</p></li>
+<li><p><strong>valid_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with validation data.</p></li>
+<li><p><strong>epochs</strong> – number of epochs for training the model</p></li>
+<li><p><strong>monitor</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.policy_gradient">
+<span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.sample_input">
+<span class="sig-name descname"><span class="pre">sample_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.sample_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.sample_input" title="Permalink to this definition"></a></dt>
+<dd><p>Samples n_samples molecule-fargement pairs from the original input loader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> – torch dataloader</p></li>
+<li><p><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if true, reduced sample size and increased batch size</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>loader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.explorer.</span></span><span class="sig-name descname"><span class="pre">SmilesExplorerNoFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'geometric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.explorer.PGLearner" title="drugex.training.models.explorer.PGLearner"><code class="xref py py-class docutils literal notranslate"><span class="pre">PGLearner</span></code></a></p>
+<p>DrugEx algorithm (version 2.0)</p>
+<dl class="simple">
+<dt>Reference: Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v2: De Novo Design of Drug Molecule by</dt><dd><p>Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.
+J Cheminform (2021). <a class="reference external" href="https://doi.org/10.1186/s13321-019-0355-6">https://doi.org/10.1186/s13321-019-0355-6</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>models.Generator</em>) – The agent network which is constructed by deep learning model
+and generates the desired molecules.</p></li>
+<li><p><strong>env</strong> (<em>utils.Env</em>) – The environment which provides the reward and judge
+if the genrated molecule is valid and desired.</p></li>
+<li><p><strong>mutate</strong> (<em>models.Generator</em>) – The pre-trained network which is constructed by deep learning model
+and ensure the agent to explore the approriate chemical space.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with training data.</p></li>
+<li><p><strong>valid_loader</strong> – PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> with validation data.</p></li>
+<li><p><strong>epochs</strong> – number of epochs for training the model</p></li>
+<li><p><strong>monitor</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag.policy_gradient">
+<span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="drugex-training-models-ra-scorer-module">
+<h2>drugex.training.models.ra_scorer module<a class="headerlink" href="#drugex-training-models-ra-scorer-module" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.training.models.single_network">
+<span id="drugex-training-models-single-network-module"></span><h2>drugex.training.models.single_network module<a class="headerlink" href="#module-drugex.training.models.single_network" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.single_network.</span></span><span class="sig-name descname"><span class="pre">RNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lstm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Generator" title="drugex.training.interfaces.Generator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.PGLoss">
+<span class="sig-name descname"><span class="pre">PGLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.PGLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.PGLoss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.attachToGPUs">
+<span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.attachToGPUs" title="Permalink to this definition"></a></dt>
+<dd><p>This model currently uses only one GPU. Therefore, only the first one from the list will be used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gpus</strong> – a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a> of GPU IDs to attach this model to (only the first one will be used)</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.evaluate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.evolve">
+<span class="sig-name descname"><span class="pre">evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.evolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.evolve" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader_valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Start training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> – training data loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>)</p></li>
+<li><p><strong>valid_loader</strong> – testing data loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>)</p></li>
+<li><p><strong>epochs</strong> – maximum number of epochs for which to train</p></li>
+<li><p><strong>evaluator</strong> – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelEvaluator" title="drugex.training.interfaces.ModelEvaluator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ModelEvaluator</span></code></a></p></li>
+<li><p><strong>monitor</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.getModel">
+<span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.getModel" title="Permalink to this definition"></a></dt>
+<dd><p>Return a copy of this model as a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a serializable copy of this model as a state dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.init_h">
+<span class="sig-name descname"><span class="pre">init_h</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.init_h"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.init_h" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.likelihood">
+<span class="sig-name descname"><span class="pre">likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.likelihood"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.likelihood" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.sample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.single_network.RNN.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-drugex.training.models" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="drugex.training.html" class="btn btn-neutral float-left" title="drugex.training package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.training.models.transform.html" class="btn btn-neutral float-right" title="drugex.training.models.transform package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

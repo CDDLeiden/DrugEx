@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.logs.utils &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../logs.html">drugex.logs</a> &raquo;</li>
+      <li>drugex.logs.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.logs.utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">utils</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 17.05.22, 9:55</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">git</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">turtle</span> <span class="kn">import</span> <span class="n">back</span>
+
+<span class="kn">import</span> <span class="nn">git</span>
+
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">setLogger</span>
+<span class="kn">from</span> <span class="nn">drugex.logs.config</span> <span class="kn">import</span> <span class="n">LogFileConfig</span>
+
+<span class="n">BACKUP_DIR_FOLDER_PREFIX</span> <span class="o">=</span> <span class="s1">&#39;backup&#39;</span>
+
+<div class="viewcode-block" id="commit_hash"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.commit_hash">[docs]</a><span class="k">def</span> <span class="nf">commit_hash</span><span class="p">(</span><span class="n">GIT_PATH</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">GIT_PATH</span><span class="p">)</span>
+        <span class="n">repo_hash</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span> <span class="o">+</span> <span class="n">repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">object</span><span class="o">.</span><span class="n">hexsha</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">__version__</span>
+        <span class="n">repo_hash</span> <span class="o">=</span> <span class="n">__version__</span>
+    <span class="k">return</span> <span class="n">repo_hash</span></div>
+
+<div class="viewcode-block" id="enable_file_logger"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.enable_file_logger">[docs]</a><span class="k">def</span> <span class="nf">enable_file_logger</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">git_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="c1"># # Get run id</span>
+    <span class="c1"># runid = config.get_runid(log_folder=log_folder,</span>
+    <span class="c1">#                         old=keep_old_runid,</span>
+    <span class="c1">#                         id=picked_runid)</span>
+    <span class="c1"># path = os.path.join(log_folder, f&#39;{runid}/{filename}&#39;)</span>
+    
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">config_logger</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+
+    <span class="c1"># get logger and init configuration</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">log_name</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">log_name</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">setLogger</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">LogFileConfig</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+
+    <span class="c1"># Begin log file</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">init_logfile</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">git_hash</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">init_data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">settings</span></div>
+
+<div class="viewcode-block" id="generate_backup_runID"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.generate_backup_runID">[docs]</a><span class="k">def</span> <span class="nf">generate_backup_runID</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Generates runID for generation backups of files to be overwritten </span>
+<span class="sd">    If no previous backfiles (starting with #) exists, runid is set to 0, else to previous runid+1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">regex</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">BACKUP_DIR_FOLDER_PREFIX</span><span class="si">}</span><span class="s1">_[0-9]+&#39;</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;[0-9]+&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">file</span><span class="p">)]</span>
+
+    <span class="n">runid</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">previous</span><span class="p">:</span>
+        <span class="n">runid</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">previous</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># backup_files = sorted([ file for file in os.listdir(path) if file.startswith(&#39;#&#39;)])</span>
+    <span class="c1"># if len(backup_files) == 0 :</span>
+    <span class="c1">#     runid = 0</span>
+    <span class="c1"># else :</span>
+    <span class="c1">#     previous_id = max([int(file.split(&#39;.&#39;)[-1][:-1]) for file in backup_files])</span>
+    <span class="c1">#     runid = previous_id + 1</span>
+
+    <span class="k">return</span> <span class="n">runid</span></div>
+
+<div class="viewcode-block" id="generateBackupDir"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.generateBackupDir">[docs]</a><span class="k">def</span> <span class="nf">generateBackupDir</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">):</span>
+    <span class="n">new_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">BACKUP_DIR_FOLDER_PREFIX</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">backup_id</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">new_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">new_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_dir</span></div>
+
+<div class="viewcode-block" id="backUpFilesInFolder"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.backUpFilesInFolder">[docs]</a><span class="k">def</span> <span class="nf">backUpFilesInFolder</span><span class="p">(</span><span class="n">_dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">,</span> <span class="n">output_prefixes</span><span class="p">,</span> <span class="n">output_extensions</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="n">cp_suffix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">existing_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">_dir</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">existing_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">output_prefixes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">output_extensions</span><span class="p">):</span>
+            <span class="n">backup_dir</span> <span class="o">=</span> <span class="n">generateBackupDir</span><span class="p">(</span><span class="n">_dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">)</span>
+            <span class="n">backup_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">backup_dir</span><span class="p">,</span> <span class="s1">&#39;backuplog.log&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">backup_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;[</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s1">] : </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> was moved from </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">_dir</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span> <span class="p">)</span>
+            <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Already existing &#39;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&#39; was copied to </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">backup_dir</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">cp_suffix</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">cp_suffix</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">message</span></div>
+
+
+<div class="viewcode-block" id="backUpFiles"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.backUpFiles">[docs]</a><span class="k">def</span> <span class="nf">backUpFiles</span><span class="p">(</span><span class="n">base_dir</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">folder</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">output_prefixes</span> <span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">cp_suffix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="nb">dir</span> <span class="o">=</span> <span class="n">base_dir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">folder</span> 
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+        <span class="n">backup_id</span> <span class="o">=</span> <span class="n">generate_backup_runID</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>    
+        <span class="k">if</span> <span class="n">folder</span> <span class="ow">in</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">backUpFilesInFolder</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">,</span> <span class="n">output_prefixes</span><span class="p">,</span> <span class="n">output_extensions</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">folder</span> <span class="o">==</span> <span class="s1">&#39;envs&#39;</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">backUpFilesInFolder</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">,</span> <span class="n">output_prefixes</span><span class="p">,</span> <span class="n">output_extensions</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">),</span> <span class="n">cp_suffix</span><span class="o">=</span><span class="n">cp_suffix</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">folder</span> <span class="o">==</span> <span class="s1">&#39;generators&#39;</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">backUpFilesInFolder</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">,</span> <span class="n">output_prefixes</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">folder</span> <span class="o">==</span> <span class="s1">&#39;new_molecules&#39;</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">backUpFilesInFolder</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">backup_id</span><span class="p">,</span> <span class="n">output_prefixes</span><span class="p">,</span> <span class="n">output_extensions</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">message</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

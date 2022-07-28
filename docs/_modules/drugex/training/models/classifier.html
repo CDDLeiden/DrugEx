@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.models.classifier &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.models.classifier</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.training.models.classifier</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="Base"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Base">[docs]</a><span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; This class is the base structure for all of classification/regression DNN models.</span>
+<span class="sd">    Mainly, it provides the general methods for training, evaluating model and predcting the given data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Base.fit"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Base.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Training the DNN model, similar to the scikit-learn or Keras style.</span>
+<span class="sd">        In the end, the optimal value of parameters will also be persisted on the hard drive.</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            train_loader (DataLoader): Data loader for training set,</span>
+<span class="sd">                including m X n target FloatTensor and m X l label FloatTensor</span>
+<span class="sd">                (m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</span>
+<span class="sd">            valid_loader (DataLoader): Data loader for validation set.</span>
+<span class="sd">                The data structure is as same as loader_train.</span>
+<span class="sd">            out (str): the file path for the model file (suffix with &#39;.pkg&#39;)</span>
+<span class="sd">                and log file (suffix with &#39;.log&#39;).</span>
+<span class="sd">            epochs(int, optional): The maximum of training epochs (default: 100)</span>
+<span class="sd">            lr (float, optional): learning rate (default: 1e-4)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;optim&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optim</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+
+        <span class="c1"># record the minimum loss value based on the calculation of loss function by the current epoch</span>
+        <span class="n">best_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="c1"># record the epoch when optimal model is saved.</span>
+        <span class="n">last_save</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="s1">&#39;.log&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">param_group</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">:</span>
+                <span class="n">param_group</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">epochs</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">Xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
+                <span class="c1"># Batch of target tenor and label tensor</span>
+                <span class="n">Xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">Xb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">),</span> <span class="n">yb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                <span class="c1"># predicted probability tensor</span>
+                <span class="n">y_</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">Xb</span><span class="p">,</span> <span class="n">istrain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># ignore all of the NaN values</span>
+                <span class="n">ix</span> <span class="o">=</span> <span class="n">yb</span> <span class="o">==</span> <span class="n">yb</span>
+                <span class="n">yb</span><span class="p">,</span> <span class="n">y_</span> <span class="o">=</span> <span class="n">yb</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">y_</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
+                <span class="n">wb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">yb</span><span class="o">.</span><span class="n">size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+                <span class="n">wb</span><span class="p">[</span><span class="n">yb</span> <span class="o">==</span> <span class="mf">3.99</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.1</span>
+                <span class="n">wb</span><span class="p">[</span><span class="n">yb</span> <span class="o">!=</span> <span class="mf">3.99</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="c1"># loss function calculation based on predicted tensor and label tensor</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">y_</span> <span class="o">*</span> <span class="n">wb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">*</span> <span class="n">wb</span><span class="p">)</span>
+                <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="c1"># loss value on validation set based on which optimal model is saved.</span>
+            <span class="n">loss_valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[Epoch: </span><span class="si">%d</span><span class="s1">/</span><span class="si">%d</span><span class="s1">] </span><span class="si">%.1f</span><span class="s1">s loss_train: </span><span class="si">%f</span><span class="s1"> loss_valid: </span><span class="si">%f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">loss_valid</span><span class="p">),</span> <span class="n">file</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">loss_valid</span> <span class="o">&lt;</span> <span class="n">best_loss</span><span class="p">:</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">out</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[Performance] loss_valid is improved from </span><span class="si">%f</span><span class="s1"> to </span><span class="si">%f</span><span class="s1">, Save model to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="n">best_loss</span><span class="p">,</span> <span class="n">loss_valid</span><span class="p">,</span> <span class="n">out</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span><span class="p">),</span> <span class="n">file</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+                <span class="n">best_loss</span> <span class="o">=</span> <span class="n">loss_valid</span>
+                <span class="n">last_save</span> <span class="o">=</span> <span class="n">epoch</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[Performance] loss_valid is not improved.&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+                <span class="c1"># early stopping, if the performance on validation is not improved in 100 epochs.</span>
+                <span class="c1"># The model training will stop in order to save time.</span>
+                <span class="k">if</span> <span class="n">epoch</span> <span class="o">-</span> <span class="n">last_save</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span> <span class="k">break</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Base.evaluate"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Base.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluating the performance of the DNN model.</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            loader (torch.util.data.DataLoader): data loader for test set,</span>
+<span class="sd">                including m X n target FloatTensor and l X n label FloatTensor</span>
+<span class="sd">                (m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</span>
+<span class="sd">        Return:</span>
+<span class="sd">            loss (float): the average loss value based on the calculation of loss function with given test set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">Xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="n">Xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">Xb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">),</span> <span class="n">yb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+            <span class="n">y_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">Xb</span><span class="p">)</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="n">yb</span> <span class="o">==</span> <span class="n">yb</span>
+            <span class="n">yb</span><span class="p">,</span> <span class="n">y_</span> <span class="o">=</span> <span class="n">yb</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">y_</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
+            <span class="n">wb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">yb</span><span class="o">.</span><span class="n">size</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+            <span class="n">wb</span><span class="p">[</span><span class="n">yb</span> <span class="o">==</span> <span class="mf">3.99</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.1</span>
+            <span class="n">wb</span><span class="p">[</span><span class="n">yb</span> <span class="o">!=</span> <span class="mf">3.99</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">loss</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">y_</span> <span class="o">*</span> <span class="n">wb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">*</span> <span class="n">wb</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+<div class="viewcode-block" id="Base.predict"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Base.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predicting the probability of each sample in the given dataset.</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            loader (torch.util.data.DataLoader): data loader for test set,</span>
+<span class="sd">                only including m X n target FloatTensor</span>
+<span class="sd">                (m is the No. of sample, n is the No. of features)</span>
+<span class="sd">        Return:</span>
+<span class="sd">            score (ndarray): probability of each sample in the given dataset,</span>
+<span class="sd">                it is a m X l FloatTensor (m is the No. of sample, l is the No. of classes or tasks.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">Xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="n">Xb</span> <span class="o">=</span> <span class="n">Xb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+            <span class="n">y_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">Xb</span><span class="p">)</span>
+            <span class="n">score</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">score</span></div></div>
+
+
+<div class="viewcode-block" id="STFullyConnected"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.STFullyConnected">[docs]</a><span class="k">class</span> <span class="nc">STFullyConnected</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Single task DNN classification/regression model. It contains four fully connected layers between which</span>
+<span class="sd">        are dropout layer for robustness.</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        n_dim (int): the No. of columns (features) for input tensor</span>
+<span class="sd">        n_class (int): the No. of columns (classes) for output tensor.</span>
+<span class="sd">        is_reg (bool, optional): Regression model (True) or Classification model (False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">,</span> <span class="n">n_class</span><span class="p">,</span> <span class="n">is_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">STFullyConnected</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="c1"># self.fc2 = nn.Linear(2000, 1000)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_class</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_reg</span> <span class="o">=</span> <span class="n">is_reg</span>
+        <span class="k">if</span> <span class="n">is_reg</span><span class="p">:</span>
+            <span class="c1"># loss function for regression</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">n_class</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># loss function and activation function of output layer for binary classification</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># loss function and activation function of output layer for multiple classification</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+
+<div class="viewcode-block" id="STFullyConnected.forward"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.STFullyConnected.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">istrain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Invoke the class directly as a function</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            X (FloatTensor): m X n FloatTensor, m is the No. of samples, n is the No. of features.</span>
+<span class="sd">            istrain (bool, optional): is it invoked during training process (True) or just for prediction (False)</span>
+<span class="sd">        Return:</span>
+<span class="sd">            y (FloatTensor): m X l FloatTensor, m is the No. of samples, n is the No. of classes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc0</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">istrain</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc1</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="c1"># if istrain:</span>
+        <span class="c1">#     y = self.dropout(y)</span>
+        <span class="c1"># y = F.relu(self.fc2(y))</span>
+        <span class="k">if</span> <span class="n">istrain</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_reg</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc3</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc3</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span></div></div>
+
+
+<div class="viewcode-block" id="MTFullyConnected"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.MTFullyConnected">[docs]</a><span class="k">class</span> <span class="nc">MTFullyConnected</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multi-task DNN classification/regression model. It contains four fully connected layers</span>
+<span class="sd">    between which are dropout layer for robustness.</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        n_dim (int): the No. of columns (features) for input tensor</span>
+<span class="sd">        n_task (int): the No. of columns (tasks) for output tensor.</span>
+<span class="sd">        is_reg (bool, optional): Regression model (True) or Classification model (False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">,</span> <span class="n">n_task</span><span class="p">,</span> <span class="n">is_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MTFullyConnected</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_task</span> <span class="o">=</span> <span class="n">n_task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_task</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_reg</span> <span class="o">=</span> <span class="n">is_reg</span>
+        <span class="k">if</span> <span class="n">is_reg</span><span class="p">:</span>
+            <span class="c1"># loss function for regression</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># loss function and activation function of output layer for multiple classification</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MTFullyConnected.forward"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.MTFullyConnected.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">istrain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Invoke the class directly as a function</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            X (FloatTensor): m X n FloatTensor, m is the No. of samples, n is the No. of features.</span>
+<span class="sd">            istrain (bool, optional): is it invoked during training process (True)</span>
+<span class="sd">                or just for prediction (False)</span>
+<span class="sd">        Return:</span>
+<span class="sd">            y (FloatTensor): m X l FloatTensor, m is the No. of samples, n is the No. of tasks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc0</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">istrain</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc1</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">istrain</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc2</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">istrain</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_reg</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span></div></div>
+
+
+<div class="viewcode-block" id="Discriminator"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Discriminator">[docs]</a><span class="k">class</span> <span class="nc">Discriminator</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A CNN for text classification</span>
+<span class="sd">    architecture: Embedding &gt;&gt; Convolution &gt;&gt; Max-pooling &gt;&gt; Softmax</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">,</span> <span class="n">filter_sizes</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.25</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Discriminator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emb</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="n">filter_sizes</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highway</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">num_filters</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">num_filters</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lin</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">num_filters</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_parameters</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">dev</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="Discriminator.forward"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Discriminator.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x: (batch_size * seq_len)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># batch_size * 1 * seq_len * emb_dim</span>
+        <span class="n">convs</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">conv</span><span class="p">(</span><span class="n">emb</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">conv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">convs</span><span class="p">]</span>  <span class="c1"># [batch_size * num_filter * length]</span>
+        <span class="n">pools</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="o">.</span><span class="n">max_pool1d</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">conv</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">conv</span> <span class="ow">in</span> <span class="n">convs</span><span class="p">]</span>  <span class="c1"># [batch_size * num_filter]</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">pools</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># batch_size * num_filters_sum</span>
+        <span class="n">highway</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">highway</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">highway</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">()</span> <span class="o">*</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">highway</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">highway</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">())</span> <span class="o">*</span> <span class="n">pred</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">pred</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">pred</span></div>
+
+<div class="viewcode-block" id="Discriminator.init_parameters"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.classifier.Discriminator.init_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

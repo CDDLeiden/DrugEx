@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.utils.gcmol &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.utils.gcmol</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.utils.gcmol</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">gcmol</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 10.06.22, 16:50</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">#THESE FUNCTIONS WERE ADDED BY HELLE FROM:</span>
+<span class="c1">#   https://github.com/BenevolentAI/guacamol/blob/8247bbd5e927fbc3d328865d12cf83cb7019e2d6/guacamol/utils/data.py#L11</span>
+<span class="c1"># to solve AttributeError: module &#39;utils&#39; has no attribute &#39;canonicalize_list&#39;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+
+
+<div class="viewcode-block" id="canonicalize"><a class="viewcode-back" href="../../../api/drugex.utils.html#drugex.utils.gcmol.canonicalize">[docs]</a><span class="k">def</span> <span class="nf">canonicalize</span><span class="p">(</span><span class="n">smiles</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">include_stereocenters</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Canonicalize the SMILES strings with RDKit.</span>
+<span class="sd">    The algorithm is detailed under https://pubs.acs.org/doi/full/10.1021/acs.jcim.5b00543</span>
+<span class="sd">    Args:</span>
+<span class="sd">        smiles: SMILES string to canonicalize</span>
+<span class="sd">        include_stereocenters: whether to keep the stereochemical information in the canonical SMILES string</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Canonicalized SMILES string, None if the molecule is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">isomericSmiles</span><span class="o">=</span><span class="n">include_stereocenters</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="remove_duplicates"><a class="viewcode-back" href="../../../api/drugex.utils.html#drugex.utils.gcmol.remove_duplicates">[docs]</a><span class="k">def</span> <span class="nf">remove_duplicates</span><span class="p">(</span><span class="n">list_with_duplicates</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Removes the duplicates and keeps the ordering of the original list.</span>
+<span class="sd">    For duplicates, the first occurrence is kept and the later occurrences are ignored.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        list_with_duplicates: list that possibly contains duplicates</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A list with no duplicates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">unique_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">unique_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">list_with_duplicates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">element</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_set</span><span class="p">:</span>
+            <span class="n">unique_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+            <span class="n">unique_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">unique_list</span></div>
+
+<div class="viewcode-block" id="canonicalize_list"><a class="viewcode-back" href="../../../api/drugex.utils.html#drugex.utils.gcmol.canonicalize_list">[docs]</a><span class="k">def</span> <span class="nf">canonicalize_list</span><span class="p">(</span><span class="n">smiles_list</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">include_stereocenters</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Canonicalize a list of smiles. Filters out repetitions and removes corrupted molecules.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        smiles_list: molecules as SMILES strings</span>
+<span class="sd">        include_stereocenters: whether to keep the stereochemical information in the canonical SMILES strings</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        The canonicalized and filtered input smiles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">canonicalized_smiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">canonicalize</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">include_stereocenters</span><span class="p">)</span> <span class="k">for</span> <span class="n">smiles</span> <span class="ow">in</span> <span class="n">smiles_list</span><span class="p">]</span>
+
+    <span class="c1"># Remove None elements</span>
+    <span class="n">canonicalized_smiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">canonicalized_smiles</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">remove_duplicates</span><span class="p">(</span><span class="n">canonicalized_smiles</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

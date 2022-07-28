@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DrugEx Python API &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="drugex package" href="drugex.html" />
+    <link rel="prev" title="Usage" href="../use.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DrugEx Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html">drugex package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>DrugEx Python API</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="drugex-python-api">
+<span id="api-docs"></span><h1>DrugEx Python API<a class="headerlink" href="#drugex-python-api" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="drugex.html">drugex package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html">drugex.data package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.datasets">drugex.data.datasets module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.fragments">drugex.data.fragments module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.interfaces">drugex.data.interfaces module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.processing">drugex.data.processing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.tests">drugex.data.tests module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data.utils">drugex.data.utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#module-drugex.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.config">drugex.logs.config module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.utils">drugex.logs.utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#module-drugex.logs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.interfaces">drugex.molecules.interfaces module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.mol">drugex.molecules.mol module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.suppliers">drugex.molecules.suppliers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.collectors">drugex.parallel.collectors module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.evaluator">drugex.parallel.evaluator module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.interfaces">drugex.parallel.interfaces module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.tests">drugex.parallel.tests module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html">drugex.training package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training.environment">drugex.training.environment module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training.interfaces">drugex.training.interfaces module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training.monitors">drugex.training.monitors module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training.rewards">drugex.training.rewards module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training.tests">drugex.training.tests module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#module-drugex.training">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.fingerprints">drugex.utils.fingerprints module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.gcmol">drugex.utils.gcmol module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.metric">drugex.utils.metric module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.nsgaii">drugex.utils.nsgaii module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.optim">drugex.utils.optim module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#module-drugex.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../use.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.html" class="btn btn-neutral float-right" title="drugex package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

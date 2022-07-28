@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.scorers.modifiers &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.scorers.modifiers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.training.scorers.modifiers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">ScoreModifier</span>
+
+
+<div class="viewcode-block" id="Chained"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Chained">[docs]</a><span class="k">class</span> <span class="nc">Chained</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls several modifiers one after the other, for instance:</span>
+<span class="sd">        score = modifier3(modifier2(modifier1(raw_score)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifiers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScoreModifier</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            modifiers: modifiers to call in sequence.</span>
+<span class="sd">                The modifier applied last (and delivering the final score) is the last one in the list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span> <span class="o">=</span> <span class="n">modifiers</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">for</span> <span class="n">modifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">modifier</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">score</span></div>
+
+
+<div class="viewcode-block" id="Linear"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Linear">[docs]</a><span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that multiplies the score by a scalar (default: 1, i.e. do nothing).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slope</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="n">slope</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">*</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="Squared"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Squared">[docs]</a><span class="k">class</span> <span class="nc">Squared</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that has a maximum at a given target value, and decreases</span>
+<span class="sd">    quadratically with increasing distance from the target value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">coefficient</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_value</span> <span class="o">=</span> <span class="n">target_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span> <span class="o">=</span> <span class="n">coefficient</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_value</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbsoluteScore"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.AbsoluteScore">[docs]</a><span class="k">class</span> <span class="nc">AbsoluteScore</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that has a maximum at a given target value, and decreases</span>
+<span class="sd">    linearly with increasing distance from the target value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_value</span> <span class="o">=</span> <span class="n">target_value</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_value</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Gaussian"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Gaussian">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that reproduces a Gaussian bell shape.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="mf">2.</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MinMaxGaussian"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.MinMaxGaussian">[docs]</a><span class="k">class</span> <span class="nc">MinMaxGaussian</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that reproduces a half Gaussian bell shape.</span>
+<span class="sd">    For minimize==True, the function is 1.0 for x &lt;= mu and decreases to zero for x &gt; mu.</span>
+<span class="sd">    For minimize==False, the function is 1.0 for x &gt;= mu and decreases to zero for x &lt; mu.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">minimize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="n">minimize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_full_gaussian</span> <span class="o">=</span> <span class="n">Gaussian</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimize</span><span class="p">:</span>
+            <span class="n">mod_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mod_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_gaussian</span><span class="p">(</span><span class="n">mod_x</span><span class="p">)</span></div>
+
+
+<span class="n">MinGaussian</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">MinMaxGaussian</span><span class="p">,</span> <span class="n">minimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">MaxGaussian</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">MinMaxGaussian</span><span class="p">,</span> <span class="n">minimize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ClippedScore"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.ClippedScore">[docs]</a><span class="k">class</span> <span class="nc">ClippedScore</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clips a score between specified low and high scores, and does a linear interpolation in between.</span>
+<span class="sd">    The function looks like this:</span>
+<span class="sd">       upper_x &lt; lower_x                 lower_x &lt; upper_x</span>
+<span class="sd">    __________                                   ____________</span>
+<span class="sd">              \                                 /</span>
+<span class="sd">               \                               /</span>
+<span class="sd">                \__________          _________/</span>
+<span class="sd">    This class works as follows:</span>
+<span class="sd">    First the input is mapped onto a linear interpolation between both specified points.</span>
+<span class="sd">    Then the generated values are clipped between low and high scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upper_x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lower_x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high_score</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">low_score</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            upper_x: x-value from which (or until which if smaller than lower_x) the score is maximal</span>
+<span class="sd">            lower_x: x-value until which (or from which if larger than upper_x) the score is minimal</span>
+<span class="sd">            high_score: maximal score to clip to</span>
+<span class="sd">            low_score: minimal score to clip to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">low_score</span> <span class="o">&lt;</span> <span class="n">high_score</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_x</span> <span class="o">=</span> <span class="n">upper_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_x</span> <span class="o">=</span> <span class="n">lower_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high_score</span> <span class="o">=</span> <span class="n">high_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low_score</span> <span class="o">=</span> <span class="n">low_score</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">high_score</span> <span class="o">-</span> <span class="n">low_score</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">upper_x</span> <span class="o">-</span> <span class="n">lower_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span> <span class="o">=</span> <span class="n">high_score</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">*</span> <span class="n">upper_x</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_score</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high_score</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SmoothClippedScore"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.SmoothClippedScore">[docs]</a><span class="k">class</span> <span class="nc">SmoothClippedScore</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smooth variant of ClippedScore.</span>
+<span class="sd">    Implemented as a logistic function that has the same steepness as ClippedScore in the</span>
+<span class="sd">    center of the logistic function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upper_x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lower_x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high_score</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">low_score</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            upper_x: x-value from which (or until which if smaller than lower_x) the score approaches high_score</span>
+<span class="sd">            lower_x: x-value until which (or from which if larger than upper_x) the score approaches low_score</span>
+<span class="sd">            high_score: maximal score (reached at +/- infinity)</span>
+<span class="sd">            low_score: minimal score (reached at -/+ infinity)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">low_score</span> <span class="o">&lt;</span> <span class="n">high_score</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_x</span> <span class="o">=</span> <span class="n">upper_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_x</span> <span class="o">=</span> <span class="n">lower_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high_score</span> <span class="o">=</span> <span class="n">high_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low_score</span> <span class="o">=</span> <span class="n">low_score</span>
+
+        <span class="c1"># Slope of a standard logistic function in the middle is 0.25 -&gt; rescale k accordingly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">upper_x</span> <span class="o">-</span> <span class="n">lower_x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">middle_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper_x</span> <span class="o">+</span> <span class="n">lower_x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">high_score</span> <span class="o">-</span> <span class="n">low_score</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_score</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">middle_x</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="ThresholdedLinear"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.ThresholdedLinear">[docs]</a><span class="k">class</span> <span class="nc">ThresholdedLinear</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a value of min(input, threshold)/threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span></div>
+
+<div class="viewcode-block" id="SmoothHump"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.modifiers.SmoothHump">[docs]</a><span class="k">class</span> <span class="nc">SmoothHump</span><span class="p">(</span><span class="n">ScoreModifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Score modifier that reproduces a smooth bump function.</span>
+<span class="sd">    The function is 1.0 for x between (lower_x, upper_x) and decreases to zero with a half Gaussian for x &lt; lower_x and x &gt; upper_x.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_x</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">upper_x</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_x</span> <span class="o">=</span> <span class="n">lower_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_x</span> <span class="o">=</span> <span class="n">upper_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximize_gaussian</span> <span class="o">=</span> <span class="n">MinMaxGaussian</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">lower_x</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">minimize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimize_gaussian</span> <span class="o">=</span> <span class="n">MinMaxGaussian</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">upper_x</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">minimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">y_maximize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maximize_gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y_minimize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimize_gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y_maximize</span><span class="p">,</span> <span class="n">y_minimize</span><span class="p">)</span> </div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

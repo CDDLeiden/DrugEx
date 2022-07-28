@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.molecules.converters package &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="drugex.parallel package" href="drugex.parallel.html" />
+    <link rel="prev" title="drugex.molecules package" href="drugex.molecules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html">drugex.training package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.molecules.html">drugex.molecules package</a> &raquo;</li>
+      <li>drugex.molecules.converters package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="drugex-molecules-converters-package">
+<h1>drugex.molecules.converters package<a class="headerlink" href="#drugex-molecules-converters-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.molecules.converters.default">
+<span id="drugex-molecules-converters-default-module"></span><h2>drugex.molecules.converters.default module<a class="headerlink" href="#module-drugex.molecules.converters.default" title="Permalink to this heading"></a></h2>
+<p>converters</p>
+<p>Created by: Martin Sicho
+On: 21.04.22, 12:20</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.default.DrExToSMILES">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.default.</span></span><span class="sig-name descname"><span class="pre">DrExToSMILES</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/default.html#DrExToSMILES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.default.DrExToSMILES" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.default.Identity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.default.</span></span><span class="sig-name descname"><span class="pre">Identity</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/default.html#Identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.default.Identity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.default.RDKitToDrEx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.default.</span></span><span class="sig-name descname"><span class="pre">RDKitToDrEx</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/default.html#RDKitToDrEx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.default.RDKitToDrEx" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.default.SmilesToDrEx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.default.</span></span><span class="sig-name descname"><span class="pre">SmilesToDrEx</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/default.html#SmilesToDrEx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.default.SmilesToDrEx" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-drugex.molecules.converters.fragmenters">
+<span id="drugex-molecules-converters-fragmenters-module"></span><h2>drugex.molecules.converters.fragmenters module<a class="headerlink" href="#module-drugex.molecules.converters.fragmenters" title="Permalink to this heading"></a></h2>
+<p>fragmenters</p>
+<p>Created by: Martin Sicho
+On: 06.05.22, 12:19</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.fragmenters.</span></span><span class="sig-name descname"><span class="pre">Fragmenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_combs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'recap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep_clean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bonds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="drugex.molecules.converters.standardizers.CleanSMILES"><code class="xref py py-class docutils literal notranslate"><span class="pre">CleanSMILES</span></code></a></p>
+<p>Reference implementation of the original fragmenter used in DrugEx v3.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter.getFragments">
+<span class="sig-name descname"><span class="pre">getFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter.getFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter.getFragments" title="Permalink to this definition"></a></dt>
+<dd><p>Get fragments form an RDKit molecule</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mol</strong> – instance of <code class="xref any docutils literal notranslate"><span class="pre">rdkit.Chem.Mol</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">numpy.array</span></code> of generated fragments</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.molecules.converters.interfaces">
+<span id="drugex-molecules-converters-interfaces-module"></span><h2>drugex.molecules.converters.interfaces module<a class="headerlink" href="#module-drugex.molecules.converters.interfaces" title="Permalink to this heading"></a></h2>
+<p>abc</p>
+<p>Created by: Martin Sicho
+On: 22.04.22, 10:40</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="drugex.molecules.converters.interfaces.ConversionException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.interfaces.</span></span><span class="sig-name descname"><span class="pre">ConversionException</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/interfaces.html#ConversionException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.interfaces.ConversionException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#Exception" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.interfaces.MolConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.interfaces.</span></span><span class="sig-name descname"><span class="pre">MolConverter</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/interfaces.html#MolConverter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.interfaces.MolConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-drugex.molecules.converters.standardizers">
+<span id="drugex-molecules-converters-standardizers-module"></span><h2>drugex.molecules.converters.standardizers module<a class="headerlink" href="#module-drugex.molecules.converters.standardizers" title="Permalink to this heading"></a></h2>
+<p>standardizers</p>
+<p>Created by: Martin Sicho
+On: 21.04.22, 12:19</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.standardizers.CleanSMILES">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.standardizers.</span></span><span class="sig-name descname"><span class="pre">CleanSMILES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/standardizers.html#CleanSMILES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+<p>Converter used to clean SMILES strings at some places. At the moment the reasons for its existence are unclear…</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.standardizers.DefaultStandardizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.standardizers.</span></span><span class="sig-name descname"><span class="pre">DefaultStandardizer</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/standardizers.html#DefaultStandardizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.standardizers.DefaultStandardizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+<p>Original standardization implementation from the original DrugEx v3.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="drugex.molecules.converters.standardizers.StandardizationException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.standardizers.</span></span><span class="sig-name descname"><span class="pre">StandardizationException</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/standardizers.html#StandardizationException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.standardizers.StandardizationException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.ConversionException" title="drugex.molecules.converters.interfaces.ConversionException"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConversionException</span></code></a></p>
+<p>Custom exception class to recognize and catch standardization errors.</p>
+</dd></dl>
+
+</section>
+<section id="module-drugex.molecules.converters.tests">
+<span id="drugex-molecules-converters-tests-module"></span><h2>drugex.molecules.converters.tests module<a class="headerlink" href="#module-drugex.molecules.converters.tests" title="Permalink to this heading"></a></h2>
+<p>tests.py</p>
+<p>Created by: Martin Sicho
+On: 22.04.22, 13:40</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.tests.TestStandardizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.tests.</span></span><span class="sig-name descname"><span class="pre">TestStandardizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/tests.html#TestStandardizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.tests.TestStandardizer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.tests.TestStandardizer.test_default">
+<span class="sig-name descname"><span class="pre">test_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/tests.html#TestStandardizer.test_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.tests.TestStandardizer.test_default" title="Permalink to this definition"></a></dt>
+<dd><p>Tests whether the default standardizer is working as expected.</p>
+<p>Returns: None</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.molecules.converters">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-drugex.molecules.converters" title="Permalink to this heading"></a></h2>
+<p>__init__.py</p>
+<p>Created by: Martin Sicho
+On: 21.04.22, 21:25</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="drugex.molecules.html" class="btn btn-neutral float-left" title="drugex.molecules package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.parallel.html" class="btn btn-neutral float-right" title="drugex.parallel package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

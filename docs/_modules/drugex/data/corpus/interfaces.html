@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.data.corpus.interfaces &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.data.corpus.interfaces</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.data.corpus.interfaces</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">interfaces</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 26.04.22, 13:12</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.interfaces</span> <span class="kn">import</span> <span class="n">MolSupplier</span>
+
+
+<div class="viewcode-block" id="Vocabulary"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary">[docs]</a><span class="k">class</span> <span class="nc">Vocabulary</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Definition of the vocabulary interface. All vocabularies contain &quot;words&quot; that are used for encoding and decoding molecules.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">words</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">words</span> <span class="o">=</span> <span class="n">words</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">other</span><span class="o">.</span><span class="n">words</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Vocabulary.encode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary.encode">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Vocabulary.decode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary.decode">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">representation</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Vocabulary.fromFile"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary.fromFile">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">fromFile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Vocabulary.toFile"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary.toFile">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">toFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+<div class="viewcode-block" id="SequenceVocabulary"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary">[docs]</a><span class="k">class</span> <span class="nc">SequenceVocabulary</span><span class="p">(</span><span class="n">Vocabulary</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic vocabulary for sequence-based models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">words</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            words: iterable of words in this vocabulary</span>
+<span class="sd">            max_len: the maximum number of tokens contained in one SMILES</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">control</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;GO&#39;</span><span class="p">,</span> <span class="s1">&#39;EOS&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">special</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">control</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">words</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">special</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateIndex</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span> <span class="o">=</span> <span class="n">max_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_len</span> <span class="o">=</span> <span class="n">min_len</span>
+
+<div class="viewcode-block" id="SequenceVocabulary.splitSequence"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.splitSequence">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">splitSequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SequenceVocabulary.toFile"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.toFile">[docs]</a>    <span class="k">def</span> <span class="nf">toFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">words</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">special</span><span class="p">]))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SequenceVocabulary.addWordsFromSeq"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq">[docs]</a>    <span class="k">def</span> <span class="nf">addWordsFromSeq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">ignoreConstraints</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitSequence</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ignoreConstraints</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_len</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="p">):</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">updateIndex</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">token</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule does not meet min/max words requirements (min: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">min_len</span><span class="si">}</span><span class="s2">, max: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="si">}</span><span class="s2">). Words found: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2"> (occurrence count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2">). It will be ignored.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="SequenceVocabulary.updateIndex"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.updateIndex">[docs]</a>    <span class="k">def</span> <span class="nf">updateIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">words</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">special</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">special</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tk2ix</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">words</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">words</span><span class="p">))))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ix2tk</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tk2ix</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div></div>
+
+<div class="viewcode-block" id="Corpus"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Corpus">[docs]</a><span class="k">class</span> <span class="nc">Corpus</span><span class="p">(</span><span class="n">MolSupplier</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A `MolSupplier` that generates encoded molecule data from the given input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply molecules</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">molecules</span> <span class="o">=</span> <span class="n">molecules</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">molecules</span><span class="p">,</span> <span class="s2">&quot;__next__&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">iter</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Corpus.next"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Corpus.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">molecules</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Corpus.convert"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Corpus.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">representation</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processMolecule</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Exception occurred when generating corpus data for molecule: </span><span class="si">{</span><span class="n">molecule</span><span class="si">}</span><span class="s1">. Cause:&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="Corpus.processMolecule"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Corpus.processMolecule">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">processMolecule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process one molecule.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            molecule: a molecule instance (representation depend on the implementation).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            encoded data of the molecule (i.e. data associated with one input sample to the desired DrugEx model)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Corpus.getVoc"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.Corpus.getVoc">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">getVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Corpus should keep track of the &#39;Vocabulary&#39; used to encode molecules. This method should return its current state.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            currently used `Vocabulary`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">pass</span></div></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

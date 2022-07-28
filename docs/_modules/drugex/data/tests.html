@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.data.tests &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.data.tests</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.data.tests</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">tests</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 18.05.22, 11:49</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">drugex.data.corpus.corpus</span> <span class="kn">import</span> <span class="n">SequenceCorpus</span>
+<span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">VocGraph</span>
+<span class="kn">from</span> <span class="nn">drugex.data.fragments</span> <span class="kn">import</span> <span class="n">FragmentPairsEncodedSupplier</span><span class="p">,</span> <span class="n">SequenceFragmentEncoder</span><span class="p">,</span> <span class="n">GraphFragmentEncoder</span><span class="p">,</span> \
+    <span class="n">FragmentPairsSplitter</span><span class="p">,</span> <span class="n">FragmentPairsSupplier</span><span class="p">,</span> <span class="n">FragmentCorpusEncoder</span>
+<span class="kn">from</span> <span class="nn">drugex.data.processing</span> <span class="kn">import</span> <span class="n">Standardization</span><span class="p">,</span> <span class="n">CorpusEncoder</span>
+<span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="n">SmilesDataSet</span><span class="p">,</span> <span class="n">SmilesFragDataSet</span><span class="p">,</span> <span class="n">GraphFragDataSet</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.fragmenters</span> <span class="kn">import</span> <span class="n">Fragmenter</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.standardizers</span> <span class="kn">import</span> <span class="n">DefaultStandardizer</span>
+<span class="kn">from</span> <span class="nn">drugex.parallel.evaluator</span> <span class="kn">import</span> <span class="n">ParallelSupplierEvaluator</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.suppliers</span> <span class="kn">import</span> <span class="n">StandardizedSupplier</span>
+
+
+<div class="viewcode-block" id="FragmentPairs"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.FragmentPairs">[docs]</a><span class="k">class</span> <span class="nc">FragmentPairs</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FragmentPairs.getPairs"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.FragmentPairs.getPairs">[docs]</a>    <span class="k">def</span> <span class="nf">getPairs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="n">StandardizedSupplier</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="s1">&#39;BrCCO&#39;</span><span class="p">],</span>
+            <span class="n">standardizer</span><span class="o">=</span><span class="n">DefaultStandardizer</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">FragmentPairsSupplier</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">fragmenter</span><span class="o">=</span><span class="n">Fragmenter</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">toList</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FragmentPairs.test_pair_encode_smiles"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_smiles">[docs]</a>    <span class="k">def</span> <span class="nf">test_pair_encode_smiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPairs</span><span class="p">()</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">SequenceFragmentEncoder</span><span class="p">()</span>
+        <span class="n">encoded_pairs</span> <span class="o">=</span> <span class="n">FragmentPairsEncodedSupplier</span><span class="p">(</span>
+            <span class="n">pairs</span><span class="p">,</span>
+            <span class="n">encoder</span><span class="o">=</span><span class="n">encoder</span>
+        <span class="p">)</span>
+
+        <span class="n">voc</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="s1">&#39;Br&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">voc</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">encoded</span> <span class="ow">in</span> <span class="n">encoded_pairs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;EOS&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;EOS&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FragmentPairs.test_pair_encode_smiles_parallel"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_smiles_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">test_pair_encode_smiles_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pairs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPairs</span><span class="p">())</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">evaluator</span> <span class="o">=</span> <span class="n">ParallelSupplierEvaluator</span><span class="p">(</span>
+            <span class="n">FragmentPairsEncodedSupplier</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;encoder&#39;</span><span class="p">:</span> <span class="n">SequenceFragmentEncoder</span><span class="p">()}</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;EOS&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;EOS&#39;</span><span class="p">)</span>
+            <span class="n">voc</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="s1">&#39;Br&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">voc</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+
+        <span class="n">evaluator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pairs_df</span><span class="p">,</span> <span class="n">collect</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FragmentPairs.test_pair_encode_graph"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_graph">[docs]</a>    <span class="k">def</span> <span class="nf">test_pair_encode_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pairs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPairs</span><span class="p">())</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">evaluator</span> <span class="o">=</span> <span class="n">ParallelSupplierEvaluator</span><span class="p">(</span>
+            <span class="n">FragmentPairsEncodedSupplier</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;encoder&#39;</span><span class="p">:</span> <span class="n">GraphFragmentEncoder</span><span class="p">()},</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="n">FragmentPairsEncodedSupplier</span><span class="p">)</span>
+
+        <span class="n">evaluator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pairs_df</span><span class="p">,</span> <span class="n">collect</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="ProcessingTests"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests">[docs]</a><span class="k">class</span> <span class="nc">ProcessingTests</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ProcessingTests.getRandomFile"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.getRandomFile">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">getRandomFile</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.getStandardizationMols"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.getStandardizationMols">[docs]</a>    <span class="k">def</span> <span class="nf">getStandardizationMols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mols_orig</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;c1ccccc1CN(=O)&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;CC(=O)[O-]&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;CCCCn1cc[n+](c1)C.F[P-](F)(F)(F)(F)F&quot;</span>
+        <span class="p">]</span>
+        <span class="n">mols_expected</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;O=NCc1ccccc1&quot;</span><span class="p">,</span> <span class="c1"># canonical</span>
+            <span class="s2">&quot;CC(=O)O&quot;</span><span class="p">,</span> <span class="c1"># without charge</span>
+            <span class="s2">&quot;CCCCn1cc[n+](C)c1&quot;</span><span class="p">,</span> <span class="c1"># remove salt</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mols_orig</span><span class="p">,</span> <span class="n">mols_expected</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.getTestMols"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.getTestMols">[docs]</a>    <span class="k">def</span> <span class="nf">getTestMols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="s1">&#39;CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C3=CC=CC=C3)C(=O)OC&#39;</span><span class="p">,</span> <span class="s1">&#39;N[C@@H]1C[C@@H]1C(=O)NCCN1CCNCC1&#39;</span><span class="p">,</span> <span class="p">]</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="n">StandardizedSupplier</span><span class="p">(</span>
+            <span class="n">mols</span><span class="p">,</span>
+            <span class="n">standardizer</span><span class="o">=</span><span class="n">DefaultStandardizer</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">toList</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">smiles</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_standardization"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_standardization">[docs]</a>    <span class="k">def</span> <span class="nf">test_standardization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">originals</span><span class="p">,</span> <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStandardizationMols</span><span class="p">()</span>
+        <span class="n">standardizer</span> <span class="o">=</span> <span class="n">Standardization</span><span class="p">(</span><span class="n">n_proc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="n">standardized</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">sup</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sup</span><span class="p">)</span> <span class="o">==</span> <span class="n">StandardizedSupplier</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">standardized</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">mol</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">)</span>
+
+        <span class="n">standardizer</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">originals</span><span class="p">,</span> <span class="n">collect</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_smiles_encoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_encoder">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">()</span>
+        <span class="n">mols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;NC1CC1C(=O)NCCN1CCNCC1CCBr&#39;</span><span class="p">)</span> <span class="c1"># add smiles with new element</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
+            <span class="n">SequenceCorpus</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;vocabulary&quot;</span> <span class="p">:</span> <span class="n">VocSmiles</span><span class="p">()</span>
+            <span class="p">},</span>
+            <span class="n">n_proc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="c1"># with collector</span>
+        <span class="n">collector</span> <span class="o">=</span> <span class="n">SmilesDataSet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">())</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="o">=</span><span class="n">collector</span><span class="p">)</span>
+        <span class="n">voc</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="s1">&#39;R&#39;</span> <span class="ow">in</span> <span class="n">voc</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_smiles_frag_encoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_frag_encoder">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_frag_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">()</span>
+        <span class="n">mols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;NC1CC1C(=O)NCCN1CCNCC1CCBr&#39;</span><span class="p">)</span> <span class="c1"># add smiles with new element</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+            <span class="n">fragmenter</span><span class="o">=</span><span class="n">Fragmenter</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">),</span>
+            <span class="n">encoder</span><span class="o">=</span><span class="n">SequenceFragmentEncoder</span><span class="p">(</span>
+                <span class="n">VocSmiles</span><span class="p">()</span>
+            <span class="p">),</span>
+            <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">FragmentPairsSplitter</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">),</span>
+            <span class="n">n_proc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="c1"># with collectors</span>
+        <span class="n">collectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">())]</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="n">collectors</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">collector</span> <span class="ow">in</span> <span class="n">collectors</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">Input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;EOS&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">df</span><span class="o">.</span><span class="n">Output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;EOS&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_frag_suppliers"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_frag_suppliers">[docs]</a>    <span class="k">def</span> <span class="nf">test_frag_suppliers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="n">FragmentPairsSupplier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">(),</span> <span class="n">Fragmenter</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">toList</span><span class="p">()</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="n">FragmentPairsEncodedSupplier</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">GraphFragmentEncoder</span><span class="p">(</span><span class="n">VocGraph</span><span class="p">(</span><span class="n">n_frags</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">encoded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="n">count</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">count</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_graph_frag_encoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_graph_frag_encoder">[docs]</a>    <span class="k">def</span> <span class="nf">test_graph_frag_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">()</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+                <span class="n">fragmenter</span><span class="o">=</span><span class="n">Fragmenter</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">),</span>
+                <span class="n">encoder</span><span class="o">=</span><span class="n">GraphFragmentEncoder</span><span class="p">(</span>
+                    <span class="n">VocGraph</span><span class="p">(</span><span class="n">n_frags</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">FragmentPairsSplitter</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">),</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="c1"># with collectors</span>
+        <span class="n">collectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">GraphFragDataSet</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">())]</span>
+        <span class="n">fragment_collector</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="o">.</span><span class="n">FragmentPairsCollector</span><span class="p">()</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">fragmentPairsCollector</span><span class="o">=</span><span class="n">fragment_collector</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="n">collectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fragment_collector</span><span class="o">.</span><span class="n">getList</span><span class="p">())</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">collectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getData</span><span class="p">())</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">collectors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">getData</span><span class="p">())))</span>
+        <span class="k">for</span> <span class="n">collector</span> <span class="ow">in</span> <span class="n">collectors</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.molecules.converters.fragmenters &mdash; DrugEx 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.molecules.converters.fragmenters</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.molecules.converters.fragmenters</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">fragmenters</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 06.05.22, 12:19</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">Recap</span><span class="p">,</span> <span class="n">BRICS</span>
+
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.interfaces</span> <span class="kn">import</span> <span class="n">ConversionException</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.standardizers</span> <span class="kn">import</span> <span class="n">CleanSMILES</span>
+
+
+<div class="viewcode-block" id="Fragmenter"><a class="viewcode-back" href="../../../../api/drugex.molecules.converters.html#drugex.molecules.converters.fragmenters.Fragmenter">[docs]</a><span class="k">class</span> <span class="nc">Fragmenter</span><span class="p">(</span><span class="n">CleanSMILES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reference implementation of the original fragmenter used in DrugEx v3.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_frags</span><span class="p">,</span> <span class="n">n_combs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;recap&#39;</span><span class="p">,</span> <span class="n">deep_clean</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="mi">75</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_frags: number of fragments to generate per compound</span>
+<span class="sd">            n_combs: maximum number of combinations of the found leaf fragments</span>
+<span class="sd">            method: fragmentation method to use. Possible values: (&#39;recap&#39;, &#39;brics&#39;)</span>
+<span class="sd">            deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)</span>
+<span class="sd">            max_bonds: only accept molecules with the number of bonds above or equal to this threshold</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deep_clean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nFrags</span> <span class="o">=</span> <span class="n">n_frags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nCombs</span> <span class="o">=</span> <span class="n">n_combs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span> <span class="o">=</span> <span class="n">max_bonds</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;recap&#39;</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ConversionException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown fragmentation method: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fragmenter.getFragments"><a class="viewcode-back" href="../../../../api/drugex.molecules.converters.html#drugex.molecules.converters.fragmenters.Fragmenter.getFragments">[docs]</a>    <span class="k">def</span> <span class="nf">getFragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get fragments form an RDKit molecule</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mol: instance of `rdkit.Chem.Mol`</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `numpy.array` of generated fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># break molecule into leaf fragments</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;recap&#39;</span><span class="p">:</span>
+            <span class="n">frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">Recap</span><span class="o">.</span><span class="n">RecapDecompose</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">GetLeaves</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frags</span> <span class="o">=</span> <span class="n">BRICS</span><span class="o">.</span><span class="n">BRICSDecompose</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+            <span class="n">frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sorted</span><span class="p">({</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[\d+\*\]&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">}))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only one retrieved fragment for molecule: </span><span class="si">{</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="si">}</span><span class="s2">. Skipping...&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">frags</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate fragment-molecule pairs for a given SMILES string.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            smiles: SMILES of the molecule to fragment</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a list of `tuple`s of format  (fragment, smiles), smiles is the same as the input in &quot;smiles&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ret_frags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span> <span class="ow">and</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumBonds</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule skipped due to threshold on maximum bond count (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">smiles</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">frags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFragments</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># replace connection tokens with [H]</span>
+        <span class="n">du</span><span class="p">,</span> <span class="n">hy</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">),</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s1">&#39;[H]&#39;</span><span class="p">)</span>
+        <span class="n">subs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">])</span>
+        <span class="n">subs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">RemoveHs</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">ReplaceSubstructs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">hy</span><span class="p">,</span> <span class="n">replaceAll</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">])</span>
+        <span class="n">subs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">subs</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># remove fragments that contain other fragments (or are contained in other fragments?)</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">m</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">])</span>
+        <span class="n">frags</span> <span class="o">=</span> <span class="n">subs</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># sort the fragments and only keep n_frag largest ones</span>
+        <span class="n">frags</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">frags</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="o">-</span><span class="n">x</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">())[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nFrags</span><span class="p">]</span>
+        <span class="n">frags</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">RemoveHs</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">]</span>
+
+        <span class="n">max_comb</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nCombs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">frags</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_comb</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># combine leaf fragments into larger fragments</span>
+            <span class="n">combs</span> <span class="o">=</span> <span class="n">combinations</span><span class="p">(</span><span class="n">frags</span><span class="p">,</span> <span class="n">ix</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combs</span><span class="p">:</span>
+                <span class="n">comb_frags</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
+                <span class="c1">#remove pair of fragment combinations if longer than original SMILES</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb_frags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">):</span> <span class="k">continue</span>
+                <span class="c1"># check if substructure is in original molecule</span>
+                <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="n">comb_frags</span><span class="p">)):</span>
+                    <span class="n">ret_frags</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">comb_frags</span><span class="p">,</span> <span class="n">smiles</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">ret_frags</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
