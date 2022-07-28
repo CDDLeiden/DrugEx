@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    drugex.molecules.converters
-   drugex.molecules.files
 
 Submodules
 ----------

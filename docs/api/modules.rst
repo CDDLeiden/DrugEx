@@ -1,5 +1,7 @@
-DrugEx API
-==========
+..  _api-docs:
+
+DrugEx Python API
+=================
 
 .. toctree::
    :maxdepth: 4

@@ -53,14 +53,6 @@ drugex.training.tests module
    :undoc-members:
    :show-inheritance:
 
-drugex.training.trainers module
--------------------------------
-
-.. automodule:: drugex.training.trainers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

@@ -52,6 +52,14 @@ drugex.data.tests module
    :undoc-members:
    :show-inheritance:
 
+drugex.data.utils module
+------------------------
+
+.. automodule:: drugex.data.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
