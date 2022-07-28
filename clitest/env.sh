@@ -4,9 +4,9 @@ export PYTHONPATH=".."
 
 # input data and base directory
 export TEST_BASE="."
-export TEST_DATA_PRETRAINING='ZINC_raw_small.txt'
-export TEST_DATA_FINETUNING='A2AR_raw_small.txt'
-export TEST_DATA_ENVIRONMENT='A2AR_raw_small_env.txt'
+export TEST_DATA_PRETRAINING='ZINC_raw_small.tsv'
+export TEST_DATA_FINETUNING='A2AR_raw_small.tsv'
+export TEST_DATA_ENVIRONMENT='A2AR_raw_small_env.tsv'
 
 # prefixes for output files
 export VOC_PREFIX='vocabulary'
@@ -15,9 +15,10 @@ export FINETUNING_PREFIX='ft'
 
 function cleanup() {
   rm -rf ${TEST_BASE}/data/backup_*;
-  rm -rf ${TEST_BASE}/data/*.tsv;
+  rm -rf ${TEST_BASE}/data/${FINETUNING_PREFIX}_*.tsv;
   rm -rf ${TEST_BASE}/data/${FINETUNING_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/${FINETUNING_PREFIX}_*.vocab;
+  rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.tsv;
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.vocab;
   rm -rf ${TEST_BASE}/data/${VOC_PREFIX}_*.txt;

@@ -94,7 +94,7 @@ class QSARDataset:
         """
 
         #read in the dataset
-        df = pd.read_table('%s/data/%s.tsv' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
+        df = pd.read_table('%s/data/%s' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
         df = df[df['accession'] == self.target]
         df = df[['accession', 'SMILES', 'pchembl_value_Mean', 'Quality', 'Year']].set_index(['SMILES'])
 
@@ -680,7 +680,7 @@ def EnvironmentArgParser(txt=None):
         args = parser.parse_args()
     
     if args.targets is None:
-        df = pd.read_table('%s/data/%s.tsv' % (args.base_dir, args.input)).dropna(subset=['SMILES'])
+        df = pd.read_table('%s/data/%s' % (args.base_dir, args.input)).dropna(subset=['SMILES'])
         args.targets = df.accession.unique().tolist()
 
     # If no regression argument, does both regression and classification
