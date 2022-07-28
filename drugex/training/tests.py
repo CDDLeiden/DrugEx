@@ -21,6 +21,7 @@ from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.models import GPT2Model, EncDec, Seq2Seq, RNN, GraphModel
 from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
+from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.predictors import Predictor
@@ -29,7 +30,7 @@ from drugex.training.scorers.properties import Property
 
 class TestModelMonitor(TrainingMonitor):
 
-    def __init__(self):
+    def __init__(self, submonitors=None):
         self.model = None
         self.execution = {
             'model' : False,
@@ -38,10 +39,18 @@ class TestModelMonitor(TrainingMonitor):
             'end' : False,
             'close' : False,
         }
+        self.submonitors = [
+            FileMonitor(tempfile.NamedTemporaryFile().name, verbose=True)
+        ] if not submonitors else submonitors
+
+    def passToSubmonitors(self, method, *args, **kwargs):
+        for monitor in self.submonitors:
+            method = getattr(monitor, method)(*args, **kwargs)
 
     def saveModel(self, model):
         self.model = model.getModel()
         self.execution['model'] = True
+        self.passToSubmonitors('saveModel', model)
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
@@ -49,6 +58,7 @@ class TestModelMonitor(TrainingMonitor):
         print(args)
         print(kwargs)
         self.execution['progress'] = True
+        self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
     def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
         print("Test Performance Monitor:")
@@ -56,14 +66,17 @@ class TestModelMonitor(TrainingMonitor):
         print(args)
         print(kwargs)
         self.execution['performance'] = True
+        self.passToSubmonitors('savePerformanceInfo', current_step, current_epoch, loss, *args, **kwargs)
 
     def endStep(self, step, epoch):
         print(f"Finished step {step} of epoch {epoch}.")
         self.execution['end'] = True
+        self.passToSubmonitors('endStep', step, epoch)
 
     def close(self):
         print("Training done.")
         self.execution['close'] = True
+        self.passToSubmonitors('close')
 
     def getModel(self):
         return self.model
@@ -83,10 +96,10 @@ class TrainingTestCase(TestCase):
     N_PROC = 2
     N_EPOCHS = 2
     SEED = 42
-    MAX_SMILES = 32
-    BATCH_SIZE = 16
+    MAX_SMILES = 16
+    BATCH_SIZE = 8
 
-    # environment objectives
+    # environment objectives (TODO: we should test more options and combinations here)
     activity_threshold = 6.5
     pad = 3.5
     scorers = [
@@ -102,6 +115,9 @@ class TrainingTestCase(TestCase):
 
     ]
     thresholds = [0.5, 0.99]
+
+    def setUp(self):
+        self.monitor = TestModelMonitor()
 
     def getTestEnvironment(self, scheme=None):
         """

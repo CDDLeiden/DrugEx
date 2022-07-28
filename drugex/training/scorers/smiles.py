@@ -18,6 +18,8 @@ class SmilesChecker:
             # 1. Check if SMILES can be parsed by rdkit
             try:
                 mol = Chem.MolFromSmiles(smile)
+                if not smile:
+                    mol = None
                 valids[j, 0] = 0 if mol is None else 1
             except:
                 valids[j, 0] = 0

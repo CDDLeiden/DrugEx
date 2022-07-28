@@ -250,15 +250,13 @@ class GraphExplorer(Explorer):
                     train_loader = self.sample_input(train_loader_original)
                     valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
-                total_batches = len(train_loader)
-                for i, src in enumerate(train_loader):
+                for i, src in enumerate(tqdm(train_loader, desc='Batch')):
                     # trgs.append(src.detach().cpu())
-                    logger.info(f"Forward pass: Batch {i}/{total_batches}.")
                     with torch.no_grad():
                         trg = net(src.to(self.device))
                         trgs.append(trg.detach().cpu())
                 trgs = torch.cat(trgs, dim=0)
-                loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=True)
+                loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=False)
                 self.policy_gradient(loader, monitor=monitor)
                 trgs = []
 
@@ -286,7 +284,7 @@ class GraphExplorer(Explorer):
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
-                    smiles_scores.append((smile, score, frags[i]))
+                    smiles_scores.append((smile, *scores.values[i], frags[i]))
 
                 monitor.savePerformanceInfo(None, epoch, valid_ratio=valid, desire_ratio=desire, unique_ratio=unique, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
@@ -401,10 +399,11 @@ class SmilesExplorer(Explorer):
         for it in range(n_iters):
             last_save = -1
             for epoch in tqdm(range(epochs), desc='Epoch'):
+                epoch += 1
                 t0 = time.time()
 
                 if self.nSamples > 0:
-                    if epoch == 0 :
+                    if epoch == 1:
                         train_loader_original = train_loader
                         valid_loader_original = valid_loader
                     train_loader = self.sample_input(train_loader_original)
@@ -422,7 +421,7 @@ class SmilesExplorer(Explorer):
                 srcs = torch.cat(srcs, dim=0)
 
                 dataset = TensorDataset(srcs, trgs)
-                loader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True, drop_last=True)
+                loader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True, drop_last=False)
                 self.policy_gradient(loader, monitor=monitor)
                 srcs, trgs = [], []
 
@@ -439,7 +438,7 @@ class SmilesExplorer(Explorer):
                 for i, smile in enumerate(smiles):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
-                    smiles_scores.append((smile, score, frags[i]))
+                    smiles_scores.append((smile, *scores.values[i], frags[i]))
 
                 if best_score < desire:
                     monitor.saveModel(self.agent)
@@ -583,7 +582,8 @@ class SmilesExplorerNoFrag(PGLearner):
         last_save = -1
         ## add self.epoch
         for epoch in range(epochs):
-            if epoch % 50 == 0: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
+            epoch += 1
+            if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             if epoch < interval and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
                 self.policy_gradient(smiles, seqs, memory=self.memory, progress=monitor)
@@ -602,7 +602,8 @@ class SmilesExplorerNoFrag(PGLearner):
  
             logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
                   (epoch, score, valid, desire))
-            monitor.savePerformanceInfo(None, epoch, None, score=score, valid=valid, desire=desire, smiles_scores=[smiles, scores])
+            scores['Smiles'] = smiles
+            monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid, desire=desire, smiles_scores=scores.values, smiles_scores_key=scores.columns)
             if best < score:
                 monitor.saveModel(self)
                 self.bestState = deepcopy(self.state_dict())

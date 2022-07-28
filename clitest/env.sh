@@ -15,6 +15,7 @@ export FINETUNING_PREFIX='ft'
 
 function cleanup() {
   rm -rf ${TEST_BASE}/data/backup_*;
+  rm -rf ${TEST_BASE}/data/*.tsv;
   rm -rf ${TEST_BASE}/data/${FINETUNING_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/${FINETUNING_PREFIX}_*.vocab;
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.txt;

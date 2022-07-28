@@ -167,6 +167,7 @@ class RNN(Generator):
         # threshold for number of epochs without change that will trigger early stopping
         max_interval = 50
         for epoch in range(epochs):
+            epoch += 1
             total_steps = len(loader_train)
             for i, batch in enumerate(loader_train):
                 optimizer.zero_grad()
@@ -181,7 +182,7 @@ class RNN(Generator):
             seqs = seqs[ix]
             smiles = [self.voc.decode(s, is_tk = False) for s in seqs]
             valids = SmilesChecker.checkSmiles(smiles, frags=None)
-            error = 1 - sum(valids) / len(seqs)
+            error = (1 - sum(valids) / len(seqs))[0]
             info = "Epoch: %d error_rate: %.3f loss_train: %.3f" % (epoch, error, loss_train.item())
             loss_valid = None
             if loader_valid is not None:
@@ -202,9 +203,9 @@ class RNN(Generator):
             logger.info(info)
             smiles_scores = []
             for i, smile in enumerate(smiles):
-                smiles_scores.append((smile, valids[0]))
-                logger.debug('%d\t%s' % (valids[i], smile))
-            monitor.savePerformanceInfo(None, epoch, loss_train.item(), loss_valid=loss_valid, smiles_scores=smiles_scores, error=error)
+                smiles_scores.append((smile, valids[i][0]))
+                logger.debug('%d\t%s' % (valids[i][0], smile))
+            monitor.savePerformanceInfo(None, epoch, loss_train.item(), loss_valid=loss_valid, smiles_scores=smiles_scores, smiles_scores_key=['Smiles', 'VALID'], error=error, valid_ratio=1 - error)
             logger.info(info)
             monitor.endStep(None, epoch)
             if epoch - last_save > max_interval: break
