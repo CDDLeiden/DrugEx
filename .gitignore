@@ -6,6 +6,7 @@
 /base_test/
 /tutorial/jupyter
 /tutorial/data
+/tutorial/CLI
 /docs/_build
 *.pkg
 *.tgz
