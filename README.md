@@ -19,7 +19,7 @@ DrugEx is now installable by pip and you can easily install the latest release o
 pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 ```
 
-After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version is available [here](https://martin-sicho.github.io/DrugEx-CDDLeiden/docs/). But you can also check out the [Jupyter notebook tutorial](./tutorial) in this repository, which documents the use of the Python API to build different types of models. The tutorial as well as the documentation are still work in progress so feel free to contribute to it if you find spots where it is lacking. You will find more information about the history of the project and the models you can build below.
+After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version is available [here](https://cddleiden.github.io/DrugEx/docs/). But you can also check out the [Jupyter notebook tutorial](./tutorial) in this repository, which documents the use of the Python API to build different types of models. The tutorial as well as the documentation are still work in progress so feel free to contribute to it if you find spots where it is lacking. You will find more information about the history of the project and the models you can build below.
 
 Introduction
 =============
