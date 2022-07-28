@@ -1,14 +1,25 @@
-DrugEx 
+DrugEx
 ====================
-This repository contains developements by Gerard van Westen's Computational Drug Discovery group to **Drug Explorer (DrugEx)**, a _de novo_ drug design code, originally developped by [Xuhan Liu](https://github.com/XuhanLiu/DrugEx/tree/master) & Gerard J.P. van Westen. [2,3,4]
+This repository contains developements by Gerard van Westen's Computational Drug Discovery group to **Drug Explorer (DrugEx)**, a _de novo_ drug design model, originally developped by [Xuhan Liu](https://github.com/XuhanLiu/DrugEx/) & Gerard J.P. van Westen. [2,3,4]
 
 Please see the LICENSE file for the license terms for the software. Basically it's free to academic users. If you do wish to sell the software or use it in a commercial product, then please contact us:
 
    [Xuhan Liu](mailto:xuhanliu@hotmail.com) (First Author): xuhanliu@hotmail.com 
 
    [Gerard J.P. van Westen](mailto:gerard@lacdr.leidenuniv.nl) (Correspondent Author): gerard@lacdr.leidenuniv.nl 
+   
+Quick Start
+===========
 
-"A small step for exploring the drug space in need, A giant leap for exploiting a healthy state indeed"
+> A small step for exploring the drug space in need, a giant leap for exploiting a healthy state indeed.
+
+DrugEx is now installable by pip and you can easily install the latest release of the package like so:
+
+```bash
+pip install git+https://github.com/CDDLeiden/DrugEx.git@master
+```
+
+After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version is available [here](https://martin-sicho.github.io/DrugEx-CDDLeiden/docs/). But you can also check out the [Jupyter notebook tutorial](./tutorial) in this repository, which documents the use of the Python API to build different types of models. The tutorial as well as the documentation are still work in progress so feel free to contribute to it if you find spots where it is lacking. You will find more information about the history of the project and the models you can build below.
 
 Introduction
 =============
