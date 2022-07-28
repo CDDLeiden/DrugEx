@@ -10,4 +10,4 @@ This tutorial is a collection of Jupyter notebooks that show how various DrugEx 
 
 You can download example data sets from [this link](https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view?usp=sharing). Just unpack the file in this folder and you should be good to go.
 
-The type of model you are trying to build determines what parts of the API you will need in your workflow. Therefore, make sure you have an overview of the available models and understand their specifics (details can be found in the [main readme file](../README.md) or the project [documentation](https://martin-sicho.github.io/drugex-docs/)).
+The type of model you are trying to build determines what parts of the API you will need in your workflow. Therefore, make sure you have an overview of the available models and understand their specifics (details can be found in the [main readme file](../README.md) or the project [documentation](https://cddleiden.github.io/DrugEx/docs/)).
