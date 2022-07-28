@@ -356,7 +356,14 @@ class TrainingTestCase(TestCase):
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
+        # RL
         # FIXME: RL for these models currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
 
     def test_smiles_frags_attn(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
@@ -372,7 +379,14 @@ class TrainingTestCase(TestCase):
         self.assertTrue(finetuned)
         self.assertTrue(monitor.getModel())
 
+        # RL
         # FIXME: RL for these models currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
 
     def test_smiles_frags_gpt(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
