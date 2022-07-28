@@ -11,6 +11,7 @@
 *.pkg
 *.tgz
 *.gzip
+*.tar.gz
 
 ### Python template
 # Byte-compiled / optimized / DLL files
