@@ -63,7 +63,7 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-sv', '--save_voc', action='store_true',
                         help="If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is 'smiles'.")   
     parser.add_argument('-vf', '--voc_file', type=str, default=None,
-                        help="Name of voc file molecules should adhere to, if molecule contains tokens not in voc it is discarded (only works is --mol_type is 'smiles')")
+                        help="Name of voc file molecules should adhere to (i.e. prior_smiles_voc), if molecule contains tokens not in voc it is discarded (only works is --mol_type is 'smiles')")
     parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
                         help="If on, intermediate files")
     parser.add_argument('-nfs', '--no_fragment_split', action='store_true',
@@ -120,8 +120,7 @@ def Dataset(args):
 
     # load get voc path if voc file given (used to filter out molecules with tokens not occuring in voc)
     if args.voc_file:
-        data_path = args.base_dir + '/data/'
-        voc_paths = getVocPaths(data_path, [args.voc_file], 'smiles')
+        voc_path = args.base_dir + '/data/' + args.voc_file
 
     print("Standardizing molecules...")
     standardizer = Standardization(n_proc=args.n_proc)
@@ -135,7 +134,7 @@ def Dataset(args):
             encoder = CorpusEncoder(
                 SequenceCorpus,
                 {
-                    'vocabulary': VocSmiles.fromFile(voc_paths[0]),
+                    'vocabulary': VocSmiles.fromFile(voc_path),
                     'update_voc': False,
                     'throw': True
 
@@ -183,7 +182,7 @@ def Dataset(args):
                 encoder = CorpusEncoder(
                     ScaffoldSequenceCorpus,
                     {
-                        'vocabulary': VocSmiles.fromFile(voc_paths[0], min_len=3),
+                        'vocabulary': VocSmiles.fromFile(voc_path, min_len=3),
                         'largest': max(smiles, key=len),
                         'update_voc': False,
                         'throw': True
@@ -242,7 +241,7 @@ def Dataset(args):
                 encoder = FragmentCorpusEncoder(
                     fragmenter=fragmenter,
                     encoder=SequenceFragmentEncoder(
-                        VocSmiles.fromFile(voc_paths[0]), 
+                        VocSmiles.fromFile(voc_path), 
                         update_voc = False, 
                         throw= True),
                     pairs_splitter=splitter,
