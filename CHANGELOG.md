@@ -14,4 +14,4 @@ None
 
 ## New Features
 
-None
+-option to remove molecules with tokens not occuring in voc (in dataset.py)
