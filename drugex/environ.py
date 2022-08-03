@@ -195,30 +195,26 @@ class QSARModel:
         grid_search: optimization of hyperparameters using grid_search
 
     """
-    def __init__(self, data, alg, parameters, search_space_bs, search_space_gs, save_m=True):
-        self.data = data
-        self.alg = alg
-        self.parameters = parameters
-        self.search_space_bs = search_space_bs
-        self.search_space_gs = search_space_gs
-        self.save_m = save_m
-        self.model = None
-
-        d = '%s/envs' % data.base_dir
-        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
-        log.info('Model intialized: %s' % self.out)
-
-    def init_model(self, n_jobs=-1):
+    def __init__(self, data, alg, parameters=None, n_jobs=-1):
         """
             initialize model from saved or default hyperparameters
         """
+        self.data = data
+        self.alg = alg
+        self.parameters = parameters
+
+        d = '%s/envs' % data.base_dir
+        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
+        
         if os.path.isfile('%s_params.json' % self.out):
             
             with open('%s_params.json' % self.out) as j:
-                self.parameters = json.loads(j.read())
+                parameters = json.loads(j.read())
             log.info('loaded model parameters from file: %s_params.json' % self.out)
-        self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
+
+        self.model = self.alg.set_params(n_jobs=n_jobs, **parameters)
         log.info('parameters: %s' % self.parameters)
+        log.debug('Model intialized: %s' % self.out)
 
     def fit_model(self):
         """
@@ -241,91 +237,6 @@ class QSARModel:
         log.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
-    def objective(self, trial):
-        """
-            objective for bayesian optimization
-        """
-
-        if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
-            bayesian_params = {'verbosity': 0}
-        else:
-            bayesian_params = {}
-
-        for key, value in self.search_space_bs.items():
-            if value[0] == 'categorical':
-                bayesian_params[key] = trial.suggest_categorical(key, value[1])
-            elif value[0] == 'discrete_uniform':
-                bayesian_params[key] = trial.suggest_discrete_uniform(key, value[1], value[2], value[3])
-            elif value[0] == 'float':
-                bayesian_params[key] = trial.suggest_float(key, value[1], value[2])
-            elif value[0] == 'int':
-                bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
-            elif value[0] == 'loguniform':
-                bayesian_params[key] = trial.suggest_loguniform(key, value[1], value[2])
-            elif value[0] == 'uniform':
-                bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
-
-        self.model = self.alg.set_params(**bayesian_params)
-
-        if self.data.reg: 
-            score = metrics.explained_variance_score(self.data.y, self.model_evaluation(save = False))
-        else:
-            score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
-
-        return score
-
-    def bayes_optimization(self, n_trials):
-        """
-            bayesian optimization of hyperparameters using optuna
-        """
-        print('Bayesian optimization can take a while for some hyperparameter combinations')
-        #TODO add timeout function
-        study = optuna.create_study(direction='maximize')
-        log.info('Bayesian optimization started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        study.optimize(lambda trial: self.objective(trial), n_trials)
-        log.info('Bayesian optimization ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-        trial = study.best_trial
-
-        self.model = self.alg.set_params(**trial.params)
-        
-        if self.save_m:
-            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
-
-        self.data.create_folds()
-
-        log.info('Bayesian optimization best params: %s' % trial.params)
-        with open('%s_params.json' % self.out, 'w') as f:
-            json.dump(trial.params, f)
-
-    def grid_search(self):
-        """
-            optimization of hyperparameters using grid_search
-        """          
-        scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
-        grid = GridSearchCV(self.alg, self.search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds, scoring=scoring, refit=self.save_m)
-        
-        
-        #TODO maybe move the model fitting and saving to environment?
-        fit_set = {'X':self.data.X}
-        fit_set['y'] = self.data.y
-        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
-            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
-        log.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        grid.fit(**fit_set)
-        log.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        
-        self.model = grid.best_estimator_
-        
-        if self.save_m:
-            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
-
-        self.data.create_folds()
-
-        log.info('Grid search best parameters: %s' % grid.best_params_)
-        with open('%s_params.json' % self.out, 'w') as f:
-            json.dump(grid.best_params_, f)
-            
     def model_evaluation(self, save=True):
         """
             Make predictions for crossvalidation and independent test set
@@ -367,6 +278,93 @@ class QSARModel:
         self.data.create_folds()
 
         return cvs
+
+    def grid_search(self, search_space_gs):
+        """
+            optimization of hyperparameters using grid_search
+        """          
+        scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
+        grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds, scoring=scoring, refit=self.save_m)
+        
+        
+        #TODO maybe move the model fitting and saving to environment?
+        fit_set = {'X':self.data.X}
+        fit_set['y'] = self.data.y
+        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
+        log.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        grid.fit(**fit_set)
+        log.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        
+        self.model = grid.best_estimator_
+        
+        if self.save_m:
+            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+        self.data.create_folds()
+
+        log.info('Grid search best parameters: %s' % grid.best_params_)
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(grid.best_params_, f)
+
+    def bayes_optimization(self, search_space_bs, n_trials):
+        """
+            bayesian optimization of hyperparameters using optuna
+        """
+        print('Bayesian optimization can take a while for some hyperparameter combinations')
+        #TODO add timeout function
+        study = optuna.create_study(direction='maximize')
+        log.info('Bayesian optimization started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        study.optimize(lambda trial: self.objective(trial, search_space_bs), n_trials)
+        log.info('Bayesian optimization ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        trial = study.best_trial
+
+        self.model = self.alg.set_params(**trial.params)
+        
+        if self.save_m:
+            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+        self.data.create_folds()
+
+        log.info('Bayesian optimization best params: %s' % trial.params)
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(trial.params, f)
+
+    def objective(self, trial, search_space_bs):
+        """
+            objective for bayesian optimization
+        """
+
+        if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
+            bayesian_params = {'verbosity': 0}
+        else:
+            bayesian_params = {}
+
+        for key, value in search_space_bs.items():
+            if value[0] == 'categorical':
+                bayesian_params[key] = trial.suggest_categorical(key, value[1])
+            elif value[0] == 'discrete_uniform':
+                bayesian_params[key] = trial.suggest_discrete_uniform(key, value[1], value[2], value[3])
+            elif value[0] == 'float':
+                bayesian_params[key] = trial.suggest_float(key, value[1], value[2])
+            elif value[0] == 'int':
+                bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
+            elif value[0] == 'loguniform':
+                bayesian_params[key] = trial.suggest_loguniform(key, value[1], value[2])
+            elif value[0] == 'uniform':
+                bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
+
+        self.model = self.alg.set_params(**bayesian_params)
+
+        if self.data.reg: 
+            score = metrics.explained_variance_score(self.data.y, self.model_evaluation(save = False))
+        else:
+            score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
+
+        return score
+    
+    def default_search_space 
 
 class RF(QSARModel):
     """ Random forest regressor and classifier initialization. Here the model instance is created 
@@ -732,16 +730,24 @@ def Environ(args):
                 if model_type == 'PLS' and not reg:
                     log.warning("PLS with classification invalid, skipped.")
                     continue
+                
+                alg_dict = {
+                    'RF' : RandomForestRegressor() if reg else RandomForestClassifier(),
+                    'XGB': XGBRegressor() if reg else XGBClassifier(),
+                    'SVM': SVR() if reg else SVC(probability=True),
+                    'PLS': PLSRegression(),
+                    'NB': GaussianNB(),
+                    'KNN': KNeighborsRegressor() if reg else KNeighborsClassifier()
+                }
 
                 #Create QSAR model object
-                mymodel_class = getattr(sys.modules[__name__], model_type)
-                mymodel = mymodel_class(mydataset)
+                qsarmodel = QSARModel(data=mydataset, alg=alg_dict[model_type], n_jobs=5)
 
                 #if desired run parameter optimization
                 if args.optimization == 'grid':
-                    mymodel.grid_search()
+                    qsarmodel.grid_search()
                 elif args.optimization == 'bayes':
-                    mymodel.bayes_optimization(n_trials=20)
+                    qsarmodel.bayes_optimization(n_trials=20)
                 
                 #initialize models from saved or default parameters
                 mymodel.init_model(n_jobs=args.ncpu)
