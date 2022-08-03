@@ -63,7 +63,7 @@ class DataSet(ResultCollector, ABC):
             if rewrite:
                 self.reset()
         except FileNotFoundError:
-            logger.warning(f"The data set file does not exist: {self.outpath}. This data set is empty. You can add data by calling it.")
+            logger.warning(f"Initialized empty dataset. The data set file does not exist (yet): {self.outpath}. You can add data by calling it.")
 
     def reset(self):
         logger.info(f"Initializing new {self.__class__.__name__} at {self.outpath}...")
