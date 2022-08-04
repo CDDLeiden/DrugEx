@@ -574,7 +574,7 @@ class SmilesExplorerNoFrag(PGLearner):
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
         monitor.saveModel(self)
-        self.bestState = deepcopy(self.state_dict())
+        self.bestState = deepcopy(self.agent.state_dict())
         best = 0
         last_smiles = []
         last_scores = []
@@ -606,7 +606,7 @@ class SmilesExplorerNoFrag(PGLearner):
             monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid, desire=desire, smiles_scores=scores.values, smiles_scores_key=scores.columns)
             if best < score:
                 monitor.saveModel(self)
-                self.bestState = deepcopy(self.state_dict())
+                self.bestState = deepcopy(self.agent.state_dict())
                 best = score
                 last_smiles = smiles
                 last_scores = scores
@@ -614,7 +614,7 @@ class SmilesExplorerNoFrag(PGLearner):
  
             if epoch % interval == 0 and epoch != 0:
                 for i, smile in enumerate(last_smiles):
-                    score = "\t".join(['%.3f' % s for s in last_scores.values[i]])
+                    score = "\t".join(['%.3f' % s for s in last_scores.drop(columns=['Smiles']).values[i]])
                     logger.info('%s\t%s' % (score, smile))
                 self.agent.load_state_dict(self.bestState)
                 self.crover.load_state_dict(self.bestState)
