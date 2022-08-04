@@ -13,6 +13,7 @@ from sklearn import metrics
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from drugex.environment import models
+from sklearn.naive_bayes import GaussianNB
 
 class QSARModel:
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
@@ -23,10 +24,7 @@ class QSARModel:
         data: instance QSARDataset
         alg:  instance of estimator
         parameters (dict): dictionary of algorithm specific parameters
-        search_space_bs (dict): search space for bayesian optimization
-        search_space_gs (dict): search space for grid search
-        save_m (bool): if true, save final model
-
+        njobs (int): the number of parallel jobs to run
         
         Methods
         -------
@@ -37,7 +35,7 @@ class QSARModel:
         grid_search: optimization of hyperparameters using grid_search
 
     """
-    def __init__(self, data, alg, parameters=None, n_jobs=-1):
+    def __init__(self, data, alg, alg_name, parameters=None, n_jobs=-1):
         """
             initialize model from saved or default hyperparameters
         """
@@ -46,15 +44,24 @@ class QSARModel:
         self.parameters = parameters
 
         d = '%s/envs' % data.base_dir
-        self.out = '%s/%s_%s_%s' % (d, self.__class__.__name__, 'REG' if data.reg else 'CLS', data.target)
+        self.out = '%s/%s_%s_%s' % (d, alg_name, 'REG' if data.reg else 'CLS', data.target)
         
         if os.path.isfile('%s_params.json' % self.out):
             
             with open('%s_params.json' % self.out) as j:
-                parameters = json.loads(j.read())
+                self.parameters = json.loads(j.read())
             logger.info('loaded model parameters from file: %s_params.json' % self.out)
 
-        self.model = self.alg.set_params(n_jobs=n_jobs, **parameters)
+        if self.parameters:
+            if type(self.alg) == GaussianNB:
+                self.model = self.alg.set_params(**self.parameters)
+            else:
+                self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
+        else:
+            if type(self.alg) == GaussianNB:
+                self.model = self.alg
+            else:
+                self.model = self.alg.set_params(n_jobs=n_jobs)
         logger.info('parameters: %s' % self.parameters)
         logger.debug('Model intialized: %s' % self.out)
 
@@ -64,6 +71,7 @@ class QSARModel:
         """
         X_all = np.concatenate([self.data.X, self.data.X_ind], axis=0)
         y_all = np.concatenate([self.data.y, self.data.y_ind], axis=0)
+        
         # KNN and PLS do not use sample_weight
         fit_set = {'X':X_all}
         if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
@@ -121,9 +129,12 @@ class QSARModel:
 
         return cvs
 
-    def grid_search(self, search_space_gs, save_m):
+    def grid_search(self, search_space_gs, save_m=True):
         """
             optimization of hyperparameters using grid_search
+            arguments:
+                search_space_gs (dict): search space for the grid search
+                save_m (bool): if true, after gs the model is refit on the entire data set
         """          
         scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
         grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds,
@@ -137,9 +148,8 @@ class QSARModel:
         grid.fit(**fit_set)
         logger.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
-        self.model = grid.best_estimator_
-        
         if save_m:
+            self.model = grid.best_estimator_
             joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
         self.data.create_folds()
@@ -148,9 +158,13 @@ class QSARModel:
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(grid.best_params_, f)
 
-    def bayes_optimization(self, search_space_bs, n_trials):
+    def bayes_optimization(self, search_space_bs, n_trials, save_m):
         """
             bayesian optimization of hyperparameters using optuna
+            arguments:
+                search_space_gs (dict): search space for the grid search
+                n_trials (int): number of trials for bayes optimization
+                save_m (bool): if true, after bayes optimization the model is refit on the entire data set
         """
         print('Bayesian optimization can take a while for some hyperparameter combinations')
         #TODO add timeout function
@@ -161,9 +175,8 @@ class QSARModel:
 
         trial = study.best_trial
 
-        self.model = self.alg.set_params(**trial.params)
-        
-        if self.save_m:
+        if save_m:
+            self.model = self.alg.set_params(**trial.params)
             joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
         self.data.create_folds()
@@ -176,6 +189,7 @@ class QSARModel:
         """
             objective for bayesian optimization
             arguments:
+                trial (int): current trial number
                 search_space_bs (dict): search space for bayes optimization
         """
 
@@ -193,7 +207,7 @@ class QSARModel:
                 bayesian_params[key] = trial.suggest_float(key, value[1], value[2])
             elif value[0] == 'int':
                 bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
-            elif value[0] == 'loggeruniform':
+            elif value[0] == 'loguniform':
                 bayesian_params[key] = trial.suggest_loggeruniform(key, value[1], value[2])
             elif value[0] == 'uniform':
                 bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])

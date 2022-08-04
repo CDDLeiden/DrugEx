@@ -113,8 +113,7 @@ def Environ(args):
     
     if args.optimization == ('grid' or 'bayes'):
         grid_params = QSARModel.load_params_grid(args.search_space, args.optimization, args.model_types)
-        log.info(grid_params)
-    sys.exit("let's stop here")
+
     for reg in args.regression:
         args.learning_rate = 1e-4 if reg else 1e-5 
         for target in args.targets:
@@ -147,22 +146,22 @@ def Environ(args):
                 }
 
                 #Create QSAR model object
-                qsarmodel = QSARModel(data=mydataset, alg=alg_dict[model_type], n_jobs=5)
+                qsarmodel = QSARModel(data=mydataset, alg=alg_dict[model_type], alg_name=model_type, n_jobs=args.ncpu)
 
                 #if desired run parameter optimization
                 if args.optimization == 'grid':
                     search_space_gs = grid_params[grid_params[:,0] == model_type,1]
-                    qsarmodel.grid_search(search_space_gs)
+                    log.info(search_space_gs)
+                    qsarmodel.grid_search(search_space_gs, args.save_model)
                 elif args.optimization == 'bayes':
                     search_space_bs = grid_params[grid_params[:,0] == model_type,1]
                     if reg and model_type == "RF":
                         search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
                     elif model_type == "RF":
                         search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
-                    qsarmodel.bayes_optimization(n_trials=20)
+                    qsarmodel.bayes_optimization(search_space_bs, 20, args.save_model)
                 
                 #initialize models from saved or default parameters
-                qsarmodel.init_model(n_jobs=args.ncpu)
 
                 if args.optimization is None and args.save_model:
                     qsarmodel.fit_model()
