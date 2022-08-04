@@ -1,6 +1,7 @@
 from drugex.logs import logger
 import os
 import os.path
+import sys
 import json
 import numpy as np
 from datetime import datetime
@@ -9,15 +10,9 @@ import pandas as pd
 from sklearn.model_selection import GridSearchCV
 import optuna
 from sklearn import metrics
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC, SVR
-from xgboost import XGBRegressor, XGBClassifier
-from drugex.training import models
+from drugex.environment import models
 
 class QSARModel:
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
@@ -221,215 +216,30 @@ class QSARModel:
             optim_type (str): optimization type ('grid' or 'bayes')
             model_types (list of str): model type for hyperparameter optimization (e.g. RF)
         """
-        try:
-            with open(fname) as json_file:
-                optim_params = np.array(json.load(json_file)) 
-        except FileNotFoundError:
-            logger.warning("Search space file (%s) not found, using default search space." % fname)
-            with open('search_space.json') as json_file:
-                optim_params = np.array(json.load(json_file))
-                optim_params = optim_params[optim_params[:,2]==optim_type][0,1]
+
+        if fname:
+            try:
+                with open(fname) as json_file:
+                    optim_params = np.array(json.load(json_file), dtype=object)
+            except:
+                logger.error("Search space file (%s) not found" % fname)
+                sys.exit()
+        else:
+            with open('drugex/environment/search_space.json') as json_file:
+                optim_params = np.array(json.load(json_file), dtype=object)
+        
+        # select either grid or bayes optimization parameters from param array
+        optim_params = optim_params[optim_params[:,2]==optim_type, :]
+        
         #check all modeltypes to be used have parameter grid
-            if set(list(model_types)).issuperset(list(optim_params[:,0])):
-                logger.error("model types %s missing from models in search space dict (%s)" % (model_types, optim_params[:,0]))
+        if not set(list(model_types)).issubset(list(optim_params[:,0])):
+            logger.error("model types %s missing from models in search space dict (%s)" % (model_types, optim_params[:,0]))
+            sys.exit()
         logger.info("search space loaded from file")
+        
         return optim_params
 
-class RF(QSARModel):
-    """ Random forest regressor and classifier initialization. Here the model instance is created 
-        and parameters and search space can be defined
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): random forest specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        self.alg = RandomForestRegressor() if data.reg else RandomForestClassifier()
-        self.parameters=parameters if parameters != None else {'n_estimators': 1000}
-
-        # set the search space for bayesian optimization
-        self.search_space_bs = {
-            'n_estimators': ['int', 10, 2000],
-            'max_depth': ['int', 1, 100],
-            'min_samples_leaf': ['int', 1, 25],
-            'max_features': ['int', 1, 100], 
-            'min_samples_split': ['int', 2, 12] 
-        }
-        if data.reg:
-            self.search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
-        else:
-            self.search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
-
-        # set the search space for grid search
-        self.search_space_gs = {
-            'max_depth': [None, 20, 50, 100],
-            'max_features': ['auto', 'logger2'],
-            'min_samples_leaf': [1, 3, 5],
-            'min_samples_split': [2, 5, 12],
-            'n_estimators': [100, 200, 300, 1000]
-        }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
-
-class XGB(QSARModel):
-    """ 
-        XG Boost regressor and classifier initialization. Here the model instance is created 
-        and parameters and search space can be defined
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): XGboost specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        self.alg = XGBRegressor(objective='reg:squarederror') if data.reg else XGBClassifier(objective='binary:loggeristic',use_label_encoder=False, eval_metric='loggerloss')
-        self.parameters=parameters if parameters != None else {'nthread': 4, 'n_estimators': 1000}
-        self.search_space_bs = {
-            'n_estimators': ['int', 100, 1000],
-            'max_depth': ['int',3, 10],
-            'learning_rate': ['uniform', 0.01, 0.1] #so called `eta` value
-        }
-        
-        self.search_space_gs = {
-            'nthread':[4], #when use hyperthread, xgboost may become slower
-            'learning_rate': [0.01, 0.05, 0.1], #so called `eta` value
-            'max_depth': [3,6,10],
-            'n_estimators': [100, 500, 1000],
-            'colsample_bytree': [0.3, 0.5, 0.7]
-        }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
-
-class SVM(QSARModel):
-    """ Support vector regressor and classifier initialization. Here the model instance is created 
-        and parameters and search space can be defined
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): SVM specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        self.alg = SVR() if data.reg else SVC(probability=True)
-        self.parameters=parameters if parameters != None else {}
-        #parameter dictionary for bayesian optimization
-        self.search_space_bs = {
-            'C': ['loggeruniform', 2.0 ** -5, 2.0 ** 15],
-            'kernel': ['categorical', ['linear', 'sigmoid', 'rbf']], # TODO: add poly kernel
-            'gamma': ['uniform', 0, 20]
-        }
-
-        #parameter dictionary for grid search (might give error if dataset too small)
-        self.search_space_gs = [{
-            'kernel'      : ['rbf', 'sigmoid'],
-            'C'           : [0.001,0.01,0.1,1,10,100,1000],
-            'gamma'       : [0.001,0.01,0.1,1,10,100,1000]
-            },
-            {
-            'kernel'      : ['linear'],
-            'C'           : [0.001,0.01,0.1,1,10,100,1000]
-            },
-            {
-            'kernel'      : ['poly'],
-            'C'           : [0.001,0.01,0.1,1,10,100,1000],
-            'gamma'       : [0.001,0.01,0.1,1,10,100,1000],
-            'degree'      : [1,2,3,4,5]
-            }]
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
-
-class KNN(QSARModel):
-    """ K-nearest neighbor regressor and classifier initialization. Here the model instance is created 
-        and parameters and search space can be defined
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): KNN specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        self.alg = KNeighborsRegressor() if data.reg else KNeighborsClassifier()
-        self.parameters=parameters if parameters != None else {}
-        #parameter dictionary for bayesian optimization
-        self.search_space_bs = {
-            'n_neighbors': ['int', 1, 100],
-            'weights': ['categorical', ['uniform', 'distance']],
-            'metric': ['categorical', ["euclidean","manhattan",
-                        "chebyshev","minkowski"]]
-        }
-        #parameter dictionary for grid search
-        self.search_space_gs = {
-            'n_neighbors' : list(range(1,31)),
-            'weights'      : ['uniform', 'distance']
-            }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
-
-class NB(QSARModel):
-    """ 
-        Gaussian Naive Bayes model initialization. Here the model instance is created 
-        and parameters and search space can be defined.
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): NB specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        if data.reg:
-            raise ValueError("NB should be constructed only with classification.")
-        self.alg = GaussianNB()
-        self.parameters=parameters if parameters != None else {}
-        #parameter dictionaries for hyperparameter optimization
-        self.search_space_bs = {
-            'var_smoothing': ['loggeruniform', 1e-10, 1]
-            }
-
-        self.search_space_gs = {
-            'var_smoothing': np.loggerspace(0,-9, num=100)
-        }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs, save_m=save_m)
-
-class PLS(QSARModel):
-    """ 
-        PLS Regression model initialization. Here the model instance is created 
-        and parameters and search space can be defined
-        ...
-
-        Attributes
-        ----------
-        data: instance of QSARDataset
-        parameters (dict): PLS specific parameters
-        save_m (bool): if true, save final model
-
-    """
-    def __init__(self, data, save_m=True, parameters=None):
-        if not data.reg:
-            raise ValueError("PLS should be constructed only with regression.")
-        self.alg = PLSRegression()
-        self.parameters=parameters if parameters != None else {}
-        self.search_space_bs = {
-            'n_components': ['int', 1, 100],
-            'scale': ['categorical', [True, False]]
-            }
-        self.search_space_gs = {
-            'n_components': list(range(1, 100, 20))
-        }
-        super().__init__(data, self.alg, self.parameters, self.search_space_bs, self.search_space_gs,  save_m=save_m)
-
-class DNN(QSARModel):
+class QSARDNN(QSARModel):
     """ 
         This class holds the methods for training and fitting a Deep Neural Net QSAR model initialization. 
         Here the model instance is created and parameters  can be defined

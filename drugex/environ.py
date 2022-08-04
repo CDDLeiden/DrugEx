@@ -44,8 +44,8 @@ def EnvironmentArgParser(txt=None):
                         help="Modeltype, defaults to run all modeltypes, choose from: 'RF', 'XGB', 'DNN', 'SVM', 'PLS' (only with REG), 'NB' (only with CLS) 'KNN' or 'MT_DNN'") 
     parser.add_argument('-r', '--regression', type=str, default=None,
                         help="If True, only regression model, if False, only classification, default both")
-    parser.add_argument('-t', '--targets', type=str, nargs='*', default=None, #TODO: maybe change this to all accession in the dataset?
-                        help="Target indentifiers") 
+    parser.add_argument('-t', '--targets', type=str, nargs='*', default=None,
+                        help="Target indentifiers, defaults to all in the dataset") 
     parser.add_argument('-a', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
     parser.add_argument('-l', '--keep_low_quality', action='store_true',
@@ -55,7 +55,9 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-n', '--test_size', type=str, default="0.1",
                         help="Random test split fraction if float is given and absolute size if int is given, used when no temporal split given.")
     parser.add_argument('-o', '--optimization', type=str, default=None,
-                        help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")    
+                        help="Hyperparameter optimization, if None no optimization, if grid gridsearch, if bayes bayesian optimization")
+    parser.add_argument('-ss', '--search_space', type=str, default=None,
+                        help="search_space hyperparameter optimization json file name, if None default drugex.environment.search_space.json used")                  
     parser.add_argument('-c', '--model_evaluation', action='store_true',
                         help='If on, model evaluation through cross validation and independent test set is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
@@ -67,7 +69,7 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs for DNN")
     parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved") 
+                        help="If on, git hash is not retrieved")
     
     if txt:
         args = parser.parse_args(txt)
@@ -100,7 +102,7 @@ def Environ(args):
     """ 
         Optimize, evaluate and train estimators
     """
-    args.devices = eval(args.gpu) if ',' in args.gpu else [eval(args.gpu)]
+    args.devices = list(eval(args.gpu))
     torch.cuda.set_device(DEFAULT_GPUS[0])
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
@@ -110,8 +112,9 @@ def Environ(args):
         os.makedirs(args.base_dir + '/envs') 
     
     if args.optimization == ('grid' or 'bayes'):
-        grid_params = QSARModel.load_params_grid(args.grid_fname, args.optimization, args.model_types)
-
+        grid_params = QSARModel.load_params_grid(args.search_space, args.optimization, args.model_types)
+        log.info(grid_params)
+    sys.exit("let's stop here")
     for reg in args.regression:
         args.learning_rate = 1e-4 if reg else 1e-5 
         for target in args.targets:
@@ -135,7 +138,8 @@ def Environ(args):
                 
                 alg_dict = {
                     'RF' : RandomForestRegressor() if reg else RandomForestClassifier(),
-                    'XGB': XGBRegressor() if reg else XGBClassifier(),
+                    'XGB': XGBRegressor(objective='reg:squarederror') if reg else \
+                        XGBClassifier(objective='binary:loggeristic', use_label_encoder=False, eval_metric='loggerloss'),
                     'SVM': SVR() if reg else SVC(probability=True),
                     'PLS': PLSRegression(),
                     'NB': GaussianNB(),
@@ -147,8 +151,14 @@ def Environ(args):
 
                 #if desired run parameter optimization
                 if args.optimization == 'grid':
-                    qsarmodel.grid_search(grid_params[,])
+                    search_space_gs = grid_params[grid_params[:,0] == model_type,1]
+                    qsarmodel.grid_search(search_space_gs)
                 elif args.optimization == 'bayes':
+                    search_space_bs = grid_params[grid_params[:,0] == model_type,1]
+                    if reg and model_type == "RF":
+                        search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
+                    elif model_type == "RF":
+                        search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
                     qsarmodel.bayes_optimization(n_trials=20)
                 
                 #initialize models from saved or default parameters
@@ -189,9 +199,6 @@ if __name__ == '__main__':
 
     log = logSettings.log
     log.info(backup_msg)
-
-    # # Get logger, include this in every module
-    # log = logging.getLogger(__name__)
 
     #Add optuna logging
     optuna.logging.enable_propagation()  # Propagate logs to the root logger.

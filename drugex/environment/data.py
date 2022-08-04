@@ -4,7 +4,6 @@ from rdkit import Chem
 from sklearn.preprocessing import MinMaxScaler as Scaler
 from sklearn.model_selection import StratifiedKFold, KFold
 from drugex.logs import logger
-from xgboost import XGBRegressor, XGBClassifier
 
 class QSARDataset:
     """
