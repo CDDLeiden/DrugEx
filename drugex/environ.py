@@ -32,7 +32,7 @@ from sklearn.model_selection import StratifiedKFold, KFold
 from drugex import DEFAULT_GPUS
 from drugex.logs.utils import backUpFiles, enable_file_logger, commit_hash
 # from drugex.environment.data import QSARDataset
-# from drugex.environment.models import 
+# from drugex.environment.models import QSARModel, QSARDNN
 
 from drugex.training import models
 from drugex.training.scorers.predictors import Predictor
@@ -279,15 +279,14 @@ class QSARModel:
 
         return cvs
 
-    def grid_search(self, search_space_gs):
+    def grid_search(self, search_space_gs, save_m):
         """
             optimization of hyperparameters using grid_search
         """          
         scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
-        grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds, scoring=scoring, refit=self.save_m)
+        grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds,
+                            scoring=scoring, refit=save_m)
         
-        
-        #TODO maybe move the model fitting and saving to environment?
         fit_set = {'X':self.data.X}
         fit_set['y'] = self.data.y
         if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
@@ -298,7 +297,7 @@ class QSARModel:
         
         self.model = grid.best_estimator_
         
-        if self.save_m:
+        if save_m:
             joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
         self.data.create_folds()
@@ -334,6 +333,8 @@ class QSARModel:
     def objective(self, trial, search_space_bs):
         """
             objective for bayesian optimization
+            arguments:
+                search_space_bs (dict): search space for bayes optimization
         """
 
         if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
@@ -364,7 +365,29 @@ class QSARModel:
 
         return score
     
-    def default_search_space 
+    @staticmethod
+    def load_params_grid(fname, optim_type, model_types):
+        """
+            Load parameter grids for bayes or grid search parameter optimization from json file
+            fname (str): file name of json file containing array with three columns containing modeltype, optimization
+                         type (grid or bayes) and model type
+            optim_type (str): optimization type ('grid' or 'bayes')
+            model_types (list of str): model type for hyperparameter optimization (e.g. RF)
+        """
+        try:
+            with open(fname) as json_file:
+                optim_params = np.array(json.load(json_file)) 
+        except FileNotFoundError:
+            log.warning("Search space file (%s) not found, using default search space." % fname)
+            with open('search_space.json') as json_file:
+                optim_params = np.array(json.load(json_file))
+                optim_params = optim_params[optim_params[:,2]==optim_type][0,1]
+        #check all modeltypes to be used have parameter grid
+            if set(list(model_types)).issuperset(list(optim_params[:,0])):
+                log.error("model types %s missing from models in search space dict (%s)")
+        log.info("search space loaded from file")
+        return optim_params
+
 
 class RF(QSARModel):
     """ Random forest regressor and classifier initialization. Here the model instance is created 
@@ -716,7 +739,9 @@ def Environ(args):
         args.learning_rate = 1e-4 if reg else 1e-5 
         for target in args.targets:
             #prepare dataset for training QSAR model
-            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year, test_size=args.test_size, th = args.activity_threshold, keep_low_quality=args.keep_low_quality)
+            mydataset = QSARDataset(args.base_dir, args.input, target, reg = reg, timesplit=args.year,
+                                    test_size=args.test_size, th = args.activity_threshold,
+                                    keep_low_quality=args.keep_low_quality)
             mydataset.split_dataset()
             
             for model_type in args.model_types:
@@ -744,24 +769,27 @@ def Environ(args):
                 qsarmodel = QSARModel(data=mydataset, alg=alg_dict[model_type], n_jobs=5)
 
                 #if desired run parameter optimization
+                if args.optimization == ('grid' or 'bayes'):
+                    test
+
                 if args.optimization == 'grid':
                     qsarmodel.grid_search()
                 elif args.optimization == 'bayes':
                     qsarmodel.bayes_optimization(n_trials=20)
                 
                 #initialize models from saved or default parameters
-                mymodel.init_model(n_jobs=args.ncpu)
+                qsarmodel.init_model(n_jobs=args.ncpu)
 
                 if args.optimization is None and args.save_model:
-                    mymodel.fit_model()
+                    qsarmodel.fit_model()
                 
                 if args.model_evaluation:
-                    mymodel.model_evaluation()
+                    qsarmodel.model_evaluation()
 
                
 if __name__ == '__main__':
     args = EnvironmentArgParser()
-    
+
     #Set random seeds
     random.seed(args.random_state)
     np.random.seed(args.random_state)
