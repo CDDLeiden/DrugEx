@@ -1,8 +1,6 @@
 # Change Log
 
-Current: v3.2.0.dev0
-
-Previous: v3.1.0
+From `v3.1.0` to `v3.2.0`
 
 ## Fixes
 
