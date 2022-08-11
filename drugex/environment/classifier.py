@@ -16,7 +16,7 @@ class Base(nn.Module):
 
     def __init__(self, n_epochs=100, lr=1e-4):
         super().__init__()
-        self.n_epochs = n_epochs,
+        self.n_epochs = n_epochs
         self.lr = lr
         self.dev = drugex.DEFAULT_DEVICE
 
@@ -59,8 +59,7 @@ class Base(nn.Module):
                 ix = yb == yb
                 yb, y_ = yb[ix], y_[ix]
                 wb = torch.Tensor(yb.size()).to(self.dev)
-                wb[yb == 3.99] = 0.1
-                wb[yb != 3.99] = 1
+
                 # loss function calculation based on predicted tensor and label tensor
                 loss = self.criterion(y_ * wb, yb * wb)
                 loss.backward()
@@ -100,8 +99,6 @@ class Base(nn.Module):
             ix = yb == yb
             yb, y_ = yb[ix], y_[ix]
             wb = torch.Tensor(yb.size()).to(self.dev)
-            wb[yb == 3.99] = 0.1
-            wb[yb != 3.99] = 1
             loss += self.criterion(y_ * wb, yb * wb).item()
         loss = loss / len(loader)
         return loss
@@ -220,10 +217,10 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, n_class, n_epochs = 100, lr = 1e-4, is_reg=False, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
-        super().__init__(n_epochs, lr)
+    def __init__(self, n_dim, n_epochs = 100, lr = 1e-4, is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
+        super().__init__(n_epochs = n_epochs, lr = lr)
         self.n_dim = n_dim
-        self.n_class = n_class
+        self.n_class = 1
         self.is_reg = is_reg
         self.neurons_h1 = neurons_h1
         self.neurons_hx = neurons_hx

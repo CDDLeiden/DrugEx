@@ -2,7 +2,10 @@ from unittest import TestCase
 import os
 import pandas as pd
 import numpy as np
+from drugex.environment.classifier import STFullyConnected
 from drugex.environment.data import QSARDataset
+import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 class TestData(TestCase):
 
@@ -60,9 +63,18 @@ class TestData(TestCase):
         self.assertTrue(np.max(np.concatenate((dataset.y, dataset.y_ind))) == 1)
         self.assertEqual(np.sum(np.concatenate((dataset.y, dataset.y_ind)) < 1), 3) # only 3 value below threshold of 7
 
-
-
-
+class TestClassifiers(TestCase):
+    def test_STFullyConnected(self):
+        df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
+        df = df.sample(500)
+        data = QSARDataset(input_df=df, target="P29274")
+        data.split_dataset()
+        y = data.y.reshape(-1,1)
+        y_ind = data.y_ind.reshape(-1,1)
+        trainloader = DataLoader(TensorDataset(torch.Tensor(data.X), torch.Tensor(y)), batch_size=100)
+        testloader = DataLoader(TensorDataset(torch.Tensor(data.X_ind), torch.Tensor(y_ind)), batch_size=100)
+        model = STFullyConnected(n_dim = data.X.shape[1])
+        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
 
 # class TestModels(TestCase):
 #     def test(self):
