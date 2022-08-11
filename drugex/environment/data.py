@@ -15,9 +15,8 @@ class QSARDataset:
 
         Attributes
         ----------
-        base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing data
-        input  (str)              : tsv file containing SMILES, target accesion & corresponding data
-        target (str)              : target identifier, corresponding with accession in papyrus dataset
+        input_df (pd dataframe)   : dataset
+        target (str)              : target identifier (accession in papyrus dataset)
         reg (bool)                : if true, dataset for regression, if false dataset for classification
         timesplit (int), optional : Year to split test set on
         test_size (int or float), optional: Used when timesplit is None
@@ -25,6 +24,14 @@ class QSARDataset:
                                             include in test split. If int, represents absolute number of test samples.
         th (float)                : threshold for activity if classficiation model, ignored otherwise
         keep_low_quality (bool)   : if true low quality data is included in the dataset
+
+        targetcol (str)           : name of column in dataframe for the target identifier
+        smilescol (str)           : name of column in dataframe for smiles
+        valuecol (str)            : name of column in dataframe for pX values
+        qualitycol (str)          : name of column in dataframe for quality of measurements ("Low, Medium, High"),
+                                    has no effect if keep_low_quality is True
+        timecol (str)             : name of column in dataframe for timesplit has no effect if timesplit is None
+
         X (np.ndarray)            : m x n feature matrix for cross validation, where m is the number of samples
                                     and n is the number of features.
         y (np.ndarray)            : m-d label array for cross validation, where m is the number of samples and
@@ -33,6 +40,7 @@ class QSARDataset:
                                     and n is the number of features.
         y_ind (np.ndarray)        : m-l label array for independent set, where m is the number of samples and
                                     equals to row of X_ind, and l is the number of types.
+        folds ()
 
         Methods
         -------
@@ -40,15 +48,23 @@ class QSARDataset:
         create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
         data_standardization: Performs standardization by centering and scaling
     """
-    def __init__(self, base_dir, input, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False):
-        self.base_dir = base_dir
-        self.input = input
+    def __init__(self, input_df, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False,
+                 targetcol = 'accession', smilescol = 'SMILES', valuecol = 'pchembl_value_Mean', qualitycol = 'Quality',
+                 timecol = 'Year'):
+        self.input_df = input_df
         self.target = target
         self.reg = reg
         self.timesplit = timesplit
         self.test_size = test_size
         self.th = th
         self.keep_low_quality = keep_low_quality
+
+        self.targetcol = targetcol
+        self.smilescol = smilescol
+        self.valuecol = valuecol
+        self.qualitycol = qualitycol
+        self.timecol = timecol
+
         self.X = None
         self.y = None
         self.X_ind = None
@@ -60,43 +76,41 @@ class QSARDataset:
         Splits the dataset in a train and temporal test set.
         Calculates the predictors for the QSAR models.
         """
-
-        #read in the dataset
-        df = pd.read_table('%s/data/%s' % (self.base_dir, self.input)).dropna(subset=['SMILES']) #drops if smiles is missing
-        df = df[df['accession'] == self.target]
-        df = df[['accession', 'SMILES', 'pchembl_value_Mean', 'Quality', 'Year']].set_index(['SMILES'])
-
-        #Get indexes of samples test set based on temporal split
-        if self.timesplit:
-            year = df[['Year']].groupby(['SMILES']).min().dropna()
-            test_idx = year[year['Year'] > self.timesplit].index
+        # read in the dataset
+        df = self.input_df.dropna(subset=[self.smilescol]) # drops if smiles is missing
+        df = df[df[self.targetcol] == self.target].set_index([self.smilescol])
 
         # filter out low quality data if desired
-        df = df if self.keep_low_quality else df[df.Quality.isin(['High','Medium'])] 
+        df = df if self.keep_low_quality else df[df[self.qualitycol] != 'Low']
 
-        #keep only pchembl values and make binary for classification
-        df = df['pchembl_value_Mean']
+        # Get indexes of samples test set based on temporal split
+        if self.timesplit:
+            year = df[[self.timecol]].groupby([self.smilescol]).max().dropna()
+            test_idx = year[year[self.timecol] > self.timesplit].index
+
+        # keep only pchembl values and make binary for classification
+        df = df[self.valuecol]
 
         if not self.reg:
             df = (df > self.th).astype(float)
 
-        #get test and train (data) set with set temporal split or random split
+        # get test and train (data) set with set temporal split or random split
         df = df.sample(len(df)) 
         if self.timesplit:
             test_ix = set(df.index).intersection(test_idx)
-            test = df.loc[test_ix].dropna()
+            test = df.loc[list(test_ix)].dropna()
         else:
             test = df.sample(int(round(len(df)*self.test_size))) if type(self.test_size) == float else df.sample(self.test_size)
         data = df.drop(test.index)
 
-        #calculate ecfp and physiochemical properties as input for the predictors
+        # calculate ecfp and physiochemical properties as input for the predictors
         self.X_ind = Predictor.calculateDescriptors([Chem.MolFromSmiles(mol) for mol in test.index])
         self.X = Predictor.calculateDescriptors([Chem.MolFromSmiles(mol) for mol in data.index])
 
         self.y_ind = test.values
         self.y = data.values
 
-        #Create folds for crossvalidation
+        # Create folds for crossvalidation
         self.create_folds()
 
         #Write information about the trainingset to the logger
