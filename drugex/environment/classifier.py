@@ -47,6 +47,7 @@ class Base(nn.Module):
         log = open(out + '.log', 'a')
         for epoch in range(self.n_epochs):
             t0 = time.time()
+            # decrease learning rate over the epochs
             for param_group in optimizer.param_groups:
                 param_group['lr'] = self.lr * (1 - 1 / self.n_epochs) ** (epoch * 10)
             for i, (Xb, yb) in enumerate(train_loader):
@@ -58,10 +59,9 @@ class Base(nn.Module):
                 # ignore all of the NaN values
                 ix = yb == yb
                 yb, y_ = yb[ix], y_[ix]
-                wb = torch.Tensor(yb.size()).to(self.dev)
 
                 # loss function calculation based on predicted tensor and label tensor
-                loss = self.criterion(y_ * wb, yb * wb)
+                loss = self.criterion(y_, yb)
                 loss.backward()
                 optimizer.step()
             # loss value on validation set based on which optimal model is saved.
@@ -98,8 +98,7 @@ class Base(nn.Module):
             y_ = self.forward(Xb)
             ix = yb == yb
             yb, y_ = yb[ix], y_[ix]
-            wb = torch.Tensor(yb.size()).to(self.dev)
-            loss += self.criterion(y_ * wb, yb * wb).item()
+            loss += self.criterion(y_, yb).item()
         loss = loss / len(loader)
         return loss
 
@@ -234,7 +233,6 @@ class STFullyConnected(Base):
         if self.extra_layer:
             self.fc2 = nn.Linear(self.neurons_hx, self.neurons_hx)
         self.fc3 = nn.Linear(self.neurons_hx, self.n_class)
-        self.is_reg = self.is_reg
         if self.is_reg:
             # loss function for regression
             self.criterion = nn.MSELoss()

@@ -1,11 +1,15 @@
 from unittest import TestCase
+
 import os
+
 import pandas as pd
 import numpy as np
-from drugex.environment.classifier import STFullyConnected
-from drugex.environment.data import QSARDataset
+
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+
+from drugex.environment.classifier import STFullyConnected
+from drugex.environment.data import QSARDataset
 
 class TestData(TestCase):
 
@@ -64,18 +68,50 @@ class TestData(TestCase):
         self.assertEqual(np.sum(np.concatenate((dataset.y, dataset.y_ind)) < 1), 3) # only 3 value below threshold of 7
 
 class TestClassifiers(TestCase):
-    def test_STFullyConnected(self):
+    def prep_testdata(self, reg=True):
+        
+        # prepare test dataset
         df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
-        df = df.sample(500)
-        data = QSARDataset(input_df=df, target="P29274")
+        data = QSARDataset(input_df=df, target="P29274", reg=reg)
         data.split_dataset()
+        data.X, data.X_ind = data.data_standardization(data.X, data.X_ind)
+
+        # prepare data for torch DNN
         y = data.y.reshape(-1,1)
         y_ind = data.y_ind.reshape(-1,1)
         trainloader = DataLoader(TensorDataset(torch.Tensor(data.X), torch.Tensor(y)), batch_size=100)
         testloader = DataLoader(TensorDataset(torch.Tensor(data.X_ind), torch.Tensor(y_ind)), batch_size=100)
-        model = STFullyConnected(n_dim = data.X.shape[1])
+
+        return data.X.shape[1], trainloader, testloader
+
+    def test_STFullyConnected(self):
+        # prepare test dataset
+        no_features, trainloader, testloader = self.prep_testdata(reg=True)
+
+        # fit model with default settings
+        model = STFullyConnected(n_dim = no_features)
         model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
 
-# class TestModels(TestCase):
-#     def test(self):
-#         pass
+        # fit model with non-default epochs and learning rate
+        model = STFullyConnected(n_dim = no_features, n_epochs = 50, lr = 0.5)
+        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+
+        # fit model with non-default settings for rate
+        model = STFullyConnected(n_dim = no_features, neurons_h1=2000, neurons_hx=500, extra_layer=True)
+        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+
+        # prepare classification test dataset
+        no_features, trainloader, testloader = self.prep_testdata(reg=False)
+
+        # fit model with regression is false
+        model = STFullyConnected(n_dim = no_features, is_reg=False)
+        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+
+
+class TestModels(TestCase):
+    def test_QSARsklearn(self):
+
+        pass
+
+    def test_QSARDNN(self):
+        pass
