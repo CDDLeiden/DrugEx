@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from drugex.environment.classifier import STFullyConnected
 from drugex.environment.data import QSARDataset
+from drugex.environment.models import QSARsklearn, QSARDNN
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 class TestData(TestCase):
 
@@ -109,9 +111,36 @@ class TestClassifiers(TestCase):
 
 
 class TestModels(TestCase):
-    def test_QSARsklearn(self):
+    def prep_testdata(self, reg=True):
+        
+        # prepare test dataset
+        df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
+        data = QSARDataset(input_df=df, target="P29274", reg=reg)
+        data.split_dataset()
+        data.X, data.X_ind = data.data_standardization(data.X, data.X_ind)
+        
+        return data
 
-        pass
+    def test_QSARsklearn(self):
+        data = self.prep_testdata(reg=True)
+        themodel = QSARsklearn(base_dir = f'{os.path.dirname(__file__)}/test_files/',
+                               data=data, alg = RandomForestRegressor(), alg_name='RF')
+        themodel.fit_model()
+        themodel.model_evaluation()
+        fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
+        # grid_params = QSARsklearn.load_params_grid(fname, "bayes", "RF")
+        # search_space_bs = grid_params[grid_params[:,0] == "RF",1][0]
+        # themodel.bayes_optimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
+        grid_params = QSARsklearn.load_params_grid(fname, "grid", "RF")
+        search_space_gs = grid_params[grid_params[:,0] == "RF",1][0]
+        themodel.grid_search(search_space_gs=search_space_gs, save_m=False)
 
     def test_QSARDNN(self):
-        pass
+        data = self.prep_testdata(reg=True)
+        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data)
+        themodel.fit_model()
+        themodel.model_evaluation()
+        fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
+        grid_params = QSARDNN.load_params_grid(fname, "grid", "DNN")
+        search_space_gs = grid_params[grid_params[:,0] == "DNN",1][0]
+        themodel.grid_search(search_space_gs=search_space_gs, save_m=False)

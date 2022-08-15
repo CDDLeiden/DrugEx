@@ -8,8 +8,7 @@
         "min_samples_leaf": ["int", 1, 25],
         "max_features": ["int", 1, 100], 
         "min_samples_split": ["int", 2, 12] }, "bayes"],
-["XGB", {"nthread":[4],
-        "learning_rate": [0.01, 0.05, 0.1],
+["XGB", {"learning_rate": [0.01, 0.05, 0.1],
         "max_depth": [3,6,10],
         "n_estimators": [100, 500, 1000],
         "colsample_bytree": [0.3, 0.5, 0.7]}, "grid"],
@@ -62,4 +61,8 @@
 ["NB", {"var_smoothing": ["loguniform", 1e-10, 1]}, "bayes"],
 ["PLS", {"n_components": [1, 21, 41, 61, 81]}, "grid"],
 ["PLS", {"n_components": ["int", 1, 100],
-        "scale": ["categorical", [true, false]]}, "bayes"]]
+        "scale": ["categorical", [true, false]]}, "bayes"],
+["DNN", {"batch_size" : [32, 128, 256],
+         "lr": [1e-8, 1e-5, 1e-4, 1e-3, 1e-2],
+         "neurons_h1" : [200, 1000, 2000, 4000],
+         "neurons_hx" : [200, 1000, 2000]}, "grid"]]

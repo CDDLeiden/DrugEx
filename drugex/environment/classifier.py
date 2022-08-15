@@ -7,6 +7,7 @@ import time
 import drugex
 import inspect
 from collections import defaultdict
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class Base(nn.Module):
@@ -14,10 +15,11 @@ class Base(nn.Module):
     Mainly, it provides the general methods for training, evaluating model and predicting the given data.
     """
 
-    def __init__(self, n_epochs=100, lr=1e-4):
+    def __init__(self, n_epochs=100, lr=1e-4, batch_size=32):
         super().__init__()
         self.n_epochs = n_epochs
         self.lr = lr
+        self.batch_size=32
         self.dev = drugex.DEFAULT_DEVICE
 
     def fit(self, train_loader, valid_loader, out):
@@ -202,6 +204,16 @@ class Base(nn.Module):
 
         return self
 
+    def get_dataloader(self, X, y):
+        """
+            Convert data to tensors and get iterable over dataset with dataloader
+            arguments:
+            X (numpy 2d array): input dataset
+            y (numpy 1d column vector): output data
+        """
+        tensordataset = TensorDataset(torch.Tensor(X), torch.Tensor(y))
+        return DataLoader(tensordataset, batch_size=self.batch_size)
+    
 class STFullyConnected(Base):
     """Single task DNN classification/regression model. It contains four fully connected layers between which
         are dropout layer for robustness.
@@ -216,8 +228,9 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, n_epochs = 100, lr = 1e-4, is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
-        super().__init__(n_epochs = n_epochs, lr = lr)
+    def __init__(self, n_dim, n_epochs = 100, lr = 1e-4, batch_size=32,
+                 is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
+        super().__init__(n_epochs = n_epochs, lr = lr, batch_size=batch_size)
         self.n_dim = n_dim
         self.n_class = 1
         self.is_reg = is_reg

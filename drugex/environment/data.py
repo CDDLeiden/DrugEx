@@ -24,6 +24,7 @@ class QSARDataset:
                                             include in test split. If int, represents absolute number of test samples.
         th (float)                : threshold for activity if classficiation model, ignored otherwise
         keep_low_quality (bool)   : if true low quality data is included in the dataset
+        n_folds(int)              : number of folds for crossvalidation
 
         targetcol (str)           : name of column in dataframe for the target identifier
         smilescol (str)           : name of column in dataframe for smiles
@@ -40,7 +41,7 @@ class QSARDataset:
                                     and n is the number of features.
         y_ind (np.ndarray)        : m-l label array for independent set, where m is the number of samples and
                                     equals to row of X_ind, and l is the number of types.
-        folds ()
+        folds (generator)         :
 
         Methods
         -------
@@ -48,7 +49,7 @@ class QSARDataset:
         create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
         data_standardization: Performs standardization by centering and scaling
     """
-    def __init__(self, input_df, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False,
+    def __init__(self, input_df, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False, n_folds=5,
                  targetcol = 'accession', smilescol = 'SMILES', valuecol = 'pchembl_value_Mean', qualitycol = 'Quality',
                  timecol = 'Year'):
         self.input_df = input_df
@@ -58,6 +59,7 @@ class QSARDataset:
         self.test_size = test_size
         self.th = th
         self.keep_low_quality = keep_low_quality
+        self.n_folds=5
 
         self.targetcol = targetcol
         self.smilescol = smilescol
@@ -130,9 +132,9 @@ class QSARDataset:
             Create folds for crossvalidation
         """
         if self.reg:
-            self.folds = KFold(5).split(self.X)
+            self.folds = KFold(self.n_folds).split(self.X)
         else:
-            self.folds = StratifiedKFold(5).split(self.X, self.y)
+            self.folds = StratifiedKFold(self.n_folds).split(self.X, self.y)
         logger.debug("Folds created for crossvalidation")
         
     @staticmethod

@@ -1,7 +1,7 @@
+from drugex.environment.interfaces import QSARModel
 from drugex.logs import logger
 import os
 import os.path
-import sys
 import json
 import numpy as np
 from datetime import datetime
@@ -11,11 +11,12 @@ from sklearn.model_selection import GridSearchCV
 import optuna
 from sklearn import metrics
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-from drugex.environment import models
-from sklearn.naive_bayes import GaussianNB
 
-class QSARModel:
+from sklearn.model_selection import ParameterGrid
+from drugex.environment.interfaces import QSARModel
+from drugex.environment.classifier import STFullyConnected
+
+class QSARsklearn(QSARModel):
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
         ...
 
@@ -35,36 +36,6 @@ class QSARModel:
         grid_search: optimization of hyperparameters using grid_search
 
     """
-    def __init__(self, data, alg, alg_name, parameters=None, n_jobs=-1):
-        """
-            initialize model from saved or default hyperparameters
-        """
-        self.data = data
-        self.alg = alg
-        self.parameters = parameters
-
-        d = '%s/envs' % data.base_dir
-        self.out = '%s/%s_%s_%s' % (d, alg_name, 'REG' if data.reg else 'CLS', data.target)
-        
-        if os.path.isfile('%s_params.json' % self.out):
-            
-            with open('%s_params.json' % self.out) as j:
-                self.parameters = json.loads(j.read())
-            logger.info('loaded model parameters from file: %s_params.json' % self.out)
-
-        if self.parameters:
-            if type(self.alg) == GaussianNB:
-                self.model = self.alg.set_params(**self.parameters)
-            else:
-                self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
-        else:
-            if type(self.alg) == GaussianNB:
-                self.model = self.alg
-            else:
-                self.model = self.alg.set_params(n_jobs=n_jobs)
-        logger.info('parameters: %s' % self.parameters)
-        logger.debug('Model intialized: %s' % self.out)
-
     def fit_model(self):
         """
             build estimator model from entire data set
@@ -73,9 +44,7 @@ class QSARModel:
         y_all = np.concatenate([self.data.y, self.data.y_ind], axis=0)
         
         # KNN and PLS do not use sample_weight
-        fit_set = {'X':X_all}
-        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
-            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in y_all]
+        fit_set = {'X': X_all}
         
         if type(self.alg).__name__ == 'PLSRegression':
             fit_set['Y'] = y_all
@@ -99,8 +68,9 @@ class QSARModel:
             logger.info('cross validation fold %s started: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             # use sample weight to decrease the weight of low quality datapoints
             fit_set = {'X':self.data.X[trained]}
-            if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
-                fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y[trained]]
+            # weighting in original drugex v2 code, but was specific to data used there
+            # if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+            #     fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y[trained]]
             if type(self.alg).__name__ == 'PLSRegression':
                 fit_set['Y'] = self.data.y[trained]
             else:
@@ -220,38 +190,6 @@ class QSARModel:
             score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
 
         return score
-    
-    @staticmethod
-    def load_params_grid(fname, optim_type, model_types):
-        """
-            Load parameter grids for bayes or grid search parameter optimization from json file
-            fname (str): file name of json file containing array with three columns containing modeltype, optimization
-                         type (grid or bayes) and model type
-            optim_type (str): optimization type ('grid' or 'bayes')
-            model_types (list of str): model type for hyperparameter optimization (e.g. RF)
-        """
-
-        if fname:
-            try:
-                with open(fname) as json_file:
-                    optim_params = np.array(json.load(json_file), dtype=object)
-            except:
-                logger.error("Search space file (%s) not found" % fname)
-                sys.exit()
-        else:
-            with open('drugex/environment/search_space.json') as json_file:
-                optim_params = np.array(json.load(json_file), dtype=object)
-        
-        # select either grid or bayes optimization parameters from param array
-        optim_params = optim_params[optim_params[:,2]==optim_type, :]
-        
-        #check all modeltypes to be used have parameter grid
-        if not set(list(model_types)).issubset(list(optim_params[:,0])):
-            logger.error("model types %s missing from models in search space dict (%s)" % (model_types, optim_params[:,0]))
-            sys.exit()
-        logger.info("search space loaded from file")
-        
-        return optim_params
 
 class QSARDNN(QSARModel):
     """ 
@@ -262,60 +200,102 @@ class QSARDNN(QSARModel):
         Attributes
         ----------
         data: instance of QSARDataset
-        parameters (dict): DNN specific parameters
-        save_m (bool): if true, save final model
         batch_size (int): batch size
         lr (int): learning rate
         n_epoch (int): number of epochs
 
     """
-    def __init__(self, data, save_m=True, parameters=None, batch_size=128, lr=1e-5, n_epoch=1000):
-        self.alg = models.STFullyConnected
-        self.parameters = parameters if parameters != None else {}
-        super().__init__(data, self.alg, self.parameters, None, None, save_m=save_m)
-        self.batch_size = batch_size
-        self.lr = lr
-        self.n_epoch = n_epoch
+    def __init__(self, base_dir, data, parameters = None):
+        
+        super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1]), "DNN", parameters=parameters)
+        
+        #transpose y data to column vector
         self.y = self.data.y.reshape(-1,1)
         self.y_ind = self.data.y_ind.reshape(-1,1)
 
-    def init_model(self):
-        pass
-
     def fit_model(self):
-        train_set = TensorDataset(torch.Tensor(self.data.X), torch.Tensor(self.y))
-        train_loader = DataLoader(train_set, batch_size=self.batch_size)
-        valid_set = TensorDataset(torch.Tensor(self.data.X_ind), torch.Tensor(self.y_ind))
-        valid_loader = DataLoader(valid_set, batch_size=self.batch_size)
-        net = self.alg(self.data.X.shape[1], self.y.shape[1], is_reg=self.data.reg)
-        net.fit(train_loader, valid_loader, out=self.out, epochs=self.n_epoch, lr=self.lr)
+        """
+            train model on the trainings data, determine best model using test set, save best model
+        """
+        train_loader = self.model.get_dataloader(self.data.X, self.y)
+        indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
 
-    def model_evaluation(self):
-        #Make predictions for crossvalidation and independent test set
-        indep_set = TensorDataset(torch.Tensor(self.data.X_ind), torch.Tensor(self.y_ind))
-        indep_loader = DataLoader(indep_set, batch_size=self.batch_size)
+        logger.info('Model fit started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.model.fit(train_loader, indep_loader, out=self.out)
+        logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+    def model_evaluation(self, save=True):
+        """
+            Make predictions for crossvalidation and independent test set
+        """
+        indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
+        
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
             logger.info('cross validation fold ' +  str(i))
-            train_set = TensorDataset(torch.Tensor(self.data.X[trained]), torch.Tensor(self.y[trained]))
-            train_loader = DataLoader(train_set, batch_size=self.batch_size)
-            valid_set = TensorDataset(torch.Tensor(self.data.X[valided]), torch.Tensor(self.y[valided]))
-            valid_loader = DataLoader(valid_set, batch_size=self.batch_size)
-            net = self.alg(self.data.X.shape[1], self.y.shape[1], is_reg=self.data.reg)
-            net.fit(train_loader, valid_loader, out='%s_%d' % (self.out, i), epochs=self.n_epoch, lr=self.lr)
-            cvs[valided] = net.predict(valid_loader)
-            inds += net.predict(indep_loader)
-        train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
-        train['Score'], test['Score'] = cvs, inds / 5
-        train.to_csv(self.out + '.cv.tsv', sep='\t')
-        test.to_csv(self.out + '.ind.tsv', sep='\t')
+            train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
+            valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
+            self.model.fit(train_loader, valid_loader, out='%s_%d' % (self.out, i))
+            cvs[valided] = self.model.predict(valid_loader)
+            inds += self.model.predict(indep_loader)
+        
+        if save:
+            train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
+            train['Score'], test['Score'] = cvs, inds / 5
+            train.to_csv(self.out + '.cv.tsv', sep='\t')
+            test.to_csv(self.out + '.ind.tsv', sep='\t')
         self.data.create_folds()
 
-    def grid_search(self):
-        #TODO implement grid search for DNN
-        logger.warning("Grid search not yet implemented for DNN, will be skipped.")
+    def grid_search(self, search_space_gs, save_m):
+        """
+            optimization of hyperparameters using grid_search
+            arguments:
+                search_space_gs (dict): search space for the grid search, accepted parameters are:
+                                        lr (int) ~ learning rate for fitting
+                                        batch_size (int) ~ batch size for fitting
+                                        n_epochs (int) ~ max number of epochs
+                                        neurons_h1 (int) ~ number of neurons in first hidden layer
+                                        neurons_hx (int) ~ number of neurons in other hidden layers
+                                        extra_layer (bool) ~ whether to add extra (3rd) hidden layer
+                save_m (bool): if true, after gs the model is refit on the entire data set
+        """          
+        scoring = metrics.explained_variance_score if self.data.reg else metrics.roc_auc_score
+
+        logger.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        best_score = 0
+        for params in ParameterGrid(search_space_gs):
+            logger.info(params)
+
+            #do 5 fold cross validation and take mean prediction on validation set as score of parameter settings
+            fold_scores = np.zeros(self.data.n_folds)
+            for i, (trained, valided) in enumerate(self.data.folds):
+                logger.info('cross validation fold ' +  str(i))
+                train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
+                valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
+                self.model.set_params(**params)
+                self.model.fit(train_loader, valid_loader, out='%s_temp' % self.out)
+                os.remove('%s_temp.pkg' % self.out)
+                y_pred = self.model.predict(valid_loader)
+                fold_scores[i] = scoring(self.y[valided], y_pred)
+            param_score = np.mean(fold_scores)
+            if param_score > best_score:
+                best_params = params
+            self.data.create_folds()
+        
+        logger.info('Grid search best parameters: %s' %  best_params)
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(best_params, f)
+        logger.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        
+        if save_m:
+            self.model.set_params(**best_params)
+            self.model.fit()
+
+        self.data.create_folds()
     
     def bayes_optimization(self, n_trials):
         #TODO implement bayes optimization for DNN
         logger.warning("bayes optimization not yet implemented for DNN, will be skipped.")
+
+

@@ -146,6 +146,8 @@ def Environ(args):
                 }
 
                 #Create QSAR model object
+                if model_type == 'DNN':
+                    qsarmodel = QSARDNN(data=mydataset, alg=alg_dict[model_type], alg_name=model_type, n_jobs=args.ncpu)
                 qsarmodel = QSARModel(data=mydataset, alg=alg_dict[model_type], alg_name=model_type, n_jobs=args.ncpu)
 
                 #if desired run parameter optimization
