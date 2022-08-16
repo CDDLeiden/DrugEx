@@ -12,6 +12,11 @@ from drugex.environment.classifier import STFullyConnected
 from drugex.environment.data import QSARDataset
 from drugex.environment.models import QSARsklearn, QSARDNN
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC, SVR
+from xgboost import XGBRegressor, XGBClassifier
 
 class TestData(TestCase):
 
@@ -121,19 +126,71 @@ class TestModels(TestCase):
         
         return data
 
-    def test_QSARsklearn(self):
-        data = self.prep_testdata(reg=True)
+    def QSARsklearn_models_test(self, alg, alg_name, reg):
+        data = self.prep_testdata(reg=reg)
         themodel = QSARsklearn(base_dir = f'{os.path.dirname(__file__)}/test_files/',
-                               data=data, alg = RandomForestRegressor(), alg_name='RF')
+                               data=data, alg = alg, alg_name=alg_name)
         themodel.fit_model()
         themodel.model_evaluation()
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
-        # grid_params = QSARsklearn.load_params_grid(fname, "bayes", "RF")
-        # search_space_bs = grid_params[grid_params[:,0] == "RF",1][0]
-        # themodel.bayes_optimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
-        grid_params = QSARsklearn.load_params_grid(fname, "grid", "RF")
-        search_space_gs = grid_params[grid_params[:,0] == "RF",1][0]
+        grid_params = QSARsklearn.load_params_grid(fname, "bayes", alg_name)
+        search_space_bs = grid_params[grid_params[:,0] == alg_name,1][0]
+        themodel.bayes_optimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
+        grid_params = QSARsklearn.load_params_grid(fname, "grid", alg_name)
+        search_space_gs = grid_params[grid_params[:,0] == alg_name,1][0]
         themodel.grid_search(search_space_gs=search_space_gs, save_m=False)
+
+    def testRF(self):
+        alg_name = "RF"
+        #test regression
+        alg = RandomForestRegressor()
+        self.QSARsklearn_models_test(alg, alg_name, reg=True)
+
+        #test classifier
+        alg = RandomForestClassifier()
+        self.QSARsklearn_models_test(alg, alg_name, reg=False)
+
+    def testKNN(self):
+        alg_name = "KNN"
+        #test regression
+        alg = KNeighborsRegressor()
+        self.QSARsklearn_models_test(alg, alg_name, reg=True)
+
+        #test classifier
+        alg = KNeighborsClassifier()
+        self.QSARsklearn_models_test(alg, alg_name, reg=False)
+
+    def testXGB(self):
+        alg_name = "XGB"
+        #test regression
+        alg = XGBRegressor(objective='reg:squarederror')
+        self.QSARsklearn_models_test(alg, alg_name, reg=True)
+
+        #test classifier
+        alg = XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss')
+        self.QSARsklearn_models_test(alg, alg_name, reg=False)
+
+    def testSVM(self):
+        alg_name = "SVM"
+        #test regression
+        alg = SVR()
+        self.QSARsklearn_models_test(alg, alg_name, reg=True)
+
+        #test classifier
+        alg = SVC(probability=True)
+        self.QSARsklearn_models_test(alg, alg_name, reg=False)
+
+    def testPLS(self):
+        alg_name = "PLS"
+        #test regression
+        alg = PLSRegression()
+        self.QSARsklearn_models_test(alg, alg_name, reg=True)
+
+    def testNB(self):
+        alg_name = "NB"
+        #test classfier
+        alg = GaussianNB()
+        self.QSARsklearn_models_test(alg, alg_name, reg=False)
 
     def test_QSARDNN(self):
         data = self.prep_testdata(reg=True)

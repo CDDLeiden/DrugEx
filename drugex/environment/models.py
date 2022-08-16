@@ -178,7 +178,7 @@ class QSARsklearn(QSARModel):
             elif value[0] == 'int':
                 bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
             elif value[0] == 'loguniform':
-                bayesian_params[key] = trial.suggest_loggeruniform(key, value[1], value[2])
+                bayesian_params[key] = trial.suggest_loguniform(key, value[1], value[2])
             elif value[0] == 'uniform':
                 bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
 

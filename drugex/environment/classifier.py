@@ -228,8 +228,10 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, n_epochs = 100, lr = 1e-4, batch_size=32,
+    def __init__(self, n_dim, n_epochs = 100, lr = None, batch_size=32,
                  is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
+        if not lr:
+            lr = 1e-4 if is_reg else 1e-5
         super().__init__(n_epochs = n_epochs, lr = lr, batch_size=batch_size)
         self.n_dim = n_dim
         self.n_class = 1
@@ -262,6 +264,7 @@ class STFullyConnected(Base):
     def set_params(self, **params):
         super().set_params(**params)
         self.init_model()
+        return self
 
     def forward(self, X, istrain=False):
         """Invoke the class directly as a function

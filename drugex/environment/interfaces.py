@@ -9,6 +9,12 @@ import json
 from drugex.logs import logger
 from sklearn.naive_bayes import GaussianNB
 from drugex.environment.classifier import STFullyConnected
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC, SVR
+from xgboost import XGBRegressor, XGBClassifier
 
 class QSARModel(ABC):
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
@@ -47,12 +53,12 @@ class QSARModel(ABC):
             logger.info('loaded model parameters from file: %s_params.json' % self.out)
 
         if self.parameters:
-            if type(self.alg) in [GaussianNB, STFullyConnected]:
+            if type(self.alg) in [GaussianNB, PLSRegression, SVR, SVC, STFullyConnected]:
                 self.model = self.alg.set_params(**self.parameters)
             else:
                 self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
         else:
-            if type(self.alg) in [GaussianNB, STFullyConnected]:
+            if type(self.alg) in [GaussianNB, PLSRegression, SVR, SVC, STFullyConnected]:
                 self.model = self.alg
             else:
                 self.model = self.alg.set_params(n_jobs=n_jobs)
