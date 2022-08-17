@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 import os
 
 import pandas as pd
@@ -8,7 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from drugex.environment.classifier import STFullyConnected
+from drugex.environment.neural_network import STFullyConnected
 from drugex.environment.data import QSARDataset
 from drugex.environment.models import QSARsklearn, QSARDNN
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -75,8 +74,11 @@ class TestData(TestCase):
         self.assertEqual(np.sum(np.concatenate((dataset.y, dataset.y_ind)) < 1), 3) # only 3 value below threshold of 7
 
 class TestClassifiers(TestCase):
+    if not os.path.exists(f'{os.path.dirname(__file__)}/test_files/envs'):
+        os.mkdir(f'{os.path.dirname(__file__)}/test_files/envs')
+
     def prep_testdata(self, reg=True):
-        
+
         # prepare test dataset
         df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
         data = QSARDataset(input_df=df, target="P29274", reg=reg)

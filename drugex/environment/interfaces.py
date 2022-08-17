@@ -3,18 +3,14 @@ import sys
 from abc import ABC, abstractmethod
 
 import numpy as np
-import pandas as pd
 import json
 
 from drugex.logs import logger
 from sklearn.naive_bayes import GaussianNB
-from drugex.environment.classifier import STFullyConnected
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from drugex.environment.neural_network import STFullyConnected
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, SVR
-from xgboost import XGBRegressor, XGBClassifier
 
 class QSARModel(ABC):
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.

@@ -62,6 +62,12 @@ class Base(nn.Module):
                 ix = yb == yb
                 yb, y_ = yb[ix], y_[ix]
 
+                # weighting in original drugex v2 code, but was specific to data used there
+                # wb = torch.Tensor(yb.size()).to(utils.dev)
+                # wb[yb == 3.99] = 0.1
+                # wb[yb != 3.99] = 1
+                # loss += self.criterion(y_ * wb, yb * wb).item()
+
                 # loss function calculation based on predicted tensor and label tensor
                 loss = self.criterion(y_, yb)
                 loss.backward()
@@ -100,6 +106,13 @@ class Base(nn.Module):
             y_ = self.forward(Xb)
             ix = yb == yb
             yb, y_ = yb[ix], y_[ix]
+            
+            # weighting in original drugex v2 code, but was specific to data used there
+            # wb = torch.Tensor(yb.size()).to(utils.dev)
+            # wb[yb == 3.99] = 0.1
+            # wb[yb != 3.99] = 1
+            # loss += self.criterion(y_ * wb, yb * wb).item()
+
             loss += self.criterion(y_, yb).item()
         loss = loss / len(loader)
         return loss

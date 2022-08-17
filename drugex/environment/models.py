@@ -1,4 +1,3 @@
-from drugex.environment.interfaces import QSARModel
 from drugex.logs import logger
 import os
 import os.path
@@ -10,11 +9,10 @@ import pandas as pd
 from sklearn.model_selection import GridSearchCV
 import optuna
 from sklearn import metrics
-import torch
 
 from sklearn.model_selection import ParameterGrid
 from drugex.environment.interfaces import QSARModel
-from drugex.environment.classifier import STFullyConnected
+from drugex.environment.neural_network import STFullyConnected
 
 class QSARsklearn(QSARModel):
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
@@ -45,6 +43,11 @@ class QSARsklearn(QSARModel):
         
         # KNN and PLS do not use sample_weight
         fit_set = {'X': X_all}
+
+        # weighting in original drugex v2 code, but was specific to data used there
+        # use sample weight to decrease the weight of low quality datapoints
+        # if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+        #     fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y[trained]]
         
         if type(self.alg).__name__ == 'PLSRegression':
             fit_set['Y'] = y_all
@@ -66,11 +69,15 @@ class QSARsklearn(QSARModel):
         inds = np.zeros(self.data.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
             logger.info('cross validation fold %s started: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-            # use sample weight to decrease the weight of low quality datapoints
+            
+            
             fit_set = {'X':self.data.X[trained]}
+
             # weighting in original drugex v2 code, but was specific to data used there
+            # use sample weight to decrease the weight of low quality datapoints
             # if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
             #     fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y[trained]]
+            
             if type(self.alg).__name__ == 'PLSRegression':
                 fit_set['Y'] = self.data.y[trained]
             else:
