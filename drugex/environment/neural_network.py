@@ -19,7 +19,7 @@ class Base(nn.Module):
         super().__init__()
         self.n_epochs = n_epochs
         self.lr = lr
-        self.batch_size=32
+        self.batch_size=batch_size
         self.dev = drugex.DEFAULT_DEVICE
 
     def fit(self, train_loader, valid_loader, out):

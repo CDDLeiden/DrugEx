@@ -1,3 +1,4 @@
+import shutil
 from unittest import TestCase
 import os
 
@@ -73,14 +74,31 @@ class TestData(TestCase):
         self.assertTrue(np.max(np.concatenate((dataset.y, dataset.y_ind))) == 1)
         self.assertEqual(np.sum(np.concatenate((dataset.y, dataset.y_ind)) < 1), 3) # only 3 value below threshold of 7
 
-class TestClassifiers(TestCase):
-    if not os.path.exists(f'{os.path.dirname(__file__)}/test_files/envs'):
-        os.mkdir(f'{os.path.dirname(__file__)}/test_files/envs')
+class PathMixIn:
+    datapath = f'{os.path.dirname(__file__)}/test_files/data'
+    envspath = f'{os.path.dirname(__file__)}/test_files/envs'
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.path.exists(cls.envspath):
+            os.mkdir(cls.envspath)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.envspath)
+
+class TestClassifiers(PathMixIn, TestCase):
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        os.remove(f'{cls.datapath}/testmodel.log')
+        os.remove(f'{cls.datapath}/testmodel.pkg')
 
     def prep_testdata(self, reg=True):
 
         # prepare test dataset
-        df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
+        df = pd.read_csv(f'{self.datapath}/test_data_large.tsv', sep='\t')
         data = QSARDataset(input_df=df, target="P29274", reg=reg)
         data.split_dataset()
         data.X, data.X_ind = data.data_standardization(data.X, data.X_ind)
@@ -99,25 +117,26 @@ class TestClassifiers(TestCase):
 
         # fit model with default settings
         model = STFullyConnected(n_dim = no_features)
-        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
 
         # fit model with non-default epochs and learning rate
         model = STFullyConnected(n_dim = no_features, n_epochs = 50, lr = 0.5)
-        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
 
         # fit model with non-default settings for rate
         model = STFullyConnected(n_dim = no_features, neurons_h1=2000, neurons_hx=500, extra_layer=True)
-        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
 
         # prepare classification test dataset
         no_features, trainloader, testloader = self.prep_testdata(reg=False)
 
         # fit model with regression is false
         model = STFullyConnected(n_dim = no_features, is_reg=False)
-        model.fit(trainloader, testloader, out=f'{os.path.dirname(__file__)}/test_files/data/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
 
 
-class TestModels(TestCase):
+class TestModels(PathMixIn, TestCase):
+
     def prep_testdata(self, reg=True):
         
         # prepare test dataset

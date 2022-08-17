@@ -117,8 +117,7 @@ class QSARsklearn(QSARModel):
         grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds,
                             scoring=scoring, refit=save_m)
         
-        fit_set = {'X':self.data.X}
-        fit_set['y'] = self.data.y
+        fit_set = {'X': self.data.X, 'y': self.data.y}
         if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
             fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
         logger.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))

@@ -1,4 +1,3 @@
-import pandas as pd
 from drugex.training.scorers.predictors import Predictor
 from rdkit import Chem
 from sklearn.preprocessing import MinMaxScaler as Scaler
