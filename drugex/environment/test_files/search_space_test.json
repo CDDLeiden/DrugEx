@@ -29,7 +29,7 @@
         "gamma": ["uniform", 0, 20]}, "bayes"],
 ["KNN", {"n_neighbors" : [1, 30],
         "weights"      : ["uniform", "distance"]}, "grid"],
-["KNN", {"n_neighbors": ["int", 1, 100],
+["KNN", {"n_neighbors": ["int", 1, 50],
         "weights": ["categorical", ["uniform", "distance"]],
         "metric": ["categorical", ["euclidean","manhattan",
                     "chebyshev","minkowski"]]}, "bayes"],

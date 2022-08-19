@@ -1,201 +1,101 @@
-	Unnamed: 0	accession	SMILES	pchembl_value_Mean	Quality	Year
-1905	6169	P29274	O=C(O)C=Cc1ccc(-c2nc3c(=O)n(CC4CCCCC4)c(=O)n(CC4CCCCC4)c3[nH]2)cc1	5.82	Medium	2000.0
-1174	3812	P29274	CCCCc1nc2[nH]ncc2c2nc(-c3ccc(C)cc3)nn12	5.0	Low	2004.0
-3458	11252	P29274	COc1cccc(-c2n[nH]c(Cc3ccc(Cl)c(Cl)c3)n2)c1OC	7.05	Medium	2004.0
-177	574	P29274	Cc1ccccc1CNc1nc(Cl)nc2c1ncn2C1SC(C(=O)NC2CC2)C(O)C1O	6.697	High	2006.0
-3912	12758	P29274	O=C(Nc1cnc(-c2ccncc2)c(-c2ccco2)n1)C1CCC1	6.852	High	2011.0
-2828	9219	P29274	CNC(=O)C12CC1C(n1cnc3c(NCc4ccc(N)c(I)c4)nc(Cl)nc31)C(O)C2O	5.96	High	2005.0
-2895	9429	P29274	CCCn1c(=O)c2nc(-c3cc(C)n(CC(=O)Nc4ccc(CC(C)C)cc4)n3)[nH]c2n(CCC)c1=O	6.0	Low	2008.0
-1463	4743	P29274	CCC(=O)Nc1cc(-c2cncc(OC)c2)nc(-n2nc(C)cc2C)n1	8.332	High	2008.0
-1358	4416	P29274	CCCn1c(=O)c2nc(-c3cc(NC(=O)Cc4ccc(CC(C)C)cc4)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2004.0
-932	3009	P29274	CCCn1c(=O)n(C)c(=O)c2[nH]c(-c3ccc(OCC(=O)Nc4ccc(F)cc4)cc3)cc21	6.95	High	2006.0
-2961	9652	P29274	CCCn1c(=O)c2nc(-c3cc(OCc4nc5cncnc5[nH]4)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2012.0
-126	407	P29274	CCCn1c(=O)c2[nH]c(-c3ccc(OCC(=O)Nc4ccc(CS(=O)(=O)N5CCCC5)cc4)cc3)cc2n(CCC)c1=O	7.28	High	2006.0
-2784	9079	P29274	Cn1c(=O)c2c(cc(C=Cc3ccc(Cl)c(Cl)c3)n2C)n(C)c1=O	5.0	Low	2013.0
-3754	12248	P29274	Nc1nc(-c2ccco2)c2nnn(CC3CCCCC3)c2n1	8.07	High	2009.0
-1342	4360	P29274	CCCn1c(=O)[nH]c(=O)c2[nH]c(-c3ccccc3)nc21	4.96	Low	1989.0
-3035	9878	P29274	CC(C)CCn1cc2c(nc(NC(=O)Cc3ccc(-c4ccccc4)cc3)n3nc(-c4ccco4)nc23)n1	8.04	High	2009.0
-4139	13501	P29274	O=C(Nc1ccc(-c2ccncc2)c(-c2ccco2)n1)C1CC1	7.521	High	2010.0
-274	872	P29274	Nc1ccccc1C(=O)Nc1nc(-c2ccccc2)nc2c1nnn2Cc1ccccc1	6.53	High	2009.0
-727	2319	P29274	Cn1c(-c2ccco2)nc2c(NC(=O)Nc3ccccc3)ncnc21	7.242	High	2013.0
-2687	8758	P29274	O=C(c1ccccc1)c1sc(NCc2ccc(F)c(F)c2)nc1-c1ccco1	7.192	High	2009.0
-4110	13405	P29274	COc1cccc(CNC(=O)c2cc(-c3ccco3)nc(N)n2)c1	8.213	High	2009.0
-762	2451	P29274	Cc1ccc2cc(CCn3ncc4c3nc(N)n3nc(-c5ccco5)nc43)ccc2n1	8.62	High	2008.0
-3201	10435	P29274	O=c1c2c(nc3ccccn32)n(Cc2ccccc2)c(=O)n1CC1CC1	6.62	High	2002.0
-2919	9508	P29274	COc1ccc(-c2cn3cc(C#Cc4ccccc4)cc(N)c3n2)cc1OC	5.0	Low	2018.0
-449	1439	P29274	CCCn1cc2c(nc(NC(=O)Nc3ccc(OC)cc3)n3nc(-c4ccco4)nc23)n1	6.851	High	1999.0
-333	1068	P29274	CCCCC(NC(=O)C1CCC2c3[nH]c4ccccc4c3CCN2C1)C(=O)NC(Cc1c[nH]c2ccccc12)C(=O)NC(CCCCN)C(N)=O	5.0	High	2015.0
-3497	11368	P29274	CCCn1c(=O)c2nc(-c3ccc(OCC(=O)NCCN(C)C)cc3O)[nH]c2n(CCC)c1=O	7.11	Low	1988.0
-304	977	P29274	Cn1c(=O)c2nc(-c3ccc(S(=O)(=O)NCCc4ccccc4)cc3)[nH]c2n(C)c1=O	7.489	High	2006.0
-2645	8635	P29274	O=[N+]([O-])c1ccc(O)c(C=NN=C(S)Cc2ccccc2)c1	8.0	Medium	2004.0
-3963	12932	P29274	CC(=O)Nc1cc(N2CCCC2=O)nc(-n2nc(C)cc2C)n1	7.28	High	2009.0
-2497	8156	P29274	CC(=O)OC1CCC(N2CCCn3c2nc2c3c(=O)n(C)c(=O)n2C)CC1	4.66	High	2011.0
-121	390	P29274	COc1cccc(NC(=O)Nc2nc3nn(C)cc3c3nc(-c4ccco4)nn23)c1	6.8	High	2002.0
-720	2294	P29274	O=C(Nc1cccc(Cl)c1)Nc1nc2ccc(Cl)cc2c2nc(-c3ccco3)nn12	8.021	High	2000.0
-3103	10108	P29274	CCCn1c(=O)c2nc(-c3cc(OCc4nc5c(C(F)(F)F)cc(C(F)(F)F)cc5[nH]4)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2012.0
-3210	10464	P29274	Cc1ccc(-c2nc(NC(=O)CN3CCN(C)CC3)cc(-n3nccc3C)n2)o1	7.852	High	2008.0
-2284	7429	P29274	COc1ccccc1Cn1c(=O)n(-c2cccc(C)c2)c2nc(NC3CC3)ncc21	6.5	High	2009.0
-4141	13512	P29274	Cc1nccn1-c1sc(Nc2cnccn2)nc1-c1cccc(C#N)c1	5.78	High	2005.0
-3651	11903	P29274	CCCn1c(=O)c2nc(C34CCC(C=CC(=O)O)(CC3)CC4)[nH]c2n(CCC)c1=O	5.479	High	2006.0
-1728	5627	P29274	CCn1cc2c(nc(N)n3nc(-c4ccco4)nc23)n1	8.714	High	1999.0
-1220	3955	P29274	OCC12CC1C(n1cnc3c(NC(C4CC4)C4CC4)nc(Cl)nc31)C(O)C2O	5.66	High	2016.0
-456	1462	P29274	COCC1CCCN1c1cc(NC(=O)CC(C)C)nc(-n2nc(C)cc2C)n1	7.3	High	2009.0
-3555	11565	P29274	CCCn1c(=O)c2nc(-c3cc(OCC(=O)Nc4ccc(C(C)CC)cc4)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2004.0
-1539	5003	P29274	O=C(c1ccc(F)cc1)c1c[nH]c(C(=O)NCCCn2ccnc2)c1	5.33	High	2012.0
-3673	11978	P29274	O=C(Nc1nc2nn(CCc3ccccc3)cc2c2nc(-c3ccccc3)nn12)c1ccccc1	6.02	High	2010.0
-669	2136	P29274	CCCn1c(=O)c2[nH]c(-c3ccc(OCC(=O)Nc4ccccc4)cc3)c(Cl)c2n(CCC)c1=O	7.13	High	2006.0
-1920	6230	P29274	O=C(CN1CCOCC1)Nc1cc(-n2cccn2)nc(-c2ccco2)n1	8.8	High	2008.0
-419	1337	P29274	OC1CC2(n3cnc4c(NC5CC5)nc(Cl)nc43)CC2C1O	5.43	Medium	2015.0
-945	3060	P29274	CCCSc1nc(NC(C)=O)cc(OCc2ccccc2Cl)n1	5.381	High	2008.0
-251	794	P29274	CCCCC(CC)CNc1nc2nn(C)cc2c2nc(-c3ccco3)nn12	6.29	High	2012.0
-4172	13606	P29274	Cc1ccc(-c2nc(N)nc(C(=O)NCc3ccccn3)c2C)o1	7.921	High	2009.0
-3357	10933	P29274	NCCCCC(NC(=O)C(Cc1ccc(F)c(F)c1)NC(=O)C1CCCN1C(=O)CCCCCNC(=O)C1CCC2c3[nH]c4ccccc4c3CCN2C1)C(N)=O	4.43	High	2015.0
-1792	5819	P29274	Nc1nnc(-c2cccc(Cl)c2)c(-c2ccccc2)n1	7.29	High	2012.0
-1447	4692	P29274	Cc1ccc(N2CCN(C(=O)C(C)Oc3ccc(-c4cc5c([nH]4)c(=O)n(C)c(=O)n5C)cc3)CC2)cc1	6.41	High	2008.0
-84	281	P29274	N#Cc1cccc(-c2nc(NC(=O)O)sc2-n2cncn2)c1	5.251	High	2005.0
-1946	6312	P29274	CC(C)(C)CNC(=O)c1ccc(C(=O)Nc2nccs2)cc1	6.96	High	2011.0
-689	2198	P29274	NCC1CCC(CNc2nc(N)n3nc(-c4ccco4)nc3n2)CC1	7.771	High	2011.0
-62	202	P29274	Cn1cc2c(nc(NNC(=S)N=C3C=CC(=C4c5ccc(O)cc5Oc5cc(O)ccc54)C(C(=O)O)=C3)n3nc(-c4ccco4)nc23)n1	5.61	High	2016.0
-1917	6220	P29274	CNc1ncc(C(=O)OC(C)c2ccccc2)c2nc(-c3ccco3)nn12	7.96	High	2018.0
-2182	7095	P29274	CNC(=O)C12CC1C(n1cnc3c(NCc4cccc(Cl)c4)nc(C#CCCCCc4cn(CCNC(C)=O)nn4)nc31)C(O)C2O	5.612	High	2010.0
-3849	12557	P29274	Nc1nc(-c2ccco2)c2ncn(C(=O)NCc3ccco3)c2n1	8.735	High	2008.0
-1628	5319	P29274	Nc1nc2nn(CCc3c(Br)cc(Br)cc3Br)cc2c2nc(-c3ccco3)nn12	6.46	High	2009.0
-2842	9265	P29274	COc1ccccc1CNc1nc(N)c2nc(C)sc2n1	6.87	High	2018.0
-4025	13117	P29274	O=C(Nc1ccc(-c2ccncc2)c(-c2cccc(F)c2)n1)C1CC1	7.242	High	2010.0
-1375	4474	P29274	COc1ccc(N2CCOCC2)c2sc(NC(=O)C(C)(C)Oc3ccc(C)cc3)nc12	8.175	High	2017.0
-4337	14179	P29274	COc1ccc(CC(=O)Nc2cc(-n3nc(C)cc3C)nc(-c3ccc(C)o3)n2)cc1F	8.521	High	2008.0
-1607	5251	P29274	COc1nc(-c2ccco2)c2ncn(C(=O)NCc3ccccc3)c2n1	8.1	High	2008.0
-1882	6103	P29274	Cc1nc2c(N)nc(NCc3ccccc3)nc2s1	6.27	High	2018.0
-3209	10463	P29274	COc1cccc2cc(C(=O)NCCO)c(=N)oc12	6.0	High	2012.0
-2544	8303	P29274	COCCCn1c(NC(=O)c2cccc(C#N)c2)nc2cc(C(N)=O)cnc21	5.612	High	2010.0
-1991	6452	P29274	Nc1ncnc2c1nc(Br)n2CCc1ccccc1	5.31	High	2009.0
-3898	12707	P29274	Nc1nc2c(cnn2CCCc2ccc3c(c2)OC(C(=O)O)(C(=O)O)O3)c2nc(-c3ccco3)nn12	6.92	High	2002.0
-3852	12563	P29274	COCCOc1cnc2c(c1)CN(CCn1ncc3c1nc(N)n1nc(-c4ccco4)nc31)CC2	8.51	High	2008.0
-1284	4171	P29274	COC(=O)C1=C(C)N=C(C)C(=C(O)OC)C1c1ccccc1[N+](=O)[O-]	4.65	High	1997.0
-904	2911	P29274	CN(C)CCOc1cccc(-c2nc3c(=O)n(C)c(=O)n(C)c3[nH]2)c1	6.399	High	2009.0
-740	2370	P29274	Nc1nc2c(cnn2CCc2ccc(S(N)(=O)=O)cc2)c2nc(-c3ccco3)nn12	8.881	High	2002.0
-2745	8941	P29274	COc1ccccc1CCCc1nc(N)c2nn(-c3ccccc3)cc2n1	6.82	High	2014.0
-1766	5742	P29274	CC(=O)Nc1cc(-c2cc(F)cc(OC3CCN(C)C3)c2)nc(-n2nc(C)cc2C)n1	8.9	High	2008.0
-3017	9822	P29274	Cc1cccc(NC2=C(N)C(=O)c3ccccc3C2=O)c1	6.1	High	2010.0
-3541	11505	P29274	Cn1c(-c2cccc(F)c2)nc2c(N)nc(C#CC(C)(C)O)nc21	8.04	Medium	2001.0
-897	2884	P29274	CCn1cc2c(nc(NC(=O)Nc3ccc4c(c3)OCO4)n3nc(-c4ccco4)nc23)n1	6.24	High	2002.0
-1231	3987	P29274	Cc1cc(C)nc(CNC(=O)c2cc(-c3ccc(C)o3)nc(N)n2)c1	8.021	High	2009.0
-1327	4311	P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4cccc(C(F)(F)F)c4)c3)[nH]c2n(CCC)c1=O	6.4	High	2006.0
-1142	3727	P29274	Cn1c(=O)c2[nH]c(-c3cccc(OCC(=O)Nc4ccc(Br)cc4)c3)cc2n(C)c1=O	7.17	High	2006.0
-4395	14349	P29274	CCOC(=O)c1nc(NC(=O)c2ccc(F)cc2)nc2nn(C(C)C)cc12	5.55	High	2015.0
-77	255	P29274	Nc1nc2c(ncn2CCN2CCN(c3ccc(Cl)cn3)CC2)c2nc(-c3ccco3)nn12	9.05	High	2007.0
-523	1667	P29274	CCCCn1cc2c(nc(NC(=O)Nc3ccc(S(=O)(=O)O)cc3)n3nc(-c4ccco4)nc23)n1	6.451	High	2002.0
-1153	3752	P29274	COCC1CCCN1c1cc(NC(C)=O)nc(-c2ccc(C)o2)n1	7.471	High	2009.0
-3481	11319	P29274	CCCCC=Cc1nc(N)c2ncn(C3SCC(O)C3O)c2n1	7.415	High	2010.0
-3886	12664	P29274	Clc1ccc(Nc2nc3c(N4CCOCC4)ncnc3s2)cc1	5.85	High	2016.0
-1466	4753	P29274	CCCC(=O)Nc1nc(-c2ccccc2)nc(-c2ccccc2)c1C#N	7.16	High	2008.0
-2097	6790	P29274	Cc1nc2[nH]cnc2c2nc(-c3ccccc3)nn12	6.26	Medium	2002.0
-3610	11757	P29274	O=C(NCc1ccccc1)Nc1nc2ccccc2n2c(=O)n(-c3ccccc3)nc12	6.8	High	2008.0
-515	1644	P29274	CCOC(=O)c1nc(NC(=O)c2ccc(C(F)(F)F)cc2)nc2nn(C)cc12	4.0	Low	2015.0
-384	1233	P29274	Cc1ccc(-c2nn3c(=O)[nH]c4ccccc4n3c2=O)cc1	5.0	Low	2007.0
-2197	7144	P29274	CC(C)Cn1cnc2ncnc(N)c21	4.0	Low	2009.0
-978	3151	P29274	Cn1cc2c(nc(NC(=O)COc3ccccc3)n3nc(-c4ccco4)nc23)n1	7.82	High	2009.0
-279	888	P29274	CCCn1c(=O)n(C)c(=O)c2[nH]c(-c3ccc(OCC(=O)O)cc3)cc21	6.11	High	2006.0
-140	450	P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4noc(-c5ccc(C#N)cc5)n4)c3)[nH]c2n(CCC)c1=O	5.301	Low	2006.0
-4230	13810	P29274	COCCOc1ccc(N2CCN(CCN(CCOC)c3cc4nc(-c5ccco5)nn4c(N)n3)CC2)cc1	9.152	High	2009.0
-4147	13530	P29274	CCn1c(=O)c2[nH]c(-c3ccc(OCC(=O)N4CCN(c5ccccc5)CC4)cc3)cc2n(CC)c1=O	6.16	High	2008.0
-3110	10135	P29274	CC(=O)N1CCN(Cc2cccc3c2-c2nc(N)nc(-c4ccccc4)c2C3=O)CC1	8.1	Medium	2010.0
-2794	9107	P29274	O=C1c2ccccc2C(=O)c2cc(OCC(O)CN3CCCCC3)ccc21	5.3	High	2012.0
-2830	9223	P29274	CC(=O)NCCNc1nc(-c2ccco2)c(C(=O)c2ccccc2)s1	6.55	High	2009.0
-1238	4011	P29274	Nc1nc(-c2ccco2)c2nnn(Cc3ccc(N)c(F)c3)c2n1	9.152	High	2009.0
-1820	5906	P29274	COc1ccc(N(C(C)=O)C(F)F)c2sc(NC(=O)c3ccc(F)cc3)nc12	7.213	High	2010.0
-1039	3357	P29274	CCn1c(=O)n(CC(C)C)c(=O)c2[nH]c(-c3cn[nH]c3)nc21	5.912	High	2008.0
-4356	14240	P29274	O=C(Nc1nc(-c2ccccc2)nc2c1nnn2Cc1ccccc1)C1CCC1	6.922	High	2009.0
-3640	11859	P29274	CCCn1c(=O)c2nc(-c3cnn(-c4ccccn4)c3)[nH]c2n(CC)c1=O	6.39	High	2008.0
-3756	12255	P29274	COc1ccc(-n2nc3c(N)nc(-c4ccccc4)cn3c2=O)cc1	7.11	High	2017.0
-2328	7572	P29274	CN1CCN(CCNc2nc(N)n3nc(-c4ccco4)nc3n2)CC1	7.116	High	2016.0
-2816	9177	P29274	O=C(COc1cccc(F)c1)Nc1cc(-c2nccs2)nc(-c2ccccn2)n1	8.442	High	2008.0
-3544	11514	P29274	CCCCC(CC)CNc1ncc(C(=O)OCC)c2nc(-c3ccco3)nn12	6.67	High	2014.0
-2534	8274	P29274	O=C(Cc1cccc2ccccc12)Nc1nc2nn(CCCc3ccccc3)cc2c2nc(-c3ccco3)nn12	6.38	High	2003.0
-300	967	P29274	COc1ccc(CCCc2cc3nc(-c4ccco4)nn3c(N)n2)cc1	7.94	High	2009.0
-3909	12749	P29274	CCC(NC(=O)COc1ccc2nc(O)c(-c3nccs3)c(CCc3ccccc3)c2c1)c1ccccc1	5.84	High	2010.0
-2581	8408	P29274	Cc1ccc(-c2nc(NC(=O)COc3ccccc3F)cc(-c3nccs3)n2)o1	8.122	High	2008.0
-2817	9180	P29274	CNC(=O)C12CC1C(n1cnc3c(NC)nc(C#Cc4cccc(Cl)c4)nc31)C(O)C2O	5.9	High	2012.0
-3879	12637	P29274	CCCn1c(=O)c2c([nH]c3nc(C)cn32)n(Cc2cccnc2)c1=O	6.0	Low	2008.0
-2467	8056	P29274	CCn1c(=O)c2c(nc(C=Cc3ccc(O)c(OC)c3)n2C)n(CC)c1=O	4.92	High	2013.0
-2496	8151	P29274	CNc1ncc(C(=O)OCc2ccc(F)cc2)c2nc(-c3ccco3)nn12	7.15	High	2018.0
-1332	4327	P29274	CCCn1c(=O)c2[nH]c(-c3ccco3)c(O)c2n(CCC)c1=O	6.982	High	2008.0
-2269	7377	P29274	CCN(C(C)=O)c1ccc(OC)c2nc(NC(=O)C3CCC(NC(=O)c4cccc(C(F)(F)F)c4)C3)sc12	7.231	High	2011.0
-1426	4632	P29274	Cn1c(=O)c2c(cc(C=Cc3ccc(F)cc3)n2C)n(C)c1=O	6.372	High	2013.0
-744	2389	P29274	Nc1nc(N2CCN3CC(COc4cccc(F)c4)CCC3C2)nc2nc(-c3ccco3)nn12	9.7	High	2008.0
-44	141	P29274	Nc1nc2c(cnn2CCCc2ccc3c(c2)OC(C(=O)O)O3)c2nc(-c3ccco3)nn12	7.23	High	2002.0
-3434	11182	P29274	CCCn1c(=O)c2nc(-c3cc(C)n(CC(=O)Nc4ccc(OC)cc4)n3)[nH]c2n(CCC)c1=O	6.0	Low	2008.0
-3499	11375	P29274	Cc1csc(-c2nc(N)nc3c2nnn3Cc2ccccc2F)n1	8.66	High	2009.0
-2292	7456	P29274	CCCn1c(=O)c2nc(-c3cc(C(=O)O)n(C)n3)[nH]c2n(CCC)c1=O	6.0	Low	2004.0
-2302	7493	P29274	CC(C)(C)OC(=O)NCCNc1nc(N)n2nc(-c3ccco3)nc2n1	7.39	High	2011.0
-1195	3877	P29274	O=C(COc1ccc2nc(O)c(-c3nccs3)c(CCc3ccccc3)c2c1)NCc1ccccc1	5.457	High	2010.0
-1155	3755	P29274	CCCn1c(Br)nc2c(NCCCc3ccccc3)ncnc21	5.99	High	2015.0
-1343	4363	P29274	CCCCc1nc2[nH]cnc2c2nc(-c3ccc(-c4ccccc4)cc3)nn12	5.0	Low	2004.0
-40	129	P29274	CCCn1c(=O)c2[nH]c(-c3ccc([N+](=O)[O-])cc3)c(O)c2n(CCC)c1=O	6.84	High	2008.0
-338	1086	P29274	CCOC(=O)c1cnc(NC2CCCCCC2)n2nc(-c3ccco3)nc12	6.63	High	2014.0
-634	2024	P29274	CCCn1c(=O)c2nc(CC3CCCC3)[nH]c2n(CCC)c1=O	5.72	Low	1988.0
-796	2557	P29274	CCOc1ccc(CCCn2ncc3c2nc(N)n2nc(-c4ccco4)nc32)cc1	7.36	High	2010.0
-1516	4922	P29274	CCCn1c(=O)c2nc(-c3cc(C)n(CC(=O)Nc4cccc(Cl)c4)n3)[nH]c2n(CCC)c1=O	6.0	Low	2008.0
-1367	4449	P29274	CC(=O)Nc1cc(-c2cccc(N)n2)nc(-n2nc(C)cc2C)n1	8.101	High	2008.0
-1224	3965	P29274	COc1cccc2c1nc(N)n1nc(CN3CCN(c4ccccn4)CC3C)nc21	7.43	High	2015.0
-1398	4543	P29274	CCOc1ccc(N2CCN(CCn3ncc4c3nc(N)n3nc(-c5ccco5)nc43)CC2)cc1	8.852	High	2007.0
-4206	13733	P29274	Clc1ccc(Cc2n[nH]c(-c3cnccn3)n2)cc1Cl	7.22	Medium	2004.0
-2958	9644	P29274	CC(C)N1CCN(C(=O)c2ccc3c(c2)-c2nc(N)nc(-c4ccccc4)c2C3=O)CC1	7.68	Medium	2010.0
-3984	12999	P29274	Cn1c(=O)c2c(nc(-c3ccc(C(=O)O)cc3)n2C)n(C)c1=O	3.824	Low	1989.0
-1692	5509	P29274	Clc1cccc2[nH]c(-c3cnc4ccccc4n3)nc12	5.0	Low	2005.0
-1580	5152	P29274	CCOC(=O)c1cnc(NC)n2nc(-c3ccco3)nc12	6.98	High	2014.0
-2491	8134	P29274	CN(C(=O)CCCc1ccccc1)c1nc2ccccc2c(=O)s1	5.0	Low	2013.0
-1249	4053	P29274	Cc1ccc(-n2nc(C)c3cnc(-c4ccc(C5CC5C(=O)O)cc4F)cc32)nc1	5.77	High	2017.0
-1162	3775	P29274	CCCn1c(=O)[nH]c2[nH]c(-c3ccc(S(=O)(=O)N4CCN(Cc5ccccc5)CC4)cc3)nc2c1=O	6.32	High	2006.0
-887	2855	P29274	CCCn1c(=O)c2nc(-c3cnn(CC(=O)N4CCN(c5cccc(C(F)(F)F)c5)CC4)c3)[nH]c2n(CCC)c1=O	7.24	High	2017.0
-3821	12468	P29274	COc1ccc2c(c1)CN(CCn1ncc3c1nc(N)n1nc(-c4ccco4)nc31)CC2	8.492	High	2008.0
-2019	6538	P29274	CCCn1c(=O)c2nc(-c3cc(OCC(=O)Nc4ccc(OC)cc4)no3)[nH]c2n(CCC)c1=O	6.0	Low	2004.0
-1440	4671	P29274	CC(=O)CNc1nc(-c2ccccc2)nc2nc(C(C)C)cn12	5.0	Low	2002.0
-1262	4090	P29274	CCCC(=O)Oc1ccc(CCNc2nc(N)n3nc(-c4ccco4)nc3n2)cc1	7.525	High	2013.0
-4386	14324	P29274	O=C(Cc1cccc2ccccc12)Nc1nc2nn(CCc3ccccc3)cc2c2nc(-c3ccco3)nn12	7.26	High	2003.0
-692	2211	P29274	CCCn1c(=O)c2nc(-c3ccc(OCC(=O)Nc4cccc(C(C)=O)c4)cc3)[nH]c2n(CCC)c1=O	7.23	Medium	2000.0
-428	1366	P29274	CCCn1c(=O)c2nc(-c3cc(OCc4nc5c(C(F)(F)F)cc(C(F)(F)F)cc5[nH]4)no3)[nH]c2n(CCC)c1=O	6.0	Low	2012.0
-3980	12988	P29274	N#Cc1c(-c2ccc(Cl)c(Cl)c2)cc(-c2ccco2)nc1N	6.72	High	2008.0
-1477	4798	P29274	Nc1nc(-c2nccs2)c2nnn(Cc3ccccc3F)c2n1	8.07	High	2009.0
-4269	13941	P29274	Cn1cc2c(nc(NC(=O)Nc3ccc(CC(=O)NCCCCN)cc3)n3nc(-c4ccco4)nc23)n1	6.76	Medium	2016.0
-2769	9028	P29274	COc1ccc(-c2cc3cccc(OC)c3oc2=O)cc1	4.0	Low	2020.0
-1870	6059	P29274	CC(=O)Nc1cc(-c2ccc3c(c2)OCO3)nc(-c2ccc3c(c2)OCO3)n1	5.48	High	2011.0
-1948	6319	P29274	CCCn1c(=O)n(CCC#N)c(=O)c2[nH]cnc21	3.79	Low	1993.0
-1280	4159	P29274	COCCOc1ccc(C2CCN(CCn3cnc4c3nc(N)n3nc(-c5ccco5)nc43)CC2)cc1	9.152	High	2007.0
-289	922	P29274	OC1C(O)C(n2cnc3c(NCc4cccc5ccccc45)nc(Cl)nc32)C2CC12	5.82	High	2008.0
-351	1126	P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4nc(-c5ccccc5)no4)c3)[nH]c2n(CCC)c1=O	5.96	High	2006.0
-471	1518	P29274	Cn1c(=O)c2[nH]c(-c3ccc(COC(=O)Nc4ccccc4)cc3)cc2n(C)c1=O	7.46	High	2009.0
-2964	9662	P29274	CCCOc1cc(NC(=O)CC)nc(SC)n1	6.4	High	2008.0
-2318	7541	P29274	Nc1nc(NCCN2CCN(c3ccc(F)cc3F)CC2)nc2nc(-c3ccco3)nn12	9.194	High	2016.0
-1085	3520	P29274	CCCn1c(=O)c2nc(-c3cc(NC(=O)CCC(=O)O)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2004.0
-3426	11158	P29274	CN1CCN(S(=O)(=O)c2ccc(CCn3ncc4c3nc(N)n3nc(-c5ccco5)nc43)cc2)CC1	8.42	High	2002.0
-3688	12022	P29274	CNc1nc(-c2ccco2)c(C(=O)c2ccccc2)s1	7.172	High	2009.0
-2274	7388	P29274	Cn1c(=O)ccc2c(O)cc(-c3ccccc3)nc21	5.19	Medium	2000.0
-4007	13065	P29274	Cn1cc2c(nc(NNC(=S)Nc3ccc(C4c5ccc(O)cc5OC5=CC(=O)C=CC54)c(C(=O)O)c3)n3nc(-c4ccco4)nc23)n1	6.03	High	2013.0
-42	135	P29274	CC(C)n1c(Br)nc2c(N)ncnc21	7.13	High	2009.0
-3809	12435	P29274	OC1CC2(n3cnc4c(NC(C5CC5)C5CC5)nc(Cl)nc43)CC2C1O	5.4	Medium	2015.0
-3708	12089	P29274	CCSc1nc(-n2cccn2)nc(N)c1Br	8.1	High	2014.0
-108	342	P29274	COc1ccc(NC(=O)Nc2nc3nn(C)cc3c3nc(-c4ccc(C(F)(F)F)cc4)nn23)cc1	4.0	Low	2011.0
-1975	6405	P29274	CCCCc1nc2ccccc2c2nc(-c3ccc(O)cc3)nn12	5.28	Medium	2004.0
-4289	14013	P29274	Nc1nnc(-c2ccc(O)c(Cl)c2)c(-c2ccccc2)n1	9.246	High	2012.0
-3025	9845	P29274	Nc1nc(Cc2ccccc2F)nc2cn(-c3ccccc3)nc12	6.81	High	2014.0
-3996	13029	P29274	COc1ccc(-c2cc(N)cc3nc(-c4ccco4)oc23)cc1OC	7.05	High	2018.0
-3897	12706	P29274	Nc1c(Sc2ccccc2)cc(Sc2ccccc2)c2c1C(=O)c1ccccc1C2=O	5.72	High	2010.0
-884	2845	P29274	CCCN(C)C(=O)c1cc(N)n2nc(-c3ccc(Br)o3)nc2c1	8.22	Medium	2004.0
-2380	7749	P29274	COc1ccc(C2CCN(C(=O)COc3ccc(-c4cc5c([nH]4)c(=O)n(C)c(=O)n5C)cc3OC)CC2)cc1	6.06	High	2008.0
-2066	6689	P29274	CCOC(=O)c1nc(NC(=O)c2ccc(C)cc2)nc2nn(CCc3ccccc3)cc12	5.22	High	2015.0
-3596	11713	P29274	COc1ccc(CC(=O)Nc2nc3nn(CCC(C)C)cc3c3nc(-c4ccco4)nn23)cc1	8.71	High	2009.0
-244	777	P29274	C=Cn1ncc2c1nc(N)n1c(=O)n(Cc3ccccc3)nc21	9.521	High	2011.0
-2309	7518	P29274	Nc1nc(-c2ccccc2)cc2nc(-c3ccco3)nn12	8.152	High	2011.0
-3746	12228	P29274	CN1CCN(C(=O)c2ccc3c(c2)-c2nc(N)nc(-c4ccccc4)c2C3=O)CC1	8.09	High	2010.0
-250	792	P29274	CCN1C(=CC=CC=CC2=[N+](CCCCCC(=O)NCCNC(=O)CCC#Cc3nc(NCc4cccc(Cl)c4)c4ncn(C5C(O)C(O)C6(C(=O)NC)CC56)c4n3)c3ccccc3C2(C)C)C(C)(C)c2cc(S(=O)(=O)O)ccc21	5.33	High	2009.0
-4409	14397	P29274	CCCOc1ccc(C=Cc2cc3c(c(=O)n(C)c(=O)n3C)n2C)cc1	6.511	High	2013.0
-594	1908	P29274	O=C(Nc1nc(-c2ccccc2)c(-c2ncon2)s1)c1ccccc1	6.481	High	2010.0
-1587	5183	P29274	N=C1N(CCCCc2ccccc2)CC2Cc3ccccc3CN12	4.46	High	2015.0
-2150	6972	P29274	COCc1cccc(CNC(=O)c2cc(-c3ccco3)nc(N)n2)n1	8.77	High	2009.0
-2053	6648	P29274	COc1ccc(Nc2c(-c3ccc4nccnc4c3)c(C)nn2-c2ccccc2Cl)c(C(=O)O)c1	4.301	Low	2010.0
-3491	11351	P29274	N#Cc1c(-c2ccco2)cc(-c2ccccc2)nc1N	7.72	High	2008.0
-4084	13322	P29274	CNc1ncc(C(=O)NCc2ccc(F)cc2)c2nc(-c3ccco3)nn12	7.32	High	2018.0
-3272	10663	P29274	CCCn1c(=O)n(C)c(=O)c2c1ncn2CCO	3.699	Low	1993.0
-1306	4237	P29274	O=c1[nH]c2[nH]c(-c3cnn(Cc4cc(-c5ccc(C(F)(F)F)cc5)on4)c3)nc2c(=O)n1CC1CC1	5.301	Low	2008.0
-4104	13387	P29274	CN(C)C(=O)CN(C)C(=O)c1cc(N)c2nc(-c3ccc(Br)o3)nn2c1	7.64	Medium	2004.0
+accession	SMILES	pchembl_value_Mean	Quality	Year
+P29274	Nc1nc(Cc2ccccc2F)nc2cn(-c3ccccc3)nc12	6.81	High	2014.0
+P29274	CN1CCN(C(=O)c2ccc3c(c2)-c2nc(N)nc(-c4ccccc4)c2C3=O)CC1	8.09	High	2010.0
+P29274	CCCCc1nc2[nH]cnc2c2nc(-c3ccc(-c4ccccc4)cc3)nn12	5.0	Low	2004.0
+P29274	Cn1c(-c2ccco2)nc2c(NC(=O)Nc3ccccc3)ncnc21	7.242	High	2013.0
+P29274	COCCOc1ccc(N2CCN(CCN(CCOC)c3cc4nc(-c5ccco5)nn4c(N)n3)CC2)cc1	9.152	High	2009.0
+P29274	COc1ccc(-c2cc(N)cc3nc(-c4ccco4)oc23)cc1OC	7.05	High	2018.0
+P29274	Nc1ncnc2c1nc(Br)n2CCc1ccccc1	5.31	High	2009.0
+P29274	CCCn1c(=O)c2nc(-c3cnn(-c4ccccn4)c3)[nH]c2n(CC)c1=O	6.39	High	2008.0
+P29274	Cn1c(=O)c2c(nc(-c3ccc(C(=O)O)cc3)n2C)n(C)c1=O	3.824	Low	1989.0
+P29274	Nc1nc(-c2ccccc2)cc2nc(-c3ccco3)nn12	8.152	High	2011.0
+P29274	O=C(c1ccccc1)c1sc(NCc2ccc(F)c(F)c2)nc1-c1ccco1	7.192	High	2009.0
+P29274	Cc1csc(-c2nc(N)nc3c2nnn3Cc2ccccc2F)n1	8.66	High	2009.0
+P29274	CC(C)(C)CNC(=O)c1ccc(C(=O)Nc2nccs2)cc1	6.96	High	2011.0
+P29274	N#Cc1c(-c2ccco2)cc(-c2ccccc2)nc1N	7.72	High	2008.0
+P29274	O=C(Nc1ccc(-c2ccncc2)c(-c2cccc(F)c2)n1)C1CC1	7.242	High	2010.0
+P29274	COc1ccc(CC(=O)Nc2nc3nn(CCC(C)C)cc3c3nc(-c4ccco4)nn23)cc1	8.71	High	2009.0
+P29274	Nc1nc2c(cnn2CCCc2ccc3c(c2)OC(C(=O)O)(C(=O)O)O3)c2nc(-c3ccco3)nn12	6.92	High	2002.0
+P29274	Cc1ccc2cc(CCn3ncc4c3nc(N)n3nc(-c5ccco5)nc43)ccc2n1	8.62	High	2008.0
+P29274	CCCCc1nc2ccccc2c2nc(-c3ccc(O)cc3)nn12	5.28	Medium	2004.0
+P29274	CC(C)n1c(Br)nc2c(N)ncnc21	7.13	High	2009.0
+P29274	Cn1c(=O)c2nc(-c3ccc(S(=O)(=O)NCCc4ccccc4)cc3)[nH]c2n(C)c1=O	7.489	High	2006.0
+P29274	CN(C)C(=O)CN(C)C(=O)c1cc(N)c2nc(-c3ccc(Br)o3)nn2c1	7.64	Medium	2004.0
+P29274	CCCn1c(=O)c2nc(-c3cc(C)n(CC(=O)Nc4ccc(CC(C)C)cc4)n3)[nH]c2n(CCC)c1=O	6.0	Low	2008.0
+P29274	CC(=O)Nc1cc(N2CCCC2=O)nc(-n2nc(C)cc2C)n1	7.28	High	2009.0
+P29274	CC(=O)OC1CCC(N2CCCn3c2nc2c3c(=O)n(C)c(=O)n2C)CC1	4.66	High	2011.0
+P29274	CCCOc1cc(NC(=O)CC)nc(SC)n1	6.4	High	2008.0
+P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4nc(-c5ccccc5)no4)c3)[nH]c2n(CCC)c1=O	5.96	High	2006.0
+P29274	CCCn1c(=O)c2[nH]c(-c3ccc([N+](=O)[O-])cc3)c(O)c2n(CCC)c1=O	6.84	High	2008.0
+P29274	Clc1cccc2[nH]c(-c3cnc4ccccc4n3)nc12	5.0	Low	2005.0
+P29274	CCCn1c(=O)n(C)c(=O)c2[nH]c(-c3ccc(OCC(=O)Nc4ccc(F)cc4)cc3)cc21	6.95	High	2006.0
+P29274	COc1ccc(N2CCOCC2)c2sc(NC(=O)C(C)(C)Oc3ccc(C)cc3)nc12	8.175	High	2017.0
+P29274	CCC(NC(=O)COc1ccc2nc(O)c(-c3nccs3)c(CCc3ccccc3)c2c1)c1ccccc1	5.84	High	2010.0
+P29274	COc1ccc(Nc2c(-c3ccc4nccnc4c3)c(C)nn2-c2ccccc2Cl)c(C(=O)O)c1	4.301	Low	2010.0
+P29274	CCOC(=O)c1nc(NC(=O)c2ccc(F)cc2)nc2nn(C(C)C)cc12	5.55	High	2015.0
+P29274	COc1ccc(-c2cn3cc(C#Cc4ccccc4)cc(N)c3n2)cc1OC	5.0	Low	2018.0
+P29274	CCCn1c(=O)n(C)c(=O)c2c1ncn2CCO	3.699	Low	1993.0
+P29274	CCOc1ccc(CCCn2ncc3c2nc(N)n2nc(-c4ccco4)nc32)cc1	7.36	High	2010.0
+P29274	CCCCn1cc2c(nc(NC(=O)Nc3ccc(S(=O)(=O)O)cc3)n3nc(-c4ccco4)nc23)n1	6.451	High	2002.0
+P29274	CCCn1c(=O)n(C)c(=O)c2[nH]c(-c3ccc(OCC(=O)O)cc3)cc21	6.11	High	2006.0
+P29274	COc1ccccc1CNc1nc(N)c2nc(C)sc2n1	6.87	High	2018.0
+P29274	Nc1nnc(-c2ccc(O)c(Cl)c2)c(-c2ccccc2)n1	9.246	High	2012.0
+P29274	COc1ccc(-n2nc3c(N)nc(-c4ccccc4)cn3c2=O)cc1	7.11	High	2017.0
+P29274	CCCn1c(=O)c2nc(-c3cc(C)n(CC(=O)Nc4cccc(Cl)c4)n3)[nH]c2n(CCC)c1=O	6.0	Low	2008.0
+P29274	Nc1nc(-c2ccco2)c2ncn(C(=O)NCc3ccco3)c2n1	8.735	High	2008.0
+P29274	CCCn1c(=O)c2nc(-c3cnn(CC(=O)N4CCN(c5cccc(C(F)(F)F)c5)CC4)c3)[nH]c2n(CCC)c1=O	7.24	High	2017.0
+P29274	Cc1ccc(-n2nc(C)c3cnc(-c4ccc(C5CC5C(=O)O)cc4F)cc32)nc1	5.77	High	2017.0
+P29274	Cn1c(=O)c2[nH]c(-c3cccc(OCC(=O)Nc4ccc(Br)cc4)c3)cc2n(C)c1=O	7.17	High	2006.0
+P29274	CCCCc1nc2[nH]ncc2c2nc(-c3ccc(C)cc3)nn12	5.0	Low	2004.0
+P29274	CCCn1c(=O)c2nc(-c3cc(OCc4nc5c(C(F)(F)F)cc(C(F)(F)F)cc5[nH]4)no3)[nH]c2n(CCC)c1=O	6.0	Low	2012.0
+P29274	O=C(Cc1cccc2ccccc12)Nc1nc2nn(CCCc3ccccc3)cc2c2nc(-c3ccco3)nn12	6.38	High	2003.0
+P29274	CCCn1c(=O)[nH]c2[nH]c(-c3ccc(S(=O)(=O)N4CCN(Cc5ccccc5)CC4)cc3)nc2c1=O	6.32	High	2006.0
+P29274	CCCn1c(=O)c2[nH]c(-c3ccc(OCC(=O)Nc4ccccc4)cc3)c(Cl)c2n(CCC)c1=O	7.13	High	2006.0
+P29274	COc1ccc(C2CCN(C(=O)COc3ccc(-c4cc5c([nH]4)c(=O)n(C)c(=O)n5C)cc3OC)CC2)cc1	6.06	High	2008.0
+P29274	CCOC(=O)c1nc(NC(=O)c2ccc(C)cc2)nc2nn(CCc3ccccc3)cc12	5.22	High	2015.0
+P29274	N=C1N(CCCCc2ccccc2)CC2Cc3ccccc3CN12	4.46	High	2015.0
+P29274	Cn1cc2c(nc(NC(=O)COc3ccccc3)n3nc(-c4ccco4)nc23)n1	7.82	High	2009.0
+P29274	NCCCCC(NC(=O)C(Cc1ccc(F)c(F)c1)NC(=O)C1CCCN1C(=O)CCCCCNC(=O)C1CCC2c3[nH]c4ccccc4c3CCN2C1)C(N)=O	4.43	High	2015.0
+P29274	Cn1c(=O)c2c(cc(C=Cc3ccc(F)cc3)n2C)n(C)c1=O	6.372	High	2013.0
+P29274	Cc1ccccc1CNc1nc(Cl)nc2c1ncn2C1SC(C(=O)NC2CC2)C(O)C1O	6.697	High	2006.0
+P29274	Nc1nc(-c2ccco2)c2nnn(Cc3ccc(N)c(F)c3)c2n1	9.152	High	2009.0
+P29274	Cc1nccn1-c1sc(Nc2cnccn2)nc1-c1cccc(C#N)c1	5.78	High	2005.0
+P29274	CN1CCN(CCNc2nc(N)n3nc(-c4ccco4)nc3n2)CC1	7.116	High	2016.0
+P29274	CNC(=O)C12CC1C(n1cnc3c(NCc4cccc(Cl)c4)nc(C#CCCCCc4cn(CCNC(C)=O)nn4)nc31)C(O)C2O	5.612	High	2010.0
+P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4cccc(C(F)(F)F)c4)c3)[nH]c2n(CCC)c1=O	6.4	High	2006.0
+P29274	CC(=O)Nc1cc(-c2cc(F)cc(OC3CCN(C)C3)c2)nc(-n2nc(C)cc2C)n1	8.9	High	2008.0
+P29274	COc1ccc(-c2cc3cccc(OC)c3oc2=O)cc1	4.0	Low	2020.0
+P29274	CCCCC(CC)CNc1ncc(C(=O)OCC)c2nc(-c3ccco3)nn12	6.67	High	2014.0
+P29274	Cc1nc2c(N)nc(NCc3ccccc3)nc2s1	6.27	High	2018.0
+P29274	COc1cccc(-c2n[nH]c(Cc3ccc(Cl)c(Cl)c3)n2)c1OC	7.05	Medium	2004.0
+P29274	CCOC(=O)c1cnc(NC2CCCCCC2)n2nc(-c3ccco3)nc12	6.63	High	2014.0
+P29274	CCCSc1nc(NC(C)=O)cc(OCc2ccccc2Cl)n1	5.381	High	2008.0
+P29274	O=C(c1ccc(F)cc1)c1c[nH]c(C(=O)NCCCn2ccnc2)c1	5.33	High	2012.0
+P29274	CCCn1c(=O)c2[nH]c(-c3ccco3)c(O)c2n(CCC)c1=O	6.982	High	2008.0
+P29274	CNC(=O)C12CC1C(n1cnc3c(NCc4ccc(N)c(I)c4)nc(Cl)nc31)C(O)C2O	5.96	High	2005.0
+P29274	Nc1nc2nn(CCc3c(Br)cc(Br)cc3Br)cc2c2nc(-c3ccco3)nn12	6.46	High	2009.0
+P29274	Clc1ccc(Nc2nc3c(N4CCOCC4)ncnc3s2)cc1	5.85	High	2016.0
+P29274	COc1ccc(N(C(C)=O)C(F)F)c2sc(NC(=O)c3ccc(F)cc3)nc12	7.213	High	2010.0
+P29274	CCCC(=O)Oc1ccc(CCNc2nc(N)n3nc(-c4ccco4)nc3n2)cc1	7.525	High	2013.0
+P29274	COCCOc1cnc2c(c1)CN(CCn1ncc3c1nc(N)n1nc(-c4ccco4)nc31)CC2	8.51	High	2008.0
+P29274	O=C1c2ccccc2C(=O)c2cc(OCC(O)CN3CCCCC3)ccc21	5.3	High	2012.0
+P29274	Nc1nc2c(ncn2CCN2CCN(c3ccc(Cl)cn3)CC2)c2nc(-c3ccco3)nn12	9.05	High	2007.0
+P29274	CCCn1c(=O)c2nc(-c3cc(OCc4nc5cncnc5[nH]4)nn3C)[nH]c2n(CCC)c1=O	6.0	Low	2012.0
+P29274	Cc1cc(C)nc(CNC(=O)c2cc(-c3ccc(C)o3)nc(N)n2)c1	8.021	High	2009.0
+P29274	Nc1nc(-c2ccco2)c2nnn(CC3CCCCC3)c2n1	8.07	High	2009.0
+P29274	Nc1nc2c(cnn2CCCc2ccc3c(c2)OC(C(=O)O)O3)c2nc(-c3ccco3)nn12	7.23	High	2002.0
+P29274	CCCn1c(=O)c2nc(-c3ccc(OCC(=O)NCCN(C)C)cc3O)[nH]c2n(CCC)c1=O	7.11	Low	1988.0
+P29274	O=C(Nc1cnc(-c2ccncc2)c(-c2ccco2)n1)C1CCC1	6.852	High	2011.0
+P29274	COc1cccc(CNC(=O)c2cc(-c3ccco3)nc(N)n2)c1	8.213	High	2009.0
+P29274	Cn1cc2c(nc(NNC(=S)N=C3C=CC(=C4c5ccc(O)cc5Oc5cc(O)ccc54)C(C(=O)O)=C3)n3nc(-c4ccco4)nc23)n1	5.61	High	2016.0
+P29274	CCn1c(=O)c2c(nc(C=Cc3ccc(O)c(OC)c3)n2C)n(CC)c1=O	4.92	High	2013.0
+P29274	CCSc1nc(-n2cccn2)nc(N)c1Br	8.1	High	2014.0
+P29274	C=Cn1ncc2c1nc(N)n1c(=O)n(Cc3ccccc3)nc21	9.521	High	2011.0
+P29274	COCCOc1ccc(C2CCN(CCn3cnc4c3nc(N)n3nc(-c5ccco5)nc43)CC2)cc1	9.152	High	2007.0
+P29274	CCCn1c(=O)c2nc(CC3CCCC3)[nH]c2n(CCC)c1=O	5.72	Low	1988.0
+P29274	CCCn1c(=O)c2nc(-c3ccc(OCC(=O)Nc4cccc(C(C)=O)c4)cc3)[nH]c2n(CCC)c1=O	7.23	Medium	2000.0
+P29274	COc1ccc2c(c1)CN(CCn1ncc3c1nc(N)n1nc(-c4ccco4)nc31)CC2	8.492	High	2008.0
+P29274	O=C(Nc1cccc(Cl)c1)Nc1nc2ccc(Cl)cc2c2nc(-c3ccco3)nn12	8.021	High	2000.0
+P29274	CCCn1c(=O)c2nc(-c3cnn(Cc4noc(-c5ccc(C#N)cc5)n4)c3)[nH]c2n(CCC)c1=O	5.301	Low	2006.0
+P29274	O=[N+]([O-])c1ccc(O)c(C=NN=C(S)Cc2ccccc2)c1	8.0	Medium	2004.0
+P29274	CC(C)CCn1cc2c(nc(NC(=O)Cc3ccc(-c4ccccc4)cc3)n3nc(-c4ccco4)nc23)n1	8.04	High	2009.0
