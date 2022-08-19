@@ -1,4 +1,5 @@
 from drugex.logs import logger
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 import os
 import os.path
 import json
@@ -13,6 +14,8 @@ from sklearn import metrics
 from sklearn.model_selection import ParameterGrid
 from drugex.environment.interfaces import QSARModel
 from drugex.environment.neural_network import STFullyConnected
+from torch import nn
+
 
 class QSARsklearn(QSARModel):
     """ Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
@@ -69,7 +72,6 @@ class QSARsklearn(QSARModel):
         inds = np.zeros(self.data.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
             logger.info('cross validation fold %s started: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-            
             
             fit_set = {'X':self.data.X[trained]}
 
@@ -211,10 +213,12 @@ class QSARDNN(QSARModel):
         n_epoch (int): number of epochs
 
     """
-    def __init__(self, base_dir, data, parameters = None):
+    def __init__(self, base_dir, data, parameters = None, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS):
+
         
-        super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1]), "DNN", parameters=parameters)
-        
+        super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1], device=device, gpus=gpus),
+                         "DNN", parameters=parameters)
+
         #transpose y data to column vector
         self.y = self.data.y.reshape(-1,1)
         self.y_ind = self.data.y_ind.reshape(-1,1)

@@ -57,19 +57,20 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-s', '--save_model', action='store_true',
                         help="If included then the model will be trained on all data and saved")   
     parser.add_argument('-p', '--parameters', type=str, default=None,
-                        help="file name of json file with non-default parameter settings. NB. If json file with name \
+                        help="file name of json file with non-default parameter settings (base_dir/[name].json). NB. If json file with name \
                              {model_type}_{REG/CLS}_{target_id}_params.json) present in envs folder those settings will be used")
     parser.add_argument('-o', '--optimization', type=str, default=None,
                         help="Hyperparameter optimization, if 'None' no optimization, if 'grid' gridsearch, if 'bayes' bayesian optimization")
     parser.add_argument('-ss', '--search_space', type=str, default=None,
-                        help="search_space hyperparameter optimization json file name, if None default drugex.environment.search_space.json used")                  
+                        help="search_space hyperparameter optimization json file location (base_dir/[name].json), \
+                              if None default drugex.environment.search_space.json used")                  
     parser.add_argument('-nt', '--n_trials', type=int, default=20, help="number of trials for bayes optimization")
     parser.add_argument('-c', '--model_evaluation', action='store_true',
                         help='If on, model evaluation through cross validation and independent test set is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
                         help="Number of CPUs")
-    parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
-                        help="List of GPUs")
+    parser.add_argument('-gpus', '--gpus', default='0',
+                        help="List of GPUs (indicate multiple gpus with ,)")
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -104,10 +105,7 @@ def Environ(args):
     """
         Optimize, evaluate and train estimators
     """
-    args.devices = list(eval(args.gpu))
-    torch.cuda.set_device(DEFAULT_GPUS[0])
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-    os.environ['OMP_NUM_THREADS'] = str(args.ncpu)
+    args.gpus = [int(x) for x in args.gpus.split(',')]
     
     if not os.path.exists(args.base_dir + '/envs'):
         os.makedirs(args.base_dir + '/envs') 
@@ -116,17 +114,17 @@ def Environ(args):
     parameters=None
     if args.parameters:
             try:
-                with open(args.parameters) as json_file:
+                with open(f'{args.base_dir}/{args.parameters}.json') as json_file:
                     par_dicts = np.array(json.load(json_file))
             except:
-                log.error("Search space file (%s) not found" % args.parameters)
+                log.error("Parameter settings file (%s) not found." % args.parameters)
                 sys.exit()
 
 
     if args.optimization in ['grid', 'bayes']:
-        grid_params = QSARModel.load_params_grid(args.search_space, args.optimization, args.model_types)
+        grid_params = QSARModel.load_params_grid(f'{args.base_dir}/{args.search_space}.json', args.optimization, args.model_types)
 
-    for reg in args.regression: 
+    for reg in args.regression:
         for target in args.targets:
             try:
                 df = pd.read_csv(f'{args.base_dir}/data/{args.input}', sep='\t')
@@ -164,16 +162,16 @@ def Environ(args):
                 alg_dict = {
                     'RF' : RandomForestRegressor() if reg else RandomForestClassifier(),
                     'XGB': XGBRegressor(objective='reg:squarederror') if reg else \
-                        XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss'),
+                           XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss'),
                     'SVM': SVR() if reg else SVC(probability=True),
                     'PLS': PLSRegression(),
-                    'NB': GaussianNB(),
+                    'NB' : GaussianNB(),
                     'KNN': KNeighborsRegressor() if reg else KNeighborsClassifier()
                 }
 
                 # Create QSAR model object
                 if model_type == 'DNN':
-                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters)
+                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters, gpus=args.gpus)
                 else:
                     qsarmodel = QSARsklearn(args.base_dir, data=mydataset, alg=alg_dict[model_type],
                                             alg_name=model_type, n_jobs=args.ncpu, parameters=parameters)

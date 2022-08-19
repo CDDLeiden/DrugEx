@@ -1,12 +1,14 @@
-import numpy as np
-import torch
-from torch import nn
-from torch import optim
-from torch.nn import functional as F
+from drugex.logs import logger
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
+
 import time
-import drugex
 import inspect
+import numpy as np
 from collections import defaultdict
+
+import torch
+from torch import nn, optim
+from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
 
@@ -15,12 +17,18 @@ class Base(nn.Module):
     Mainly, it provides the general methods for training, evaluating model and predicting the given data.
     """
 
-    def __init__(self, n_epochs=100, lr=1e-4, batch_size=32):
+    def __init__(self, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs=100, lr=1e-4, batch_size=32):
         super().__init__()
         self.n_epochs = n_epochs
         self.lr = lr
         self.batch_size=batch_size
-        self.dev = drugex.DEFAULT_DEVICE
+        if device.type == 'cuda':
+            self.device = torch.device(f'cuda:{gpus[0]}')
+        else:
+            self.device = device
+        self.gpus = gpus
+        if len(self.gpus) > 1:
+            logger.warning(f'At the moment multiple gpus is not possible: running DNN on gpu: {gpus[0]}.')
 
     def fit(self, train_loader, valid_loader, out):
         """Training the DNN model, similar to the scikit-learn or Keras style.
@@ -54,7 +62,7 @@ class Base(nn.Module):
                 param_group['lr'] = self.lr * (1 - 1 / self.n_epochs) ** (epoch * 10)
             for i, (Xb, yb) in enumerate(train_loader):
                 # Batch of target tenor and label tensor
-                Xb, yb = Xb.to(self.dev), yb.to(self.dev)
+                Xb, yb = Xb.to(self.device), yb.to(self.device)
                 optimizer.zero_grad()
                 # predicted probability tensor
                 y_ = self(Xb, istrain=True)
@@ -102,7 +110,7 @@ class Base(nn.Module):
         """
         loss = 0
         for Xb, yb in loader:
-            Xb, yb = Xb.to(self.dev), yb.to(self.dev)
+            Xb, yb = Xb.to(self.device), yb.to(self.device)
             y_ = self.forward(Xb)
             ix = yb == yb
             yb, y_ = yb[ix], y_[ix]
@@ -129,7 +137,7 @@ class Base(nn.Module):
         """
         score = []
         for Xb, _ in loader:
-            Xb = Xb.to(self.dev)
+            Xb = Xb.to(self.device)
             y_ = self.forward(Xb)
             score.append(y_.detach().cpu())
         score = torch.cat(score, dim=0).numpy()
@@ -241,11 +249,11 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, n_epochs = 100, lr = None, batch_size=32,
+    def __init__(self, n_dim, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs = 100, lr = None, batch_size=32,
                  is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
         if not lr:
             lr = 1e-4 if is_reg else 1e-5
-        super().__init__(n_epochs = n_epochs, lr = lr, batch_size=batch_size)
+        super().__init__(device=device, gpus=gpus, n_epochs = n_epochs, lr = lr, batch_size=batch_size)
         self.n_dim = n_dim
         self.n_class = 1
         self.is_reg = is_reg
@@ -272,7 +280,7 @@ class STFullyConnected(Base):
             # loss function and activation function of output layer for multiple classification
             self.criterion = nn.CrossEntropyLoss()
             self.activation = nn.Softmax()
-        self.to(self.dev)
+        self.to(self.device)
 
     def set_params(self, **params):
         super().set_params(**params)

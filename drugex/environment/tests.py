@@ -215,7 +215,7 @@ class TestModels(PathMixIn, TestCase):
 
     def test_QSARDNN(self):
         data = self.prep_testdata(reg=True)
-        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data)
+        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2])
         themodel.fit_model()
         themodel.model_evaluation()
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
