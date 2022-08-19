@@ -1,6 +1,7 @@
 import shutil
 from unittest import TestCase
 import os
+from os.path import exists
 
 import pandas as pd
 import numpy as np
@@ -148,18 +149,35 @@ class TestModels(PathMixIn, TestCase):
         return data
 
     def QSARsklearn_models_test(self, alg, alg_name, reg):
+        #intialize dataset and model
         data = self.prep_testdata(reg=reg)
         themodel = QSARsklearn(base_dir = f'{os.path.dirname(__file__)}/test_files/',
                                data=data, alg = alg, alg_name=alg_name)
+        
+        # train the model on all data
         themodel.fit()
+        regid = 'REG' if reg else 'CLS'
+        self.assertTrue(exists(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}.pkg'))
+
+        # perform crossvalidation
         themodel.evaluate()
+        self.assertTrue(exists(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}.ind.tsv'))
+        self.assertTrue(exists(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}.cv.tsv'))
+        
+        # perform bayes optimization
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
         grid_params = QSARsklearn.loadParamsGrid(fname, "bayes", alg_name)
         search_space_bs = grid_params[grid_params[:,0] == alg_name,1][0]
         themodel.bayesOptimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
+        self.assertTrue(exists(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}_params.json'))
+
+        # perform grid search
+        os.remove(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}_params.json')
         grid_params = QSARsklearn.loadParamsGrid(fname, "grid", alg_name)
         search_space_gs = grid_params[grid_params[:,0] == alg_name,1][0]
         themodel.gridSearch(search_space_gs=search_space_gs, save_m=False)
+        self.assertTrue(exists(f'{os.path.dirname(__file__)}/test_files/envs/{alg_name}_{regid}_{data.target}_params.json'))
+
 
     def testRF(self):
         alg_name = "RF"
