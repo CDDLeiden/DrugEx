@@ -40,6 +40,9 @@ export TRAIN_EPOCHS=2
 export TRAIN_BATCH=32
 export TRAIN_GPUS=0
 export N_CPUS=2
+export OPTIMIZATION='bayes'
+export SEARCH_SPACE='data/search_space/search_space_test'
+export N_TRIALS=2
 
 ###########
 # DATASET #
@@ -58,9 +61,11 @@ ${ENVIRON_COMMON_ARGS} \
 -l \
 -s \
 -m RF \
+-r CLS \
 -ncpu ${N_CPUS} \
--gpu ${TRAIN_GPUS} \
--bs ${TRAIN_BATCH}
+-o ${OPTIMIZATION} \
+-ss ${SEARCH_SPACE} \
+-nt ${N_TRIALS}
 
 ############
 # TRAINING #

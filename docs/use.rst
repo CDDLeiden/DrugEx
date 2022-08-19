@@ -60,7 +60,7 @@ In this example, we generate drug-like molecules that should be active on A2B (U
 The reinforcement learning (RL) framework is used to create the exploitation-exploration model tuned to generate molecules with desired properties. 
 The RL framework is composed of the agent-generator and environment-predictor parts.
 
-QSAR models
+Environment: QSAR models
 """""""""""
 
 First, we create the QSAR models used in the environment-predictor with
@@ -68,11 +68,24 @@ First, we create the QSAR models used in the environment-predictor with
 .. code-block:: bash
 
     # input is in ./data/LIGAND_RAW_small.tsv
-    drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -c -s 
+    drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -o bayes -a 5.3 -n 0.2 -l -c -s
 
-This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create and train two Random Forrest (:code:`-m RF`) QSAR models
-for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions. 
+This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create two Random Forest (:code:`-m RF`) QSAR models
+for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions 
+with a threshold on pchembl value for activity of 5.3 (:code:`-a 5.3`). :code:`-n 0.2` defines a random split test set
+ of 20%. Setting (:code:`-n 200`) to an integer value would give a test set of 200 random samples. Alternatively, 
+a time split can be determined by setting (:code:`-y 2015`), this will make all samples in the 'year' column >2015 the
+test set. Including (:code:`-l`) will keep all data in the Quality column with the marker :code:`"Low"`.
+If no model parameters are specified, the model will be trained on default settings. Specific parameter settings can
+be entered using a json file (:code:`-p parameters`) (see drugex/environment/test_files/parameters.json for an example)
+or optimization can be performed as grid search or bayes optimization  (:code:`-o bayes`), afterwards the optimal
+parameters found using the chosen optimization setting will be used to train and evaluate the models.
+Grid search parameters are by default read from drugex/environment/search_space.json, but can also be manually defined
+as json file and passed to :code:`-ss`.
+Setting :code:`-s`, will train the model on all data and save the model. Setting :code:`-c`, will perform model 
+evaluation using 5-fold cross-validation.
 The model will be saved to :code:`./envs/single/RF_CLS_P29274.pkg` and model evalution to :code:`./envs/single/RF_CLS_P29274.[cv/ind].tsv`.
+See (:code:`-h`) for more customization options.
 
 Reinforcement Learning
 """"""""""""""""""""""
