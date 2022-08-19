@@ -38,7 +38,7 @@ def EnvironmentArgParser(txt=None):
                         help="Base directory which contains a folder 'data' with input files")
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-ran', '--random_state', type=int, default=1, help="Seed for the random state")
-    parser.add_argument('-i', '--input', type=str, default='dataset',
+    parser.add_argument('-i', '--input', type=str, default='dataset.tsv',
                         help="tsv file name that contains SMILES, target accession & corresponding data")
     parser.add_argument('-m', '--model_types', type=str, nargs='*', default=['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'],
                         help="Modeltype, defaults to run all modeltypes, choose from: 'RF', 'XGB', 'DNN', 'SVM', 'PLS' (only with REG), 'NB' (only with CLS) 'KNN' or 'MT_DNN'") 
