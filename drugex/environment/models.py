@@ -1,5 +1,6 @@
 from drugex.logs import logger
 from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
+
 import os
 import os.path
 import json
@@ -7,11 +8,15 @@ import numpy as np
 from datetime import datetime
 import joblib
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
 import optuna
-from sklearn import metrics
 
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC, SVR
+from sklearn import metrics
+from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import ParameterGrid
+
 from drugex.environment.interfaces import QSARModel
 from drugex.environment.neural_network import STFullyConnected
 
@@ -30,13 +35,32 @@ class QSARsklearn(QSARModel):
         Methods
         -------
         init_model: initialize model from saved hyperparameters
-        fit_model: build estimator model from entire data set
+        fit: build estimator model from entire data set
         objective: objective used by bayesian optimization
-        bayes_optimization: bayesian optimization of hyperparameters using optuna
-        grid_search: optimization of hyperparameters using grid_search
+        bayesOptimization: bayesian optimization of hyperparameters using optuna
+        gridSearch: optimization of hyperparameters using gridSearch
 
     """
-    def fit_model(self):
+    def __init__(self, base_dir, data, alg, alg_name, parameters=None, n_jobs = 1):
+
+        super().__init__(base_dir, data, alg, alg_name, parameters=parameters)
+        
+        #initialize models with defined parameters
+        if self.parameters:
+            if type(self.alg) in [GaussianNB, PLSRegression, SVR, SVC]:
+                self.model = self.alg.set_params(**self.parameters)
+            else:
+                self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
+        else:
+            if type(self.alg) in [GaussianNB, PLSRegression, SVR, SVC]:
+                self.model = self.alg
+            else:
+                self.model = self.alg.set_params(n_jobs=n_jobs)
+    
+        logger.info('parameters: %s' % self.parameters)
+        logger.debug('Model intialized: %s' % self.out)
+
+    def fit(self):
         """
             build estimator model from entire data set
         """
@@ -61,7 +85,7 @@ class QSARsklearn(QSARModel):
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
-    def model_evaluation(self, save=True):
+    def evaluate(self, save=True):
         """
             Make predictions for crossvalidation and independent test set
             arguments:
@@ -103,13 +127,13 @@ class QSARsklearn(QSARModel):
             train.to_csv(self.out + '.cv.tsv', sep='\t')
             test.to_csv(self.out + '.ind.tsv', sep='\t')
 
-        self.data.create_folds()
+        self.data.createFolds()
 
         return cvs
 
-    def grid_search(self, search_space_gs, save_m=True):
+    def gridSearch(self, search_space_gs, save_m=True):
         """
-            optimization of hyperparameters using grid_search
+            optimization of hyperparameters using gridSearch
             arguments:
                 search_space_gs (dict): search space for the grid search
                 save_m (bool): if true, after gs the model is refit on the entire data set
@@ -129,13 +153,13 @@ class QSARsklearn(QSARModel):
             self.model = grid.best_estimator_
             joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
-        self.data.create_folds()
+        self.data.createFolds()
 
         logger.info('Grid search best parameters: %s' % grid.best_params_)
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(grid.best_params_, f)
 
-    def bayes_optimization(self, search_space_bs, n_trials, save_m):
+    def bayesOptimization(self, search_space_bs, n_trials, save_m):
         """
             bayesian optimization of hyperparameters using optuna
             arguments:
@@ -156,7 +180,7 @@ class QSARsklearn(QSARModel):
             self.model = self.alg.set_params(**trial.params)
             joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
-        self.data.create_folds()
+        self.data.createFolds()
 
         logger.info('Bayesian optimization best params: %s' % trial.params)
         with open('%s_params.json' % self.out, 'w') as f:
@@ -192,9 +216,9 @@ class QSARsklearn(QSARModel):
         self.model = self.alg.set_params(**bayesian_params)
 
         if self.data.reg: 
-            score = metrics.explained_variance_score(self.data.y, self.model_evaluation(save = False))
+            score = metrics.explained_variance_score(self.data.y, self.evaluate(save = False))
         else:
-            score = metrics.roc_auc_score(self.data.y, self.model_evaluation(save = False))
+            score = metrics.roc_auc_score(self.data.y, self.evaluate(save = False))
 
         return score
 
@@ -218,11 +242,19 @@ class QSARDNN(QSARModel):
         super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1], device=device, gpus=gpus),
                          "DNN", parameters=parameters)
 
+        #Initialize model with defined parameters
+        if self.parameters:
+                self.model = self.alg.set_params(**self.parameters)
+        else:
+                self.model = self.alg
+        logger.info('parameters: %s' % self.parameters)
+        logger.debug('Model intialized: %s' % self.out)
+
         #transpose y data to column vector
         self.y = self.data.y.reshape(-1,1)
         self.y_ind = self.data.y_ind.reshape(-1,1)
 
-    def fit_model(self):
+    def fit(self):
         """
             train model on the trainings data, determine best model using test set, save best model
         """
@@ -233,7 +265,7 @@ class QSARDNN(QSARModel):
         self.model.fit(train_loader, indep_loader, out=self.out)
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    def model_evaluation(self, save=True):
+    def evaluate(self, save=True):
         """
             Make predictions for crossvalidation and independent test set
         """
@@ -254,11 +286,11 @@ class QSARDNN(QSARModel):
             train['Score'], test['Score'] = cvs, inds / 5
             train.to_csv(self.out + '.cv.tsv', sep='\t')
             test.to_csv(self.out + '.ind.tsv', sep='\t')
-        self.data.create_folds()
+        self.data.createFolds()
 
-    def grid_search(self, search_space_gs, save_m):
+    def gridSearch(self, search_space_gs, save_m):
         """
-            optimization of hyperparameters using grid_search
+            optimization of hyperparameters using gridSearch
             arguments:
                 search_space_gs (dict): search space for the grid search, accepted parameters are:
                                         lr (int) ~ learning rate for fitting
@@ -290,7 +322,7 @@ class QSARDNN(QSARModel):
             param_score = np.mean(fold_scores)
             if param_score > best_score:
                 best_params = params
-            self.data.create_folds()
+            self.data.createFolds()
         
         logger.info('Grid search best parameters: %s' %  best_params)
         with open('%s_params.json' % self.out, 'w') as f:
@@ -301,9 +333,9 @@ class QSARDNN(QSARModel):
             self.model.set_params(**best_params)
             self.model.fit()
 
-        self.data.create_folds()
+        self.data.createFolds()
     
-    def bayes_optimization(self, n_trials):
+    def bayesOptimization(self, n_trials):
         #TODO implement bayes optimization for DNN
         logger.warning("bayes optimization not yet implemented for DNN, will be skipped.")
 

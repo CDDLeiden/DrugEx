@@ -25,7 +25,7 @@ class TestData(TestCase):
         dataset = QSARDataset(input_df=df, target="P29274")
         self.assertIsInstance(dataset, QSARDataset)
 
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertIsInstance(dataset.X, np.ndarray)
         self.assertIsInstance(dataset.X_ind, np.ndarray)
         self.assertIsInstance(dataset.y, np.ndarray)
@@ -45,31 +45,31 @@ class TestData(TestCase):
 
         # with test size is 3
         dataset = QSARDataset(input_df=df, target="P29274", test_size=3)
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertEqual(dataset.X_ind.shape[0], 3) # test size of 3
         self.assertEqual(dataset.X.shape[0], 5) # 8 - 3 is 5
 
         # with timesplit on 2015
         dataset = QSARDataset(input_df=df, target="P29274", timesplit=2015, test_size=3)
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertEqual(dataset.X_ind.shape[0], 2) # two sample year > 2015
         self.assertEqual(dataset.X.shape[0], 6) # 8 - 2 is 6
 
         # with timesplit on 2015
         dataset = QSARDataset(input_df=df, target="P29274", keep_low_quality=True)
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertEqual(dataset.X_ind.shape[0], 1) # test_size 0.1, should be 1 test sample
         self.assertEqual(dataset.X.shape[0], 9) # no datapoints removed, 10-1=9
 
         # with timesplit on 2015
         dataset = QSARDataset(input_df=df, target="P29274", keep_low_quality=True)
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertEqual(dataset.X_ind.shape[0], 1) # test_size 0.1, should be 1 test sample
         self.assertEqual(dataset.X.shape[0], 9) # no datapoints removed, 10-1=9
 
         # with classification
         dataset = QSARDataset(input_df=df, target="P29274", reg=False, th=7)
-        dataset.split_dataset()
+        dataset.splitDataset()
         self.assertTrue(np.min(np.concatenate((dataset.y, dataset.y_ind))) == 0)
         self.assertTrue(np.max(np.concatenate((dataset.y, dataset.y_ind))) == 1)
         self.assertEqual(np.sum(np.concatenate((dataset.y, dataset.y_ind)) < 1), 3) # only 3 value below threshold of 7
@@ -100,8 +100,8 @@ class TestClassifiers(PathMixIn, TestCase):
         # prepare test dataset
         df = pd.read_csv(f'{self.datapath}/test_data_large.tsv', sep='\t')
         data = QSARDataset(input_df=df, target="P29274", reg=reg)
-        data.split_dataset()
-        data.X, data.X_ind = data.data_standardization(data.X, data.X_ind)
+        data.splitDataset()
+        data.X, data.X_ind = data.dataStandardization(data.X, data.X_ind)
 
         # prepare data for torch DNN
         y = data.y.reshape(-1,1)
@@ -142,8 +142,8 @@ class TestModels(PathMixIn, TestCase):
         # prepare test dataset
         df = pd.read_csv(f'{os.path.dirname(__file__)}/test_files/data/test_data_large.tsv', sep='\t')
         data = QSARDataset(input_df=df, target="P29274", reg=reg)
-        data.split_dataset()
-        data.X, data.X_ind = data.data_standardization(data.X, data.X_ind)
+        data.splitDataset()
+        data.X, data.X_ind = data.dataStandardization(data.X, data.X_ind)
         
         return data
 
@@ -151,15 +151,15 @@ class TestModels(PathMixIn, TestCase):
         data = self.prep_testdata(reg=reg)
         themodel = QSARsklearn(base_dir = f'{os.path.dirname(__file__)}/test_files/',
                                data=data, alg = alg, alg_name=alg_name)
-        themodel.fit_model()
-        themodel.model_evaluation()
+        themodel.fit()
+        themodel.evaluate()
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
-        grid_params = QSARsklearn.load_params_grid(fname, "bayes", alg_name)
+        grid_params = QSARsklearn.loadParamsGrid(fname, "bayes", alg_name)
         search_space_bs = grid_params[grid_params[:,0] == alg_name,1][0]
-        themodel.bayes_optimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
-        grid_params = QSARsklearn.load_params_grid(fname, "grid", alg_name)
+        themodel.bayesOptimization(search_space_bs=search_space_bs, n_trials=1, save_m=False)
+        grid_params = QSARsklearn.loadParamsGrid(fname, "grid", alg_name)
         search_space_gs = grid_params[grid_params[:,0] == alg_name,1][0]
-        themodel.grid_search(search_space_gs=search_space_gs, save_m=False)
+        themodel.gridSearch(search_space_gs=search_space_gs, save_m=False)
 
     def testRF(self):
         alg_name = "RF"
@@ -216,9 +216,9 @@ class TestModels(PathMixIn, TestCase):
     def test_QSARDNN(self):
         data = self.prep_testdata(reg=True)
         themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2])
-        themodel.fit_model()
-        themodel.model_evaluation()
+        themodel.fit()
+        themodel.evaluate()
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
-        grid_params = QSARDNN.load_params_grid(fname, "grid", "DNN")
+        grid_params = QSARDNN.loadParamsGrid(fname, "grid", "DNN")
         search_space_gs = grid_params[grid_params[:,0] == "DNN",1][0]
-        themodel.grid_search(search_space_gs=search_space_gs, save_m=False)
+        themodel.gridSearch(search_space_gs=search_space_gs, save_m=False)

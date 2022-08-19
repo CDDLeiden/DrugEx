@@ -122,7 +122,7 @@ def Environ(args):
 
 
     if args.optimization in ['grid', 'bayes']:
-        grid_params = QSARModel.load_params_grid(f'{args.base_dir}/{args.search_space}.json', args.optimization, args.model_types)
+        grid_params = QSARModel.loadParamsGrid(f'{args.base_dir}/{args.search_space}.json', args.optimization, args.model_types)
 
     for reg in args.regression:
         for target in args.targets:
@@ -136,7 +136,7 @@ def Environ(args):
             mydataset = QSARDataset(df, target, reg = reg, timesplit=args.year,
                                     test_size=args.test_size, th = args.activity_threshold,
                                     keep_low_quality=args.keep_low_quality)
-            mydataset.split_dataset()
+            mydataset.splitDataset()
             
             for model_type in args.model_types:
                 if model_type == 'MT_DNN': print('MT DNN is not implemented yet')
@@ -150,7 +150,7 @@ def Environ(args):
                     log.warning("PLS with classification invalid, skipped.")
                     continue
                 if model_type != "RF":
-                    mydataset.X, mydataset.X_ind = mydataset.data_standardization(mydataset.X, mydataset.X_ind)
+                    mydataset.X, mydataset.X_ind = mydataset.dataStandardization(mydataset.X, mydataset.X_ind)
                 
                 if args.parameters:
                     try:
@@ -180,7 +180,7 @@ def Environ(args):
                 if args.optimization == 'grid':
                     search_space_gs = grid_params[grid_params[:,0] == model_type,1][0]
                     log.info(search_space_gs)
-                    qsarmodel.grid_search(search_space_gs, args.save_model)
+                    qsarmodel.gridSearch(search_space_gs, args.save_model)
                 elif args.optimization == 'bayes':
                     if model_type == 'DNN':
                         log.warning('Bayes optimization not implemented for DNN, skipped')
@@ -191,15 +191,15 @@ def Environ(args):
                         search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
                     elif model_type == "RF":
                         search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
-                    qsarmodel.bayes_optimization(search_space_bs, args.n_trials, args.save_model)
+                    qsarmodel.bayesOptimization(search_space_bs, args.n_trials, args.save_model)
                 
                 # initialize models from saved or default parameters
 
                 if args.optimization is None and args.save_model:
-                    qsarmodel.fit_model()
+                    qsarmodel.fit()
                 
                 if args.model_evaluation:
-                    qsarmodel.model_evaluation()
+                    qsarmodel.evaluate()
 
                
 if __name__ == '__main__':

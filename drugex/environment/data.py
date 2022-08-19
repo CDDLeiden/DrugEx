@@ -44,9 +44,9 @@ class QSARDataset:
 
         Methods
         -------
-        split_dataset : A train and test split is made.
-        create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
-        data_standardization: Performs standardization by centering and scaling
+        splitDataset : A train and test split is made.
+        createFolds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
+        dataStandardization: Performs standardization by centering and scaling
     """
     def __init__(self, input_df, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False, n_folds=5,
                  targetcol = 'accession', smilescol = 'SMILES', valuecol = 'pchembl_value_Mean', qualitycol = 'Quality',
@@ -72,7 +72,7 @@ class QSARDataset:
         self.y_ind = None
         self.folds = None
 
-    def split_dataset(self):
+    def splitDataset(self):
         """
         Splits the dataset in a train and temporal test set.
         Calculates the predictors for the QSAR models.
@@ -115,7 +115,7 @@ class QSARDataset:
         self.y = data.values
 
         # Create folds for crossvalidation
-        self.create_folds()
+        self.createFolds()
 
         #Write information about the trainingset to the logger
         logger.info('Train and test set created for %s %s:' % (self.target, 'REG' if self.reg else 'CLS'))
@@ -129,7 +129,7 @@ class QSARDataset:
             logger.info('    In train: active: %s not active: %s' % (data.sum().astype(int), (len(data)-data.sum()).astype(int)))
             logger.info('    In test:  active: %s not active: %s\n' % (test.sum().astype(int), (len(test)-test.sum()).astype(int)))
     
-    def create_folds(self):
+    def createFolds(self):
         """
             Create folds for crossvalidation
         """
@@ -140,7 +140,7 @@ class QSARDataset:
         logger.debug("Folds created for crossvalidation")
         
     @staticmethod
-    def data_standardization(data_x, test_x):
+    def dataStandardization(data_x, test_x):
         """
         Perform standardization by centering and scaling
 
