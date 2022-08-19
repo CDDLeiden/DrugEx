@@ -14,7 +14,6 @@ from sklearn import metrics
 from sklearn.model_selection import ParameterGrid
 from drugex.environment.interfaces import QSARModel
 from drugex.environment.neural_network import STFullyConnected
-from torch import nn
 
 
 class QSARsklearn(QSARModel):

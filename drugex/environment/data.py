@@ -58,7 +58,7 @@ class QSARDataset:
         self.test_size = test_size
         self.th = th
         self.keep_low_quality = keep_low_quality
-        self.n_folds=5
+        self.n_folds=n_folds
 
         self.targetcol = targetcol
         self.smilescol = smilescol
@@ -82,7 +82,10 @@ class QSARDataset:
         df = df[df[self.targetcol] == self.target].set_index([self.smilescol])
 
         # filter out low quality data if desired
-        df = df if self.keep_low_quality else df[df[self.qualitycol] != 'Low']
+        try:
+            df = df if self.keep_low_quality else df[df[self.qualitycol] != 'Low']
+        except KeyError:
+            logger.warning("Quality column not in dataframe ('%s'), all data included in set." % self.qualitycol)
 
         # Get indexes of samples test set based on temporal split
         if self.timesplit:
