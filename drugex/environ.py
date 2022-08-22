@@ -122,7 +122,10 @@ def Environ(args):
 
 
     if args.optimization in ['grid', 'bayes']:
-        grid_params = QSARModel.loadParamsGrid(f'{args.base_dir}/{args.search_space}.json', args.optimization, args.model_types)
+        if args.search_space:
+            grid_params = QSARModel.loadParamsGrid(f'{args.base_dir}/{args.search_space}.json', args.optimization, args.model_types)
+        else:
+            grid_params = QSARModel.loadParamsGrid(None, args.optimization, args.model_types)
 
     for reg in args.regression:
         for target in args.targets:
@@ -139,7 +142,9 @@ def Environ(args):
             mydataset.splitDataset()
             
             for model_type in args.model_types:
-                if model_type == 'MT_DNN': print('MT DNN is not implemented yet')
+                if model_type == 'MT_DNN':
+                    log.warning('MT DNN is not implemented yet')
+                    continue
                 elif model_type not in ['RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN']: 
                     log.warning(f'Model type {model_type} does not exist')
                     continue

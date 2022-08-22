@@ -65,4 +65,7 @@
 ["DNN", {"batch_size" : [32, 128, 256],
          "lr": [1e-8, 1e-5, 1e-4, 1e-3, 1e-2],
          "neurons_h1" : [200, 1000, 2000, 4000],
-         "neurons_hx" : [200, 1000, 2000]}, "grid"]]
+         "neurons_hx" : [200, 1000, 2000]}, "grid"],
+["DNN", {}, "bayes"],
+["MT_DNN", {}, "grid"],
+["MT_DNN", {}, "bayes"]]
