@@ -196,6 +196,8 @@ class QSARsklearn(QSARModel):
 
         if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
             bayesian_params = {'verbosity': 0}
+        elif type(self.alg).__name__ in ['SVC', 'SVR']:
+            bayesian_params = {'max_iter': 2000}
         else:
             bayesian_params = {}
 
@@ -213,6 +215,7 @@ class QSARsklearn(QSARModel):
             elif value[0] == 'uniform':
                 bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
 
+        logger.info(bayesian_params)
         self.model = self.alg.set_params(**bayesian_params)
 
         if self.data.reg: 
@@ -288,6 +291,8 @@ class QSARDNN(QSARModel):
             test.to_csv(self.out + '.ind.tsv', sep='\t')
         self.data.createFolds()
 
+        return cvs
+
     def gridSearch(self, search_space_gs, save_m):
         """
             optimization of hyperparameters using gridSearch
@@ -322,6 +327,7 @@ class QSARDNN(QSARModel):
             param_score = np.mean(fold_scores)
             if param_score > best_score:
                 best_params = params
+                best_score = param_score
             self.data.createFolds()
         
         logger.info('Grid search best parameters: %s' %  best_params)
@@ -331,12 +337,68 @@ class QSARDNN(QSARModel):
         
         if save_m:
             self.model.set_params(**best_params)
-            self.model.fit()
+            self.fit()
 
         self.data.createFolds()
     
-    def bayesOptimization(self, n_trials):
-        #TODO implement bayes optimization for DNN
-        logger.warning("bayes optimization not yet implemented for DNN, will be skipped.")
+    def bayesOptimization(self, search_space_bs, n_trials, save_m):
+        """
+            bayesian optimization of hyperparameters using optuna
+            arguments:
+                search_space_gs (dict): search space for the grid search
+                n_trials (int): number of trials for bayes optimization
+                save_m (bool): if true, after bayes optimization the model is refit on the entire data set
+        """
+        print('Bayesian optimization can take a while for some hyperparameter combinations')
+        #TODO add timeout function
+        study = optuna.create_study(direction='maximize')
+        logger.info('Bayesian optimization started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        study.optimize(lambda trial: self.objective(trial, search_space_bs), n_trials)
+        logger.info('Bayesian optimization ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
+        trial = study.best_trial
+
+        if save_m:
+            self.model = self.alg.set_params(**trial.params)
+            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
+
+        self.data.createFolds()
+
+        logger.info('Bayesian optimization best params: %s' % trial.params)
+        with open('%s_params.json' % self.out, 'w') as f:
+            json.dump(trial.params, f)
+
+    def objective(self, trial, search_space_bs):
+        """
+            objective for bayesian optimization
+            arguments:
+                trial (int): current trial number
+                search_space_bs (dict): search space for bayes optimization
+        """
+
+        bayesian_params = {}
+
+        for key, value in search_space_bs.items():
+            if value[0] == 'categorical':
+                bayesian_params[key] = trial.suggest_categorical(key, value[1])
+            elif value[0] == 'discrete_uniform':
+                bayesian_params[key] = trial.suggest_discrete_uniform(key, value[1], value[2], value[3])
+            elif value[0] == 'float':
+                bayesian_params[key] = trial.suggest_float(key, value[1], value[2])
+            elif value[0] == 'int':
+                bayesian_params[key] = trial.suggest_int(key, value[1], value[2])
+            elif value[0] == 'loguniform':
+                bayesian_params[key] = trial.suggest_loguniform(key, value[1], value[2])
+            elif value[0] == 'uniform':
+                bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
+
+        logger.info(bayesian_params)
+        self.model = self.alg.set_params(**bayesian_params)
+
+        if self.data.reg:
+            score = metrics.explained_variance_score(self.data.y, self.evaluate(save = False))
+        else:
+            score = metrics.roc_auc_score(self.data.y, self.evaluate(save = False))
+
+        return score
 
