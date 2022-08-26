@@ -88,7 +88,7 @@ class PathMixIn:
     def tearDownClass(cls):
         shutil.rmtree(cls.envspath)
 
-class TestClassifiers(PathMixIn, TestCase):
+class NeuralNet(PathMixIn, TestCase):
 
     @classmethod
     def tearDownClass(cls):
@@ -232,11 +232,23 @@ class TestModels(PathMixIn, TestCase):
         self.QSARsklearn_models_test(alg, alg_name, reg=False)
 
     def test_QSARDNN(self):
+        #intialize model
         data = self.prep_testdata(reg=True)
         themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2])
+        
+        #fit and cross-validation
         themodel.fit()
         themodel.evaluate()
+
+        #optimization
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
+
+        # grid search
         grid_params = QSARDNN.loadParamsGrid(fname, "grid", "DNN")
         search_space_gs = grid_params[grid_params[:,0] == "DNN",1][0]
-        themodel.gridSearch(search_space_gs=search_space_gs, save_m=False)
+        themodel.gridSearch(search_space_gs=search_space_gs, save_m=True)
+
+        # bayesian optimization
+        bayes_params = QSARDNN.loadParamsGrid(fname, "bayes", "DNN")
+        search_space_bs = grid_params[bayes_params[:,0] == "DNN",1][0]
+        themodel.bayesOptimization(search_space_bs=search_space_bs, n_trials=5, save_m=True)

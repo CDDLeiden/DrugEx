@@ -26,6 +26,7 @@ from drugex import DEFAULT_GPUS
 from drugex.logs.utils import backUpFiles, enable_file_logger, commit_hash
 from drugex.environment.data import QSARDataset
 from drugex.environment.models import QSARModel, QSARDNN, QSARsklearn
+import pickle
 
 def EnvironmentArgParser(txt=None):
     """ 
@@ -117,7 +118,7 @@ def Environ(args):
                 with open(f'{args.base_dir}/{args.parameters}.json') as json_file:
                     par_dicts = np.array(json.load(json_file))
             except:
-                log.error("Parameter settings file (%s) not found." % args.parameters)
+                log.error("Parameter settings file (%s/%s.json) not found." % args.base_dir/args.parameters)
                 sys.exit()
 
 
@@ -128,6 +129,7 @@ def Environ(args):
             grid_params = QSARModel.loadParamsGrid(None, args.optimization, args.model_types)
 
     for reg in args.regression:
+        reg_abbr = 'REG' if reg else 'CLS'
         for target in args.targets:
             try:
                 df = pd.read_csv(f'{args.base_dir}/data/{args.input}', sep='\t')
@@ -140,8 +142,15 @@ def Environ(args):
                                     test_size=args.test_size, th = args.activity_threshold,
                                     keep_low_quality=args.keep_low_quality)
             mydataset.splitDataset()
+
+            # save dataset object
+            mydataset.folds = None
+            pickle.dump(mydataset, open(f'{args.base_dir}/envs/{target}_{reg_abbr}_QSARdata.pkg', 'bw'))
+            mydataset.createFolds()
             
             for model_type in args.model_types:
+                log.info(f'Model: {model_type} {reg_abbr}')
+
                 if model_type == 'MT_DNN':
                     log.warning('MT DNN is not implemented yet')
                     continue
@@ -154,9 +163,10 @@ def Environ(args):
                 if model_type == 'PLS' and not reg:
                     log.warning("PLS with classification invalid, skipped.")
                     continue
+
                 if model_type != "RF":
                     mydataset.X, mydataset.X_ind = mydataset.dataStandardization(mydataset.X, mydataset.X_ind)
-                
+
                 if args.parameters:
                     try:
                         parameters = par_dicts[par_dicts[:,0]==model_type,1][0]
@@ -187,9 +197,6 @@ def Environ(args):
                     log.info(search_space_gs)
                     qsarmodel.gridSearch(search_space_gs, args.save_model)
                 elif args.optimization == 'bayes':
-                    if model_type == 'DNN':
-                        log.warning('Bayes optimization not implemented for DNN, skipped')
-                        continue
                     search_space_bs = grid_params[grid_params[:,0] == model_type,1][0]
                     log.info(search_space_bs)
                     if reg and model_type == "RF":
@@ -230,7 +237,8 @@ if __name__ == '__main__':
         args.debug,
         __name__,
         commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
-        vars(args)
+        vars(args),
+        disable_existing_loggers=False
     )   
 
     log = logSettings.log
