@@ -30,7 +30,7 @@ def commit_hash(GIT_PATH):
         repo_hash = __version__
     return repo_hash
 
-def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_hash=None, init_data=None):
+def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_hash=None, init_data=None, disable_existing_loggers=True):
 
     # # Get run id
     # runid = config.get_runid(log_folder=log_folder,
@@ -39,7 +39,7 @@ def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_has
     # path = os.path.join(log_folder, f'{runid}/{filename}')
     
     path = os.path.join(log_folder, filename)
-    config.config_logger(path, debug)
+    config.config_logger(path, debug, disable_existing_loggers=disable_existing_loggers)
 
     # get logger and init configuration
     log = logging.getLogger(filename) if not log_name else logging.getLogger(log_name)

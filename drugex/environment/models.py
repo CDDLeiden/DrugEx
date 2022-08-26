@@ -52,7 +52,9 @@ class QSARsklearn(QSARModel):
             else:
                 self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
         else:
-            if type(self.alg) in [GaussianNB, PLSRegression, SVR, SVC]:
+            if type(self.alg) in [SVC, SVR]:
+                self.model = self.alg.set_params(max_iter=10000)
+            elif type(self.alg) in [GaussianNB, PLSRegression]:
                 self.model = self.alg
             else:
                 self.model = self.alg.set_params(n_jobs=n_jobs)
@@ -143,8 +145,8 @@ class QSARsklearn(QSARModel):
                             scoring=scoring, refit=save_m)
         
         fit_set = {'X': self.data.X, 'y': self.data.y}
-        if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
-            fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
+        # if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
+        #     fit_set['sample_weight'] = [1 if v >= 4 else 0.1 for v in self.data.y]
         logger.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         grid.fit(**fit_set)
         logger.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -194,12 +196,7 @@ class QSARsklearn(QSARModel):
                 search_space_bs (dict): search space for bayes optimization
         """
 
-        if type(self.alg).__name__ in ['XGBRegressor', 'XGBClassifier']:
-            bayesian_params = {'verbosity': 0}
-        elif type(self.alg).__name__ in ['SVC', 'SVR']:
-            bayesian_params = {'max_iter': 2000}
-        else:
-            bayesian_params = {}
+        bayesian_params = {}
 
         for key, value in search_space_bs.items():
             if value[0] == 'categorical':
@@ -215,7 +212,7 @@ class QSARsklearn(QSARModel):
             elif value[0] == 'uniform':
                 bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
 
-        logger.info(bayesian_params)
+        print(bayesian_params)
         self.model = self.alg.set_params(**bayesian_params)
 
         if self.data.reg: 
@@ -392,7 +389,6 @@ class QSARDNN(QSARModel):
             elif value[0] == 'uniform':
                 bayesian_params[key] = trial.suggest_uniform(key, value[1], value[2])
 
-        logger.info(bayesian_params)
         self.model = self.alg.set_params(**bayesian_params)
 
         if self.data.reg:
