@@ -32,6 +32,8 @@ def DesignArgParser(txt=None):
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
                         help="Batch size")
+    parser.add_argument('-m', '--modify', action='store_true',
+                        help="If on, modifiers (defined in CreateDesirabilityFunction) are applied to predictor outputs, if not returns unmodified scores")
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")    
     if txt:
@@ -44,8 +46,8 @@ def DesignArgParser(txt=None):
     # Load parameters generator/environment from trained model
     designer_args = vars(args)
     train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task', 
-        'active_targets', 'inactive_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 'ra_score_model',
-        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
+        'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
+        'ra_score_model', 'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
@@ -53,7 +55,7 @@ def DesignArgParser(txt=None):
             designer_args[k] = v
     args = argparse.Namespace(**designer_args)
     
-    args.targets = args.active_targets + args.inactive_targets
+    args.targets = args.active_targets + args.inactive_targets + args.window_targets
 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
     return args
@@ -133,12 +135,12 @@ def Design(args):
             )
     else:
         voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
-        voc = VocSmiles(voc_paths, max_len=100)
+        voc = VocSmiles.fromFile(voc_paths[0], max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     assert os.path.exists(gen_path)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     agent.loadStatesFromFile(gen_path)
     # Set up environment-predictor
     env = CreateDesirabilityFunction(
@@ -148,6 +150,7 @@ def Design(args):
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
+        window_targets=args.window_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
         sa_score=args.sa_score,
@@ -158,7 +161,9 @@ def Design(args):
         logP=args.logP,
         logP_ths=args.logP_thresholds,
     )
-    
+    if not args.modify:
+        for scorer in env.scorers:
+            scorer.modifier=None
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
@@ -173,6 +178,8 @@ def Design(args):
     else:
         frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
         scores['Frags'], scores['SMILES'] = frags, smiles
+    if not args.modify:
+        scores = scores.drop(columns=['DESIRE'])
     scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
 
