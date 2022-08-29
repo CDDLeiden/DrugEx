@@ -116,7 +116,7 @@ def Environ(args):
     parameters=None
     if args.parameters:
             try:
-                with open(f'{args.base_dir}/{args.parameters}_params.json') as json_file:
+                with open(f'{args.base_dir}/envs/{args.parameters}_params.json') as json_file:
                     par_dicts = np.array(json.load(json_file))
             except:
                 log.error("Parameter settings file (%s/%s.json) not found." % args.base_dir/args.parameters)
