@@ -53,6 +53,8 @@ class QSARsklearn(QSARModel):
                 self.model = self.alg.set_params(n_jobs=n_jobs, **self.parameters)
         else:
             if type(self.alg) in [SVC, SVR]:
+                logger.warning("parameter max_iter set to 10000 to avoid training getting stuck. \
+                                 Manually set this parameter if this is not desired.")
                 self.model = self.alg.set_params(max_iter=10000)
             elif type(self.alg) in [GaussianNB, PLSRegression]:
                 self.model = self.alg
