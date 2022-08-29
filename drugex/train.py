@@ -367,7 +367,7 @@ def CreateDesirabilityFunction(base_dir,
     
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
-        ths.append(0.0)
+        ths.append(0.5)
     if unique:
         objs.append(Uniqueness(modifier=ClippedScore(lower_x=1.0, upper_x=0.0)))
         ths.append(0.2)
