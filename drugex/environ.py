@@ -58,8 +58,9 @@ def EnvironmentArgParser(txt=None):
     parser.add_argument('-s', '--save_model', action='store_true',
                         help="If included then the model will be trained on all data and saved")   
     parser.add_argument('-p', '--parameters', type=str, default=None,
-                        help="file name of json file with non-default parameter settings (base_dir/[name].json). NB. If json file with name \
-                             {model_type}_{REG/CLS}_{target_id}_params.json) present in envs folder those settings will be used")
+                        help="file name of json file with non-default parameter settings (base_dir/[-p].json). NB. If json file with name \
+                             {model_type}_{REG/CLS}_{target_id}_params.json) present in envs folder those settings will also be used, \
+                             but if the same parameter is present in both files the settings from (base_dir/[-p].json) will be used.")
     parser.add_argument('-o', '--optimization', type=str, default=None,
                         help="Hyperparameter optimization, if 'None' no optimization, if 'grid' gridsearch, if 'bayes' bayesian optimization")
     parser.add_argument('-ss', '--search_space', type=str, default=None,

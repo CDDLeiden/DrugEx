@@ -32,7 +32,7 @@ class QSARModel(ABC):
         gridSearch: optimization of hyperparameters using gridSearch
 
     """
-    def __init__(self, base_dir, data, alg, alg_name, parameters=None):
+    def __init__(self, base_dir, data, alg, alg_name, parameters={}):
         """
             initialize model from saved or default hyperparameters
         """
@@ -43,9 +43,9 @@ class QSARModel(ABC):
         d = '%s/envs' % base_dir
         self.out = '%s/%s_%s_%s' % (d, alg_name, 'REG' if data.reg else 'CLS', data.target)
         
-        if os.path.isfile('%s_params.json' % self.out) and not self.parameters:    
+        if os.path.isfile('%s_params.json' % self.out):    
             with open('%s_params.json' % self.out) as j:
-                self.parameters = json.loads(j.read())
+                self.parameters = json.loads(j.read()).update(self.parameters)
             logger.info('loaded model parameters from file: %s_params.json' % self.out)
 
 
