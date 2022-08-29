@@ -45,7 +45,10 @@ class QSARModel(ABC):
         
         if os.path.isfile('%s_params.json' % self.out):    
             with open('%s_params.json' % self.out) as j:
-                self.parameters = json.loads(j.read()).update(self.parameters)
+                if self.parameters:
+                    self.parameters = json.loads(j.read()).update(self.parameters)
+                else:
+                    self.parameters = json.loads(j.read())
             logger.info('loaded model parameters from file: %s_params.json' % self.out)
 
 
