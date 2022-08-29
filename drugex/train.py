@@ -339,8 +339,6 @@ def CreateDesirabilityFunction(base_dir,
         else:
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
-        ths = [0.5] * (len(targets))
-
     else:
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
         if task == 'CLS':
@@ -352,7 +350,8 @@ def CreateDesirabilityFunction(base_dir,
     
     for t in targets:
         predictor_modifier = active if t in active_targets else inactive
-        ths.append(0.99)
+        if scheme == 'WS' : ths.append(0.5)
+        else : ths.append(0.99)
         if alg.startswith('MT_'):
             sys.exit('TO DO: using multitask model')
         else:
@@ -370,7 +369,7 @@ def CreateDesirabilityFunction(base_dir,
         ths.append(0.5)
     if unique:
         objs.append(Uniqueness(modifier=ClippedScore(lower_x=1.0, upper_x=0.0)))
-        ths.append(0.2)
+        ths.append(0.0)
     if sa_score:
         objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
         ths.append(0.5)
@@ -379,10 +378,10 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
-        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[1], upper_x=mw_ths[0], sigma=100)))
+        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[0], upper_x=mw_ths[1], sigma=100)))
         ths.append(0.99)
     if logP:
-        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[1], upper_x=logP_ths[0], sigma=1)))
+        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
