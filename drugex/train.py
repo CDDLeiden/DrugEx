@@ -78,6 +78,8 @@ def GeneratorArgParser(txt=None):
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
                         help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
+    parser.add_argument('-pa', '--patience', type=int, default=50,
+                        help="Number of epochs to wait before early stop if no progress on test set score")
 
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
@@ -437,7 +439,7 @@ def PreTrain(args):
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     monitor = FileMonitor(pt_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
         
 def FineTune(args):
     """
@@ -468,7 +470,7 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     agent.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
                               
 def RLTrain(args):
     
@@ -521,7 +523,7 @@ def RLTrain(args):
     ## first difference for v2 needs to be adapted
     explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples, args.gpu)
     monitor = FileMonitor(rl_path, verbose=True)
-    explorer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    explorer.fit(train_loader, valid_loader, epochs=args.epochs, patience=args.patience, monitor=monitor)
 
 
 def TrainGenerator(args):

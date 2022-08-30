@@ -225,7 +225,7 @@ class GraphExplorer(Explorer):
         return loader
         
 
-    def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50 monitor=None):
         monitor = monitor if monitor else NullMonitor()
         best_score = 0
         self.bestState = deepcopy(self.agent.state_dict())
@@ -267,16 +267,15 @@ class GraphExplorer(Explorer):
                 unique = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch} Mean Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
+                logger.info(f"Epoch: {epoch}  Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
         
-                if best_score < desire:
+                if best_score < score:
                     monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
-                    best_score = desire
+                    best_score = score
                     last_save = epoch
                     last_it = it
                     logger.info(f"Model saved at epoch {epoch}")
-                if epoch - last_save > 50: break
 
                 smiles_scores = []
                 smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
@@ -289,6 +288,8 @@ class GraphExplorer(Explorer):
                 monitor.savePerformanceInfo(None, epoch, valid_ratio=valid, desire_ratio=desire, unique_ratio=unique, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
+
+                if epoch - last_save > patience: break
 
             if self.crover is not None:
                 self.agent.load_state_dict(self.bestState)
@@ -388,7 +389,7 @@ class SmilesExplorer(Explorer):
             
         return loader
 
-    def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, monitor=None):
         self.bestState = deepcopy(self.agent.state_dict())
         monitor.saveModel(self.agent)
         best_score = 0
@@ -409,7 +410,6 @@ class SmilesExplorer(Explorer):
                     train_loader = self.sample_input(train_loader_original)
                     valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
-                logger.info('\n----------\nITERATION %d\nEPOCH %d\n----------' % (it, epoch))
                 for i, (ix, src) in enumerate(tqdm(train_loader, desc='Batch')):
                     with torch.no_grad():
                         # frag = data_loader.dataset.index[ix]
@@ -429,9 +429,10 @@ class SmilesExplorer(Explorer):
                 desire = scores.DESIRE.sum() / len(smiles)
                 score = scores[self.env.getScorerKeys()].values.mean()
                 valid = scores.VALID.sum() / len(smiles)
+                unique = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch} Av. Clipped Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Time: {t1-t0:.1f}s")  
+                logger.info(f"Epoch: {epoch}  Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
 
                 smiles_scores = []
                 smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
@@ -439,21 +440,26 @@ class SmilesExplorer(Explorer):
                     score = "\t".join(['%.3f' % s for s in scores.values[i]])
                     logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
                     smiles_scores.append((smile, *scores.values[i], frags[i]))
-
-                if best_score < desire:
+        
+                if best_score < score:
                     monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
-                    best_score = desire
+                    best_score = score
                     last_save = epoch
                     last_it = it
+                    logger.info(f"Model saved at epoch {epoch}")
+
                 monitor.savePerformanceInfo(None, epoch, None, valid_ratio=valid, desire_ratio=desire, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
-                if epoch - last_save > 50: break
+
+                if epoch - last_save > patience: break
+                
                 if self.crover is not None:
                     self.agent.load_state_dict(self.bestState)
                     self.crover.load_state_dict(self.bestState)
             if it - last_it > 1: break
+        
         monitor.close()
         torch.cuda.empty_cache()
 
@@ -572,13 +578,12 @@ class SmilesExplorerNoFrag(PGLearner):
         #t3 = time.time()
         #print(t1 - start, t2-t1, t3-t2)
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50):
         monitor.saveModel(self)
         self.bestState = deepcopy(self.agent.state_dict())
         best = 0
         last_smiles = []
         last_scores = []
-        interval = 250
         last_save = -1
         ## add self.epoch
         for epoch in range(epochs):
@@ -620,6 +625,7 @@ class SmilesExplorerNoFrag(PGLearner):
                 self.crover.load_state_dict(self.bestState)
             monitor.saveProgress(None, epoch, None, epochs)
             monitor.endStep(None, epoch)
-            if epoch - last_save > interval: break
+            if epoch - last_save > patience: break
+        
         logger.info('End time reinforcement learning: %s \n' % time.strftime('%d-%m-%y %H:%M:%S', time.localtime()))
         monitor.close()
