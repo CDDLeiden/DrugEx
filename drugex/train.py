@@ -305,7 +305,7 @@ def CreateDesirabilityFunction(base_dir,
     
     Arguments:
         base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (str)                   : environment-predictor algoritm
+        alg (list)                   : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
@@ -376,8 +376,6 @@ def CreateDesirabilityFunction(base_dir,
             if a.startswith('MT_'):
                 sys.exit('TO DO: using multitask model')
 
-        print(alg[0])
-        print(type(alg))
         if len(alg) > 1:
             try:
                 path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
