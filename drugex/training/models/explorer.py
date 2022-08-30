@@ -589,7 +589,7 @@ class SmilesExplorerNoFrag(PGLearner):
         for epoch in range(epochs):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
-            if epoch < interval and self.memory is not None:
+            if epoch < patience and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
                 self.policy_gradient(smiles, seqs, memory=self.memory, progress=monitor)
             else:
@@ -617,7 +617,7 @@ class SmilesExplorerNoFrag(PGLearner):
                 last_scores = scores
                 last_save = epoch
  
-            if epoch % interval == 0 and epoch != 0:
+            if epoch % patience == 0 and epoch != 0:
                 for i, smile in enumerate(last_smiles):
                     score = "\t".join(['%.3f' % s for s in last_scores.drop(columns=['Smiles']).values[i]])
                     logger.info('%s\t%s' % (score, smile))

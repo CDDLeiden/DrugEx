@@ -83,7 +83,7 @@ def GeneratorArgParser(txt=None):
 
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
-    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default='RF',
+    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
@@ -375,25 +375,27 @@ def CreateDesirabilityFunction(base_dir,
         for a in alg:
             if a.startswith('MT_'):
                 sys.exit('TO DO: using multitask model')
+
+        print(alg[0])
+        print(type(alg))
+        if len(alg) > 1:
+            try:
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
         else:
-            if len(alg) > 1:
-                try:
-                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-                except:
-                    path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            else:
-                try :
-                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-                except:
-                    path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            try :
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
 
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -527,6 +529,7 @@ def RLTrain(args):
     prior.loadStatesFromFile(pr_path)
 
     rl_path = args.base_dir + '/generators/' + args.output_long
+    print(args.env_alg)
     
     # Create the desirability function
     environment = CreateDesirabilityFunction(
