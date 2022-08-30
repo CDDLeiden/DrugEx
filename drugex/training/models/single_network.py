@@ -160,7 +160,7 @@ class RNN(Generator):
             if is_end.all(): break
         return sequences
 
-    def fit(self, loader_train, loader_valid=None, epochs=100, monitor=None, lr=1e-3):
+    def fit(self, loader_train, loader_valid=None, epochs=100, monitor=None, lr=1e-3, patience=50):
         optimizer = optim.Adam(self.parameters(), lr=lr)
         best_error = np.inf
         last_save = -1

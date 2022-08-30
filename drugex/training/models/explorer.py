@@ -437,8 +437,8 @@ class SmilesExplorer(Explorer):
                 smiles_scores = []
                 smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
                 for i, smile in enumerate(smiles):
-                    score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
+                    score_str = "\t".join(['%.3f' % s for s in scores.values[i]])
+                    logger.debug('%s\t%s\t%s\n' % (score_str, frags[i], smile))
                     smiles_scores.append((smile, *scores.values[i], frags[i]))
         
                 if best_score < score:
