@@ -73,6 +73,10 @@ def EnvironmentArgParser(txt=None):
                         help="Number of CPUs")
     parser.add_argument('-gpus', '--gpus', default='0',
                         help="List of GPUs (indicate multiple gpus with ,)")
+    parser.add_argument('-pat', '--patience', default='50',
+                        help="for DNN, number of epochs for early stopping")
+    parser.add_argument('-tol', '--tolerance', default='0.01',
+                        help="for DNN, minimum absolute change of loss to count as progress")       
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -187,7 +191,8 @@ def Environ(args):
 
                 # Create QSAR model object
                 if model_type == 'DNN':
-                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters, gpus=args.gpus)
+                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters, gpus=args.gpus,
+                                        patience = args.patience, tol = args.tolerance)
                 else:
                     qsarmodel = QSARsklearn(args.base_dir, data=mydataset, alg=alg_dict[model_type],
                                             alg_name=model_type, n_jobs=args.ncpu, parameters=parameters)

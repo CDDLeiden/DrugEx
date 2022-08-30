@@ -233,16 +233,21 @@ class QSARDNN(QSARModel):
         Attributes
         ----------
         data: instance of QSARDataset
-        batch_size (int): batch size
-        lr (int): learning rate
-        n_epoch (int): number of epochs
+        parameters (dict): dictionary of parameters to set for model fitting
+        device (cuda device): cuda device
+        gpus (int/ list of ints): gpu number(s) to use for model fitting
+        patience (int): number of epochs to wait before early stop if no progress on validiation set score
+        tol (float): minimum absolute improvement of loss necessary to count as progress on best validation score
 
     """
-    def __init__(self, base_dir, data, parameters = None, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS):
+    def __init__(self, base_dir, data, parameters = None, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, patience = 50, tol = 0):
 
         
         super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1], device=device, gpus=gpus),
                          "DNN", parameters=parameters)
+
+        self.patience = patience
+        self.tol = tol
 
         #Initialize model with defined parameters
         if self.parameters:
@@ -264,7 +269,7 @@ class QSARDNN(QSARModel):
         indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
 
         logger.info('Model fit started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        self.model.fit(train_loader, indep_loader, out=self.out)
+        self.model.fit(train_loader, indep_loader, self.out, self.patience, self.tol)
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def evaluate(self, save=True):
@@ -279,7 +284,7 @@ class QSARDNN(QSARModel):
             logger.info('cross validation fold ' +  str(i))
             train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
             valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
-            self.model.fit(train_loader, valid_loader, out='%s_%d' % (self.out, i))
+            self.model.fit(train_loader, valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
             cvs[valided] = self.model.predict(valid_loader)
             inds += self.model.predict(indep_loader)
         
@@ -319,7 +324,7 @@ class QSARDNN(QSARModel):
                 train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
                 valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
                 self.model.set_params(**params)
-                self.model.fit(train_loader, valid_loader, out='%s_temp' % self.out)
+                self.model.fit(train_loader, valid_loader, '%s_temp' % self.out, self.patience, self.tol)
                 os.remove('%s_temp.pkg' % self.out)
                 y_pred = self.model.predict(valid_loader)
                 fold_scores[i] = scoring(self.y[valided], y_pred)

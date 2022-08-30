@@ -118,22 +118,22 @@ class NeuralNet(PathMixIn, TestCase):
 
         # fit model with default settings
         model = STFullyConnected(n_dim = no_features)
-        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel', patience = 3)
 
-        # fit model with non-default epochs and learning rate
+        # fit model with non-default epochs and learning rate and tolerance
         model = STFullyConnected(n_dim = no_features, n_epochs = 50, lr = 0.5)
-        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel', patience = 3, tol=0.01)
 
-        # fit model with non-default settings for rate
+        # fit model with non-default settings for model construction
         model = STFullyConnected(n_dim = no_features, neurons_h1=2000, neurons_hx=500, extra_layer=True)
-        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel', patience = 3)
 
         # prepare classification test dataset
         no_features, trainloader, testloader = self.prep_testdata(reg=False)
 
         # fit model with regression is false
         model = STFullyConnected(n_dim = no_features, is_reg=False)
-        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel')
+        model.fit(trainloader, testloader, out=f'{self.datapath}/testmodel', patience = 3)
 
 
 class TestModels(PathMixIn, TestCase):
@@ -234,7 +234,7 @@ class TestModels(PathMixIn, TestCase):
     def test_QSARDNN(self):
         #intialize model
         data = self.prep_testdata(reg=True)
-        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2])
+        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2], patience=3, tol=0.02)
         
         #fit and cross-validation
         themodel.fit()
