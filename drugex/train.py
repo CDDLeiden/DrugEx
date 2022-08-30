@@ -376,7 +376,7 @@ def CreateDesirabilityFunction(base_dir,
             if a.startswith('MT_'):
                 sys.exit('TO DO: using multitask model')
         else:
-            if len(alg) > 1:
+            if isinstance(alg, list):
                 try:
                     path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
                     objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
