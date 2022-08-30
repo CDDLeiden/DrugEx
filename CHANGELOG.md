@@ -19,3 +19,7 @@ As well as unittests added for this part of the code.
 - add option to remove molecules with tokens not occuring in voc (in dataset.py), see !39.
 
 - add grid search for DNN QSAR model (see !41)
+- add bayes optimization for DNN QSAR model (see !42)
+
+- add option to use different environment algorithms during RL
+- add option to use selectivity window predictor for RL

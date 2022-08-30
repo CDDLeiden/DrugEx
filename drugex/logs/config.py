@@ -38,7 +38,7 @@ class LevelFormatter(logging.Formatter):
         level, formatter = self.formats[idx]
         return formatter.format(record)
 
-def config_logger(log_file_path, debug=None, no_exist_log=True):
+def config_logger(log_file_path, debug=None, disable_existing_loggers=True):
     """
         Function to configure the logging. 
         All info is saved in a simple format on the log file path.
@@ -59,7 +59,7 @@ def config_logger(log_file_path, debug=None, no_exist_log=True):
 
     LOGGING_CONFIG = {
         'version': 1,
-        'disable_existing_loggers': no_exist_log,
+        'disable_existing_loggers': disable_existing_loggers,
         'formatters': {
             'simple_formatter': {
                 'format': simple_format

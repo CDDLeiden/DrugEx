@@ -57,7 +57,7 @@ def DatasetArgParser(txt=None):
     parser.add_argument('-nc', '--n_combs', type=int, default=None,
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
     parser.add_argument('-np', '--n_proc', type=int, default=8,
-                        help="Number of parallel processes to use for multi-core tasks. If not specified, this number is set to the number of available CPUs on the system.")
+                        help="Number of parallel processes to use for multi-core tasks.")
     parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
                         help="Name of the column in CSV files that contains molecules.")
     parser.add_argument('-sv', '--save_voc', action='store_true',

@@ -83,8 +83,8 @@ def GeneratorArgParser(txt=None):
 
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
-    parser.add_argument('-ea', '--env_alg', type=str, default='RF',
-                        help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
+    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default='RF',
+                        help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
     
@@ -111,6 +111,8 @@ def GeneratorArgParser(txt=None):
                         help="Target IDs for which activity is desirable")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
+    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which selectivity window is calculated")
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
@@ -132,7 +134,7 @@ def GeneratorArgParser(txt=None):
     if args.voc_files is None:
         args.voc_files = [args.input.split('_')[0]]
     
-    args.targets = args.active_targets + args.inactive_targets
+    args.targets = args.active_targets + args.inactive_targets + args.window_targets
 
     args.output_long = '_'.join([args.output, args.mol_type, args.algorithm, args.mode])
 
@@ -286,6 +288,7 @@ def CreateDesirabilityFunction(base_dir,
                                scheme, 
                                active_targets=[], 
                                inactive_targets=[], 
+                               window_targets=[],
                                activity_threshold=6.5, 
                                qed=False, 
                                unique=False,
@@ -307,6 +310,7 @@ def CreateDesirabilityFunction(base_dir,
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
+        window_targets (lst), opt   : list of target IDs for selectivity window
         activity_threshold (float), opt : activety threshold in case of 'CLS'
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         unique (bool), opt          : if Trye, molecule uniqueness in an epoch included in the desirability function
@@ -330,42 +334,67 @@ def CreateDesirabilityFunction(base_dir,
     }
     objs = []
     ths = []
-    targets = active_targets + inactive_targets
+    targets = active_targets + inactive_targets + window_targets
 
     pad = 3.5
+    pad_window = 1.5
     if scheme == 'WS':
         # Weighted Sum (WS) reward scheme
         if task == 'CLS':
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
         else:
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+
     else:
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
         if task == 'CLS':
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
         else:
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+      
     
-    for t in targets:
-        predictor_modifier = active if t in active_targets else inactive
-        if scheme == 'WS' : ths.append(0.5)
-        else : ths.append(0.99)
-        if alg.startswith('MT_'):
-            sys.exit('TO DO: using multitask model')
+    for i, t in enumerate(targets):
+        if t in active_targets:
+            predictor_modifier = active 
+            ths.append(0.5 if scheme == 'WS' else 0.99)
+        elif t in inactive_targets:
+            predictor_modifier = inactive 
+            ths.append(0.5 if scheme == 'WS' else 0.99)
+        elif t in window_targets:
+            predictor_modifier = window
+            ths.append(0.5)
+        
+        for a in alg:
+            if a.startswith('MT_'):
+                sys.exit('TO DO: using multitask model')
         else:
-            try :
-                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except FileNotFoundError:
-                path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg, task, t]) + '.pkg'
-                log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-    
+            if len(alg) > 1:
+                try:
+                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+                except:
+                    path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            else:
+                try :
+                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+                except:
+                    path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.5)
@@ -507,6 +536,7 @@ def RLTrain(args):
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
+        window_targets=args.window_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
         unique=args.uniqueness, 
