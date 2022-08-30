@@ -225,7 +225,7 @@ class GraphExplorer(Explorer):
         return loader
         
 
-    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50 monitor=None):
+    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, monitor=None):
         monitor = monitor if monitor else NullMonitor()
         best_score = 0
         self.bestState = deepcopy(self.agent.state_dict())
