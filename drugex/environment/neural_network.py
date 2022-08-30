@@ -17,7 +17,7 @@ class Base(nn.Module):
     Mainly, it provides the general methods for training, evaluating model and predicting the given data.
     """
 
-    def __init__(self, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs=100, lr=1e-4, batch_size=32):
+    def __init__(self, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs=1000, lr=1e-4, batch_size=64):
         super().__init__()
         self.n_epochs = n_epochs
         self.lr = lr
@@ -30,7 +30,7 @@ class Base(nn.Module):
         if len(self.gpus) > 1:
             logger.warning(f'At the moment multiple gpus is not possible: running DNN on gpu: {gpus[0]}.')
 
-    def fit(self, train_loader, valid_loader, out):
+    def fit(self, train_loader, valid_loader, out, patience=50, tol=0):
         """Training the DNN model, similar to the scikit-learn or Keras style.
         In the end, the optimal value of parameters will also be persisted on the hard drive.
         Arguments:
@@ -41,8 +41,8 @@ class Base(nn.Module):
                 The data structure is as same as loader_train.
             out (str): the file path for the model file (suffix with '.pkg')
                 and log file (suffix with '.log').
-            epochs(int, optional): The maximum of training epochs (default: 100)
-            lr (float, optional): learning rate (default: 1e-4)
+            patience (int): number of epochs to wait before early stop if no progress on validiation set score
+            tol (float): minimum absolute improvement of loss necessary to count as progress on best validation score
         """
 
         if 'optim' in self.__dict__:
@@ -84,7 +84,7 @@ class Base(nn.Module):
             loss_valid = self.evaluate(valid_loader)
             print('[Epoch: %d/%d] %.1fs loss_train: %f loss_valid: %f' % (
                 epoch, self.n_epochs, time.time() - t0, loss.item(), loss_valid), file=log)
-            if loss_valid < best_loss:
+            if loss_valid + tol < best_loss:
                 torch.save(self.state_dict(), out + '.pkg')
                 print('[Performance] loss_valid is improved from %f to %f, Save model to %s' %
                       (best_loss, loss_valid, out + '.pkg'), file=log)
@@ -94,7 +94,7 @@ class Base(nn.Module):
                 print('[Performance] loss_valid is not improved.', file=log)
                 # early stopping, if the performance on validation is not improved in 100 epochs.
                 # The model training will stop in order to save time.
-                if epoch - last_save > 100: break
+                if epoch - last_save > patience: break
         print('Neural net fitting completed.', file=log)
         log.close()
         self.load_state_dict(torch.load(out + '.pkg'))

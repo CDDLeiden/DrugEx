@@ -84,7 +84,7 @@ def generateBackupDir(root, backup_id):
 def backUpFilesInFolder(_dir, backup_id, output_prefixes, output_extensions='dummy', cp_suffix=None):
     message = ''
     existing_files = os.listdir(_dir)
-    if all([file.split('.')[0].endswith(cp_suffix) for file in existing_files]):
+    if cp_suffix and all([file.split('.')[0].endswith(cp_suffix) for file in existing_files]):
         return message
     for file in existing_files:
         if file.startswith(output_prefixes) or file.endswith(output_extensions):

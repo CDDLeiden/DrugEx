@@ -71,8 +71,12 @@ def EnvironmentArgParser(txt=None):
                         help='If on, model evaluation through cross validation and independent test set is performed.')
     parser.add_argument('-ncpu', '--ncpu', type=int, default=8,
                         help="Number of CPUs")
-    parser.add_argument('-gpus', '--gpus', default='0',
-                        help="List of GPUs (indicate multiple gpus with ,)")
+    parser.add_argument('-gpus', '--gpus', nargs="*",  default=['0'],
+                        help="List of GPUs")
+    parser.add_argument('-pat', '--patience', default='50',
+                        help="for DNN, number of epochs for early stopping")
+    parser.add_argument('-tol', '--tolerance', default='0.01',
+                        help="for DNN, minimum absolute change of loss to count as progress")       
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
     
@@ -107,7 +111,6 @@ def Environ(args):
     """
         Optimize, evaluate and train estimators
     """
-    args.gpus = [int(x) for x in args.gpus.split(',')]
     
     if not os.path.exists(args.base_dir + '/envs'):
         os.makedirs(args.base_dir + '/envs') 
@@ -150,6 +153,7 @@ def Environ(args):
             mydataset.createFolds()
             
             for model_type in args.model_types:
+                print(model_type)
                 log.info(f'Model: {model_type} {reg_abbr}')
 
                 if model_type == 'MT_DNN':
@@ -187,7 +191,8 @@ def Environ(args):
 
                 # Create QSAR model object
                 if model_type == 'DNN':
-                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters, gpus=args.gpus)
+                    qsarmodel = QSARDNN(base_dir = args.base_dir, data=mydataset, parameters=parameters, gpus=args.gpus,
+                                        patience = args.patience, tol = args.tolerance)
                 else:
                     qsarmodel = QSARsklearn(args.base_dir, data=mydataset, alg=alg_dict[model_type],
                                             alg_name=model_type, n_jobs=args.ncpu, parameters=parameters)

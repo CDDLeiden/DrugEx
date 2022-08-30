@@ -78,10 +78,12 @@ def GeneratorArgParser(txt=None):
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
                         help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
+    parser.add_argument('-pa', '--patience', type=int, default=50,
+                        help="Number of epochs to wait before early stop if no progress on test set score")
 
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
-    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default='RF',
+    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
@@ -303,7 +305,7 @@ def CreateDesirabilityFunction(base_dir,
     
     Arguments:
         base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (str)                   : environment-predictor algoritm
+        alg (list)                   : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
@@ -346,7 +348,6 @@ def CreateDesirabilityFunction(base_dir,
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
             window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
-        ths = [0.5] * (len(targets))
 
     else:
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
@@ -358,47 +359,48 @@ def CreateDesirabilityFunction(base_dir,
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
             window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+      
     
     for i, t in enumerate(targets):
         if t in active_targets:
             predictor_modifier = active 
-            ths.append(0.99)
+            ths.append(0.5 if scheme == 'WS' else 0.99)
         elif t in inactive_targets:
             predictor_modifier = inactive 
-            ths.append(0.99)
+            ths.append(0.5 if scheme == 'WS' else 0.99)
         elif t in window_targets:
             predictor_modifier = window
-            ths.append(0.59)
+            ths.append(0.5)
         
         for a in alg:
             if a.startswith('MT_'):
                 sys.exit('TO DO: using multitask model')
+
+        if len(alg) > 1:
+            try:
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
         else:
-            if len(alg) > 1:
-                try:
-                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-                except:
-                    path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            else:
-                try :
-                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-                except:
-                    path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                    #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                    objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            try :
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
 
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
-        ths.append(0.0)
+        ths.append(0.5)
     if unique:
         objs.append(Uniqueness(modifier=ClippedScore(lower_x=1.0, upper_x=0.0)))
-        ths.append(0.2)
+        ths.append(0.0)
     if sa_score:
         objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
         ths.append(0.5)
@@ -407,10 +409,10 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
-        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[1], upper_x=mw_ths[0], sigma=100)))
+        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[0], upper_x=mw_ths[1], sigma=100)))
         ths.append(0.99)
     if logP:
-        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[1], upper_x=logP_ths[0], sigma=1)))
+        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
@@ -466,7 +468,7 @@ def PreTrain(args):
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     monitor = FileMonitor(pt_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
         
 def FineTune(args):
     """
@@ -497,7 +499,7 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     agent.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
                               
 def RLTrain(args):
     
@@ -525,6 +527,7 @@ def RLTrain(args):
     prior.loadStatesFromFile(pr_path)
 
     rl_path = args.base_dir + '/generators/' + args.output_long
+    print(args.env_alg)
     
     # Create the desirability function
     environment = CreateDesirabilityFunction(
@@ -551,7 +554,7 @@ def RLTrain(args):
     ## first difference for v2 needs to be adapted
     explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples, args.gpu)
     monitor = FileMonitor(rl_path, verbose=True)
-    explorer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    explorer.fit(train_loader, valid_loader, epochs=args.epochs, patience=args.patience, monitor=monitor)
 
 
 def TrainGenerator(args):

@@ -32,11 +32,10 @@ class Base(Generator, ABC):
     def getModel(self):
         return deepcopy(self.state_dict())
 
-    def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None):
         monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
-        max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
          
         for epoch in tqdm(range(epochs)):
             epoch += 1
@@ -47,6 +46,8 @@ class Base(Generator, ABC):
             
             logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
+
+
             
             if loss_valid < best:
                 monitor.saveModel(self)    
@@ -58,7 +59,7 @@ class Base(Generator, ABC):
             del loss_valid
             monitor.endStep(None, epoch)
                 
-            if epoch - last_save > max_interval : break
+            if epoch - last_save > patience : break
         
         torch.cuda.empty_cache()
         monitor.close()
