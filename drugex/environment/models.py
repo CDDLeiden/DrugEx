@@ -14,9 +14,7 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, SVR
 from sklearn import metrics
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import ParameterGrid
-
+from sklearn.model_selection import GridSearchCV, ParameterGrid, train_test_split
 from drugex.environment.interfaces import QSARModel
 from drugex.environment.neural_network import STFullyConnected
 
@@ -97,6 +95,8 @@ class QSARsklearn(QSARModel):
         """
         cvs = np.zeros(self.data.y.shape)
         inds = np.zeros(self.data.y_ind.shape)
+
+        # cross validation
         for i, (trained, valided) in enumerate(self.data.folds):
             logger.info('cross validation fold %s started: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             
@@ -124,10 +124,27 @@ class QSARsklearn(QSARModel):
                 inds += self.model.predict_proba(self.data.X_ind)[:, 1]
             logger.info('cross validation fold %s ended: %s' % (i, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         
+        # fitting on whole trainingset and predicting on test set
+        fit_set = {'X': self.data.X}
+            
+        if type(self.alg).__name__ == 'PLSRegression':
+            fit_set['Y'] = self.data.y
+        else:
+            fit_set['y'] = self.data.y
+
+        self.model.fit(**fit_set)
+        
+        if type(self.alg).__name__ == 'PLSRegression':
+            inds = self.model.predict(self.data.X_ind)[:, 0]
+        elif self.data.reg:
+            inds = self.model.predict(self.data.X_ind)
+        else:
+            inds = self.model.predict_proba(self.data.X_ind)[:, 1]
+
         #save crossvalidation results
         if save:
             train, test = pd.Series(self.data.y).to_frame(name='Label'), pd.Series(self.data.y_ind).to_frame(name='Label')
-            train['Score'], test['Score'] = cvs, inds / 5
+            train['Score'], test['Score'] = cvs, inds
             train.to_csv(self.out + '.cv.tsv', sep='\t')
             test.to_csv(self.out + '.ind.tsv', sep='\t')
 
@@ -272,32 +289,41 @@ class QSARDNN(QSARModel):
         self.model.fit(train_loader, indep_loader, self.out, self.patience, self.tol)
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    def evaluate(self, save=True):
+    def evaluate(self, save=True, ES_val_size=0.1):
         """
             Make predictions for crossvalidation and independent test set
+            arguments:
+                save (bool): wether to save the cross validation predictions
+                ES_val_size (float): validation set size for early stopping in CV
         """
         indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
         
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
+            X_train_fold, X_val_fold, y_train_fold, y_val_fold = train_test_split(self.data.X[trained], self.y[trained], test_size=ES_val_size)
             logger.info('cross validation fold ' +  str(i))
-            train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
+            train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
+            ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
             valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
-            self.model.fit(train_loader, valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
+            self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
             cvs[valided] = self.model.predict(valid_loader)
-            inds += self.model.predict(indep_loader)
-        
+
+        train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
+        valid_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
+        self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
+        inds = self.model.predict(indep_loader)
+
         if save:
             train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
-            train['Score'], test['Score'] = cvs, inds / 5
+            train['Score'], test['Score'] = cvs, inds
             train.to_csv(self.out + '.cv.tsv', sep='\t')
             test.to_csv(self.out + '.ind.tsv', sep='\t')
         self.data.createFolds()
 
         return cvs
 
-    def gridSearch(self, search_space_gs, save_m):
+    def gridSearch(self, search_space_gs, save_m, ES_val_size=0.1):
         """
             optimization of hyperparameters using gridSearch
             arguments:
@@ -309,6 +335,7 @@ class QSARDNN(QSARModel):
                                         neurons_hx (int) ~ number of neurons in other hidden layers
                                         extra_layer (bool) ~ whether to add extra (3rd) hidden layer
                 save_m (bool): if true, after gs the model is refit on the entire data set
+                ES_val_size (float): validation set size for early stopping in CV
         """          
         scoring = metrics.explained_variance_score if self.data.reg else metrics.roc_auc_score
 
@@ -321,10 +348,12 @@ class QSARDNN(QSARModel):
             fold_scores = np.zeros(self.data.n_folds)
             for i, (trained, valided) in enumerate(self.data.folds):
                 logger.info('cross validation fold ' +  str(i))
-                train_loader = self.model.get_dataloader(self.data.X[trained], self.y[trained])
+                X_train_fold, X_val_fold, y_train_fold, y_val_fold = train_test_split(self.data.X[trained], self.y[trained], test_size=ES_val_size)
+                train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
+                ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
                 valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
                 self.model.set_params(**params)
-                self.model.fit(train_loader, valid_loader, '%s_temp' % self.out, self.patience, self.tol)
+                self.model.fit(train_loader, ES_valid_loader, '%s_temp' % self.out, self.patience, self.tol)
                 os.remove('%s_temp.pkg' % self.out)
                 y_pred = self.model.predict(valid_loader)
                 fold_scores[i] = scoring(self.y[valided], y_pred)
