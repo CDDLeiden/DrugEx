@@ -237,8 +237,8 @@ class TestModels(PathMixIn, TestCase):
         themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2], patience=3, tol=0.02)
         
         #fit and cross-validation
-        themodel.fit()
         themodel.evaluate()
+        themodel.fit()
 
         #optimization
         fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'

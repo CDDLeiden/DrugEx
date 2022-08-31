@@ -1,6 +1,7 @@
 from drugex.logs import logger
 from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 
+import sys
 import os
 import os.path
 import json
@@ -9,6 +10,7 @@ from datetime import datetime
 import joblib
 import pandas as pd
 import optuna
+import math
 
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.naive_bayes import GaussianNB
@@ -278,15 +280,25 @@ class QSARDNN(QSARModel):
         self.y = self.data.y.reshape(-1,1)
         self.y_ind = self.data.y_ind.reshape(-1,1)
 
+        self.optimal_epochs = 0
+
     def fit(self):
         """
             train model on the trainings data, determine best model using test set, save best model
         """
-        train_loader = self.model.get_dataloader(self.data.X, self.y)
-        indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
+        if self.optimal_epochs == 0:
+            logger.error('Cannot fit final model without first determining the optimal number of epochs for fitting. \
+                        first run evaluate.')
+            sys.exit()
+
+        X_all = np.concatenate([self.data.X, self.data.X_ind], axis=0)
+        y_all = np.concatenate([self.y, self.y_ind], axis=0)
+
+        self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
+        train_loader = self.model.get_dataloader(X_all, y_all)
 
         logger.info('Model fit started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        self.model.fit(train_loader, indep_loader, self.out, self.patience, self.tol)
+        self.model.fit(train_loader, None, self.out, patience = -1)
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def evaluate(self, save=True, ES_val_size=0.1):
@@ -297,7 +309,8 @@ class QSARDNN(QSARModel):
                 ES_val_size (float): validation set size for early stopping in CV
         """
         indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
-        
+        last_save_epoch = 0
+
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
@@ -306,13 +319,15 @@ class QSARDNN(QSARModel):
             train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
             ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
             valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
-            self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
+            last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
             cvs[valided] = self.model.predict(valid_loader)
 
         train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
         valid_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
-        self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
+        last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
         inds = self.model.predict(indep_loader)
+
+        self.optimal_epochs = int(math.ceil(last_save_epoch / (self.data.n_folds+1)))
 
         if save:
             train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
