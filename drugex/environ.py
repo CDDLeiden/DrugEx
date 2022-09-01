@@ -73,9 +73,9 @@ def EnvironmentArgParser(txt=None):
                         help="Number of CPUs")
     parser.add_argument('-gpus', '--gpus', nargs="*",  default=['0'],
                         help="List of GPUs")
-    parser.add_argument('-pat', '--patience', default='50',
+    parser.add_argument('-pat', '--patience', type=int, default=50,
                         help="for DNN, number of epochs for early stopping")
-    parser.add_argument('-tol', '--tolerance', default='0.01',
+    parser.add_argument('-tol', '--tolerance', type=float, default=0.01,
                         help="for DNN, minimum absolute change of loss to count as progress")       
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")

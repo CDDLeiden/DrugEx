@@ -40,7 +40,7 @@ class QSARDataset:
                                     and n is the number of features.
         y_ind (np.ndarray)        : m-l label array for independent set, where m is the number of samples and
                                     equals to row of X_ind, and l is the number of types.
-        folds (generator)         :
+        folds (generator)         : scikit-learn n-fold generator object
 
         Methods
         -------
