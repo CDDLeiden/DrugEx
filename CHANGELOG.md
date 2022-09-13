@@ -13,6 +13,8 @@ From v3.1.0 to v3.2.0
 - Training QSAR models is restructured (see !41), only CLI still environ.py, actually functionality moved to environment.
 As well as unittests added for this part of the code.
 
+- Early stopping patience is now softcoded for all models and for reinforcement learning criteria was changed from ratio of desired molecules to the mean average score (see !46)
+
 
 ## New Features
 
