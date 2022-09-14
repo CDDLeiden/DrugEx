@@ -58,6 +58,8 @@ def DatasetArgParser(txt=None):
                         help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
     parser.add_argument('-np', '--n_proc', type=int, default=8,
                         help="Number of parallel processes to use for multi-core tasks.")
+    parser.add_argument('-cs', '--chunk_size', type=int, default=512,
+                        help="Number of iitems to be given to each process for multi-core tasks. If not specified, this number is set to 512.")
     parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
                         help="Name of the column in CSV files that contains molecules.")
     parser.add_argument('-sv', '--save_voc', action='store_true',
@@ -227,7 +229,8 @@ def Dataset(args):
                     VocGraph(n_frags=args.n_frags)
                 ),
                 pairs_splitter=splitter,
-                n_proc=args.n_proc
+                n_proc=args.n_proc,
+                chunk_size=args.chunk_size
             )
 
             data_collectors = [GraphFragDataSet(file_prefix + f'_{split}_graph.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_train_graph.txt', rewrite=True) ]
@@ -245,7 +248,8 @@ def Dataset(args):
                         update_voc = False, 
                         throw= True),
                     pairs_splitter=splitter,
-                    n_proc=args.n_proc
+                    n_proc=args.n_proc,
+                    chunk_size=args.chunk_size
                 )
             else:
                 encoder = FragmentCorpusEncoder(
@@ -254,7 +258,8 @@ def Dataset(args):
                         VocSmiles()
                     ),
                     pairs_splitter=splitter,
-                    n_proc=args.n_proc
+                    n_proc=args.n_proc,
+                    chunk_size=args.chunk_size
                 )
             encoder.apply(smiles, encodingCollectors=data_collectors)
             if args.save_voc:
