@@ -4,6 +4,7 @@ From v3.1.0 to v3.2.0
 ## Fixes
 
 - fixes to SmilesExplorerNoFrag (wrong best state was saved and a TypeError while logging was eliminated, see !40)
+- optimized how memory is used a little bit (!50)
 
 
 ## Changes
@@ -25,3 +26,5 @@ As well as unittests added for this part of the code.
 
 - add option to use different environment algorithms during RL
 - add option to use selectivity window predictor for RL
+
+- add option to specify `chunk_size` in the `dataset.py` script to control how data is supplied to parallel processes (bigger chunk size -> more memory used, but more efficient use of multiple CPUs, see !50)
