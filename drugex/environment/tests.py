@@ -233,22 +233,23 @@ class TestModels(PathMixIn, TestCase):
 
     def test_QSARDNN(self):
         #intialize model
-        data = self.prep_testdata(reg=True)
-        themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2], patience=3, tol=0.02)
-        
-        #fit and cross-validation
-        themodel.evaluate()
-        themodel.fit()
+        for reg in [True, False]:
+            data = self.prep_testdata(reg=reg)
+            themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2], patience=3, tol=0.02)
+            
+            #fit and cross-validation
+            themodel.evaluate()
+            themodel.fit()
 
-        #optimization
-        fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
+            #optimization
+            fname = f'{os.path.dirname(__file__)}/test_files/search_space_test.json'
 
-        # grid search
-        grid_params = QSARDNN.loadParamsGrid(fname, "grid", "DNN")
-        search_space_gs = grid_params[grid_params[:,0] == "DNN",1][0]
-        themodel.gridSearch(search_space_gs=search_space_gs, save_m=True)
+            # grid search
+            grid_params = QSARDNN.loadParamsGrid(fname, "grid", "DNN")
+            search_space_gs = grid_params[grid_params[:,0] == "DNN",1][0]
+            themodel.gridSearch(search_space_gs=search_space_gs, save_m=True)
 
-        # bayesian optimization
-        bayes_params = QSARDNN.loadParamsGrid(fname, "bayes", "DNN")
-        search_space_bs = grid_params[bayes_params[:,0] == "DNN",1][0]
-        themodel.bayesOptimization(search_space_bs=search_space_bs, n_trials=5, save_m=True)
+            # bayesian optimization
+            bayes_params = QSARDNN.loadParamsGrid(fname, "bayes", "DNN")
+            search_space_bs = grid_params[bayes_params[:,0] == "DNN",1][0]
+            themodel.bayesOptimization(search_space_bs=search_space_bs, n_trials=5, save_m=True)

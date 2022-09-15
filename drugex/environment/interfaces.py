@@ -39,6 +39,7 @@ class QSARModel(ABC):
         self.data = data
         self.alg = alg
         self.parameters = parameters
+        self.alg_name = alg_name
 
         d = '%s/envs' % base_dir
         self.out = '%s/%s_%s_%s' % (d, alg_name, 'REG' if data.reg else 'CLS', data.target)
