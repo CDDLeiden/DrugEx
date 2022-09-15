@@ -10,7 +10,6 @@ from drugex.data.processing import Standardization, CorpusEncoder, RandomTrainTe
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffoldDataSet, GraphFragDataSet, \
     GraphScaffoldDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
-from drugex.data.utils import getVocPaths
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
@@ -125,7 +124,7 @@ def Dataset(args):
         voc_path = args.base_dir + '/data/' + args.voc_file
 
     print("Standardizing molecules...")
-    standardizer = Standardization(n_proc=args.n_proc)
+    standardizer = Standardization(n_proc=args.n_proc, chunk_size=args.chunk_size)
     smiles = standardizer.apply(smiles)
 
     file_base = os.path.join(args.base_dir, 'data')
@@ -141,7 +140,8 @@ def Dataset(args):
                     'throw': True
 
                 },
-                n_proc=args.n_proc
+                n_proc=args.n_proc,
+                chunk_size=args.chunk_size
             )
         else:
             encoder = CorpusEncoder(
@@ -150,7 +150,8 @@ def Dataset(args):
                     'vocabulary': VocSmiles(),
 
                 },
-                n_proc=args.n_proc
+                n_proc=args.n_proc,
+                chunk_size=args.chunk_size
             )
         data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'), rewrite=True)
         encoder.apply(smiles, collector=data_collector)
@@ -173,7 +174,8 @@ def Dataset(args):
                     'vocabulary': VocGraph(),
                     'largest': max(smiles, key=len)
                 },
-                n_proc=args.n_proc
+                n_proc=args.n_proc,
+                chunk_size=args.chunk_size
             )
             encoder.apply(smiles, collector=data_set)
             if args.save_voc:
@@ -189,7 +191,8 @@ def Dataset(args):
                         'update_voc': False,
                         'throw': True
                     },
-                    n_proc=args.n_proc
+                    n_proc=args.n_proc,
+                    chunk_size=args.chunk_size
                 )
             else:
                 encoder = CorpusEncoder(
@@ -198,7 +201,8 @@ def Dataset(args):
                     'vocabulary': VocSmiles(min_len=3),
                     'largest': max(smiles, key=len)
                 },
-                n_proc=args.n_proc
+                n_proc=args.n_proc,
+                chunk_size=args.chunk_size
             )
 
             encoder.apply(smiles, collector=data_set)
