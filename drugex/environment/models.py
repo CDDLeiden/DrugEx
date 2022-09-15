@@ -262,7 +262,7 @@ class QSARDNN(QSARModel):
     def __init__(self, base_dir, data, parameters = None, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, patience = 50, tol = 0):
 
         
-        super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1], device=device, gpus=gpus),
+        super().__init__(base_dir, data, STFullyConnected(n_dim=data.X.shape[1], device=device, gpus=gpus, is_reg=data.reg),
                          "DNN", parameters=parameters)
 
         self.patience = patience
@@ -280,15 +280,15 @@ class QSARDNN(QSARModel):
         self.y = self.data.y.reshape(-1,1)
         self.y_ind = self.data.y_ind.reshape(-1,1)
 
-        self.optimal_epochs = 0
+        self.optimal_epochs = -1
 
     def fit(self):
         """
             train model on the trainings data, determine best model using test set, save best model
         """
-        if self.optimal_epochs == 0:
+        if self.optimal_epochs == -1:
             logger.error('Cannot fit final model without first determining the optimal number of epochs for fitting. \
-                        first run evaluate.')
+                          first run evaluate.')
             sys.exit()
 
         X_all = np.concatenate([self.data.X, self.data.X_ind], axis=0)
@@ -299,6 +299,7 @@ class QSARDNN(QSARModel):
 
         logger.info('Model fit started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         self.model.fit(train_loader, None, self.out, patience = -1)
+        joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
         logger.info('Model fit ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def evaluate(self, save=True, ES_val_size=0.1):
@@ -308,7 +309,7 @@ class QSARDNN(QSARModel):
                 save (bool): wether to save the cross validation predictions
                 ES_val_size (float): validation set size for early stopping in CV
         """
-        indep_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
+        indep_loader = self.model.get_dataloader(self.data.X_ind)
         last_save_epoch = 0
 
         cvs = np.zeros(self.y.shape)
@@ -318,16 +319,16 @@ class QSARDNN(QSARModel):
             logger.info('cross validation fold ' +  str(i))
             train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
             ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
-            valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
+            valid_loader = self.model.get_dataloader(self.data.X[valided])
             last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
             cvs[valided] = self.model.predict(valid_loader)
 
-        train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
-        valid_loader = self.model.get_dataloader(self.data.X_ind, self.y_ind)
-        last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
-        inds = self.model.predict(indep_loader)
+        self.optimal_epochs = max(int(math.ceil(last_save_epoch / (self.data.n_folds))), 1)
+        self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
 
-        self.optimal_epochs = int(math.ceil(last_save_epoch / (self.data.n_folds+1)))
+        train_loader = self.model.get_dataloader(self.data.X, self.y)
+        self.model.fit(train_loader, None, self.out, patience = -1)
+        inds = self.model.predict(indep_loader)
 
         if save:
             train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
@@ -355,7 +356,7 @@ class QSARDNN(QSARModel):
         scoring = metrics.explained_variance_score if self.data.reg else metrics.roc_auc_score
 
         logger.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        best_score = 0
+        best_score = -np.inf
         for params in ParameterGrid(search_space_gs):
             logger.info(params)
 
@@ -366,14 +367,14 @@ class QSARDNN(QSARModel):
                 X_train_fold, X_val_fold, y_train_fold, y_val_fold = train_test_split(self.data.X[trained], self.y[trained], test_size=ES_val_size)
                 train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
                 ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
-                valid_loader = self.model.get_dataloader(self.data.X[valided], self.y[valided])
+                valid_loader = self.model.get_dataloader(self.data.X[valided])
                 self.model.set_params(**params)
                 self.model.fit(train_loader, ES_valid_loader, '%s_temp' % self.out, self.patience, self.tol)
-                os.remove('%s_temp.pkg' % self.out)
+                os.remove('%s_temp_weights.pkg' % self.out)
                 y_pred = self.model.predict(valid_loader)
                 fold_scores[i] = scoring(self.y[valided], y_pred)
             param_score = np.mean(fold_scores)
-            if param_score > best_score:
+            if param_score >= best_score:
                 best_params = params
                 best_score = param_score
             self.data.createFolds()
