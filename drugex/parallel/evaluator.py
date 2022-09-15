@@ -92,7 +92,7 @@ class ParallelSupplierEvaluator(ParallelProcessor):
         error = error if error else self.error
         chunk_size = self.getChunkSize(data)
         data = [data[i: i+chunk_size] for i in range(0, len(data), chunk_size)]
-        batch_size = 4 * self.nProc
+        batch_size = self.nProc
         results = []
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.nProc) as executor:
