@@ -154,16 +154,15 @@ class QSARsklearn(QSARModel):
 
         return cvs
 
-    def gridSearch(self, search_space_gs, save_m=True):
+    def gridSearch(self, search_space_gs):
         """
             optimization of hyperparameters using gridSearch
             arguments:
                 search_space_gs (dict): search space for the grid search
-                save_m (bool): if true, after gs the model is refit on the entire data set
         """          
         scoring = 'explained_variance' if self.data.reg else 'roc_auc'    
         grid = GridSearchCV(self.alg, search_space_gs, n_jobs=10, verbose=1, cv=self.data.folds,
-                            scoring=scoring, refit=save_m)
+                            scoring=scoring, refit=False)
         
         fit_set = {'X': self.data.X, 'y': self.data.y}
         # if type(self.alg).__name__ not in ['KNeighborsRegressor', 'KNeighborsClassifier', 'PLSRegression']:
@@ -171,10 +170,6 @@ class QSARsklearn(QSARModel):
         logger.info('Grid search started: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         grid.fit(**fit_set)
         logger.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        
-        if save_m:
-            self.model = grid.best_estimator_
-            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
 
         self.data.createFolds()
 
@@ -182,7 +177,9 @@ class QSARsklearn(QSARModel):
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(grid.best_params_, f)
 
-    def bayesOptimization(self, search_space_bs, n_trials, save_m):
+        self.model = self.alg.set_params(**grid.best_params_)
+
+    def bayesOptimization(self, search_space_bs, n_trials):
         """
             bayesian optimization of hyperparameters using optuna
             arguments:
@@ -199,15 +196,13 @@ class QSARsklearn(QSARModel):
 
         trial = study.best_trial
 
-        if save_m:
-            self.model = self.alg.set_params(**trial.params)
-            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
-
         self.data.createFolds()
 
         logger.info('Bayesian optimization best params: %s' % trial.params)
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(trial.params, f)
+
+        self.model = self.alg.set_params(**trial.params)
 
     def objective(self, trial, search_space_bs):
         """
@@ -285,6 +280,9 @@ class QSARDNN(QSARModel):
     def fit(self):
         """
             train model on the trainings data, determine best model using test set, save best model
+
+            ** IMPORTANT: evaluate should be run first, so that the average number of epochs from the cross-validation
+                          with early stopping can be used for fitting the model.
         """
         if self.optimal_epochs == -1:
             logger.error('Cannot fit final model without first determining the optimal number of epochs for fitting. \
@@ -339,7 +337,7 @@ class QSARDNN(QSARModel):
 
         return cvs
 
-    def gridSearch(self, search_space_gs, save_m, ES_val_size=0.1):
+    def gridSearch(self, search_space_gs, ES_val_size=0.1):
         """
             optimization of hyperparameters using gridSearch
             arguments:
@@ -384,13 +382,11 @@ class QSARDNN(QSARModel):
             json.dump(best_params, f)
         logger.info('Grid search ended: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
-        if save_m:
-            self.model.set_params(**best_params)
-            self.fit()
+        self.model = self.alg.set_params(**best_params)
 
         self.data.createFolds()
     
-    def bayesOptimization(self, search_space_bs, n_trials, save_m):
+    def bayesOptimization(self, search_space_bs, n_trials):
         """
             bayesian optimization of hyperparameters using optuna
             arguments:
@@ -407,15 +403,13 @@ class QSARDNN(QSARModel):
 
         trial = study.best_trial
 
-        if save_m:
-            self.model = self.alg.set_params(**trial.params)
-            joblib.dump(self.model, '%s.pkg' % self.out, compress=3)
-
         self.data.createFolds()
 
         logger.info('Bayesian optimization best params: %s' % trial.params)
         with open('%s_params.json' % self.out, 'w') as f:
             json.dump(trial.params, f)
+
+        self.model = self.alg.set_params(**trial.params)
 
     def objective(self, trial, search_space_bs):
         """

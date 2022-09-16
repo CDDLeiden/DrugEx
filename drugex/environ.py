@@ -201,7 +201,7 @@ def Environ(args):
                 if args.optimization == 'grid':
                     search_space_gs = grid_params[grid_params[:,0] == model_type,1][0]
                     log.info(search_space_gs)
-                    qsarmodel.gridSearch(search_space_gs, args.save_model)
+                    qsarmodel.gridSearch(search_space_gs)
                 elif args.optimization == 'bayes':
                     search_space_bs = grid_params[grid_params[:,0] == model_type,1][0]
                     log.info(search_space_bs)
@@ -209,16 +209,18 @@ def Environ(args):
                         search_space_bs.update({'criterion' : ['categorical', ['squared_error', 'poisson']]})
                     elif model_type == "RF":
                         search_space_bs.update({'criterion' : ['categorical', ['gini', 'entropy']]})
-                    qsarmodel.bayesOptimization(search_space_bs, args.n_trials, args.save_model)
+                    qsarmodel.bayesOptimization(search_space_bs, args.n_trials)
                 
-                # initialize models from saved or default parameters
-
-                if args.optimization is None and args.save_model:
-                    qsarmodel.fit()
-                
+                # initialize models from saved or default parameters  
                 if args.model_evaluation:
                     qsarmodel.evaluate()
 
+                if args.save_model:
+                    if (model_type == 'DNN') and ~(args.model_evaluation):
+                        log.warning("Fit skipped: DNN can only be fitted after cross-validation for determining \
+                                     optimal number of epochs to stop training")
+                    else:
+                        qsarmodel.fit()
                
 if __name__ == '__main__':
     args = EnvironmentArgParser()
