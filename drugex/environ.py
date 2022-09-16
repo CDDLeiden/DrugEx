@@ -216,7 +216,7 @@ def Environ(args):
                     qsarmodel.evaluate()
 
                 if args.save_model:
-                    if (model_type == 'DNN') and ~(args.model_evaluation):
+                    if (model_type == 'DNN') and not (args.model_evaluation):
                         log.warning("Fit skipped: DNN can only be fitted after cross-validation for determining \
                                      optimal number of epochs to stop training")
                     else:
