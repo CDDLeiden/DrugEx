@@ -1,4 +1,5 @@
 import os
+import os.path as op
 import sys
 from abc import ABC, abstractmethod
 
@@ -109,7 +110,7 @@ class QSARModel(ABC):
                 logger.error("Search space file (%s) not found" % fname)
                 sys.exit()
         else:
-            with open('drugex/environment/search_space.json') as json_file:
+            with open(op.join(op.dirname(__file__), "search_space.json")) as json_file:
                 optim_params = np.array(json.load(json_file), dtype=object)
         
         # select either grid or bayes optimization parameters from param array
