@@ -318,17 +318,22 @@ class QSARDNN(QSARModel):
             train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
             ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
             valid_loader = self.model.get_dataloader(self.data.X[valided])
-            last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_%d' % (self.out, i), self.patience, self.tol)
+            last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_temp' % self.out, self.patience, self.tol)
+            os.remove('%s_temp_weights.pkg' % self.out)
             cvs[valided] = self.model.predict(valid_loader)
-
-        self.optimal_epochs = max(int(math.ceil(last_save_epoch / (self.data.n_folds))), 1)
-        self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
-
-        train_loader = self.model.get_dataloader(self.data.X, self.y)
-        self.model.fit(train_loader, None, self.out, patience = -1)
-        inds = self.model.predict(indep_loader)
+        os.remove('%s_temp.log' % self.out)
 
         if save:
+            self.optimal_epochs = max(int(math.ceil(last_save_epoch / (self.data.n_folds))), 1)
+            self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
+
+            train_loader = self.model.get_dataloader(self.data.X, self.y)
+            self.model.fit(train_loader, None, '%s_temp' % self.out, patience = -1)
+            os.remove('%s_temp_weights.pkg' % self.out)
+            os.remove('%s_temp.log' % self.out)
+            inds = self.model.predict(indep_loader)
+
+
             train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
             train['Score'], test['Score'] = cvs, inds
             train.to_csv(self.out + '.cv.tsv', sep='\t')
@@ -371,6 +376,7 @@ class QSARDNN(QSARModel):
                 os.remove('%s_temp_weights.pkg' % self.out)
                 y_pred = self.model.predict(valid_loader)
                 fold_scores[i] = scoring(self.y[valided], y_pred)
+            os.remove('%s_temp.log' % self.out)
             param_score = np.mean(fold_scores)
             if param_score >= best_score:
                 best_params = params
