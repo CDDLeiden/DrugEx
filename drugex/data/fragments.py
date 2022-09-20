@@ -192,10 +192,9 @@ class FragmentCorpusEncoder(ParallelProcessor):
             self.other = other
 
         def __call__(self, result):
+            self.items.extend(result[0])
             if self.other:
-                return self.other(result)
-            else:
-                self.items.extend(result[0])
+                self.other(result)
 
     def __init__(self, fragmenter, encoder, pairs_splitter=None, n_proc=None, chunk_size=None):
         """
