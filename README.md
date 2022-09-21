@@ -13,16 +13,22 @@ Quick Start
 
 > A small step for exploring the drug space in need, a giant leap for exploiting a healthy state indeed.
 
+
+### Installation
+
 DrugEx can be installed with pip like so:
 
 ```bash
 pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 ```
 
-### Optional Dependencies
+#### Optional Dependencies
 
 **[RAscore](https://github.com/reymond-group/RAscore)** - If you want to use the Retrosynthesis Accessibility Score in the desirability function.
 - The installation of RAscore might degrade the Scikit-Learn packages. If this happens, Scikit-Learn should be re-upgraded.
+
+
+### Use
 
 After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version of both is available [here](https://cddleiden.github.io/DrugEx/docs/). For a quick start, you can also check out our [Jupyter notebook tutorial](./tutorial), which documents the use of the Python API to build different types of models. The tutorial as well as the documentation are still work in progress, and we will be happy for any contributions where it is still lacking.
 
