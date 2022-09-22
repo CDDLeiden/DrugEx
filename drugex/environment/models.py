@@ -324,7 +324,7 @@ class QSARDNN(QSARModel):
         os.remove('%s_temp.log' % self.out)
 
         if save:
-            self.optimal_epochs = max(int(math.ceil(last_save_epoch / (self.data.n_folds))), 1)
+            self.optimal_epochs = int(math.ceil(last_save_epoch / self.data.n_folds)) + 1
             self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
 
             train_loader = self.model.get_dataloader(self.data.X, self.y)
