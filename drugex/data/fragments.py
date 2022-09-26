@@ -1,5 +1,4 @@
 import pandas as pd
-from rdkit import Chem
 
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger

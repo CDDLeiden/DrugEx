@@ -36,7 +36,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=None,
-                        help="Names of voc files to use as vocabulary. If None, uses the input prefix.")
+                        help="Prefix of voc files to use as vocabulary ({}_smiles/graph.txt). If None, assumes no prefix.")
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first word of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
@@ -59,7 +59,9 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
                         help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
                              "'ved' (smiles, lstm-based encoder-decoder) or "\
-                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) ")
+                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) " \
+                             "If '--version 2' is specified, it implies '--algorithm rnn'. " \
+                             "Note that 'ved' and 'attn' algorithms currently do not work with '--mode RL'. Reinforcement learning was not implemented for these, yet.")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -479,9 +481,9 @@ def FineTune(args):
     """
     
     if args.pretrained_model :
-        if args.pretrained_model.endswith('.pkg'):
-            pt_path = os.path.join(args.base_dir, 'generators', args.pretrained_model)
-        else:
+        pt_path = os.path.join(args.base_dir, 'generators', args.pretrained_model +'.pkg')
+        if not os.path.exists(pt_path):
+            log.warning('%s does not exist, trying %s as prefix of path name.' % (pt_path, args.pretrained_model))
             pt_path = os.path.join(args.base_dir, 'generators', '_'.join([args.pretrained_model, args.mol_type, args.algorithm, 'PT']) +'.pkg')
         assert os.path.exists(pt_path), f'{pt_path} does not exist'
     else:
@@ -590,9 +592,11 @@ def TrainGenerator(args):
     elif args.mode == 'RL' :
         log.info("Reinforcement learning started.")
         try:
+            if args.algorithm in ('ved', 'attn'):
+                raise NotImplementedError(f"The algorithm you specified does not support reinforcement learning: {args.algorithm}")
             RLTrain(args)
         except Exception as exp:
-            log.exception("Something went wrong in the finetuning.")
+            log.exception("Something went wrong in reinforcement learning.")
             raise exp
         log.info("Reinforcement learning finised.")
     else:

@@ -11,6 +11,7 @@ from rdkit.Chem import AllChem
 
 from drugex.training.interfaces import Scorer
 from drugex.training.scorers.properties import Property
+import torch
 
 
 class Predictor(Scorer):
@@ -23,11 +24,18 @@ class Predictor(Scorer):
 
     @staticmethod
     def fromFile(path, type='CLS', name="Predictor", modifier=None):
+        if "DNN" in path:
+            model = joblib.load(path)
+            model.load_state_dict(torch.load(f"{path[:-4]}_weights.pkg"))
+            return Predictor(model, type=type, name=name, modifier=modifier)
         return Predictor(joblib.load(path), type=type, name=name, modifier=modifier)
 
     def getScores(self, mols, frags=None):
         fps = self.calculateDescriptors(mols)
-        if self.type == 'CLS':
+        if (self.model.__class__.__name__ == "STFullyConnected"):
+            fps_loader = self.model.get_dataloader(fps)
+            scores = self.model.predict(fps_loader).flatten()
+        elif (self.type == 'CLS'):
             scores = self.model.predict_proba(fps)[:, 1]
         else:
             scores = self.model.predict(fps)
