@@ -7,16 +7,14 @@ On: 17.05.22, 9:55
 import os
 import re
 
-import git
 import json
 import shutil
 import logging
 import datetime
-from turtle import back
 
 import git
 
-from drugex.logs import config, setLogger
+from drugex.logs import config, setLogger, logger
 from drugex.logs.config import LogFileConfig
 
 BACKUP_DIR_FOLDER_PREFIX = 'backup'
@@ -115,3 +113,11 @@ def backUpFiles(base_dir : str, folder : str, output_prefixes : tuple, cp_suffix
         return message
     else:
         return ''
+
+def callwarning(warning_text):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            logger.warning(warning_text)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator

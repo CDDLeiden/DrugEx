@@ -93,8 +93,10 @@ class NeuralNet(PathMixIn, TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        os.remove(f'{cls.datapath}/testmodel.log')
-        os.remove(f'{cls.datapath}/testmodel.pkg')
+        if os.path.exists(f'{cls.datapath}/testmodel.log'):
+            os.remove(f'{cls.datapath}/testmodel.log')
+        if os.path.exists(f'{cls.datapath}/testmodel.pkg'):
+            os.remove(f'{cls.datapath}/testmodel.pkg')
 
     def prep_testdata(self, reg=True):
 
@@ -235,7 +237,7 @@ class TestModels(PathMixIn, TestCase):
         #intialize model
         for reg in [True, False]:
             data = self.prep_testdata(reg=reg)
-            themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[3,2], patience=3, tol=0.02)
+            themodel = QSARDNN(base_dir = f'{os.path.dirname(__file__)}/test_files/', data=data, gpus=[0,1], patience=3, tol=0.02)
             
             #fit and cross-validation
             themodel.evaluate()

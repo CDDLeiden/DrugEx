@@ -60,7 +60,8 @@ def GeneratorArgParser(txt=None):
                         help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
                              "'ved' (smiles, lstm-based encoder-decoder) or "\
                              "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) " \
-                             "If version = 2, then always 'rnn' is used")
+                             "If '--version 2' is specified, it implies '--algorithm rnn'. " \
+                             "Note that 'ved' and 'attn' algorithms currently do not work with '--mode RL'. Reinforcement learning was not implemented for these, yet.")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -591,9 +592,11 @@ def TrainGenerator(args):
     elif args.mode == 'RL' :
         log.info("Reinforcement learning started.")
         try:
+            if args.algorithm in ('ved', 'attn'):
+                raise NotImplementedError(f"The algorithm you specified does not support reinforcement learning: {args.algorithm}")
             RLTrain(args)
         except Exception as exp:
-            log.exception("Something went wrong in the finetuning.")
+            log.exception("Something went wrong in reinforcement learning.")
             raise exp
         log.info("Reinforcement learning finised.")
     else:
