@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.interfaces &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data.interfaces &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -138,7 +138,7 @@
             <span class="k">if</span> <span class="n">rewrite</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The data set file does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s2">. This data set is empty. You can add data by calling it.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialized empty dataset. The data set file does not exist (yet): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s2">. You can add data by calling this instance with the appropriate parameters.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DataSet.reset"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initializing new </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>

@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    drugex.data
+   drugex.environment
    drugex.logs
    drugex.molecules
    drugex.parallel

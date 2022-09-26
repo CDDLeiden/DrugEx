@@ -28,7 +28,9 @@ Basics
 Finetuning a Pretrained Generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example, we will finetune an already pretrained graph transformer, but before we do that we have to generate the appropriate training data. 
+In this example, we will use the command line utilities of DrugEx to do transfer learning in order to finetune an already pretrained graph transformer on the CHEMBL 27 database. Finetuning will give us a model that can generate molecules that should more closely resemble the compounds in the data set of interest. You can find the model used here `archived on Zenodo <https://doi.org/10.5281/zenodo.7096823>`_ or `among the other data files for this tutorial <https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view>`_. You can find links to more pretrained models on the `project GitHub <https://github.com/CDDLeiden/DrugEx>`_.
+
+Before we begin the transfer learning, we have to generate the appropriate training data.
 Let's assume we want to bias the model towards generating compounds that are more related to known ligands of the Adenosine receptors. 
 DrugEx assumes that all input data are saved in the :code:`data` folder of the directory it is executed from. 
 Therefore, we place the compounds that will serve as a template for the finetuning inside this folder and execute DrugEx as follows:
@@ -39,19 +41,20 @@ Therefore, we place the compounds that will serve as a template for the finetuni
     drugex dataset -i LIGAND_RAW_small.tsv -mc CANONICAL_SMILES -o arl -mt graph
 
 This will tell DrugEx to preprocess compounds saved in the :code:`CANONICAL_SMILES` column of the :code:`LIGAND_RAW_small.tsv` file 
-(You can download example data sets from `this link <https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view>`_).
+(You can download this and other example data set from ).
 
-The resulting input files will be saved in the data folder and given a prefix (:code:`arl`). 
-You can then finetune the pretrained molecule generator preprocessed molecules with the :code:`train` script:
+The resulting files will be saved in the data folder and given a prefix (:code:`arl`). You can use this prefix to load the compiled data files in the next step, which is finetuning the pretrained generator with transfer learning on the preprocessed molecules with the :code:`train` script:
 
 ..  code-block:: bash
 
     # pretrained model placed in ./generators/chembl27_graph.pkg
     drugex train -m FT -i arl -o arl -pt chembl27_graph -mt graph -e 200 -bs 32 -gpu 0,1
 
-This tells DrugEx to use the generated file (prefixed with :code:`arl`) to finetune (:code:`-m FT`) a pretrained model with states saved in the :code:`chembl27_graph.pkg` file. 
+This tells DrugEx to use the generated file (prefixed with :code:`arl`) to finetune (:code:`-m FT`) a pretrained model with model states saved in the :code:`chembl27_graph.pkg` file.
 The training will take a maximum of 200 epochs with a batch size of 32 in parallel on GPUs with IDs 0 and 1. 
 The best model will be saved to :code:`./generators/arl_graph_trans_FT.pkg`.
+
+You can vary the type of model to use with the :code:`-mt` parameter. For example, if you wanted to preprocess the data for the SMILES-based transformer, you would specify :code:`-mt smiles` in both of the previous commands and add the :code:`-a trans` flag to the :code:`drugex train` command.
 
 Optimization with Reinforcement Learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -60,7 +63,7 @@ In this example, we generate drug-like molecules that should be active on A2B (U
 The reinforcement learning (RL) framework is used to create the exploitation-exploration model tuned to generate molecules with desired properties. 
 The RL framework is composed of the agent-generator and environment-predictor parts.
 
-QSAR models
+Environment: QSAR models
 """""""""""
 
 First, we create the QSAR models used in the environment-predictor with
@@ -68,11 +71,24 @@ First, we create the QSAR models used in the environment-predictor with
 .. code-block:: bash
 
     # input is in ./data/LIGAND_RAW_small.tsv
-    drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -c -s 
+    drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -o bayes -a 5.3 -n 0.2 -l -c -s
 
-This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create and train two Random Forrest (:code:`-m RF`) QSAR models
-for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions. 
+This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create two Random Forest (:code:`-m RF`) QSAR models
+for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions 
+with a threshold on pchembl value for activity of 5.3 (:code:`-a 5.3`). :code:`-n 0.2` defines a random split test set
+ of 20%. Setting (:code:`-n 200`) to an integer value would give a test set of 200 random samples. Alternatively, 
+a time split can be determined by setting (:code:`-y 2015`), this will make all samples in the 'year' column >2015 the
+test set. Including (:code:`-l`) will keep all data in the Quality column with the marker :code:`"Low"`.
+If no model parameters are specified, the model will be trained on default settings. Specific parameter settings can
+be entered using a json file (:code:`-p parameters`) (see drugex/environment/test_files/parameters.json for an example)
+or optimization can be performed as grid search or bayes optimization  (:code:`-o bayes`), afterwards the optimal
+parameters found using the chosen optimization setting will be used to train and evaluate the models.
+Grid search parameters are by default read from drugex/environment/search_space.json, but can also be manually defined
+as json file and passed to :code:`-ss`.
+Setting :code:`-s`, will train the model on all data and save the model. Setting :code:`-c`, will perform model 
+evaluation using 5-fold cross-validation.
 The model will be saved to :code:`./envs/single/RF_CLS_P29274.pkg` and model evalution to :code:`./envs/single/RF_CLS_P29274.[cv/ind].tsv`.
+See (:code:`-h`) for more customization options.
 
 Reinforcement Learning
 """"""""""""""""""""""

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex package &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex package &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">drugex package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -125,6 +126,16 @@
 <li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment.data">drugex.environment.data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment.interfaces">drugex.environment.interfaces module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment.models">drugex.environment.models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment.neural_network">drugex.environment.neural_network module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment.tests">drugex.environment.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.environment.html#module-drugex.environment">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.config">drugex.logs.config module</a></li>
@@ -168,7 +179,6 @@
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#subpackages">Subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#module-drugex.training.models.attention">drugex.training.models.attention module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#module-drugex.training.models.classifier">drugex.training.models.classifier module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#module-drugex.training.models.encoderdecoder">drugex.training.models.encoderdecoder module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#module-drugex.training.models.explorer">drugex.training.models.explorer module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.models.html#drugex-training-models-ra-scorer-module">drugex.training.models.ra_scorer module</a></li>
@@ -332,59 +342,6 @@ loader                      : torch DataLoader containing input fragements</p>
 </section>
 <section id="module-drugex.environ">
 <span id="drugex-environ-module"></span><h2>drugex.environ module<a class="headerlink" href="#module-drugex.environ" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.DNN">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">DNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>This class holds the methods for training and fitting a Deep Neural Net QSAR model initialization.
-Here the model instance is created and parameters  can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-<li><p><strong>(</strong><strong>int</strong><strong>)</strong> (<em>n_epoch</em>) – </p></li>
-<li><p><strong>(</strong><strong>int</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>int</strong><strong>)</strong> – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.DNN.bayes_optimization">
-<span class="sig-name descname"><span class="pre">bayes_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_trials</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN.bayes_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN.bayes_optimization" title="Permalink to this definition"></a></dt>
-<dd><p>bayesian optimization of hyperparameters using optuna</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.DNN.fit_model">
-<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN.fit_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN.fit_model" title="Permalink to this definition"></a></dt>
-<dd><p>build estimator model from entire data set</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.DNN.grid_search">
-<span class="sig-name descname"><span class="pre">grid_search</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN.grid_search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN.grid_search" title="Permalink to this definition"></a></dt>
-<dd><p>optimization of hyperparameters using grid_search</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.DNN.init_model">
-<span class="sig-name descname"><span class="pre">init_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN.init_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN.init_model" title="Permalink to this definition"></a></dt>
-<dd><p>initialize model from saved or default hyperparameters</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.DNN.model_evaluation">
-<span class="sig-name descname"><span class="pre">model_evaluation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#DNN.model_evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.DNN.model_evaluation" title="Permalink to this definition"></a></dt>
-<dd><p>Make predictions for crossvalidation and independent test set
-:param save: don’t save predictions when used in bayesian optimization
-:type save: bool</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.environ.Environ">
 <span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">Environ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#Environ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.Environ" title="Permalink to this definition"></a></dt>
@@ -397,292 +354,23 @@ Here the model instance is created and parameters  can be defined
 <dd><p>Define and read command line arguments</p>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.KNN">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">KNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#KNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.KNN" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>K-nearest neighbor regressor and classifier initialization. Here the model instance is created
-and parameters and search space can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.NB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">NB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#NB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.NB" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>Gaussian Naive Bayes model initialization. Here the model instance is created
-and parameters and search space can be defined.
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.PLS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">PLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#PLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.PLS" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>PLS Regression model initialization. Here the model instance is created
-and parameters and search space can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.QSARDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">QSARDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timesplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_low_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARDataset" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>This class is used to prepare the dataset for QSAR model training.
-It splits the data in train and test set, as well as creating cross-validation folds.
-Optionally low quality data is filtered out.
-For classification the dataset samples are labelled as active/inactive.
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>str</strong><strong>)</strong> (<em>target</em>) – </p></li>
-<li><p><strong>(</strong><strong>str</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>str</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>keep_low_quality</em>) – </p></li>
-<li><p><strong>optional</strong> (<em>test_size</em><em> (</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>)</em><em>,</em>) – </p></li>
-<li><p><strong>optional</strong> – If float, should be between 0.0 and 1.0 and is proportion of dataset to
-include in test split. If int, represents absolute number of test samples.</p></li>
-<li><p><strong>(</strong><strong>float</strong><strong>)</strong> (<em>th</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>np.ndarray</strong><strong>)</strong> (<em>y_ind</em>) – and n is the number of features.</p></li>
-<li><p><strong>(</strong><strong>np.ndarray</strong><strong>)</strong> – equals to row of X.</p></li>
-<li><p><strong>(</strong><strong>np.ndarray</strong><strong>)</strong> – and n is the number of features.</p></li>
-<li><p><strong>(</strong><strong>np.ndarray</strong><strong>)</strong> – equals to row of X_ind, and l is the number of types.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_dataset</span> <span class="pre">:</span> <span class="pre">A</span> <span class="pre">train</span> <span class="pre">and</span> <span class="pre">test</span> <span class="pre">split</span> <span class="pre">is</span> <span class="pre">made.</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">create_folds:</span> <span class="pre">folds</span> <span class="pre">is</span> <span class="pre">an</span> <span class="pre">generator</span> <span class="pre">and</span> <span class="pre">needs</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">reset</span> <span class="pre">after</span> <span class="pre">cross</span> <span class="pre">validation</span> <span class="pre">or</span> <span class="pre">hyperparameter</span> <span class="pre">optimization</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">data_standardization:</span> <span class="pre">Performs</span> <span class="pre">standardization</span> <span class="pre">by</span> <span class="pre">centering</span> <span class="pre">and</span> <span class="pre">scaling</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARDataset.create_folds">
-<span class="sig-name descname"><span class="pre">create_folds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARDataset.create_folds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARDataset.create_folds" title="Permalink to this definition"></a></dt>
-<dd><p>Create folds for crossvalidation</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARDataset.data_standardization">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data_standardization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARDataset.data_standardization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARDataset.data_standardization" title="Permalink to this definition"></a></dt>
-<dd><p>Perform standardization by centering and scaling</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_x</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – descriptors of data set</p></li>
-<li><p><strong>test_x</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – descriptors of test set</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>descriptors of data set standardized
-test_x (list): descriptors of test set standardized</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>data_x (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARDataset.split_dataset">
-<span class="sig-name descname"><span class="pre">split_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARDataset.split_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARDataset.split_dataset" title="Permalink to this definition"></a></dt>
-<dd><p>Splits the dataset in a train and temporal test set.
-Calculates the predictors for the QSAR models.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">QSARModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_space_bs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_space_gs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Model initialization, fit, cross validation and hyperparameter optimization for classifion/regression models.
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance QSARDataset</em>) – </p></li>
-<li><p><strong>alg</strong> (<em>instance of estimator</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>search_space_gs</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">init_model:</span> <span class="pre">initialize</span> <span class="pre">model</span> <span class="pre">from</span> <span class="pre">saved</span> <span class="pre">hyperparameters</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">fit_model:</span> <span class="pre">build</span> <span class="pre">estimator</span> <span class="pre">model</span> <span class="pre">from</span> <span class="pre">entire</span> <span class="pre">data</span> <span class="pre">set</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">objective:</span> <span class="pre">objective</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">bayesian</span> <span class="pre">optimization</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">bayes_optimization:</span> <span class="pre">bayesian</span> <span class="pre">optimization</span> <span class="pre">of</span> <span class="pre">hyperparameters</span> <span class="pre">using</span> <span class="pre">optuna</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">grid_search:</span> <span class="pre">optimization</span> <span class="pre">of</span> <span class="pre">hyperparameters</span> <span class="pre">using</span> <span class="pre">grid_search</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.bayes_optimization">
-<span class="sig-name descname"><span class="pre">bayes_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_trials</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.bayes_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.bayes_optimization" title="Permalink to this definition"></a></dt>
-<dd><p>bayesian optimization of hyperparameters using optuna</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.fit_model">
-<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.fit_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.fit_model" title="Permalink to this definition"></a></dt>
-<dd><p>build estimator model from entire data set</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.grid_search">
-<span class="sig-name descname"><span class="pre">grid_search</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.grid_search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.grid_search" title="Permalink to this definition"></a></dt>
-<dd><p>optimization of hyperparameters using grid_search</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.init_model">
-<span class="sig-name descname"><span class="pre">init_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.init_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.init_model" title="Permalink to this definition"></a></dt>
-<dd><p>initialize model from saved or default hyperparameters</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.model_evaluation">
-<span class="sig-name descname"><span class="pre">model_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.model_evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.model_evaluation" title="Permalink to this definition"></a></dt>
-<dd><p>Make predictions for crossvalidation and independent test set
-:param save: don’t save predictions when used in bayesian optimization
-:type save: bool</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.environ.QSARModel.objective">
-<span class="sig-name descname"><span class="pre">objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trial</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#QSARModel.objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.QSARModel.objective" title="Permalink to this definition"></a></dt>
-<dd><p>objective for bayesian optimization</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.RF">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">RF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#RF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.RF" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>Random forest regressor and classifier initialization. Here the model instance is created
-and parameters and search space can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.SVM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">SVM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#SVM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.SVM" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>Support vector regressor and classifier initialization. Here the model instance is created
-and parameters and search space can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.environ.XGB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.environ.</span></span><span class="sig-name descname"><span class="pre">XGB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/environ.html#XGB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.environ.XGB" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.environ.QSARModel" title="drugex.environ.QSARModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">QSARModel</span></code></a></p>
-<p>XG Boost regressor and classifier initialization. Here the model instance is created
-and parameters and search space can be defined
-…</p>
-<dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>instance of QSARDataset</em>) – </p></li>
-<li><p><strong>(</strong><strong>dict</strong><strong>)</strong> (<em>parameters</em>) – </p></li>
-<li><p><strong>(</strong><strong>bool</strong><strong>)</strong> (<em>save_m</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="module-drugex.train">
 <span id="drugex-train-module"></span><h2>drugex.train module<a class="headerlink" href="#module-drugex.train" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.train.CreateDesirabilityFunction">
-<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateDesirabilityFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'XBG'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateDesirabilityFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateDesirabilityFunction" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateDesirabilityFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'XBG'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateDesirabilityFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateDesirabilityFunction" title="Permalink to this definition"></a></dt>
 <dd><p>Sets up the objectives of the desirability function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – folder containing ‘envs’ folder with saved environment-predictor models</p></li>
-<li><p><strong>alg</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – environment-predictor algoritm</p></li>
+<li><p><strong>alg</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – environment-predictor algoritm</p></li>
 <li><p><strong>task</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – environment-predictor task: ‘REG’ or ‘CLS’</p></li>
 <li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – optimization scheme: ‘WS’ for weighted sum, ‘PR’ for Parento front with Tanimoto-dist. or ‘CD’ for PR with crowding dist.</p></li>
 <li><p><strong>active_targets</strong> (<em>lst</em>) – list of active target IDs</p></li>
 <li><p><strong>inactive_targets</strong> (<em>lst</em>) – list of inactive target IDs</p></li>
+<li><p><strong>window_targets</strong> (<em>lst</em>) – list of target IDs for selectivity window</p></li>
 <li><p><strong>activity_threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – activety threshold in case of ‘CLS’</p></li>
 <li><p><strong>qed</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, ‘quantitative estimate of drug-likeness’ included in the desirability function</p></li>
 <li><p><strong>unique</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if Trye, molecule uniqueness in an epoch included in the desirability function</p></li>

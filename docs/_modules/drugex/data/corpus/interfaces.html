@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus.interfaces &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data.corpus.interfaces &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -152,6 +152,19 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">updateIndex</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">token</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule does not meet min/max words requirements (min: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">min_len</span><span class="si">}</span><span class="s2">, max: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="si">}</span><span class="s2">). Words found: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2"> (occurrence count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2">). It will be ignored.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="SequenceVocabulary.removeIfNew"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew">[docs]</a>    <span class="k">def</span> <span class="nf">removeIfNew</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">ignoreConstraints</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitSequence</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ignoreConstraints</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_len</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="p">):</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wordSet</span> <span class="o">-</span> <span class="p">{</span><span class="s1">&#39;EOS&#39;</span><span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tokens: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not occur in voc. Molecule: </span><span class="si">{</span><span class="n">seq</span><span class="si">}</span><span class="s2"> will be ignored.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">token</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Molecule does not meet min/max words requirements (min: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">min_len</span><span class="si">}</span><span class="s2">, max: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_len</span><span class="si">}</span><span class="s2">). Words found: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2"> (occurrence count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="si">}</span><span class="s2">). It will be ignored.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span></div>

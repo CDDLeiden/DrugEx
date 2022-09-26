@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.models package &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.training.models package &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -203,197 +204,6 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 </section>
-<section id="module-drugex.training.models.classifier">
-<span id="drugex-training-models-classifier-module"></span><h2>drugex.training.models.classifier module<a class="headerlink" href="#module-drugex.training.models.classifier" title="Permalink to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Base">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">Base</span></span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>This class is the base structure for all of classification/regression DNN models.
-Mainly, it provides the general methods for training, evaluating model and predcting the given data.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.evaluate" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluating the performance of the DNN model.
-:param loader: data loader for test set,</p>
-<blockquote>
-<div><p>including m X n target FloatTensor and l X n label FloatTensor
-(m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the average loss value based on the calculation of loss function with given test set.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>loss (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.fit" title="Permalink to this definition"></a></dt>
-<dd><p>Training the DNN model, similar to the scikit-learn or Keras style.
-In the end, the optimal value of parameters will also be persisted on the hard drive.
-:param train_loader: Data loader for training set,</p>
-<blockquote>
-<div><p>including m X n target FloatTensor and m X l label FloatTensor
-(m is the No. of sample, n is the No. of features, l is the No. of classes or tasks)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>valid_loader</strong> (<em>DataLoader</em>) – Data loader for validation set.
-The data structure is as same as loader_train.</p></li>
-<li><p><strong>out</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – the file path for the model file (suffix with ‘.pkg’)
-and log file (suffix with ‘.log’).</p></li>
-<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The maximum of training epochs (default: 100)</p></li>
-<li><p><strong>lr</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – learning rate (default: 1e-4)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Base.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Base.predict" title="Permalink to this definition"></a></dt>
-<dd><p>Predicting the probability of each sample in the given dataset.
-:param loader: data loader for test set,</p>
-<blockquote>
-<div><p>only including m X n target FloatTensor
-(m is the No. of sample, n is the No. of features)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>probability of each sample in the given dataset,</dt><dd><p>it is a m X l FloatTensor (m is the No. of sample, l is the No. of classes or tasks.)</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>score (ndarray)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Base.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.Base.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">Discriminator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_sizes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
-<p>A CNN for text classification
-architecture: Embedding &gt;&gt; Convolution &gt;&gt; Max-pooling &gt;&gt; Softmax</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.forward" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> – (batch_size * seq_len)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.init_parameters">
-<span class="sig-name descname"><span class="pre">init_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#Discriminator.init_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.init_parameters" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.Discriminator.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.Discriminator.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">MTFullyConnected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#MTFullyConnected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
-<p>Multi-task DNN classification/regression model. It contains four fully connected layers
-between which are dropout layer for robustness.
-:param n_dim: the No. of columns (features) for input tensor
-:type n_dim: int
-:param n_task: the No. of columns (tasks) for output tensor.
-:type n_task: int
-:param is_reg: Regression model (True) or Classification model (False)
-:type is_reg: bool, optional</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#MTFullyConnected.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected.forward" title="Permalink to this definition"></a></dt>
-<dd><p>Invoke the class directly as a function
-:param X: m X n FloatTensor, m is the No. of samples, n is the No. of features.
-:type X: FloatTensor
-:param istrain: is it invoked during training process (True)</p>
-<blockquote>
-<div><p>or just for prediction (False)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>m X l FloatTensor, m is the No. of samples, n is the No. of tasks</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>y (FloatTensor)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.MTFullyConnected.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.MTFullyConnected.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.classifier.</span></span><span class="sig-name descname"><span class="pre">STFullyConnected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#STFullyConnected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.training.models.classifier.Base" title="drugex.training.models.classifier.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
-<dl class="simple">
-<dt>Single task DNN classification/regression model. It contains four fully connected layers between which</dt><dd><p>are dropout layer for robustness.</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_dim</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the No. of columns (features) for input tensor</p></li>
-<li><p><strong>n_class</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the No. of columns (classes) for output tensor.</p></li>
-<li><p><strong>is_reg</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Regression model (True) or Classification model (False)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/classifier.html#STFullyConnected.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected.forward" title="Permalink to this definition"></a></dt>
-<dd><p>Invoke the class directly as a function
-:param X: m X n FloatTensor, m is the No. of samples, n is the No. of features.
-:type X: FloatTensor
-:param istrain: is it invoked during training process (True) or just for prediction (False)
-:type istrain: bool, optional</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>m X l FloatTensor, m is the No. of samples, n is the No. of classes</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>y (FloatTensor)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.models.classifier.STFullyConnected.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.models.classifier.STFullyConnected.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</section>
 <section id="module-drugex.training.models.encoderdecoder">
 <span id="drugex-training-models-encoderdecoder-module"></span><h2>drugex.training.models.encoderdecoder module<a class="headerlink" href="#module-drugex.training.models.encoderdecoder" title="Permalink to this heading"></a></h2>
 <dl class="py class">
@@ -422,7 +232,7 @@ between which are dropout layer for robustness.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Base.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Base.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Base.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Start training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -498,7 +308,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncDec">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">EncDec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_trg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncDec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncDec" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">EncDec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#EncDec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.EncDec" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase" title="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmilesFragsGeneratorBase</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.EncDec.forward">
@@ -548,7 +358,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Seq2Seq">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">Seq2Seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_trg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_sharing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Seq2Seq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Seq2Seq" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.models.encoderdecoder.</span></span><span class="sig-name descname"><span class="pre">Seq2Seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/encoderdecoder.html#Seq2Seq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.encoderdecoder.Seq2Seq" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase" title="drugex.training.models.encoderdecoder.SmilesFragsGeneratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmilesFragsGeneratorBase</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.encoderdecoder.Seq2Seq.forward">
@@ -642,7 +452,7 @@ registered hooks while the latter silently ignores them.</p>
 <p>Graph-based <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a  graph-based agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.explorer.GraphExplorer.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#GraphExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.GraphExplorer.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -758,7 +568,7 @@ if the generated molecule is valid and desired.</p></li>
 <p>Smiles-based <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Explorer" title="drugex.training.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a  graph-based agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorer.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorer.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -842,7 +652,7 @@ and ensure the agent to explore the approriate chemical space.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.explorer.SmilesExplorerNoFrag.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/explorer.html#SmilesExplorerNoFrag.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.explorer.SmilesExplorerNoFrag.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -924,7 +734,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.models.single_network.RNN.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader_valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader_valid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/models/single_network.html#RNN.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.models.single_network.RNN.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Start training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; DrugEx 3.1.0 documentation</title>
+  <title>Usage &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -50,7 +50,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#basics">Basics</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#finetuning-a-pretrained-generator">Finetuning a Pretrained Generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#optimization-with-reinforcement-learning">Optimization with Reinforcement Learning</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#qsar-models">QSAR models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#environment-qsar-models">Environment: QSAR models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#reinforcement-learning">Reinforcement Learning</a></li>
 </ul>
 </li>
@@ -112,7 +112,8 @@ You can find a tutorial with Jupyter notebooks illustrating some common use case
 <span id="id3"></span><h2>Basics<a class="headerlink" href="#basics" title="Permalink to this heading"></a></h2>
 <section id="finetuning-a-pretrained-generator">
 <h3>Finetuning a Pretrained Generator<a class="headerlink" href="#finetuning-a-pretrained-generator" title="Permalink to this heading"></a></h3>
-<p>In this example, we will finetune an already pretrained graph transformer, but before we do that we have to generate the appropriate training data.
+<p>In this example, we will use the command line utilities of DrugEx to do transfer learning in order to finetune an already pretrained graph transformer on the CHEMBL 27 database. Finetuning will give us a model that can generate molecules that should more closely resemble the compounds in the data set of interest. You can find the model used here <a class="reference external" href="https://doi.org/10.5281/zenodo.7096823">archived on Zenodo</a> or <a class="reference external" href="https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view">among the other data files for this tutorial</a>. You can find links to more pretrained models on the <a class="reference external" href="https://github.com/CDDLeiden/DrugEx">project GitHub</a>.</p>
+<p>Before we begin the transfer learning, we have to generate the appropriate training data.
 Let’s assume we want to bias the model towards generating compounds that are more related to known ligands of the Adenosine receptors.
 DrugEx assumes that all input data are saved in the <code class="code docutils literal notranslate"><span class="pre">data</span></code> folder of the directory it is executed from.
 Therefore, we place the compounds that will serve as a template for the finetuning inside this folder and execute DrugEx as follows:</p>
@@ -121,32 +122,47 @@ drugex dataset -i LIGAND_RAW_small.tsv -mc CANONICAL_SMILES -o arl -mt graph
 </pre></div>
 </div>
 <p>This will tell DrugEx to preprocess compounds saved in the <code class="code docutils literal notranslate"><span class="pre">CANONICAL_SMILES</span></code> column of the <code class="code docutils literal notranslate"><span class="pre">LIGAND_RAW_small.tsv</span></code> file
-(You can download example data sets from <a class="reference external" href="https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view">this link</a>).</p>
-<p>The resulting input files will be saved in the data folder and given a prefix (<code class="code docutils literal notranslate"><span class="pre">arl</span></code>).
-You can then finetune the pretrained molecule generator preprocessed molecules with the <code class="code docutils literal notranslate"><span class="pre">train</span></code> script:</p>
+(You can download this and other example data set from ).</p>
+<p>The resulting files will be saved in the data folder and given a prefix (<code class="code docutils literal notranslate"><span class="pre">arl</span></code>). You can use this prefix to load the compiled data files in the next step, which is finetuning the pretrained generator with transfer learning on the preprocessed molecules with the <code class="code docutils literal notranslate"><span class="pre">train</span></code> script:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># pretrained model placed in ./generators/chembl27_graph.pkg</span>
 drugex train -m FT -i arl -o arl -pt chembl27_graph -mt graph -e <span class="m">200</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>,1
 </pre></div>
 </div>
-<p>This tells DrugEx to use the generated file (prefixed with <code class="code docutils literal notranslate"><span class="pre">arl</span></code>) to finetune (<code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">FT</span></code>) a pretrained model with states saved in the <code class="code docutils literal notranslate"><span class="pre">chembl27_graph.pkg</span></code> file.
+<p>This tells DrugEx to use the generated file (prefixed with <code class="code docutils literal notranslate"><span class="pre">arl</span></code>) to finetune (<code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">FT</span></code>) a pretrained model with model states saved in the <code class="code docutils literal notranslate"><span class="pre">chembl27_graph.pkg</span></code> file.
 The training will take a maximum of 200 epochs with a batch size of 32 in parallel on GPUs with IDs 0 and 1.
 The best model will be saved to <code class="code docutils literal notranslate"><span class="pre">./generators/arl_graph_trans_FT.pkg</span></code>.</p>
+<p>You can vary the type of model to use with the <code class="code docutils literal notranslate"><span class="pre">-mt</span></code> parameter. For example, if you wanted to preprocess the data for the SMILES-based transformer, you would specify <code class="code docutils literal notranslate"><span class="pre">-mt</span> <span class="pre">smiles</span></code> in both of the previous commands and add the <code class="code docutils literal notranslate"><span class="pre">-a</span> <span class="pre">trans</span></code> flag to the <code class="code docutils literal notranslate"><span class="pre">drugex</span> <span class="pre">train</span></code> command.</p>
 </section>
 <section id="optimization-with-reinforcement-learning">
 <h3>Optimization with Reinforcement Learning<a class="headerlink" href="#optimization-with-reinforcement-learning" title="Permalink to this heading"></a></h3>
 <p>In this example, we generate drug-like molecules that should be active on A2B (UniprotID: P29275) and inactive on A2A (UniprotID: P29274).
 The reinforcement learning (RL) framework is used to create the exploitation-exploration model tuned to generate molecules with desired properties.
 The RL framework is composed of the agent-generator and environment-predictor parts.</p>
-<section id="qsar-models">
-<h4>QSAR models<a class="headerlink" href="#qsar-models" title="Permalink to this heading"></a></h4>
+<section id="environment-qsar-models">
+<h4>Environment: QSAR models<a class="headerlink" href="#environment-qsar-models" title="Permalink to this heading"></a></h4>
 <p>First, we create the QSAR models used in the environment-predictor with</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># input is in ./data/LIGAND_RAW_small.tsv</span>
-drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -c -s
+drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -o bayes -a <span class="m">5</span>.3 -n <span class="m">0</span>.2 -l -c -s
 </pre></div>
 </div>
-<p>This tells DrugEx to use data from <code class="code docutils literal notranslate"><span class="pre">LIGAND_RAW_small.tsv</span></code> to create and train two Random Forrest (<code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">RF</span></code>) QSAR models
-for binary (<code class="code docutils literal notranslate"><span class="pre">-r</span> <span class="pre">False</span></code>) A2A and A2B (<code class="code docutils literal notranslate"><span class="pre">-t</span> <span class="pre">P29274</span> <span class="pre">P29275</span></code>) bioactivity predictions.
-The model will be saved to <code class="code docutils literal notranslate"><span class="pre">./envs/single/RF_CLS_P29274.pkg</span></code> and model evalution to <code class="code docutils literal notranslate"><span class="pre">./envs/single/RF_CLS_P29274.[cv/ind].tsv</span></code>.</p>
+<p>This tells DrugEx to use data from <code class="code docutils literal notranslate"><span class="pre">LIGAND_RAW_small.tsv</span></code> to create two Random Forest (<code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">RF</span></code>) QSAR models
+for binary (<code class="code docutils literal notranslate"><span class="pre">-r</span> <span class="pre">False</span></code>) A2A and A2B (<code class="code docutils literal notranslate"><span class="pre">-t</span> <span class="pre">P29274</span> <span class="pre">P29275</span></code>) bioactivity predictions
+with a threshold on pchembl value for activity of 5.3 (<code class="code docutils literal notranslate"><span class="pre">-a</span> <span class="pre">5.3</span></code>). <code class="code docutils literal notranslate"><span class="pre">-n</span> <span class="pre">0.2</span></code> defines a random split test set</p>
+<blockquote>
+<div><p>of 20%. Setting (<code class="code docutils literal notranslate"><span class="pre">-n</span> <span class="pre">200</span></code>) to an integer value would give a test set of 200 random samples. Alternatively,</p>
+</div></blockquote>
+<p>a time split can be determined by setting (<code class="code docutils literal notranslate"><span class="pre">-y</span> <span class="pre">2015</span></code>), this will make all samples in the ‘year’ column &gt;2015 the
+test set. Including (<code class="code docutils literal notranslate"><span class="pre">-l</span></code>) will keep all data in the Quality column with the marker <code class="code docutils literal notranslate"><span class="pre">&quot;Low&quot;</span></code>.
+If no model parameters are specified, the model will be trained on default settings. Specific parameter settings can
+be entered using a json file (<code class="code docutils literal notranslate"><span class="pre">-p</span> <span class="pre">parameters</span></code>) (see drugex/environment/test_files/parameters.json for an example)
+or optimization can be performed as grid search or bayes optimization  (<code class="code docutils literal notranslate"><span class="pre">-o</span> <span class="pre">bayes</span></code>), afterwards the optimal
+parameters found using the chosen optimization setting will be used to train and evaluate the models.
+Grid search parameters are by default read from drugex/environment/search_space.json, but can also be manually defined
+as json file and passed to <code class="code docutils literal notranslate"><span class="pre">-ss</span></code>.
+Setting <code class="code docutils literal notranslate"><span class="pre">-s</span></code>, will train the model on all data and save the model. Setting <code class="code docutils literal notranslate"><span class="pre">-c</span></code>, will perform model
+evaluation using 5-fold cross-validation.
+The model will be saved to <code class="code docutils literal notranslate"><span class="pre">./envs/single/RF_CLS_P29274.pkg</span></code> and model evalution to <code class="code docutils literal notranslate"><span class="pre">./envs/single/RF_CLS_P29274.[cv/ind].tsv</span></code>.
+See (<code class="code docutils literal notranslate"><span class="pre">-h</span></code>) for more customization options.</p>
 </section>
 <section id="reinforcement-learning">
 <h4>Reinforcement Learning<a class="headerlink" href="#reinforcement-learning" title="Permalink to this heading"></a></h4>

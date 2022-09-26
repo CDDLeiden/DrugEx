@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus package &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data.corpus package &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="drugex.logs package" href="drugex.logs.html" />
+    <link rel="next" title="drugex.environment package" href="drugex.environment.html" />
     <link rel="prev" title="drugex.data package" href="drugex.data.html" /> 
 </head>
 
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -141,7 +142,7 @@ On: 26.04.22, 16:47</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.data.corpus.corpus.ScaffoldSequenceCorpus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.corpus.</span></span><span class="sig-name descname"><span class="pre">ScaffoldSequenceCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">largest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#ScaffoldSequenceCorpus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.ScaffoldSequenceCorpus" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.corpus.</span></span><span class="sig-name descname"><span class="pre">ScaffoldSequenceCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">largest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throw=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#ScaffoldSequenceCorpus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.ScaffoldSequenceCorpus" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.corpus.SequenceCorpus" title="drugex.data.corpus.corpus.SequenceCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceCorpus</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.corpus.ScaffoldSequenceCorpus.processMolecule">
@@ -161,7 +162,7 @@ On: 26.04.22, 16:47</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.data.corpus.corpus.SequenceCorpus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.corpus.</span></span><span class="sig-name descname"><span class="pre">SequenceCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.corpus.</span></span><span class="sig-name descname"><span class="pre">SequenceCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throw=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.interfaces.Corpus" title="drugex.data.corpus.interfaces.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></p>
 <p>A <a class="reference internal" href="#drugex.data.corpus.interfaces.Corpus" title="drugex.data.corpus.interfaces.Corpus"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a> to encode molecules for the sequence-based models.</p>
 <dl class="py method">
@@ -283,6 +284,11 @@ annotations (optional): molecule associated metadata as a <a class="reference ex
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq">
 <span class="sig-name descname"><span class="pre">addWordsFromSeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreConstraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#SequenceVocabulary.addWordsFromSeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew">
+<span class="sig-name descname"><span class="pre">removeIfNew</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreConstraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#SequenceVocabulary.removeIfNew"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -539,7 +545,7 @@ On: 26.04.22, 13:12</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="drugex.data.html" class="btn btn-neutral float-left" title="drugex.data package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="drugex.logs.html" class="btn btn-neutral float-right" title="drugex.logs package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="drugex.environment.html" class="btn btn-neutral float-right" title="drugex.environment package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.predictors &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.training.scorers.predictors &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -86,6 +86,7 @@
 
 <span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.properties</span> <span class="kn">import</span> <span class="n">Property</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 
 
 <div class="viewcode-block" id="Predictor"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.predictors.Predictor">[docs]</a><span class="k">class</span> <span class="nc">Predictor</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
@@ -98,11 +99,18 @@
 
 <div class="viewcode-block" id="Predictor.fromFile"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.predictors.Predictor.fromFile">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">fromFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;CLS&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Predictor&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;DNN&quot;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s2">_weights.pkg&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">Predictor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="n">modifier</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Predictor</span><span class="p">(</span><span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="n">modifier</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Predictor.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.predictors.Predictor.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">fps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateDescriptors</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;CLS&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;STFullyConnected&quot;</span><span class="p">):</span>
+            <span class="n">fps_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_dataloader</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">fps_loader</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;CLS&#39;</span><span class="p">):</span>
             <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">fps</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>

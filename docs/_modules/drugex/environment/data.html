@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.environment.data &mdash; DrugEx 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.environment.data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.environment.data</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">drugex.training.scorers.predictors</span> <span class="kn">import</span> <span class="n">Predictor</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">MinMaxScaler</span> <span class="k">as</span> <span class="n">Scaler</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">StratifiedKFold</span><span class="p">,</span> <span class="n">KFold</span>
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<div class="viewcode-block" id="QSARDataset"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.data.QSARDataset">[docs]</a><span class="k">class</span> <span class="nc">QSARDataset</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This class is used to prepare the dataset for QSAR model training. </span>
+<span class="sd">        It splits the data in train and test set, as well as creating cross-validation folds.</span>
+<span class="sd">        Optionally low quality data is filtered out.</span>
+<span class="sd">        For classification the dataset samples are labelled as active/inactive.</span>
+<span class="sd">        ...</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_df (pd dataframe)   : dataset</span>
+<span class="sd">        target (str)              : target identifier (accession in papyrus dataset)</span>
+<span class="sd">        reg (bool)                : if true, dataset for regression, if false dataset for classification</span>
+<span class="sd">        timesplit (int), optional : Year to split test set on</span>
+<span class="sd">        test_size (int or float), optional: Used when timesplit is None</span>
+<span class="sd">                                            If float, should be between 0.0 and 1.0 and is proportion of dataset to</span>
+<span class="sd">                                            include in test split. If int, represents absolute number of test samples.</span>
+<span class="sd">        th (float)                : threshold for activity if classficiation model, ignored otherwise</span>
+<span class="sd">        keep_low_quality (bool)   : if true low quality data is included in the dataset</span>
+<span class="sd">        n_folds(int)              : number of folds for crossvalidation</span>
+
+<span class="sd">        targetcol (str)           : name of column in dataframe for the target identifier</span>
+<span class="sd">        smilescol (str)           : name of column in dataframe for smiles</span>
+<span class="sd">        valuecol (str)            : name of column in dataframe for pX values</span>
+<span class="sd">        qualitycol (str)          : name of column in dataframe for quality of measurements (&quot;Low, Medium, High&quot;),</span>
+<span class="sd">                                    has no effect if keep_low_quality is True</span>
+<span class="sd">        timecol (str)             : name of column in dataframe for timesplit has no effect if timesplit is None</span>
+
+<span class="sd">        X (np.ndarray)            : m x n feature matrix for cross validation, where m is the number of samples</span>
+<span class="sd">                                    and n is the number of features.</span>
+<span class="sd">        y (np.ndarray)            : m-d label array for cross validation, where m is the number of samples and</span>
+<span class="sd">                                    equals to row of X.</span>
+<span class="sd">        X_ind (np.ndarray)        : m x n Feature matrix for independent set, where m is the number of samples</span>
+<span class="sd">                                    and n is the number of features.</span>
+<span class="sd">        y_ind (np.ndarray)        : m-l label array for independent set, where m is the number of samples and</span>
+<span class="sd">                                    equals to row of X_ind, and l is the number of types.</span>
+<span class="sd">        folds (generator)         : scikit-learn n-fold generator object</span>
+
+<span class="sd">        Methods</span>
+<span class="sd">        -------</span>
+<span class="sd">        splitDataset : A train and test split is made.</span>
+<span class="sd">        createFolds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization</span>
+<span class="sd">        dataStandardization: Performs standardization by centering and scaling</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_df</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timesplit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">th</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">keep_low_quality</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                 <span class="n">targetcol</span> <span class="o">=</span> <span class="s1">&#39;accession&#39;</span><span class="p">,</span> <span class="n">smilescol</span> <span class="o">=</span> <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="n">valuecol</span> <span class="o">=</span> <span class="s1">&#39;pchembl_value_Mean&#39;</span><span class="p">,</span> <span class="n">qualitycol</span> <span class="o">=</span> <span class="s1">&#39;Quality&#39;</span><span class="p">,</span>
+                 <span class="n">timecol</span> <span class="o">=</span> <span class="s1">&#39;Year&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_df</span> <span class="o">=</span> <span class="n">input_df</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timesplit</span> <span class="o">=</span> <span class="n">timesplit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_size</span> <span class="o">=</span> <span class="n">test_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">th</span> <span class="o">=</span> <span class="n">th</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_low_quality</span> <span class="o">=</span> <span class="n">keep_low_quality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_folds</span><span class="o">=</span><span class="n">n_folds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">targetcol</span> <span class="o">=</span> <span class="n">targetcol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smilescol</span> <span class="o">=</span> <span class="n">smilescol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valuecol</span> <span class="o">=</span> <span class="n">valuecol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qualitycol</span> <span class="o">=</span> <span class="n">qualitycol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timecol</span> <span class="o">=</span> <span class="n">timecol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_ind</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">folds</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="QSARDataset.splitDataset"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.data.QSARDataset.splitDataset">[docs]</a>    <span class="k">def</span> <span class="nf">splitDataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits the dataset in a train and temporal test set.</span>
+<span class="sd">        Calculates the predictors for the QSAR models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># read in the dataset</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">smilescol</span><span class="p">])</span> <span class="c1"># drops if smiles is missing</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">targetcol</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">smilescol</span><span class="p">])</span>
+
+        <span class="c1"># filter out low quality data if desired</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_low_quality</span> <span class="k">else</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">qualitycol</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;Low&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Quality column not in dataframe (&#39;</span><span class="si">%s</span><span class="s2">&#39;), all data included in set.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">qualitycol</span><span class="p">)</span>
+
+        <span class="c1"># Get indexes of samples test set based on temporal split</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesplit</span><span class="p">:</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">timecol</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">smilescol</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+            <span class="n">test_idx</span> <span class="o">=</span> <span class="n">year</span><span class="p">[</span><span class="n">year</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timecol</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesplit</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="c1"># keep only pchembl values and make binary for classification</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">valuecol</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># get test and train (data) set with set temporal split or random split</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesplit</span><span class="p">:</span>
+            <span class="n">test_ix</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">test_idx</span><span class="p">)</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">test_ix</span><span class="p">)]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">)))</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># calculate ecfp and physiochemical properties as input for the predictors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_ind</span> <span class="o">=</span> <span class="n">Predictor</span><span class="o">.</span><span class="n">calculateDescriptors</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">test</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">Predictor</span><span class="o">.</span><span class="n">calculateDescriptors</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># Create folds for crossvalidation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">createFolds</span><span class="p">()</span>
+
+        <span class="c1">#Write information about the trainingset to the logger</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Train and test set created for </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">:&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="s1">&#39;REG&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="k">else</span> <span class="s1">&#39;CLS&#39;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    Total: train: </span><span class="si">%s</span><span class="s1"> test: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">test</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    Total: active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">df</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    In train: active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    In test:  active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">test</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">test</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">th</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    Total: active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">-</span><span class="n">df</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    In train: active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">-</span><span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;    In test:  active: </span><span class="si">%s</span><span class="s1"> not active: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">test</span><span class="p">)</span><span class="o">-</span><span class="n">test</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span></div>
+    
+<div class="viewcode-block" id="QSARDataset.createFolds"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.data.QSARDataset.createFolds">[docs]</a>    <span class="k">def</span> <span class="nf">createFolds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Create folds for crossvalidation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">folds</span> <span class="o">=</span> <span class="n">KFold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_folds</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">folds</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_folds</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Folds created for crossvalidation&quot;</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="QSARDataset.dataStandardization"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.data.QSARDataset.dataStandardization">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">dataStandardization</span><span class="p">(</span><span class="n">data_x</span><span class="p">,</span> <span class="n">test_x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform standardization by centering and scaling</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">                    data_x (list): descriptors of data set</span>
+<span class="sd">                    test_x (list): descriptors of test set</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">                    data_x (list): descriptors of data set standardized</span>
+<span class="sd">                    test_x (list): descriptors of test set standardized</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scaler</span> <span class="o">=</span> <span class="n">Scaler</span><span class="p">();</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_x</span><span class="p">)</span>
+        <span class="n">test_x</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">test_x</span><span class="p">)</span>
+        <span class="n">data_x</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">data_x</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data standardized&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_x</span><span class="p">,</span> <span class="n">test_x</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

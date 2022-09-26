@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.logs package &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.logs package &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="drugex.molecules package" href="drugex.molecules.html" />
-    <link rel="prev" title="drugex.data.corpus package" href="drugex.data.corpus.html" /> 
+    <link rel="prev" title="drugex.environment package" href="drugex.environment.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -148,7 +149,7 @@ it is formatted using formatException() and appended to the message.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.logs.config.config_logger">
-<span class="sig-prename descclassname"><span class="pre">drugex.logs.config.</span></span><span class="sig-name descname"><span class="pre">config_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_exist_log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/config.html#config_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.config.config_logger" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">drugex.logs.config.</span></span><span class="sig-name descname"><span class="pre">config_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_existing_loggers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/config.html#config_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.config.config_logger" title="Permalink to this definition"></a></dt>
 <dd><p>Function to configure the logging.
 All info is saved in a simple format on the log file path.
 Debug entries are saved to a separate file if debug is True
@@ -215,13 +216,18 @@ On: 17.05.22, 9:55</p>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="drugex.logs.utils.callwarning">
+<span class="sig-prename descclassname"><span class="pre">drugex.logs.utils.</span></span><span class="sig-name descname"><span class="pre">callwarning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warning_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/utils.html#callwarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.utils.callwarning" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="drugex.logs.utils.commit_hash">
 <span class="sig-prename descclassname"><span class="pre">drugex.logs.utils.</span></span><span class="sig-name descname"><span class="pre">commit_hash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GIT_PATH</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/utils.html#commit_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.utils.commit_hash" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.logs.utils.enable_file_logger">
-<span class="sig-prename descclassname"><span class="pre">drugex.logs.utils.</span></span><span class="sig-name descname"><span class="pre">enable_file_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/utils.html#enable_file_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.utils.enable_file_logger" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">drugex.logs.utils.</span></span><span class="sig-name descname"><span class="pre">enable_file_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_existing_loggers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/logs/utils.html#enable_file_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.logs.utils.enable_file_logger" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -254,7 +260,7 @@ On: 17.05.22, 9:53</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="drugex.data.corpus.html" class="btn btn-neutral float-left" title="drugex.data.corpus package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.environment.html" class="btn btn-neutral float-left" title="drugex.environment package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="drugex.molecules.html" class="btn btn-neutral float-right" title="drugex.molecules package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

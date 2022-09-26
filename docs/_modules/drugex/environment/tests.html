@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.environment.tests &mdash; DrugEx 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.environment.tests</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.environment.tests</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">exists</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
+
+<span class="kn">from</span> <span class="nn">drugex.environment.neural_network</span> <span class="kn">import</span> <span class="n">STFullyConnected</span>
+<span class="kn">from</span> <span class="nn">drugex.environment.data</span> <span class="kn">import</span> <span class="n">QSARDataset</span>
+<span class="kn">from</span> <span class="nn">drugex.environment.models</span> <span class="kn">import</span> <span class="n">QSARsklearn</span><span class="p">,</span> <span class="n">QSARDNN</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestClassifier</span><span class="p">,</span> <span class="n">RandomForestRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span><span class="p">,</span> <span class="n">KNeighborsRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.cross_decomposition</span> <span class="kn">import</span> <span class="n">PLSRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.naive_bayes</span> <span class="kn">import</span> <span class="n">GaussianNB</span>
+<span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">SVC</span><span class="p">,</span> <span class="n">SVR</span>
+<span class="kn">from</span> <span class="nn">xgboost</span> <span class="kn">import</span> <span class="n">XGBRegressor</span><span class="p">,</span> <span class="n">XGBClassifier</span>
+
+<div class="viewcode-block" id="TestData"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestData">[docs]</a><span class="k">class</span> <span class="nc">TestData</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestData.test_data"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestData.test_data">[docs]</a>    <span class="k">def</span> <span class="nf">test_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/data/test_data.tsv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">QSARDataset</span><span class="p">)</span>
+
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">),</span> <span class="mi">19</span> <span class="o">+</span> <span class="mi">2048</span><span class="p">))</span> <span class="c1"># 19 (no. of physchem desc) +  2048 (fp bit len)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">),</span> <span class="mi">19</span> <span class="o">+</span> <span class="mi">2048</span><span class="p">))</span>
+
+        <span class="c1"># default case</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">8</span><span class="p">)</span> <span class="c1"># two of 10 datapoints removed, low quality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># test_size 0.1, should be 1 test sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">7</span><span class="p">)</span> <span class="c1"># test_size 0.1, should be 1 test sample</span>
+        
+        <span class="c1"># regression is true</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">))),</span> <span class="mf">6.460</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">))),</span> <span class="mf">8.960</span><span class="p">)</span>
+
+        <span class="c1"># with test size is 3</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span> <span class="c1"># test size of 3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span> <span class="c1"># 8 - 3 is 5</span>
+
+        <span class="c1"># with timesplit on 2015</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">timesplit</span><span class="o">=</span><span class="mi">2015</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># two sample year &gt; 2015</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">)</span> <span class="c1"># 8 - 2 is 6</span>
+
+        <span class="c1"># with timesplit on 2015</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">keep_low_quality</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># test_size 0.1, should be 1 test sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">9</span><span class="p">)</span> <span class="c1"># no datapoints removed, 10-1=9</span>
+
+        <span class="c1"># with timesplit on 2015</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">keep_low_quality</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_ind</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># test_size 0.1, should be 1 test sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">9</span><span class="p">)</span> <span class="c1"># no datapoints removed, 10-1=9</span>
+
+        <span class="c1"># with classification</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">th</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_ind</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="c1"># only 3 value below threshold of 7</span></div></div>
+
+<div class="viewcode-block" id="PathMixIn"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.PathMixIn">[docs]</a><span class="k">class</span> <span class="nc">PathMixIn</span><span class="p">:</span>
+    <span class="n">datapath</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/data&#39;</span>
+    <span class="n">envspath</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs&#39;</span>
+
+<div class="viewcode-block" id="PathMixIn.setUpClass"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.PathMixIn.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">envspath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">envspath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PathMixIn.tearDownClass"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.PathMixIn.tearDownClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">tearDownClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">envspath</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="NeuralNet"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.NeuralNet">[docs]</a><span class="k">class</span> <span class="nc">NeuralNet</span><span class="p">(</span><span class="n">PathMixIn</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="NeuralNet.tearDownClass"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.NeuralNet.tearDownClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">tearDownClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">tearDownClass</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel.log&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel.log&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel.pkg&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel.pkg&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NeuralNet.prep_testdata"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.NeuralNet.prep_testdata">[docs]</a>    <span class="k">def</span> <span class="nf">prep_testdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="c1"># prepare test dataset</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/test_data_large.tsv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">X_ind</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dataStandardization</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">X_ind</span><span class="p">)</span>
+
+        <span class="c1"># prepare data for torch DNN</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">y_ind</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">y_ind</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">trainloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">TensorDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">testloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">TensorDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X_ind</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">y_ind</span><span class="p">)),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span></div>
+
+<div class="viewcode-block" id="NeuralNet.test_STFullyConnected"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.NeuralNet.test_STFullyConnected">[docs]</a>    <span class="k">def</span> <span class="nf">test_STFullyConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># prepare test dataset</span>
+        <span class="n">no_features</span><span class="p">,</span> <span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_testdata</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># fit model with default settings</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">STFullyConnected</span><span class="p">(</span><span class="n">n_dim</span> <span class="o">=</span> <span class="n">no_features</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel&#39;</span><span class="p">,</span> <span class="n">patience</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># fit model with non-default epochs and learning rate and tolerance</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">STFullyConnected</span><span class="p">(</span><span class="n">n_dim</span> <span class="o">=</span> <span class="n">no_features</span><span class="p">,</span> <span class="n">n_epochs</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel&#39;</span><span class="p">,</span> <span class="n">patience</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+        <span class="c1"># fit model with non-default settings for model construction</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">STFullyConnected</span><span class="p">(</span><span class="n">n_dim</span> <span class="o">=</span> <span class="n">no_features</span><span class="p">,</span> <span class="n">neurons_h1</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">neurons_hx</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">extra_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel&#39;</span><span class="p">,</span> <span class="n">patience</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># prepare classification test dataset</span>
+        <span class="n">no_features</span><span class="p">,</span> <span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_testdata</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># fit model with regression is false</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">STFullyConnected</span><span class="p">(</span><span class="n">n_dim</span> <span class="o">=</span> <span class="n">no_features</span><span class="p">,</span> <span class="n">is_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="n">testloader</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="si">}</span><span class="s1">/testmodel&#39;</span><span class="p">,</span> <span class="n">patience</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestModels"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels">[docs]</a><span class="k">class</span> <span class="nc">TestModels</span><span class="p">(</span><span class="n">PathMixIn</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestModels.prep_testdata"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.prep_testdata">[docs]</a>    <span class="k">def</span> <span class="nf">prep_testdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        
+        <span class="c1"># prepare test dataset</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/data/test_data_large.tsv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">QSARDataset</span><span class="p">(</span><span class="n">input_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;P29274&quot;</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">splitDataset</span><span class="p">()</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">X_ind</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dataStandardization</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">X_ind</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="TestModels.QSARsklearn_models_test"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.QSARsklearn_models_test">[docs]</a>    <span class="k">def</span> <span class="nf">QSARsklearn_models_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+        <span class="c1">#intialize dataset and model</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_testdata</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+        <span class="n">themodel</span> <span class="o">=</span> <span class="n">QSARsklearn</span><span class="p">(</span><span class="n">base_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/&#39;</span><span class="p">,</span>
+                               <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">alg</span> <span class="o">=</span> <span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="o">=</span><span class="n">alg_name</span><span class="p">)</span>
+        
+        <span class="c1"># train the model on all data</span>
+        <span class="n">themodel</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+        <span class="n">regid</span> <span class="o">=</span> <span class="s1">&#39;REG&#39;</span> <span class="k">if</span> <span class="n">reg</span> <span class="k">else</span> <span class="s1">&#39;CLS&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">.pkg&#39;</span><span class="p">))</span>
+
+        <span class="c1"># perform crossvalidation</span>
+        <span class="n">themodel</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">.ind.tsv&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">.cv.tsv&#39;</span><span class="p">))</span>
+        
+        <span class="c1"># perform bayes optimization</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/search_space_test.json&#39;</span>
+        <span class="n">grid_params</span> <span class="o">=</span> <span class="n">QSARsklearn</span><span class="o">.</span><span class="n">loadParamsGrid</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;bayes&quot;</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">)</span>
+        <span class="n">search_space_bs</span> <span class="o">=</span> <span class="n">grid_params</span><span class="p">[</span><span class="n">grid_params</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">alg_name</span><span class="p">,</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">themodel</span><span class="o">.</span><span class="n">bayesOptimization</span><span class="p">(</span><span class="n">search_space_bs</span><span class="o">=</span><span class="n">search_space_bs</span><span class="p">,</span> <span class="n">n_trials</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">_params.json&#39;</span><span class="p">))</span>
+
+        <span class="c1"># perform grid search</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">_params.json&#39;</span><span class="p">)</span>
+        <span class="n">grid_params</span> <span class="o">=</span> <span class="n">QSARsklearn</span><span class="o">.</span><span class="n">loadParamsGrid</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">)</span>
+        <span class="n">search_space_gs</span> <span class="o">=</span> <span class="n">grid_params</span><span class="p">[</span><span class="n">grid_params</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">alg_name</span><span class="p">,</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">themodel</span><span class="o">.</span><span class="n">gridSearch</span><span class="p">(</span><span class="n">search_space_gs</span><span class="o">=</span><span class="n">search_space_gs</span><span class="p">,)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/envs/</span><span class="si">{</span><span class="n">alg_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">regid</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s1">_params.json&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="TestModels.testRF"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testRF">[docs]</a>    <span class="k">def</span> <span class="nf">testRF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;RF&quot;</span>
+        <span class="c1">#test regression</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">RandomForestRegressor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">#test classifier</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.testKNN"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testKNN">[docs]</a>    <span class="k">def</span> <span class="nf">testKNN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;KNN&quot;</span>
+        <span class="c1">#test regression</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">KNeighborsRegressor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">#test classifier</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.testXGB"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testXGB">[docs]</a>    <span class="k">def</span> <span class="nf">testXGB</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;XGB&quot;</span>
+        <span class="c1">#test regression</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">XGBRegressor</span><span class="p">(</span><span class="n">objective</span><span class="o">=</span><span class="s1">&#39;reg:squarederror&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">#test classifier</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">XGBClassifier</span><span class="p">(</span><span class="n">objective</span><span class="o">=</span><span class="s1">&#39;binary:logistic&#39;</span><span class="p">,</span> <span class="n">use_label_encoder</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eval_metric</span><span class="o">=</span><span class="s1">&#39;logloss&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.testSVM"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testSVM">[docs]</a>    <span class="k">def</span> <span class="nf">testSVM</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;SVM&quot;</span>
+        <span class="c1">#test regression</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">SVR</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">#test classifier</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">SVC</span><span class="p">(</span><span class="n">probability</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.testPLS"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testPLS">[docs]</a>    <span class="k">def</span> <span class="nf">testPLS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;PLS&quot;</span>
+        <span class="c1">#test regression</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">PLSRegression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.testNB"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.testNB">[docs]</a>    <span class="k">def</span> <span class="nf">testNB</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">alg_name</span> <span class="o">=</span> <span class="s2">&quot;NB&quot;</span>
+        <span class="c1">#test classfier</span>
+        <span class="n">alg</span> <span class="o">=</span> <span class="n">GaussianNB</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">QSARsklearn_models_test</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span> <span class="n">alg_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestModels.test_QSARDNN"><a class="viewcode-back" href="../../../api/drugex.environment.html#drugex.environment.tests.TestModels.test_QSARDNN">[docs]</a>    <span class="k">def</span> <span class="nf">test_QSARDNN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#intialize model</span>
+        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prep_testdata</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+            <span class="n">themodel</span> <span class="o">=</span> <span class="n">QSARDNN</span><span class="p">(</span><span class="n">base_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">gpus</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">patience</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+            
+            <span class="c1">#fit and cross-validation</span>
+            <span class="n">themodel</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+            <span class="n">themodel</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+            <span class="c1">#optimization</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s1">/test_files/search_space_test.json&#39;</span>
+
+            <span class="c1"># grid search</span>
+            <span class="n">grid_params</span> <span class="o">=</span> <span class="n">QSARDNN</span><span class="o">.</span><span class="n">loadParamsGrid</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="s2">&quot;DNN&quot;</span><span class="p">)</span>
+            <span class="n">search_space_gs</span> <span class="o">=</span> <span class="n">grid_params</span><span class="p">[</span><span class="n">grid_params</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DNN&quot;</span><span class="p">,</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">themodel</span><span class="o">.</span><span class="n">gridSearch</span><span class="p">(</span><span class="n">search_space_gs</span><span class="o">=</span><span class="n">search_space_gs</span><span class="p">)</span>
+
+            <span class="c1"># bayesian optimization</span>
+            <span class="n">bayes_params</span> <span class="o">=</span> <span class="n">QSARDNN</span><span class="o">.</span><span class="n">loadParamsGrid</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;bayes&quot;</span><span class="p">,</span> <span class="s2">&quot;DNN&quot;</span><span class="p">)</span>
+            <span class="n">search_space_bs</span> <span class="o">=</span> <span class="n">grid_params</span><span class="p">[</span><span class="n">bayes_params</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DNN&quot;</span><span class="p">,</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">themodel</span><span class="o">.</span><span class="n">bayesOptimization</span><span class="p">(</span><span class="n">search_space_bs</span><span class="o">=</span><span class="n">search_space_bs</span><span class="p">,</span> <span class="n">n_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

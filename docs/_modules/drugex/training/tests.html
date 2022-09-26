@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.tests &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.training.tests &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -431,7 +431,14 @@
         <span class="n">finetuned</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">pretrained</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="n">finetuned</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">)</span></div>
 
+        <span class="c1"># RL</span>
         <span class="c1"># FIXME: RL for these models currently not working</span>
+        <span class="c1"># environment = self.getTestEnvironment()</span>
+        <span class="c1"># explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)</span>
+        <span class="c1"># monitor = TestModelMonitor()</span>
+        <span class="c1"># explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)</span>
+        <span class="c1"># self.assertTrue(monitor.getModel())</span>
+        <span class="c1"># self.assertTrue(monitor.allMethodsExecuted())</span>
 
 <div class="viewcode-block" id="TrainingTestCase.test_smiles_frags_attn"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_smiles_frags_attn">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_frags_attn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">vocabulary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUpSmilesFragData</span><span class="p">()</span>
@@ -447,7 +454,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">finetuned</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span></div>
 
+        <span class="c1"># RL</span>
         <span class="c1"># FIXME: RL for these models currently not working</span>
+        <span class="c1"># environment = self.getTestEnvironment()</span>
+        <span class="c1"># explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)</span>
+        <span class="c1"># monitor = TestModelMonitor()</span>
+        <span class="c1"># explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)</span>
+        <span class="c1"># self.assertTrue(monitor.getModel())</span>
+        <span class="c1"># self.assertTrue(monitor.allMethodsExecuted())</span>
 
 <div class="viewcode-block" id="TrainingTestCase.test_smiles_frags_gpt"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_smiles_frags_gpt">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_frags_gpt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">vocabulary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUpSmilesFragData</span><span class="p">()</span>

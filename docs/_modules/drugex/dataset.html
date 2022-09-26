@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.dataset &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.dataset &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -131,11 +131,15 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-nc&#39;</span><span class="p">,</span> <span class="s1">&#39;--n_combs&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is </span><span class="si">{n_frags}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-np&#39;</span><span class="p">,</span> <span class="s1">&#39;--n_proc&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of parallel processes to use for multi-core tasks. If not specified, this number is set to the number of available CPUs on the system.&quot;</span><span class="p">)</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of parallel processes to use for multi-core tasks.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-cs&#39;</span><span class="p">,</span> <span class="s1">&#39;--chunk_size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of iitems to be given to each process for multi-core tasks. If not specified, this number is set to 512.&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-mc&#39;</span><span class="p">,</span> <span class="s1">&#39;--molecule_column&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the column in CSV files that contains molecules.&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-sv&#39;</span><span class="p">,</span> <span class="s1">&#39;--save_voc&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is &#39;smiles&#39;.&quot;</span><span class="p">)</span>   
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-vf&#39;</span><span class="p">,</span> <span class="s1">&#39;--voc_file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of voc file molecules should adhere to (i.e. prior_smiles_voc), if molecule contains tokens not in voc it is discarded (only works is --mol_type is &#39;smiles&#39;)&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-sif&#39;</span><span class="p">,</span> <span class="s1">&#39;--save_intermediate_files&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, intermediate files&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-nfs&#39;</span><span class="p">,</span> <span class="s1">&#39;--no_fragment_split&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
@@ -190,21 +194,40 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dataset started. Loading molecules...&#39;</span><span class="p">)</span>
     <span class="n">smiles</span> <span class="o">=</span> <span class="n">load_molecules</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
 
+    <span class="c1"># load get voc path if voc file given (used to filter out molecules with tokens not occuring in voc)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_file</span><span class="p">:</span>
+        <span class="n">voc_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">+</span> <span class="s1">&#39;/data/&#39;</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_file</span>
+
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Standardizing molecules...&quot;</span><span class="p">)</span>
-    <span class="n">standardizer</span> <span class="o">=</span> <span class="n">Standardization</span><span class="p">(</span><span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">)</span>
+    <span class="n">standardizer</span> <span class="o">=</span> <span class="n">Standardization</span><span class="p">(</span><span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">)</span>
     <span class="n">smiles</span> <span class="o">=</span> <span class="n">standardizer</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
 
     <span class="n">file_base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">base_dir</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">smiles_corpus</span><span class="p">:</span>
         <span class="c1"># create sequence corpus and vocabulary (used only in v2 models)</span>
-        <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
-            <span class="n">SequenceCorpus</span><span class="p">,</span>
-            <span class="p">{</span>
-                <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocSmiles</span><span class="p">()</span>
-            <span class="p">},</span>
-            <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_file</span><span class="p">:</span>
+            <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
+                <span class="n">SequenceCorpus</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocSmiles</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">voc_path</span><span class="p">),</span>
+                    <span class="s1">&#39;update_voc&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s1">&#39;throw&#39;</span><span class="p">:</span> <span class="kc">True</span>
+
+                <span class="p">},</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
+                <span class="n">SequenceCorpus</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocSmiles</span><span class="p">(),</span>
+
+                <span class="p">},</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
+            <span class="p">)</span>
         <span class="n">data_collector</span> <span class="o">=</span> <span class="n">SmilesDataSet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_base</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="si">}</span><span class="s1">_corpus.txt&#39;</span><span class="p">),</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">collector</span><span class="o">=</span><span class="n">data_collector</span><span class="p">)</span>
 
@@ -226,21 +249,37 @@
                     <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocGraph</span><span class="p">(),</span>
                     <span class="s1">&#39;largest&#39;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
                 <span class="p">},</span>
-                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
             <span class="p">)</span>
             <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">collector</span><span class="o">=</span><span class="n">data_set</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_voc</span><span class="p">:</span>
                 <span class="n">save_vocabulary</span><span class="p">([</span><span class="n">data_set</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()],</span> <span class="n">file_base</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data_set</span> <span class="o">=</span> <span class="n">SmilesScaffoldDataSet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_base</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="si">}</span><span class="s1">_smi.txt&#39;</span> <span class="p">),</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_file</span><span class="p">:</span>
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
+                    <span class="n">ScaffoldSequenceCorpus</span><span class="p">,</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocSmiles</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">voc_path</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+                        <span class="s1">&#39;largest&#39;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">),</span>
+                        <span class="s1">&#39;update_voc&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s1">&#39;throw&#39;</span><span class="p">:</span> <span class="kc">True</span>
+                    <span class="p">},</span>
+                    <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                    <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">CorpusEncoder</span><span class="p">(</span>
                 <span class="n">ScaffoldSequenceCorpus</span><span class="p">,</span>
                 <span class="p">{</span>
                     <span class="s1">&#39;vocabulary&#39;</span><span class="p">:</span> <span class="n">VocSmiles</span><span class="p">(</span><span class="n">min_len</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
                     <span class="s1">&#39;largest&#39;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
                 <span class="p">},</span>
-                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
             <span class="p">)</span>
+
             <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">collector</span><span class="o">=</span><span class="n">data_set</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_voc</span><span class="p">:</span>
                 <span class="n">save_vocabulary</span><span class="p">([</span><span class="n">data_set</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()],</span> <span class="n">file_base</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
@@ -261,15 +300,16 @@
             <span class="n">pair_collectors</span><span class="p">[</span><span class="s1">&#39;unique_collector&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Frags&#39;</span><span class="p">,</span> <span class="s1">&#39;Smiles&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_prefix</span> <span class="o">+</span> <span class="s1">&#39;_unique.txt&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">splitter</span> <span class="o">=</span> <span class="n">FragmentPairsSplitter</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">,</span> <span class="n">make_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">pair_collectors</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_fragment_split</span> <span class="k">else</span> <span class="kc">None</span>
 
+        <span class="n">fragmenter</span> <span class="o">=</span> <span class="n">Fragmenter</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_frags</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_combs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">frag_method</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span> <span class="o">==</span> <span class="s1">&#39;graph&#39;</span><span class="p">:</span>
-            <span class="n">fragmenter</span> <span class="o">=</span> <span class="n">Fragmenter</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_frags</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_combs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">frag_method</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
             <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
                 <span class="n">fragmenter</span><span class="o">=</span><span class="n">fragmenter</span><span class="p">,</span>
                 <span class="n">encoder</span><span class="o">=</span><span class="n">GraphFragmentEncoder</span><span class="p">(</span>
                     <span class="n">VocGraph</span><span class="p">(</span><span class="n">n_frags</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_frags</span><span class="p">)</span>
                 <span class="p">),</span>
                 <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">splitter</span><span class="p">,</span>
-                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span>
+                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
             <span class="p">)</span>
 
             <span class="n">data_collectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">GraphFragDataSet</span><span class="p">(</span><span class="n">file_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s1">_graph.txt&#39;</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;unique&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">splitter</span> <span class="k">else</span> <span class="p">[</span><span class="n">GraphFragDataSet</span><span class="p">(</span><span class="n">file_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_train_graph.txt&#39;</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="p">]</span>
@@ -277,16 +317,28 @@
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_voc</span><span class="p">:</span>
                 <span class="n">save_vocabulary</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data_collectors</span><span class="p">],</span> <span class="n">file_base</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span> <span class="o">==</span> <span class="s1">&#39;smiles&#39;</span><span class="p">:</span>
-            <span class="n">fragmenter</span> <span class="o">=</span> <span class="n">Fragmenter</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n_frags</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n_combs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">frag_method</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">data_collectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">file_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s1">_smi.txt&#39;</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;unique&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">splitter</span> <span class="k">else</span> <span class="p">[</span><span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">file_prefix</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_train_smi.txt&#39;</span><span class="p">)]</span>
-            <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
-                <span class="n">fragmenter</span><span class="o">=</span><span class="n">fragmenter</span><span class="p">,</span>
-                <span class="n">encoder</span><span class="o">=</span><span class="n">SequenceFragmentEncoder</span><span class="p">(</span>
-                    <span class="n">VocSmiles</span><span class="p">()</span>
-                <span class="p">),</span>
-                <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">splitter</span><span class="p">,</span>
-                <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_file</span><span class="p">:</span>
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+                    <span class="n">fragmenter</span><span class="o">=</span><span class="n">fragmenter</span><span class="p">,</span>
+                    <span class="n">encoder</span><span class="o">=</span><span class="n">SequenceFragmentEncoder</span><span class="p">(</span>
+                        <span class="n">VocSmiles</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">voc_path</span><span class="p">),</span> 
+                        <span class="n">update_voc</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+                        <span class="n">throw</span><span class="o">=</span> <span class="kc">True</span><span class="p">),</span>
+                    <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">splitter</span><span class="p">,</span>
+                    <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                    <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+                    <span class="n">fragmenter</span><span class="o">=</span><span class="n">fragmenter</span><span class="p">,</span>
+                    <span class="n">encoder</span><span class="o">=</span><span class="n">SequenceFragmentEncoder</span><span class="p">(</span>
+                        <span class="n">VocSmiles</span><span class="p">()</span>
+                    <span class="p">),</span>
+                    <span class="n">pairs_splitter</span><span class="o">=</span><span class="n">splitter</span><span class="p">,</span>
+                    <span class="n">n_proc</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_proc</span><span class="p">,</span>
+                    <span class="n">chunk_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_size</span>
+                <span class="p">)</span>
             <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="n">data_collectors</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_voc</span><span class="p">:</span>
                 <span class="n">save_vocabulary</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data_collectors</span><span class="p">],</span> <span class="n">file_base</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mol_type</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>

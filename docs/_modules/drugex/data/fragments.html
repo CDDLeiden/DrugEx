@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.fragments &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data.fragments &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -74,7 +74,6 @@
              
   <h1>Source code for drugex.data.fragments</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
 
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">VocGraph</span>
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
@@ -92,14 +91,28 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">(),</span> <span class="n">update_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">throw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span> <span class="o">=</span> <span class="n">vocabulary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span> <span class="o">=</span> <span class="n">update_voc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">throw</span> <span class="o">=</span> <span class="n">throw</span>
 
 <div class="viewcode-block" id="SequenceFragmentEncoder.encodeMol"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeMol">[docs]</a>    <span class="k">def</span> <span class="nf">encodeMol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span></div>
+        <span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">throw</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">removeIfNew</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">token</span></div>
 
 <div class="viewcode-block" id="SequenceFragmentEncoder.encodeFrag"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeFrag">[docs]</a>    <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">ignoreConstraints</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">ignoreConstraints</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">throw</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">removeIfNew</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">ignoreConstraints</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">token</span></div>
 
 <div class="viewcode-block" id="SequenceFragmentEncoder.getVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.getVoc">[docs]</a>    <span class="k">def</span> <span class="nf">getVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span></div></div>

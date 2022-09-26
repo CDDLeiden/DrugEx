@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data package &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data package &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -437,7 +438,7 @@ On: 25.06.22, 19:42</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.data.fragments.SequenceFragmentEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.fragments.</span></span><span class="sig-name descname"><span class="pre">SequenceFragmentEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#SequenceFragmentEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.SequenceFragmentEncoder" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.fragments.</span></span><span class="sig-name descname"><span class="pre">SequenceFragmentEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throw=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#SequenceFragmentEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.SequenceFragmentEncoder" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.interfaces.FragmentPairEncoder" title="drugex.data.interfaces.FragmentPairEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">FragmentPairEncoder</span></code></a></p>
 <p>Encode fragment-molecule pairs for the sequence-based models.</p>
 <dl class="py method">

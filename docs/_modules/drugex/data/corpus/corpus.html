@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus.corpus &mdash; DrugEx 3.1.0 documentation</title>
+  <title>drugex.data.corpus.corpus &mdash; DrugEx 3.2.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.1.0
+                v3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -81,6 +81,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
 
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.interfaces</span> <span class="kn">import</span> <span class="n">Corpus</span>
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">VocGraph</span>
 
@@ -90,7 +91,7 @@
 <span class="sd">    A `Corpus` to encode molecules for the sequence-based models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">(),</span> <span class="n">update_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">(),</span> <span class="n">update_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">throw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a sequence corpus.</span>
 
@@ -98,12 +99,16 @@
 <span class="sd">            molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply sequence representations of molecules (i.e. SMILES strings)</span>
 <span class="sd">            vocabulary: a `SequenceVocabulary` instance to be used for encoding and collecting tokens</span>
 <span class="sd">            update_voc: `True` if the tokens in the vocabulary should be updated with new tokens derived from the data (the `SequenceVocabulary.addWordsFromSeq()` method is used for splitting instead of doing simply `SequenceVocabulary.splitSequence()`)</span>
+<span class="sd">            throw: &#39;True&#39; if molecules that contain tokens that are not in the vocabulary should be thrown out of corpus (the `SequenceVocabulary.removeIfNew()` method is used for splitting instead of doing simply `SequenceVocabulary.splitSequence()`)</span>
 <span class="sd">            check_unique: Skip identical sequences in &quot;molecules&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span> <span class="o">=</span> <span class="n">vocabulary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span> <span class="o">=</span> <span class="n">update_voc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">throw</span> <span class="o">=</span> <span class="n">throw</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">throw</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;update_voc and throw cannot both be true at same time, defaulting to update_voc&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkUnique</span> <span class="o">=</span> <span class="n">check_unique</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unique</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
@@ -147,6 +152,8 @@
         <span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updateVoc</span><span class="p">:</span>
             <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">throw</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">removeIfNew</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">splitSequence</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
 
@@ -159,8 +166,8 @@
 
 <div class="viewcode-block" id="ScaffoldSequenceCorpus"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.corpus.ScaffoldSequenceCorpus">[docs]</a><span class="k">class</span> <span class="nc">ScaffoldSequenceCorpus</span><span class="p">(</span><span class="n">SequenceCorpus</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">,</span> <span class="n">largest</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">(),</span> <span class="n">update_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">molecules</span><span class="p">,</span> <span class="n">vocabulary</span><span class="p">,</span> <span class="n">update_voc</span><span class="p">,</span> <span class="n">check_unique</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">,</span> <span class="n">largest</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocSmiles</span><span class="p">(),</span> <span class="n">update_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">throw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">molecules</span><span class="p">,</span> <span class="n">vocabulary</span><span class="p">,</span> <span class="n">update_voc</span><span class="p">,</span> <span class="n">throw</span><span class="p">,</span> <span class="n">check_unique</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">largest</span> <span class="o">=</span> <span class="n">largest</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">largestToken</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">addWordsFromSeq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">largest</span><span class="p">)</span>
 
@@ -169,10 +176,13 @@
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">processed</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">processMolecule</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;mol&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">largestToken</span><span class="p">,</span>
-            <span class="s2">&quot;frag&quot;</span><span class="p">:</span> <span class="n">processed</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-        <span class="p">}</span></div></div>
+        <span class="k">if</span> <span class="n">processed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;mol&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">largestToken</span><span class="p">,</span>
+                <span class="s2">&quot;frag&quot;</span><span class="p">:</span> <span class="n">processed</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div></div>
 
 <div class="viewcode-block" id="ScaffoldGraphCorpus"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.corpus.ScaffoldGraphCorpus">[docs]</a><span class="k">class</span> <span class="nc">ScaffoldGraphCorpus</span><span class="p">(</span><span class="n">Corpus</span><span class="p">):</span>
 
