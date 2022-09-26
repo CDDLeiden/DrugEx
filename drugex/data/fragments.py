@@ -1,5 +1,4 @@
 import pandas as pd
-from rdkit import Chem
 
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.logs import logger
@@ -17,14 +16,28 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
 
     """
 
-    def __init__(self, vocabulary=VocSmiles()):
+    def __init__(self, vocabulary=VocSmiles(), update_voc=True, throw = False):
         self.vocabulary = vocabulary
+        self.updateVoc = update_voc
+        self.throw = throw
 
     def encodeMol(self, sequence):
-        return self.vocabulary.addWordsFromSeq(sequence)
+        token = None
+        if self.updateVoc:
+            token = self.vocabulary.addWordsFromSeq(sequence)
+        elif self.throw:
+            token = self.vocabulary.removeIfNew(sequence)
+
+        return token
 
     def encodeFrag(self, mol, frag):
-        return self.vocabulary.addWordsFromSeq(frag, ignoreConstraints=True)
+        token = None
+        if self.updateVoc:
+            token = self.vocabulary.addWordsFromSeq(frag, ignoreConstraints=True)
+        elif self.throw:
+            token = self.vocabulary.removeIfNew(frag, ignoreConstraints=True)
+
+        return token
 
     def getVoc(self):
         return self.vocabulary

@@ -1,17 +1,16 @@
 # Change Log
-
-Current: v3.2.0.dev0
-
-Previous: v3.1.0
+From v3.2.0 to v3.3.0
 
 ## Fixes
 
-None
+None.
+
 
 ## Changes
 
-None
+None.
+
 
 ## New Features
 
-None
+None.

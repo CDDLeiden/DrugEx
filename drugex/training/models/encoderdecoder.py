@@ -13,6 +13,7 @@ from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 from ..monitors import NullMonitor
+from ...logs.utils import callwarning
 
 
 class Base(Generator, ABC):
@@ -32,11 +33,10 @@ class Base(Generator, ABC):
     def getModel(self):
         return deepcopy(self.state_dict())
 
-    def fit(self, train_loader, valid_loader, epochs=100, evaluator=None, monitor=None):
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None):
         monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
-        max_interval = 50 # threshold for number of epochs without change that will trigger early stopping
          
         for epoch in tqdm(range(epochs)):
             epoch += 1
@@ -47,6 +47,8 @@ class Base(Generator, ABC):
             
             logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
+
+
             
             if loss_valid < best:
                 monitor.saveModel(self)    
@@ -58,7 +60,7 @@ class Base(Generator, ABC):
             del loss_valid
             monitor.endStep(None, epoch)
                 
-            if epoch - last_save > max_interval : break
+            if epoch - last_save > patience : break
         
         torch.cuda.empty_cache()
         monitor.close()
@@ -128,6 +130,8 @@ class SmilesFragsGeneratorBase(Base):
 
 
 class Seq2Seq(SmilesFragsGeneratorBase):
+
+    @callwarning("Note that the 'Seq2Seq' ('attn') model currently does not support reinforcement learning in the current version of DrugEx.")
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(Seq2Seq, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
@@ -170,6 +174,8 @@ class Seq2Seq(SmilesFragsGeneratorBase):
 
 
 class EncDec(SmilesFragsGeneratorBase):
+
+    @callwarning("Note that the 'EncDec' ('vec') model currently does not support reinforcement learning in the current version of DrugEx.")
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(EncDec, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'

@@ -81,6 +81,19 @@ class SequenceVocabulary(Vocabulary, ABC):
             logger.warning(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {set(token)} (occurrence count: {len(token)}). It will be ignored.")
             return None
 
+    def removeIfNew(self, seq, ignoreConstraints=False):
+        token = self.splitSequence(seq)
+        if ignoreConstraints or (self.min_len < len(token) <= self.max_len):
+            diff = set(token) - self.wordSet - {'EOS'}
+            if len(diff) > 0:
+                logger.warning(f"Tokens: {set(diff)} do not occur in voc. Molecule: {seq} will be ignored.")
+                return None
+            else:
+                return token
+        else:
+            logger.warning(f"Molecule does not meet min/max words requirements (min: {self.min_len}, max: {self.max_len}). Words found: {set(token)} (occurrence count: {len(token)}). It will be ignored.")
+            return None
+
     def updateIndex(self):
         self.words = self.special + [x for x in sorted(self.wordSet) if x not in self.special]
         self.size = len(self.words)

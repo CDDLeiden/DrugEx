@@ -36,7 +36,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=None,
-                        help="Names of voc files to use as vocabulary. If None, uses the input prefix.")
+                        help="Prefix of voc files to use as vocabulary ({}_smiles/graph.txt). If None, assumes no prefix.")
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first word of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
@@ -59,7 +59,9 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
                         help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
                              "'ved' (smiles, lstm-based encoder-decoder) or "\
-                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) ")
+                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) " \
+                             "If '--version 2' is specified, it implies '--algorithm rnn'. " \
+                             "Note that 'ved' and 'attn' algorithms currently do not work with '--mode RL'. Reinforcement learning was not implemented for these, yet.")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -78,11 +80,13 @@ def GeneratorArgParser(txt=None):
                         help="Reward baseline")
     parser.add_argument('-s', '--scheme', type=str, default='PR',
                         help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
+    parser.add_argument('-pa', '--patience', type=int, default=50,
+                        help="Number of epochs to wait before early stop if no progress on test set score")
 
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
-    parser.add_argument('-ea', '--env_alg', type=str, default='RF',
-                        help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN'")
+    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
+                        help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
     
@@ -109,6 +113,8 @@ def GeneratorArgParser(txt=None):
                         help="Target IDs for which activity is desirable")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
+    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which selectivity window is calculated")
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
@@ -130,7 +136,7 @@ def GeneratorArgParser(txt=None):
     if args.voc_files is None:
         args.voc_files = [args.input.split('_')[0]]
     
-    args.targets = args.active_targets + args.inactive_targets
+    args.targets = args.active_targets + args.inactive_targets + args.window_targets
 
     args.output_long = '_'.join([args.output, args.mol_type, args.algorithm, args.mode])
 
@@ -284,6 +290,7 @@ def CreateDesirabilityFunction(base_dir,
                                scheme, 
                                active_targets=[], 
                                inactive_targets=[], 
+                               window_targets=[],
                                activity_threshold=6.5, 
                                qed=False, 
                                unique=False,
@@ -300,11 +307,12 @@ def CreateDesirabilityFunction(base_dir,
     
     Arguments:
         base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (str)                   : environment-predictor algoritm
+        alg (list)                   : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
+        window_targets (lst), opt   : list of target IDs for selectivity window
         activity_threshold (float), opt : activety threshold in case of 'CLS'
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         unique (bool), opt          : if Trye, molecule uniqueness in an epoch included in the desirability function
@@ -328,49 +336,73 @@ def CreateDesirabilityFunction(base_dir,
     }
     objs = []
     ths = []
-    targets = active_targets + inactive_targets
+    targets = active_targets + inactive_targets + window_targets
 
     pad = 3.5
+    pad_window = 1.5
     if scheme == 'WS':
         # Weighted Sum (WS) reward scheme
         if task == 'CLS':
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
         else:
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
-        ths = [0.5] * (len(targets))
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
 
     else:
         # Pareto Front (PR) or Crowding Distance (CD) reward scheme
         if task == 'CLS':
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
         else:
             active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
             inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+      
     
-    for t in targets:
-        predictor_modifier = active if t in active_targets else inactive
-        ths.append(0.99)
-        if alg.startswith('MT_'):
-            sys.exit('TO DO: using multitask model')
+    for i, t in enumerate(targets):
+        if t in active_targets:
+            predictor_modifier = active 
+            ths.append(0.5 if scheme == 'WS' else 0.99)
+        elif t in inactive_targets:
+            predictor_modifier = inactive 
+            ths.append(0.5 if scheme == 'WS' else 0.99)
+        elif t in window_targets:
+            predictor_modifier = window
+            ths.append(0.5)
+        
+        for a in alg:
+            if a.startswith('MT_'):
+                sys.exit('TO DO: using multitask model')
+
+        if len(alg) > 1:
+            try:
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
         else:
             try :
-                path = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except FileNotFoundError:
-                path_false = base_dir + '/envs/single/' + '_'.join([alg, task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg, task, t]) + '.pkg'
-                log.warning('Using model from {} instead of model from {}'.format(path, path_false))
+            except:
+                path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
+                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
                 objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-    
+
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
-        ths.append(0.0)
+        ths.append(0.5)
     if unique:
         objs.append(Uniqueness(modifier=ClippedScore(lower_x=1.0, upper_x=0.0)))
-        ths.append(0.2)
+        ths.append(0.0)
     if sa_score:
         objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
         ths.append(0.5)
@@ -379,10 +411,10 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
-        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[1], upper_x=mw_ths[0], sigma=100)))
+        objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[0], upper_x=mw_ths[1], sigma=100)))
         ths.append(0.99)
     if logP:
-        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[1], upper_x=logP_ths[0], sigma=1)))
+        objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
     
     return DrugExEnvironment(objs, ths, schemes[scheme])
@@ -438,7 +470,7 @@ def PreTrain(args):
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     monitor = FileMonitor(pt_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
         
 def FineTune(args):
     """
@@ -449,9 +481,9 @@ def FineTune(args):
     """
     
     if args.pretrained_model :
-        if args.pretrained_model.endswith('.pkg'):
-            pt_path = os.path.join(args.base_dir, 'generators', args.pretrained_model)
-        else:
+        pt_path = os.path.join(args.base_dir, 'generators', args.pretrained_model +'.pkg')
+        if not os.path.exists(pt_path):
+            log.warning('%s does not exist, trying %s as prefix of path name.' % (pt_path, args.pretrained_model))
             pt_path = os.path.join(args.base_dir, 'generators', '_'.join([args.pretrained_model, args.mol_type, args.algorithm, 'PT']) +'.pkg')
         assert os.path.exists(pt_path), f'{pt_path} does not exist'
     else:
@@ -469,7 +501,7 @@ def FineTune(args):
     agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
     agent.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
-    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
                               
 def RLTrain(args):
     
@@ -497,6 +529,7 @@ def RLTrain(args):
     prior.loadStatesFromFile(pr_path)
 
     rl_path = args.base_dir + '/generators/' + args.output_long
+    print(args.env_alg)
     
     # Create the desirability function
     environment = CreateDesirabilityFunction(
@@ -506,6 +539,7 @@ def RLTrain(args):
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
+        window_targets=args.window_targets,
         activity_threshold=args.activity_threshold,
         qed=args.qed,
         unique=args.uniqueness, 
@@ -522,7 +556,7 @@ def RLTrain(args):
     ## first difference for v2 needs to be adapted
     explorer = InitializeEvolver(agent, environment, prior, args.mol_type, args.algorithm, args.batch_size, args.epsilon, args.beta, args.n_samples, args.gpu)
     monitor = FileMonitor(rl_path, verbose=True)
-    explorer.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor)
+    explorer.fit(train_loader, valid_loader, epochs=args.epochs, patience=args.patience, monitor=monitor)
 
 
 def TrainGenerator(args):
@@ -558,9 +592,11 @@ def TrainGenerator(args):
     elif args.mode == 'RL' :
         log.info("Reinforcement learning started.")
         try:
+            if args.algorithm in ('ved', 'attn'):
+                raise NotImplementedError(f"The algorithm you specified does not support reinforcement learning: {args.algorithm}")
             RLTrain(args)
         except Exception as exp:
-            log.exception("Something went wrong in the finetuning.")
+            log.exception("Something went wrong in reinforcement learning.")
             raise exp
         log.info("Reinforcement learning finised.")
     else:

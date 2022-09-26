@@ -6,6 +6,7 @@ On: 26.04.22, 16:47
 """
 from rdkit import Chem
 
+from drugex.logs import logger
 from drugex.data.corpus.interfaces import Corpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 
@@ -15,7 +16,7 @@ class SequenceCorpus(Corpus):
     A `Corpus` to encode molecules for the sequence-based models.
     """
 
-    def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, check_unique=True):
+    def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, throw = False, check_unique=True):
         """
         Create a sequence corpus.
 
@@ -23,12 +24,16 @@ class SequenceCorpus(Corpus):
             molecules: an `iterable`, `MolSupplier` or a `list`-like data structure to supply sequence representations of molecules (i.e. SMILES strings)
             vocabulary: a `SequenceVocabulary` instance to be used for encoding and collecting tokens
             update_voc: `True` if the tokens in the vocabulary should be updated with new tokens derived from the data (the `SequenceVocabulary.addWordsFromSeq()` method is used for splitting instead of doing simply `SequenceVocabulary.splitSequence()`)
+            throw: 'True' if molecules that contain tokens that are not in the vocabulary should be thrown out of corpus (the `SequenceVocabulary.removeIfNew()` method is used for splitting instead of doing simply `SequenceVocabulary.splitSequence()`)
             check_unique: Skip identical sequences in "molecules".
         """
 
         super().__init__(molecules)
         self.vocabulary = vocabulary
         self.updateVoc = update_voc
+        self.throw = throw
+        if self.updateVoc and self.throw:
+            logger.warning(f"update_voc and throw cannot both be true at same time, defaulting to update_voc")
         self.checkUnique = check_unique
         self._unique = set()
 
@@ -72,6 +77,8 @@ class SequenceCorpus(Corpus):
         token = None
         if self.updateVoc:
             token = self.vocabulary.addWordsFromSeq(seq)
+        elif self.throw:
+            token = self.vocabulary.removeIfNew(seq)
         else:
             token = self.vocabulary.splitSequence(seq)
 
@@ -84,8 +91,8 @@ class SequenceCorpus(Corpus):
 
 class ScaffoldSequenceCorpus(SequenceCorpus):
 
-    def __init__(self, molecules, largest, vocabulary=VocSmiles(), update_voc=True, check_unique=True):
-        super().__init__(molecules, vocabulary, update_voc, check_unique)
+    def __init__(self, molecules, largest, vocabulary=VocSmiles(), update_voc=True, throw = False, check_unique=True):
+        super().__init__(molecules, vocabulary, update_voc, throw, check_unique)
         self.largest = largest
         self.largestToken = self.vocabulary.addWordsFromSeq(self.largest)
 
@@ -94,10 +101,13 @@ class ScaffoldSequenceCorpus(SequenceCorpus):
             return None
 
         processed = super().processMolecule(seq)
-        return {
-            "mol": self.largestToken,
-            "frag": processed['token'].split(' ')
-        }
+        if processed:
+            return {
+                "mol": self.largestToken,
+                "frag": processed['token'].split(' ')
+            }
+        else:
+            return None
 
 class ScaffoldGraphCorpus(Corpus):
 

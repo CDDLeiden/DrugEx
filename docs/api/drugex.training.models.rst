@@ -20,14 +20,6 @@ drugex.training.models.attention module
    :undoc-members:
    :show-inheritance:
 
-drugex.training.models.classifier module
-----------------------------------------
-
-.. automodule:: drugex.training.models.classifier
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 drugex.training.models.encoderdecoder module
 --------------------------------------------
 
