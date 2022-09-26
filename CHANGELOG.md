@@ -5,6 +5,7 @@ From v3.1.0 to v3.2.0
 
 - fixes to SmilesExplorerNoFrag (wrong best state was saved and a TypeError while logging was eliminated, see !40)
 - optimized how memory is used a little bit (!50)
+- fix #55
 
 
 ## Changes
