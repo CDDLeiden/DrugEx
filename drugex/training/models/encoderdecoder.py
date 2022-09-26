@@ -116,7 +116,7 @@ class SmilesFragsGeneratorBase(Base):
         return valid, desired, loss_valid, smiles_scores
     
     def sample(self, loader, repeat=1):
-        net = nn.DataParallel(self, device_ids=[self.gpus[0]]) # FIXME: quick fix to prevent #55, but hurts performance
+        net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():
             for _ in range(repeat):                
