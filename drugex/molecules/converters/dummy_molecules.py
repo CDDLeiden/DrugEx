@@ -57,7 +57,7 @@ class dummyMolsFromFragments():
                 smiles = self.bridgeFragments(frag)
             else: # single leaf fragment
                 smiles = self.addCBrToFragments(frag)
-            return (frag, smiles)
+            return [(frag, smiles)]
         except:
             logger.warning(f"Skipped: couldn't build a molecule from {frag}.")
             return None     
