@@ -1,16 +1,13 @@
 """
 tests
 
+
 Created by: Martin Sicho
 On: 18.05.22, 11:49
 """
-from unittest import TestCase
-import tempfile
-
-# import sys
-#sys.path.append('/zfsdata/data/sohvi/DrugEx')
-
 import pandas as pd
+import tempfile
+from unittest import TestCase
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -159,6 +156,22 @@ class ProcessingTests(TestCase):
             df = collector.getData()
             self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
 
+    def test_smiles_scaffold_encoding(self):
+        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
+        encoder = FragmentCorpusEncoder(
+            fragmenter=dummyMolsFromFragments(), 
+            encoder=SequenceFragmentEncoder(
+                VocSmiles(min_len=2) 
+            ),
+            pairs_splitter=None, 
+            n_proc=1,
+            chunk_size=1
+        )
+        collector = SmilesFragDataSet(self.getRandomFile())
+        encoder.apply(list(frags), encodingCollectors=[collector])
+        self.assertTrue(collector.getData().Input[0].endswith('EOS') and collector.getData().Output[0].endswith('EOS'))
+
+
     def test_frag_suppliers(self):
         pairs = FragmentPairsSupplier(self.getTestMols(), Fragmenter(4, 4, 'brics')).toList()
         encoded = FragmentPairsEncodedSupplier(pairs, GraphFragmentEncoder(VocGraph(n_frags=4)))
@@ -204,18 +217,7 @@ class ProcessingTests(TestCase):
             chunk_size=1
         )
         collector = GraphFragDataSet(self.getRandomFile())
-        encoder.apply(list(frags), encodingCollectors=[collector])
-
-    def test_smiles_scaffold_encoding(self):
-        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
-        encoder = FragmentCorpusEncoder(
-            fragmenter=dummyMolsFromFragments(), 
-            encoder=SequenceFragmentEncoder(
-                VocSmiles(min_len=2) 
-            ),
-            pairs_splitter=None, 
-            n_proc=1,
-            chunk_size=1
-        )
-        collector = SmilesFragDataSet(self.getRandomFile())
-        encoder.apply(list(frags), encodingCollectors=[collector])
+        fragment_collector = FragmentCorpusEncoder.FragmentPairsCollector()
+        encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
+        self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
+        self.assertTrue(collector.getData().columns[0][0] == 'C')
