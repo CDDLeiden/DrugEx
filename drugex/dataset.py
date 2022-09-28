@@ -163,6 +163,7 @@ def v3Dataset(smiles, args):
     if args.scaffolds:
         fragmenter = dummyMolsFromFragments()
         splitter = None
+        min_len = 2
 
     else:
         fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
@@ -172,6 +173,7 @@ def v3Dataset(smiles, args):
             pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_test.txt', sep='\t', index=False)
             pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
         splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) if not args.no_fragment_split else None
+        min_len = 10
 
 
     if args.mol_type == 'graph':
@@ -197,7 +199,7 @@ def v3Dataset(smiles, args):
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles.fromFile(voc_path), 
+                    VocSmiles.fromFile(voc_path, min_len=min_len), 
                     update_voc = False, 
                     throw= True),
                 pairs_splitter=splitter,
@@ -208,7 +210,7 @@ def v3Dataset(smiles, args):
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles()
+                    VocSmiles(min_len=min_len)
                 ),
                 pairs_splitter=splitter,
                 n_proc=args.n_proc,
