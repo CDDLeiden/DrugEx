@@ -296,7 +296,7 @@ class GraphModel(Base):
         return smiles, frags
 
 
-    def sampleFromSmiles(self, smiles, repeat=1, min_samples=100, n_proc=1, fragmenter=None):
+    def sampleFromSmiles(self, smiles, batch_size=32, repeat=1, min_samples=100, n_proc=1, fragmenter=None, keep_frags=True):
         standardizer = Standardization(n_proc=n_proc)
         smiles = standardizer.apply(smiles)
 
@@ -313,10 +313,10 @@ class GraphModel(Base):
 
         smiles, frags = [], []
         while not len(smiles) >= min_samples:
-            new_s, new_f = self.sample(out_data.asDataLoader(32), repeat=repeat)
+            new_s, new_f = self.sample(out_data.asDataLoader(batch_size), repeat=repeat)
             smiles.extend(new_s)
             frags.extend(new_f)
-
-        return smiles, frags
-
+        if keep_frags
+            return smiles, frags
+        return smiles
 

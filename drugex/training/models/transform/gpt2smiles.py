@@ -3,6 +3,10 @@ import torch.nn as nn
 from torch.nn.init import kaiming_normal_
 
 from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
+from drugex.data.fragments import SequenceFragmentEncoder, FragmentCorpusEncoder
+from drugex.data.processing import Standardization
+from drugex.data.datasets import SmilesFragDataSet
+from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
 from .layer import pad_mask, tri_mask
 from drugex.training.models.encoderdecoder import SmilesFragsGeneratorBase
@@ -94,4 +98,27 @@ class GPT2Model(SmilesFragsGeneratorBase):
                 if is_end.all(): break
             out = out[:, self.voc_trg.max_len:].detach()
         return out
+
+    def sampleFromSmiles(self, smiles, batch_size=32, repeat=1, min_samples=100, n_proc=1, fragmenter=None):
+        standardizer = Standardization(n_proc=n_proc)
+        smiles = standardizer.apply(smiles)
+
+        fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
+        encoder = FragmentCorpusEncoder(
+            fragmenter=fragmenter,
+            encoder=SequenceFragmentEncoder(
+                self.voc_trg
+            ),
+            n_proc=n_proc
+        )
+        out_data = SmilesFragDataSet(tempfile.NamedTemporaryFile().name)
+        encoder.apply(smiles, encodingCollectors=[out_data])
+
+        smiles, frags = [], []
+        while not len(smiles) >= min_samples:
+            new_s, new_f = self.sample(out_data.asDataLoader(batch_size), repeat=repeat)
+            smiles.extend(new_s)
+            frags.extend(new_f)
+
+        return smiles, frags
 
