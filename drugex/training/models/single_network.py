@@ -212,5 +212,19 @@ class RNN(Generator):
         torch.cuda.empty_cache()
         monitor.close()
 
-
-
+    def sample_smiles(self, num_smiles, batch_size=100, drop_duplicates=True, drop_invalid=True):
+        smiles = []
+        while len(smiles) < num_smiles:
+            # sample SMILES
+            sequences = self.sample(batch_size)
+            # decode according to vocabulary
+            smiles += utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
+            # drop duplicates
+            if drop_duplicates:
+                smiles = list(set(smiles))
+            # drop invalid smiles
+            if drop_invalid:
+                scores = SmilesChecker.checkSmiles(smiles, frags=None).ravel()
+                smiles = np.array(smiles)[scores > 0].tolist()
+        smiles = smiles[:num_smiles]
+        return smiles
