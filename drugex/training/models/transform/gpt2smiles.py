@@ -99,7 +99,7 @@ class GPT2Model(SmilesFragsGeneratorBase):
             out = out[:, self.voc_trg.max_len:].detach()
         return out
 
-    def sampleFromSmiles(self, smiles, batch_size=32, repeat=1, min_samples=100, n_proc=1, fragmenter=None):
+    def sampleFromSmiles(self, smiles, batch_size=32, repeat=1, min_samples=100, n_proc=1, fragmenter=None, keep_frags=True):
         standardizer = Standardization(n_proc=n_proc)
         smiles = standardizer.apply(smiles)
 
@@ -119,6 +119,8 @@ class GPT2Model(SmilesFragsGeneratorBase):
             new_s, new_f = self.sample(out_data.asDataLoader(batch_size), repeat=repeat)
             smiles.extend(new_s)
             frags.extend(new_f)
-
-        return smiles, frags
+        
+        if keep_frags:
+            return smiles, frags
+        return smiles
 
