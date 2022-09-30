@@ -316,7 +316,7 @@ class GraphModel(Base):
             new_s, new_f = self.sample(out_data.asDataLoader(batch_size), repeat=repeat)
             smiles.extend(new_s)
             frags.extend(new_f)
-        if keep_frags
+        if keep_frags:
             return smiles, frags
         return smiles
 
