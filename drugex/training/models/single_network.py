@@ -111,15 +111,10 @@ class RNN(Generator):
 
         return sequences
 
-    def evaluate(self, batch_size, repeat=1, method = None, drop_duplicates = False):
-        smiles = []
-        for _ in range(repeat):
-            sequences = self.sample(batch_size)
-            smiles += [self.voc.decode(s, is_tk = False) for s in sequences]
-        if drop_duplicates:
-            smiles = np.array(utils.canonicalize_list(smiles))
-            ix = utils.unique(np.array([[s] for s in smiles]))
-            smiles = smiles[ix]
+    def evaluate(self, batch_size, num_smiles=1, method = None, drop_duplicates = False, drop_invalid=False):
+        smiles = self.sample_smiles(num_smiles = num_smiles, batch_size=batch_size, drop_duplicates=drop_duplicates,
+                                    drop_invalid=drop_invalid)
+        
         if method is None:
             scores = SmilesChecker.checkSmiles(smiles)
         else:
