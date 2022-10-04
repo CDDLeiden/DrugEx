@@ -19,7 +19,7 @@ from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
 from drugex.training.scorers.predictors import Predictor
-from drugex.training.scorers.properties import Property, Uniqueness
+from drugex.training.scorers.properties import Property, Uniqueness, TanimotoFingerprintSimilarity, TanimotoGraphSimilarity
 
 warnings.filterwarnings("ignore")
     
@@ -108,6 +108,12 @@ def GeneratorArgParser(txt=None):
                         help='If on, compounds with logP values outside a range set by mw_thersholds are penalized in the desirability function')
     parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[-5, 5],
                         help='Thresholds used calculate logP clipped scores in the desirability function')
+    parser.add_argument('-sim_mol', '--similarity_mol', type=str, default=None,
+                        help='SMILES string of a reference molecule to which the similarity is used as an objective. Similarity metric and threshold set by --sim_metric and --sim_th.')
+    parser.add_argument('-sim_type', '--similarity_type', type=str, default='ECFP6',
+                        help="Tanimoto similarity between fingerprints ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') or 'graph'")
+    parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.6
+                        help="Threshold for molecular similarity to reference molecule")
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
@@ -119,12 +125,6 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
 
-    
-    # Load some arguments from string --> usefull functions called eg. in a notebook
-    if txt:
-        args = parser.parse_args(txt)
-    else:
-        args = parser.parse_args()
             
     # Setting output file prefix from input file
     if args.output is None:
@@ -300,7 +300,10 @@ def CreateDesirabilityFunction(base_dir,
                                mw=False,
                                mw_ths=[200,600],
                                logP=False,
-                               logP_ths=[0,5]):
+                               logP_ths=[0,5],
+                               sim_smiles=None,
+                               sim_type='ECFP6',
+                               sim_th=0.6):
     
     """
     Sets up the objectives of the desirability function.
@@ -322,6 +325,9 @@ def CreateDesirabilityFunction(base_dir,
         mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
         logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
         logP_ths (list), opt        : logP thresholds to penalize large molecules
+        sim_smiles (str), opt       : reference molecules used for similarity calculation
+        sim_type (str), opt         : type of fingerprint or 'graph' used for similarity calculation
+        sim_th (float), opt         : threshold for similarity desirability  
     
     Returns:
         objs (lst)                  : list of selected scorers
@@ -416,7 +422,12 @@ def CreateDesirabilityFunction(base_dir,
     if logP:
         objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
-    
+    if sim_smiles:
+        if sim_type == 'graph':
+            objs.append(TanimotoGraphSimilarity(sim_smiles))
+        else:
+            objs.append(TanimotoFingerprintSimilarity(sim_smiles, sim_type))
+        ths.append(sim_th)
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
 def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
@@ -550,6 +561,9 @@ def RLTrain(args):
         mw_ths=args.mw_thresholds,
         logP=args.logP,
         logP_ths=args.logP_thresholds,
+        sim_smiles=args.similarity_mol,
+        sim_type=args.similarity_type,
+        sim_th=args.similarity_threshold
     )
 
     # Initialize evolver algorithm
