@@ -29,15 +29,26 @@ class dummyMolsFromFragments():
 
         try:
             frags_rdkit = [Chem.MolFromSmiles(f) for f in frags.split('.') ]
-            mol = frags_rdkit[0]
-            for i in range(1,len(frags_rdkit)):
-                n = mol.GetNumAtoms()
-                comb = Chem.EditableMol( Chem.CombineMols(mol, frags_rdkit[i]))
-                comb.AddBond(n-1, n, order=Chem.rdchem.BondType.SINGLE)
-                mol = comb.GetMol()
-            return Chem.MolToSmiles(mol)
+            mol = frags_rdkit[0] # set 1st fragment as base of molecule
+            
+            for i in range(1,len(frags_rdkit)): # iterate over other fragments to be combined with the base molecule
+                frag = frags_rdkit[i] 
+                nfrag = frag.GetNumAtoms()
+                nmol = mol.GetNumAtoms()
+
+                # iterate over bridging position until creation of valid molecule
+                for j in range(nmol): 
+                    for k in range(nfrag):
+                        comb = Chem.EditableMol( Chem.CombineMols(mol, frag ))
+                        mpos = nmol - j -1
+                        fpos = nmol + k
+                        comb.AddBond(mpos, fpos, order=Chem.rdchem.BondType.SINGLE)
+                        smiles = Chem.MolToSmiles(comb.GetMol())
+                        if Chem.MolFromSmiles(smiles) is not None: break                    
+            return smiles
+            
         except:
-            logger.debug(f"Skipped: couldn't build a molecule from {frags}.")
+            logger.warning(f"Skipped: couldn't build a molecule from {frags}")
             return None
             
 
