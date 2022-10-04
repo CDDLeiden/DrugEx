@@ -13,7 +13,7 @@ from typing import List
 from rdkit import Chem, DataStructs
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
-from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
+from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski, rdFMCS
 
 from drugex.utils.fingerprints import get_fingerprint
 from drugex.training.interfaces import Scorer
@@ -158,11 +158,11 @@ class Isomer(Scorer):
     def getKey(self):
         return f"Isomer (mean_func={self.mean_func})"
 
-class Similarity(Scorer):
-    def __init__(self, smile, fp_type, modifier=None):
+class TanimotoFingerprintSimilarity(Scorer):
+    def __init__(self, smiles, fp_type, modifier=None):
         super().__init__(modifier)
-        self.smile = smile
-        self.mol = Chem.MolFromSmiles(smile)
+        self.smiles = smiles
+        self.mol = Chem.MolFromSmiles(smiles)
         self.fp_type = fp_type
         self.fp = get_fingerprint(self.mol, fp_type=fp_type)
 
@@ -176,8 +176,28 @@ class Similarity(Scorer):
         return scores
 
     def getKey(self):
-        return f"Similarity (fp_type={self.fp_type}, smile={self.smile})"
+        return f"Fingerprint similarity (fp_type={self.fp_type}, smiles={self.smiles})"
 
+class TanimotoGraphSimilarity(Scorer):
+    def __init__(self, smiles, modifier=None):
+        super().__init__(modifier)
+        self.smiles = smiles
+        self.mol = Chem.MolFromSmiles(smiles)
+
+    def getScores(self, mols, frags=None):
+        scores = np.zeros(len(mols))
+        for i, mol in enumerate(tqdm.tqdm(mols)):
+            try:
+                mcs = rdFMCS.FindMCS(mols)
+                nref = self.mol.GetNumAtoms()
+                nmol = mol.GetNumAtoms()
+                nmcs = mcs.numAtoms
+                scores[i] = nmcs / (nref+nmol-nmcs)
+            except: continue
+        return scores
+    
+    def getKey(self):
+        return f"Graph similarity (smiles={self.smiles})"
 
 class Scaffold(Scorer):
     def __init__(self, smart, is_match, modifier=None):
