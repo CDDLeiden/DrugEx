@@ -19,7 +19,8 @@ from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
 from drugex.training.scorers.predictors import Predictor
-from drugex.training.scorers.properties import Property, Uniqueness, TanimotoFingerprintSimilarity, TanimotoGraphSimilarity
+from drugex.training.scorers.properties import Property, Uniqueness
+from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
 
 warnings.filterwarnings("ignore")
     
@@ -110,10 +111,12 @@ def GeneratorArgParser(txt=None):
                         help='Thresholds used calculate logP clipped scores in the desirability function')
     parser.add_argument('-sim_mol', '--similarity_mol', type=str, default=None,
                         help='SMILES string of a reference molecule to which the similarity is used as an objective. Similarity metric and threshold set by --sim_metric and --sim_th.')
-    parser.add_argument('-sim_type', '--similarity_type', type=str, default='ECFP6',
-                        help="Tanimoto similarity between fingerprints ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') or 'graph'")
-    parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.6
+    parser.add_argument('-sim_type', '--similarity_type', type=str, default='fraggle',
+                        help="'fraggle' for Fraggle similarity, 'graph' for Tversky similarity between graphs or fingerprints name ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') for Tversky similarity between fingeprints")
+    parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.5,
                         help="Threshold for molecular similarity to reference molecule")
+    parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3]
+                        help="Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.")                       
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
                         help="Target IDs for which activity is desirable")
@@ -303,7 +306,8 @@ def CreateDesirabilityFunction(base_dir,
                                logP_ths=[0,5],
                                sim_smiles=None,
                                sim_type='ECFP6',
-                               sim_th=0.6):
+                               sim_th=0.6,
+                               sim_tw=[1.,1.]):
     
     """
     Sets up the objectives of the desirability function.
@@ -328,6 +332,7 @@ def CreateDesirabilityFunction(base_dir,
         sim_smiles (str), opt       : reference molecules used for similarity calculation
         sim_type (str), opt         : type of fingerprint or 'graph' used for similarity calculation
         sim_th (float), opt         : threshold for similarity desirability  
+        sim_tw (list), opt          : tversky similarity weights
     
     Returns:
         objs (lst)                  : list of selected scorers
@@ -423,10 +428,12 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
     if sim_smiles:
+        if sim_type == 'fraggle':
+            objs.append(FraggleSimilarity(sim_smiles))
         if sim_type == 'graph':
-            objs.append(TanimotoGraphSimilarity(sim_smiles))
+            objs.append(TverskyGraphSimilarity(sim_smiles, sim_tw[0], sim_tw[1]))
         else:
-            objs.append(TanimotoFingerprintSimilarity(sim_smiles, sim_type))
+            objs.append(TverskyFingerprintSimilarity(sim_smiles, sim_type, sim_tw[0], sim_tw[1]))
         ths.append(sim_th)
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
@@ -563,7 +570,8 @@ def RLTrain(args):
         logP_ths=args.logP_thresholds,
         sim_smiles=args.similarity_mol,
         sim_type=args.similarity_type,
-        sim_th=args.similarity_threshold
+        sim_th=args.similarity_threshold,
+        sim_tw=args.similarity_tversky_weights
     )
 
     # Initialize evolver algorithm
