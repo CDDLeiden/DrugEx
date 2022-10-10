@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 import torch
+from tqdm.auto import tqdm
 from torch import nn
 from torch import optim
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
@@ -207,19 +208,30 @@ class RNN(Generator):
         torch.cuda.empty_cache()
         monitor.close()
 
-    def sample_smiles(self, num_smiles, batch_size=100, drop_duplicates=True, drop_invalid=True):
+    def sample_smiles(self, num_smiles, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+        if progress:
+            pbar = tqdm(total=num_smiles, **tqdm_kwargs)
         smiles = []
         while len(smiles) < num_smiles:
             # sample SMILES
             sequences = self.sample(batch_size)
             # decode according to vocabulary
-            smiles += utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
+            new_smiles = utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
             # drop duplicates
             if drop_duplicates:
-                smiles = list(set(smiles))
+                new_smiles = np.array(new_smiles)
+                new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))]
+                new_smiles = new_smiles.tolist()
             # drop invalid smiles
             if drop_invalid:
-                scores = SmilesChecker.checkSmiles(smiles, frags=None).ravel()
-                smiles = np.array(smiles)[scores > 0].tolist()
+                scores = SmilesChecker.checkSmiles(new_smiles, frags=None).ravel()
+                new_smiles = np.array(new_smiles)[scores > 0].tolist()
+            smiles += new_smiles
+            # Update progress bar
+            if progress:
+                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_smiles else num_smiles - pbar.n)
         smiles = smiles[:num_smiles]
+        if progress:
+            pbar.close()
         return smiles
+
