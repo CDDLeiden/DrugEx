@@ -57,6 +57,8 @@ class DataSet(ResultCollector, ABC):
         """
 
         self.outpath = path
+        if not os.path.exists(os.path.dirname(self.outpath)):
+            os.makedirs(os.path.dirname(self.outpath))
         self.voc = None
         try:
             self.fromFile(self.outpath)

@@ -124,8 +124,6 @@ class ScaffoldGraphCorpus(Corpus):
         if molecule == self.largest:
             return None
         output = self.voc.encode([self.largest], [molecule])
-        f, s = self.voc.decode(output)
-        assert self.largest == s[0]
         code = output[0].reshape(-1).tolist()
         return code
 
