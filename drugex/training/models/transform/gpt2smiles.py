@@ -99,9 +99,10 @@ class GPT2Model(SmilesFragsGeneratorBase):
             out = out[:, self.voc_trg.max_len:].detach()
         return out
 
-    def sampleFromSmiles(self, smiles, batch_size=32, repeat=1, min_samples=100, n_proc=1, fragmenter=None, keep_frags=True):
+    def sample_smiles(self, input_smiles, num_samples=100, batch_size=32, n_proc=1, fragmenter=None,
+                      keep_frags=True, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
         standardizer = Standardization(n_proc=n_proc)
-        smiles = standardizer.apply(smiles)
+        smiles = standardizer.apply(input_smiles)
 
         fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
         encoder = FragmentCorpusEncoder(
@@ -114,12 +115,41 @@ class GPT2Model(SmilesFragsGeneratorBase):
         out_data = SmilesFragDataSet(tempfile.NamedTemporaryFile().name)
         encoder.apply(smiles, encodingCollectors=[out_data])
 
+        # Duplicate of self.sample to allow dropping molecules
+        # and progress bar on the fly without additional
+        # overhead caused by calling nn.DataParallel a few times
+        net = nn.DataParallel(self, device_ids=self.gpus)
+
+        if progress:
+            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
+            pbar = tqdm(**tqdm_kwargs)
+
         smiles, frags = [], []
-        while not len(smiles) >= min_samples:
-            new_s, new_f = self.sample(out_data.asDataLoader(batch_size), repeat=repeat)
-            smiles.extend(new_s)
-            frags.extend(new_f)
-        
+        while not len(smiles) >= num_samples:
+            with torch.no_grad():
+                src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
+                trg = net(src.to(self.device))
+                new_smiles = self.voc_trg.decode(trg, is_tk=False)
+                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=False)
+                # drop duplicates
+                if drop_duplicates:
+                    new_smiles = np.array(new_smiles)
+                    new_frags = np.array(new_frags)[np.logical_not(np.isin(new_smiles, smiles))].tolist()
+                    new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
+                # drop invalid smiles
+                if drop_invalid:
+                    # Make sure both valid molecules and include input fragments
+                    scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags).sum(axis=1)
+                    new_smiles = np.array(new_smiles)[scores > 0].tolist()
+                    new_frags = np.array(new_frags)[scores > 0].tolist()
+                smiles += new_smiles
+                frags += new_frags
+                # Update progress bar
+                if progress:
+                    pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        if progress:
+            pbar.close()
+        smiles = smiles[:num_samples]
         if keep_frags:
             return smiles, frags
         return smiles

@@ -321,10 +321,10 @@ class TrainingTestCase(TestCase):
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # test molecule generation
-        pretrained.sampleFromSmiles([
+        pretrained.sample_smiles([
             "c1ccncc1CCC",
             "CCO"
-        ], min_samples=1)
+        ], num_samples=1)
 
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(self.BATCH_SIZE)
