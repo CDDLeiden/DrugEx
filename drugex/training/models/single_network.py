@@ -208,9 +208,10 @@ class RNN(Generator):
         torch.cuda.empty_cache()
         monitor.close()
 
-    def sample_smiles(self, num_smiles, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+    def sample_smiles(self, num_samples, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
         if progress:
-            pbar = tqdm(total=num_smiles, **tqdm_kwargs)
+            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
+            pbar = tqdm(**tqdm_kwargs)
         smiles = []
         while len(smiles) < num_smiles:
             # sample SMILES
