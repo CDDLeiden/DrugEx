@@ -113,7 +113,7 @@ class RNN(Generator):
         return sequences
 
     def evaluate(self, batch_size, num_smiles=1, method = None, drop_duplicates = False, drop_invalid=False):
-        smiles = self.sample_smiles(num_smiles = num_smiles, batch_size=batch_size, drop_duplicates=drop_duplicates,
+        smiles = self.sample_smiles(num_samples=num_smiles, batch_size=batch_size, drop_duplicates=drop_duplicates,
                                     drop_invalid=drop_invalid)
         
         if method is None:
