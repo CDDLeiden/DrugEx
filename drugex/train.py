@@ -115,7 +115,7 @@ def GeneratorArgParser(txt=None):
                         help="'fraggle' for Fraggle similarity, 'graph' for Tversky similarity between graphs or fingerprints name ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') for Tversky similarity between fingeprints")
     parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.5,
                         help="Threshold for molecular similarity to reference molecule")
-    parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3]
+    parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3],
                         help="Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.")                       
     
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
@@ -129,6 +129,8 @@ def GeneratorArgParser(txt=None):
                         help="If on, git hash is not retrieved")
 
             
+    args = parser.parse_args()
+    
     # Setting output file prefix from input file
     if args.output is None:
         args.output = args.input.split('_')[0]
