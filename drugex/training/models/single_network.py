@@ -213,7 +213,7 @@ class RNN(Generator):
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
         smiles = []
-        while len(smiles) < num_smiles:
+        while len(smiles) < num_samples:
             # sample SMILES
             sequences = self.sample(batch_size)
             # decode according to vocabulary
@@ -230,8 +230,8 @@ class RNN(Generator):
             smiles += new_smiles
             # Update progress bar
             if progress:
-                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_smiles else num_smiles - pbar.n)
-        smiles = smiles[:num_smiles]
+                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        smiles = smiles[:num_samples]
         if progress:
             pbar.close()
         return smiles
