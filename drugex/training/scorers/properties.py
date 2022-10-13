@@ -195,3 +195,42 @@ class Uniqueness(Scorer):
 
     def getKey(self):
         return "Unique"
+
+
+class LipophilicEfficiency(Scorer):
+    """
+    Calculates the lipophilic efficiency of a molecule: LiPE = pChEMBL value - logP
+    """
+
+    def __init__(self, qsar_scorer, modifier=None):
+        super().__init__(modifier)
+        self.qsar_scorer = qsar_scorer
+        self.key = f'LipE_{qsar_scorer.getKey()}'
+
+    def getScores(self, mols : List[str], frags=None):
+        pChEMBL = self.qsar_scorer.getScores(mols)
+        logP = Property('logP').getScores(mols)
+        scores = pChEMBL - logP
+        return scores
+
+    def getKey(self):
+        return self.key
+
+class LigandEfficiency(Scorer):
+    """
+    Calculates the ligand efficiency of a molecule: LE = 1.4 * pChEMBL / nAtoms
+    """
+
+    def __init__(self, qsar_scorer, modifier=None):
+        super().__init__(modifier)
+        self.qsar_scorer = qsar_scorer
+        self.key = f'LE_{qsar_scorer.getKey()}'
+
+    def getScores(self, mols : List[str], frags=None):
+        pChEMBL = self.qsar_scorer.getScores(mols)
+        nAtoms = [mol.GerNumAtoms() for mol in mols]
+        scores = 1.4 * pChEMBL / nAtoms
+        return scores
+
+    def getKey(self):
+        return self.key
