@@ -267,11 +267,11 @@ class GraphModel(Base):
             monitor.saveProgress(current_step, None, total_steps, None)
             monitor.savePerformanceInfo(current_step, None, loss.item())
                 
-    def validate(self, loader, evaluator=None):
+    def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
         
-        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
