@@ -146,7 +146,6 @@ class GraphEditInverseDistance(Scorer):
         for i, mol in enumerate(tqdm.tqdm(mols)):
             try:
                 graph = self.get_graph(mol)
-                print(i)
                 for v in networkx.optimize_graph_edit_distance(self.graph, graph, edge_match=lambda a,b: a['weight']==b['weight']):
                     dist = v
                 scores[i] = 1 / np.sqrt(dist)
