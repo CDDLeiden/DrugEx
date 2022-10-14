@@ -111,14 +111,14 @@ class RNN(Generator):
 
         return sequences
 
-    def evaluate(self, batch_size, num_smiles=1, method = None, drop_duplicates = False, drop_invalid=False):
+    def evaluate(self, batch_size, num_smiles=1, method = None, drop_duplicates = False, drop_invalid=False, no_multifrag_smiles=True):
         smiles = self.sample_smiles(num_smiles = num_smiles, batch_size=batch_size, drop_duplicates=drop_duplicates,
                                     drop_invalid=drop_invalid)
         
         if method is None:
-            scores = SmilesChecker.checkSmiles(smiles)
+            scores = SmilesChecker.checkSmiles(smiles, no_multifrag_smiles=no_multifrag_smiles)
         else:
-            scores = method.getScores(smiles)
+            scores = method.getScores(smiles, no_multifrag_smiles=no_multifrag_smiles)
 
         return smiles, scores
 

@@ -497,14 +497,14 @@ class PGLearner(Explorer, ABC):
     def policy_gradient(self, smiles=None, seqs=None, memory=None):
         pass
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, no_multifrag_smiles=True):
         best = 0
         last_save = 0
         log = open(self.out + '.log', 'w')
         for epoch in range(1000):
             logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             self.policy_gradient()
-            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True)
+            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=no_multifrag_smiles)
  
             desire = (scores.DESIRE).sum() / self.n_samples
             score = scores[self.env.getScorerKeys()].values.mean()
@@ -583,7 +583,7 @@ class SmilesExplorerNoFrag(PGLearner):
         #t3 = time.time()
         #print(t1 - start, t2-t1, t3-t2)
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, no_multifrag_smiles=True):
         monitor.saveModel(self)
         self.bestState = deepcopy(self.agent.state_dict())
         best = 0
@@ -600,7 +600,7 @@ class SmilesExplorerNoFrag(PGLearner):
             else:
                 smiles, seqs = self.forward(crover=self.crover, epsilon=self.epsilon)
                 self.policy_gradient(smiles, seqs, progress=monitor)
-            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True)
+            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=True)
  
             desire = (scores.DESIRE).sum() / self.n_samples
             if self.mean_func == 'arithmetic':
