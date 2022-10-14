@@ -99,7 +99,7 @@ def GeneratorArgParser(txt=None):
                         help="Target IDs for which selectivity window is calculated")
     parser.add_argument('-le', '--ligand_efficiency', action='store_true', 
                         help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")
-    parser.add_argument('-le_ths', '--le_thresholds', type=float, nargs=2, default=[0.0, 1.0],
+    parser.add_argument('-le_ths', '--le_thresholds', type=float, nargs=2, default=[0.0, 0.5],
                         help='Thresholds used calculate ligand efficiency clipped scores in the desirability function.')
     parser.add_argument('-lipe', '--lipophilic_efficiency', action='store_true',
                         help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")           
