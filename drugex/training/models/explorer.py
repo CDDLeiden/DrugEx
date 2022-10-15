@@ -608,7 +608,7 @@ class SmilesExplorerNoFrag(PGLearner):
             logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
                   (epoch, score, valid, desire))
             scores['Smiles'] = smiles
-            monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid, desire=desire, smiles_scores=scores.values, smiles_scores_key=scores.columns)
+            monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid, desire_ratio=desire, smiles_scores=scores.values, smiles_scores_key=scores.columns)
             if best < score:
                 monitor.saveModel(self)
                 self.bestState = deepcopy(self.agent.state_dict())
