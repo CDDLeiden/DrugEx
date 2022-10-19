@@ -86,10 +86,10 @@ class RNN(Generator):
             self.zero_grad()
             score = self.likelihood(seq)
             loss = score * reward
+            loss = -loss.mean()
             if progress:
                 progress.saveProgress(step_idx, None, total_steps, None)
-                progress.savePerformanceInfo(step_idx, None, loss.mean().item())
-            loss = -loss.mean()
+                progress.savePerformanceInfo(step_idx, None, loss.item())
             loss.backward()
             self.optim.step()
             step_idx += 1
