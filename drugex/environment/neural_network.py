@@ -41,7 +41,8 @@ class Base(nn.Module):
                 The data structure is as same as loader_train.
             out (str): the file path for the model file (suffix with '.pkg')
                 and log file (suffix with '.log').
-            patience (int): number of epochs to wait before early stop if no progress on validiation set score
+            patience (int): number of epochs to wait before early stop if no progress on validation set score,
+                            if patience = -1, always train to n_epochs
             tol (float): minimum absolute improvement of loss necessary to count as progress on best validation score
         """
 
@@ -80,24 +81,31 @@ class Base(nn.Module):
                 loss = self.criterion(y_, yb)
                 loss.backward()
                 optimizer.step()
-            # loss value on validation set based on which optimal model is saved.
-            loss_valid = self.evaluate(valid_loader)
-            print('[Epoch: %d/%d] %.1fs loss_train: %f loss_valid: %f' % (
-                epoch, self.n_epochs, time.time() - t0, loss.item(), loss_valid), file=log)
-            if loss_valid + tol < best_loss:
-                torch.save(self.state_dict(), out + '.pkg')
-                print('[Performance] loss_valid is improved from %f to %f, Save model to %s' %
-                      (best_loss, loss_valid, out + '.pkg'), file=log)
-                best_loss = loss_valid
-                last_save = epoch
+            if patience == -1:
+                print('[Epoch: %d/%d] %.1fs loss_train: %f'% (
+                    epoch, self.n_epochs, time.time() - t0, loss.item()), file=log)
             else:
-                print('[Performance] loss_valid is not improved.', file=log)
-                # early stopping, if the performance on validation is not improved in 100 epochs.
-                # The model training will stop in order to save time.
-                if epoch - last_save > patience: break
+                # loss value on validation set based on which optimal model is saved.
+                loss_valid = self.evaluate(valid_loader)
+                print('[Epoch: %d/%d] %.1fs loss_train: %f loss_valid: %f' % (
+                    epoch, self.n_epochs, time.time() - t0, loss.item(), loss_valid), file=log)
+                if loss_valid + tol < best_loss:
+                    torch.save(self.state_dict(), out + '_weights.pkg')
+                    print('[Performance] loss_valid is improved from %f to %f, Save model to %s' %
+                        (best_loss, loss_valid, out + '_weights.pkg'), file=log)
+                    best_loss = loss_valid
+                    last_save = epoch
+                else:
+                    print('[Performance] loss_valid is not improved.', file=log)
+                    # early stopping, if the performance on validation is not improved in 100 epochs.
+                    # The model training will stop in order to save time.
+                    if epoch - last_save > patience: break
+        if patience == -1:
+            torch.save(self.state_dict(), out + '_weights.pkg')
         print('Neural net fitting completed.', file=log)
         log.close()
-        self.load_state_dict(torch.load(out + '.pkg'))
+        self.load_state_dict(torch.load(out + '_weights.pkg'))
+        return last_save
 
     def evaluate(self, loader):
         """Evaluating the performance of the DNN model.
@@ -136,7 +144,7 @@ class Base(nn.Module):
                 it is a m X l FloatTensor (m is the No. of sample, l is the No. of classes or tasks.)
         """
         score = []
-        for Xb, _ in loader:
+        for Xb in loader:
             Xb = Xb.to(self.device)
             y_ = self.forward(Xb)
             score.append(y_.detach().cpu())
@@ -225,14 +233,17 @@ class Base(nn.Module):
 
         return self
 
-    def get_dataloader(self, X, y):
+    def get_dataloader(self, X, y=None):
         """
             Convert data to tensors and get iterable over dataset with dataloader
             arguments:
             X (numpy 2d array): input dataset
             y (numpy 1d column vector): output data
         """
-        tensordataset = TensorDataset(torch.Tensor(X), torch.Tensor(y))
+        if y is None:
+            tensordataset = torch.Tensor(X)
+        else:
+            tensordataset = TensorDataset(torch.Tensor(X), torch.Tensor(y))
         return DataLoader(tensordataset, batch_size=self.batch_size)
     
 class STFullyConnected(Base):
@@ -249,7 +260,7 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs = 100, lr = None, batch_size=32,
+    def __init__(self, n_dim, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs = 1000, lr = None, batch_size=32,
                  is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
         if not lr:
             lr = 1e-4 if is_reg else 1e-5

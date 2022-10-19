@@ -57,13 +57,15 @@ class DataSet(ResultCollector, ABC):
         """
 
         self.outpath = path
+        if not os.path.exists(os.path.dirname(self.outpath)):
+            os.makedirs(os.path.dirname(self.outpath))
         self.voc = None
         try:
             self.fromFile(self.outpath)
             if rewrite:
                 self.reset()
         except FileNotFoundError:
-            logger.warning(f"Initialized empty dataset. The data set file does not exist (yet): {self.outpath}. You can add data by calling it.")
+            logger.warning(f"Initialized empty dataset. The data set file does not exist (yet): {self.outpath}. You can add data by calling this instance with the appropriate parameters.")
 
     def reset(self):
         logger.info(f"Initializing new {self.__class__.__name__} at {self.outpath}...")

@@ -23,7 +23,7 @@ class SmilesDataSet(DataSet):
 
     def __init__(self, path, voc=None, rewrite=False):
         super().__init__(path, rewrite=rewrite)
-        self.voc = self.setVoc(voc if voc else VocSmiles())
+        self.setVoc(voc if voc else VocSmiles())
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
