@@ -162,7 +162,7 @@ class RNN(Generator):
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
         max_interval = 50
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
             total_steps = len(loader_train)
             for i, batch in enumerate(loader_train):

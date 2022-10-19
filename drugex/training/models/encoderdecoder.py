@@ -5,6 +5,7 @@ import torch
 import time
 
 from tqdm import tqdm
+from tqdm.auto import tqdm
 from torch import nn
 
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
@@ -38,7 +39,7 @@ class Base(Generator, ABC):
         best = float('inf')
         last_save = -1
          
-        for epoch in tqdm(range(epochs)):
+        for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
             t0 = time.time()
             self.trainNet(train_loader, monitor)

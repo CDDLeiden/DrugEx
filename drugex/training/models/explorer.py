@@ -9,7 +9,7 @@ from torch.optim import Adam
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 import time
 from torch.utils.data import DataLoader, TensorDataset
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy as np
 
 from drugex.logs import logger
@@ -183,7 +183,7 @@ class GraphExplorer(Explorer):
         monitor = monitor if monitor else NullMonitor()
         net = nn.DataParallel(self.agent, device_ids=self.gpus)
         total_steps = len(loader)
-        for step_idx, src in enumerate(loader):
+        for step_idx, src in enumerate(tqdm(loader, desc='Iterating over validation batches', leave=False)):
             monitor.saveProgress(step_idx, None, total_steps, None)
             src = src.to(self.device)
             frags, smiles = self.voc_trg.decode(src)
@@ -239,7 +239,7 @@ class GraphExplorer(Explorer):
             last_save = -1
             if n_iters > 1:
                 logger.info('\n----------\nITERATION %d/%d\n----------' % (it, n_iters))
-            for epoch in tqdm(range(epochs)):
+            for epoch in tqdm(range(epochs), desc='Fitting graph explorer'):
                 epoch += 1
                 t0 = time.time()
                               
@@ -250,7 +250,7 @@ class GraphExplorer(Explorer):
                     train_loader = self.sample_input(train_loader_original)
                     valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
-                for i, src in enumerate(tqdm(train_loader, desc='Batch')):
+                for i, src in enumerate(tqdm(train_loader, desc='Iterating over training batches', leave=False)):
                     # trgs.append(src.detach().cpu())
                     with torch.no_grad():
                         trg = net(src.to(self.device))
@@ -345,7 +345,7 @@ class SmilesExplorer(Explorer):
         net = nn.DataParallel(self.agent, device_ids=self.gpus)
         total_steps = len(loader)
         step_idx = 0
-        for src, trg in loader:
+        for src, trg in tqdm(loader, desc='Iterating over validation batches', leave=False):
             src, trg = src.to(self.device), trg.to(self.device)
             self.optim.zero_grad()
             smiles = [self.agent.voc_trg.decode(s, is_tk=False) for s in trg]
@@ -399,7 +399,7 @@ class SmilesExplorer(Explorer):
         srcs, trgs = [], []
         for it in range(n_iters):
             last_save = -1
-            for epoch in tqdm(range(epochs), desc='Epoch'):
+            for epoch in tqdm(range(epochs), desc='Fitting SMILES explorer'):
                 epoch += 1
                 t0 = time.time()
 
@@ -410,7 +410,7 @@ class SmilesExplorer(Explorer):
                     train_loader = self.sample_input(train_loader_original)
                     valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
-                for i, (ix, src) in enumerate(tqdm(train_loader, desc='Batch')):
+                for i, (ix, src) in enumerate(tqdm(train_loader, desc='Iterating over training batches', leave=False)):
                     with torch.no_grad():
                         # frag = data_loader.dataset.index[ix]
                         trg = net(src.to(self.device))
@@ -586,7 +586,7 @@ class SmilesExplorerNoFrag(PGLearner):
         last_scores = []
         last_save = -1
         ## add self.epoch
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             if epoch < patience and self.memory is not None:
