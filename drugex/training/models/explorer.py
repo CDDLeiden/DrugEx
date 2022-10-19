@@ -282,7 +282,7 @@ class GraphExplorer(Explorer):
                 for i, smile in enumerate(smiles):
                     smiles_scores.append((smile, *scores.values[i], frags[i]))
 
-                monitor.savePerformanceInfo(None, epoch, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+                monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
 
@@ -444,7 +444,7 @@ class SmilesExplorer(Explorer):
                     last_it = it
                     logger.info(f"Model saved at epoch {epoch}")
 
-                monitor.savePerformanceInfo(None, epoch, None, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+                monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
 
@@ -612,7 +612,7 @@ class SmilesExplorerNoFrag(PGLearner):
                 smiles_scores.append((smile, *scores.values[i]))
  
             scores['Smiles'] = smiles
-            monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid_ratio, desire=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+            monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
             
             if max_desired_ratio < desired_ratio:
                 monitor.saveModel(self)
