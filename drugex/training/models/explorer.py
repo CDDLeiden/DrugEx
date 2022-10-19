@@ -601,7 +601,7 @@ class SmilesExplorerNoFrag(PGLearner):
                 mean_score = scores[self.env.getScorerKeys()].values.sum() / self.n_samples / len(self.env.getScorerKeys())
             else:
                 mean_score = scores[self.env.getScorerKeys()].values.prod(axis=1) ** (1.0 / len(self.env.getScorerKeys()))
-                mean_score = score.sum() / self.n_samples
+                mean_score = mean_score.sum() / self.n_samples
 
             t1 = time.time()
             logger.info(f"Epoch: {epoch}  Score: {mean_score:.4f} Valid: {valid_ratio:.4f} Desire: {desired_ratio:.4f} Unique: {unique_ratio:.4f} Time: {t1-t0:.1f}s") 
