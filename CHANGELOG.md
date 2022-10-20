@@ -10,6 +10,15 @@ None.
 
 - Improve scaffold-based encoding. New `dummyMolsFromFragments` to create dummy molecules from set of fragments to be called as the `fragmenter` in `FragmentCorpusEncoder`. This makes the `ScaffoldSequenceCorpus`, `ScaffoldGraphCorpus`, `SmilesScaffoldDataSet` and `GraphScaffoldDataSet` classes obsolete. 
 - The early stopping criterion of reinforcement learning is changed back to the ratio of desired molecules.
+- Renamed `GaphModel.sampleFromSmiles` to `GraphModel.sample_smiles`,
+  - argument `min_samples` was renamed to `num_samples`,
+  - exactly `num_samples` are returned,
+  - arguments `drop_duplicates`, `drop_invalid` were added,
+  - argument `keep_frags` was added.
+- The `sample_smiles` method was added to the SequenceTranformer `GTP2Model` and to the `RNN` classes.
+- Progress bars were added for models' fitting (pretraining, fine-tuning and reinforcement learning).
+- Tokens `_` and `.` always present in `VocSmiles` have been removed.
+- RNN models deposited on Zenodo and pretrained on ChEMBL31 and Papyrus 05.5 were updated while the RNN model pretrained on ChEMBL27 did not need to.
 
 
 ## New Features
