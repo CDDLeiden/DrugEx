@@ -169,12 +169,9 @@ def Design(args):
     # Generate molecules and save them
     if args.algorithm == 'rnn':
         df = pd.DataFrame()
-        repeat = 1
         batch_size = min(args.num, args.batch_size)
-        if args.num > args.batch_size:
-            repeat = math.ceil(args.num / batch_size)
-        df['Smiles'], scores = agent.evaluate(batch_size, repeat = repeat, method=env)
-        scores = pd.concat([df, scores],axis=1)
+        df['Smiles'], scores = agent.evaluate(batch_size, num_smiles=args.num, method=env)
+        scores = pd.concat([df, scores], axis=1)
     else:
         frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
         scores['Frags'], scores['SMILES'] = frags, smiles

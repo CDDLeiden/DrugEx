@@ -121,7 +121,7 @@ class Corpus(MolSupplier, ABC):
         try:
             ret = self.processMolecule(representation)
         except Exception as exp:
-            logger.warning(f'Exception occurred when generating corpus data for molecule: {molecule}. Cause:')
+            logger.warning(f'Exception occurred when generating corpus data for molecule: {representation}. Cause:')
             logger.exception(exp)
             return next(self)
         return ret
