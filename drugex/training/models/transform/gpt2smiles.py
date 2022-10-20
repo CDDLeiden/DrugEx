@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.nn.init import kaiming_normal_
+from tqdm.auto import tqdm
+import numpy as np
+
 
 from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.data.fragments import SequenceFragmentEncoder, FragmentCorpusEncoder
@@ -11,6 +14,7 @@ from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnect
 from .layer import pad_mask, tri_mask
 from drugex.training.models.encoderdecoder import SmilesFragsGeneratorBase
 from drugex.utils import ScheduledOptim
+from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
 
 
@@ -140,8 +144,8 @@ class GPT2Model(SmilesFragsGeneratorBase):
                 if drop_invalid:
                     # Make sure both valid molecules and include input fragments
                     scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags).sum(axis=1)
-                    new_smiles = np.array(new_smiles)[scores > 0].tolist()
-                    new_frags = np.array(new_frags)[scores > 0].tolist()
+                    new_smiles = np.array(new_smiles)[scores > 1].tolist()
+                    new_frags = np.array(new_frags)[scores > 1].tolist()
                 smiles += new_smiles
                 frags += new_frags
                 # Update progress bar

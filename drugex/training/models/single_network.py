@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 import torch
+from tqdm.auto import tqdm
 from torch import nn
 from torch import optim
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
@@ -85,10 +86,10 @@ class RNN(Generator):
             self.zero_grad()
             score = self.likelihood(seq)
             loss = score * reward
+            loss = -loss.mean()
             if progress:
                 progress.saveProgress(step_idx, None, total_steps, None)
-                progress.savePerformanceInfo(step_idx, None, loss.mean().item())
-            loss = -loss.mean()
+                progress.savePerformanceInfo(step_idx, None, loss.item())
             loss.backward()
             self.optim.step()
             step_idx += 1
@@ -111,15 +112,19 @@ class RNN(Generator):
 
         return sequences
 
-    def evaluate(self, batch_size, num_smiles=1, method = None, drop_duplicates = False, drop_invalid=False, no_multifrag_smiles=True):
-        smiles = self.sample_smiles(num_smiles = num_smiles, batch_size=batch_size, drop_duplicates=drop_duplicates,
-                                    drop_invalid=drop_invalid)
-        
+    def evaluate(self, batch_size, repeat=1, method = None, drop_duplicates = False, no_multifrag_smiles=True):
+        smiles = []
+        for _ in range(repeat):
+            sequences = self.sample(batch_size)
+            smiles += [self.voc.decode(s, is_tk = False) for s in sequences]
+        if drop_duplicates:
+            smiles = np.array(utils.canonicalize_list(smiles))
+            ix = utils.unique(np.array([[s] for s in smiles]))
+            smiles = smiles[ix]
         if method is None:
             scores = SmilesChecker.checkSmiles(smiles, no_multifrag_smiles=no_multifrag_smiles)
         else:
-            scores = method.getScores(smiles, no_multifrag_smiles=no_multifrag_smiles)
-
+            scores = method.getScores(smiles)
         return smiles, scores
 
     def evolve(self, batch_size, epsilon=0.01, crover=None, mutate=None):
@@ -161,7 +166,7 @@ class RNN(Generator):
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
         max_interval = 50
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
             total_steps = len(loader_train)
             for i, batch in enumerate(loader_train):
@@ -207,19 +212,31 @@ class RNN(Generator):
         torch.cuda.empty_cache()
         monitor.close()
 
-    def sample_smiles(self, num_smiles, batch_size=100, drop_duplicates=True, drop_invalid=True):
+    def sample_smiles(self, num_samples, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+        if progress:
+            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
+            pbar = tqdm(**tqdm_kwargs)
         smiles = []
-        while len(smiles) < num_smiles:
+        while len(smiles) < num_samples:
             # sample SMILES
             sequences = self.sample(batch_size)
             # decode according to vocabulary
-            smiles += utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
+            new_smiles = utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
             # drop duplicates
             if drop_duplicates:
-                smiles = list(set(smiles))
+                new_smiles = np.array(new_smiles)
+                new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))]
+                new_smiles = new_smiles.tolist()
             # drop invalid smiles
             if drop_invalid:
-                scores = SmilesChecker.checkSmiles(smiles, frags=None).ravel()
-                smiles = np.array(smiles)[scores > 0].tolist()
-        smiles = smiles[:num_smiles]
+                scores = SmilesChecker.checkSmiles(new_smiles, frags=None).ravel()
+                new_smiles = np.array(new_smiles)[scores > 0].tolist()
+            smiles += new_smiles
+            # Update progress bar
+            if progress:
+                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        smiles = smiles[:num_samples]
+        if progress:
+            pbar.close()
         return smiles
+
