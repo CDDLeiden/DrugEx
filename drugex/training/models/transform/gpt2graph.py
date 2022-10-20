@@ -344,8 +344,8 @@ class GraphModel(Base):
                 if drop_invalid:
                     # Make sure both valid molecules and include input fragments
                     scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags).sum(axis=1)
-                    new_smiles = np.array(new_smiles)[scores > 0].tolist()
-                    new_frags = np.array(new_frags)[scores > 0].tolist()
+                    new_smiles = np.array(new_smiles)[scores > 1].tolist()
+                    new_frags = np.array(new_frags)[scores > 1].tolist()
                 smiles += new_smiles
                 frags += new_frags
                 # Update progress bar
