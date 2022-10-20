@@ -34,7 +34,7 @@ class Base(Generator, ABC):
     def getModel(self):
         return deepcopy(self.state_dict())
 
-    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None):
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
         monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
@@ -43,14 +43,12 @@ class Base(Generator, ABC):
             epoch += 1
             t0 = time.time()
             self.trainNet(train_loader, monitor)
-            valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator)
+            valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             t1 = time.time()
             
             logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
 
-
-            
             if loss_valid < best:
                 monitor.saveModel(self)    
                 best = loss_valid
@@ -66,13 +64,13 @@ class Base(Generator, ABC):
         torch.cuda.empty_cache()
         monitor.close()
 
-    def evaluate(self, loader, repeat=1, method=None):
+    def evaluate(self, loader, repeat=1, method=None, no_multifrag_smiles=True):
         smiles, frags = self.sample(loader, repeat)
 
         if method is None:
-            scores = SmilesChecker.checkSmiles(smiles, frags=frags)
+            scores = SmilesChecker.checkSmiles(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
         else:
-            scores = method.getScores(smiles, frags=frags)
+            scores = method.getScores(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
         return frags, smiles, scores
 
     def init_states(self):
@@ -99,11 +97,11 @@ class SmilesFragsGeneratorBase(Base):
             monitor.saveProgress(current_step, None, total_steps, None)
             monitor.savePerformanceInfo(current_step, None, loss.item())
             
-    def validate(self, loader, evaluator=None):
+    def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
         
-        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 

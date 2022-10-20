@@ -19,7 +19,8 @@ from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
 from drugex.training.scorers.predictors import Predictor
-from drugex.training.scorers.properties import Property, Uniqueness
+from drugex.training.scorers.properties import Property, Uniqueness, LigandEfficiency, LipophilicEfficiency
+from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
 
 warnings.filterwarnings("ignore")
     
@@ -83,13 +84,29 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pa', '--patience', type=int, default=50,
                         help="Number of epochs to wait before early stop if no progress on test set score")
 
+    # Affinity models
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
+    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
+                        help="Target IDs for which activity is desirable")
+    parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which activity is undesirable")
+    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which selectivity window is calculated")
+    parser.add_argument('-le', '--ligand_efficiency', action='store_true', 
+                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")
+    parser.add_argument('-le_ths', '--le_thresholds', type=float, nargs=2, default=[0.0, 0.5],
+                        help='Thresholds used calculate ligand efficiency clipped scores in the desirability function.')
+    parser.add_argument('-lipe', '--lipophilic_efficiency', action='store_true',
+                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")           
+    parser.add_argument('-lipe_ths', '--lipe_thresholds', type=float, nargs=2, default=[4.0, 6.0],
+                        help='Thresholds used calculate lipophilic efficiency clipped scores in the desirability function.')
     
+    # Pre-implemented properties
     parser.add_argument('-qed', '--qed', action='store_true',
                         help="If on, QED is used in desirability function")
     parser.add_argument('-unq', '--uniqueness', action='store_true',
@@ -108,24 +125,27 @@ def GeneratorArgParser(txt=None):
                         help='If on, compounds with logP values outside a range set by mw_thersholds are penalized in the desirability function')
     parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[-5, 5],
                         help='Thresholds used calculate logP clipped scores in the desirability function')
+    parser.add_argument('-tpsa', '--tpsa', action='store_true',
+                        help='If on, topology polar surface area is used in desirability function')
+    parser.add_argument('-tpsa_ths', '--tpsa_thresholds', type=float, nargs=2, default=[0, 140],
+                        help='Thresholds used calculate TPSA clipped scores in the desirability function')
+    parser.add_argument('-sim_mol', '--similarity_mol', type=str, default=None,
+                        help='SMILES string of a reference molecule to which the similarity is used as an objective. Similarity metric and threshold set by --sim_metric and --sim_th.')
+    parser.add_argument('-sim_type', '--similarity_type', type=str, default='fraggle',
+                        help="'fraggle' for Fraggle similarity, 'graph' for Tversky similarity between graphs or fingerprints name ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') for Tversky similarity between fingeprints")
+    parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.5,
+                        help="Threshold for molecular similarity to reference molecule")
+    parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3],
+                        help="Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.")       
     
-    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
-                        help="Target IDs for which activity is desirable")
-    parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which activity is undesirable")
-    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which selectivity window is calculated")
+
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
 
-    
-    # Load some arguments from string --> usefull functions called eg. in a notebook
-    if txt:
-        args = parser.parse_args(txt)
-    else:
-        args = parser.parse_args()
             
+    args = parser.parse_args()
+    
     # Setting output file prefix from input file
     if args.output is None:
         args.output = args.input.split('_')[0]
@@ -300,7 +320,18 @@ def CreateDesirabilityFunction(base_dir,
                                mw=False,
                                mw_ths=[200,600],
                                logP=False,
-                               logP_ths=[0,5]):
+                               logP_ths=[0,5],
+                               tpsa=False,
+                               tpsa_ths=[0,140],
+                               sim_smiles=None,
+                               sim_type='ECFP6',
+                               sim_th=0.6,
+                               sim_tw=[1.,1.],
+                               le = False,
+                               le_ths=[0,1],
+                               lipe = False,
+                               lipe_ths=[4,6],
+                               ):
     
     """
     Sets up the objectives of the desirability function.
@@ -322,10 +353,19 @@ def CreateDesirabilityFunction(base_dir,
         mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
         logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
         logP_ths (list), opt        : logP thresholds to penalize large molecules
+        tpsa (bool), opt            : if True, tpsa used in the desirability function
+        tpsa_ths (list), opt        : tpsa thresholds
+        sim_smiles (str), opt       : reference molecules used for similarity calculation
+        sim_type (str), opt         : type of fingerprint or 'graph' used for similarity calculation
+        sim_th (float), opt         : threshold for similarity desirability  
+        sim_tw (list), opt          : tversky similarity weights
+        le (bool), opt              : if True, ligand efficiency used instead of activity for active targets in the desirability function
+        le_ths (list), opt          : ligand efficiency thresholds
+        lipe (bool), opt            : if True, lipophilic efficiency used instead of activity for active targets in the desirability function
+        lipe_ths (list), opt        : lipophilic efficiency thresholds
     
     Returns:
-        objs (lst)                  : list of selected scorers
-        ths (lst)                   : list desirability thresholds per scorer
+        DrugExEnvironment (torch model) : environment-predictor model
         
     """
 
@@ -363,39 +403,42 @@ def CreateDesirabilityFunction(base_dir,
             window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
       
     
+    
     for i, t in enumerate(targets):
+        
+        if len(alg) > 1:  algorithm = alg[i] # Different algorithms for different targets
+        else: algorithm = alg[0] # Same algorithm for all targets
+
+        if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
+
+        path = base_dir + '/envs/' + '_'.join([algorithm, task, t]) + '.pkg'
+        
         if t in active_targets:
-            predictor_modifier = active 
-            ths.append(0.5 if scheme == 'WS' else 0.99)
+            
+            if le or lipe:
+                if task == 'CLS': 
+                    log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
+                if le:
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
+                    ths.append(0.5)
+                if lipe:
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
+                    ths.append(0.5)            
+            else:
+                predictor_modifier = active 
+                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+                ths.append(0.5 if scheme == 'WS' else 0.99)
+        
         elif t in inactive_targets:
             predictor_modifier = inactive 
+            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
+        
         elif t in window_targets:
             predictor_modifier = window
+            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
             ths.append(0.5)
-        
-        for a in alg:
-            if a.startswith('MT_'):
-                sys.exit('TO DO: using multitask model')
 
-        if len(alg) > 1:
-            try:
-                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except:
-                path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-        else:
-            try :
-                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except:
-                path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
 
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -416,7 +459,20 @@ def CreateDesirabilityFunction(base_dir,
     if logP:
         objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
-    
+    if tpsa:
+        objs.append(Property('TPSA', modifier=SmoothHump(lower_x=tpsa_ths[0], upper_x=tpsa_ths[1], sigma=10)))
+        ths.append(0.99)
+    if sim_smiles:
+        if sim_type == 'fraggle':
+            objs.append(FraggleSimilarity(sim_smiles))
+        if sim_type == 'graph':
+            objs.append(TverskyGraphSimilarity(sim_smiles, sim_tw[0], sim_tw[1]))
+        else:
+            objs.append(TverskyFingerprintSimilarity(sim_smiles, sim_type, sim_tw[0], sim_tw[1]))
+        ths.append(sim_th)
+
+    for o in objs: print(o.getKey())
+
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
 def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
@@ -550,6 +606,16 @@ def RLTrain(args):
         mw_ths=args.mw_thresholds,
         logP=args.logP,
         logP_ths=args.logP_thresholds,
+        tpsa=args.tpsa,
+        tpsa_ths=args.tpsa_thresholds,
+        sim_smiles=args.similarity_mol,
+        sim_type=args.similarity_type,
+        sim_th=args.similarity_threshold,
+        sim_tw=args.similarity_tversky_weights,
+        le=args.ligand_efficiency,
+        le_ths=args.le_thresholds,
+        lipe=args.lipophilic_efficiency,
+        lipe_ths=args.lipe_thresholds,
     )
 
     # Initialize evolver algorithm

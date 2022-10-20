@@ -1,13 +1,13 @@
 """
 tests
 
+
 Created by: Martin Sicho
 On: 18.05.22, 11:49
 """
+import pandas as pd
 import tempfile
 from unittest import TestCase
-
-import pandas as pd
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -17,6 +17,7 @@ from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DefaultStandardizer
+from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.molecules.suppliers import StandardizedSupplier
 
@@ -155,6 +156,22 @@ class ProcessingTests(TestCase):
             df = collector.getData()
             self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
 
+    def test_smiles_scaffold_encoding(self):
+        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
+        encoder = FragmentCorpusEncoder(
+            fragmenter=dummyMolsFromFragments(), 
+            encoder=SequenceFragmentEncoder(
+                VocSmiles(min_len=2) 
+            ),
+            pairs_splitter=None, 
+            n_proc=1,
+            chunk_size=1
+        )
+        collector = SmilesFragDataSet(self.getRandomFile())
+        encoder.apply(list(frags), encodingCollectors=[collector])
+        self.assertTrue(collector.getData().Input[0].endswith('EOS') and collector.getData().Output[0].endswith('EOS'))
+
+
     def test_frag_suppliers(self):
         pairs = FragmentPairsSupplier(self.getTestMols(), Fragmenter(4, 4, 'brics')).toList()
         encoded = FragmentPairsEncodedSupplier(pairs, GraphFragmentEncoder(VocGraph(n_frags=4)))
@@ -187,3 +204,20 @@ class ProcessingTests(TestCase):
         for collector in collectors:
             df = collector.getData()
             self.assertTrue(df.columns[0][0] == 'C')
+
+    def test_gragh_scaffold_encoding(self):
+        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
+        encoder = FragmentCorpusEncoder(
+            fragmenter=dummyMolsFromFragments(), 
+            encoder=GraphFragmentEncoder(
+                VocGraph(n_frags=4) 
+            ),
+            pairs_splitter=None, 
+            n_proc=1,
+            chunk_size=1
+        )
+        collector = GraphFragDataSet(self.getRandomFile())
+        fragment_collector = FragmentCorpusEncoder.FragmentPairsCollector()
+        encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
+        self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
+        self.assertTrue(collector.getData().columns[0][0] == 'C')
