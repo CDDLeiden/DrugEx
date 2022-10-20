@@ -125,22 +125,6 @@ class SmilesFragDataSet(DataSet):
         dataset = TensorDataset(_in, _out)
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-class SmilesScaffoldDataSet(SmilesFragDataSet):
-
-    def __call__(self, result):
-        if result[0]:
-            self.updateVoc(result[1].getVoc())
-            self.sendDataToFile(
-                [
-                    (
-                        " ".join(x['frag']),
-                        " ".join(x['mol'])
-                    )
-                    for x in result[0] if x['mol'] and x['frag']
-                ],
-                columns=self.columns
-            )
-
 
 class GraphFragDataSet(DataSet):
     """
@@ -174,9 +158,3 @@ class GraphFragDataSet(DataSet):
         dataset = torch.from_numpy(dataset).long().view(len(dataset), vocabulary.max_len, -1)
         loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader
-
-
-class GraphScaffoldDataSet(GraphFragDataSet):
-
-    def __call__(self, result):
-        self.sendDataToFile(result[0], columns=self.getColumns())

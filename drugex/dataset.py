@@ -5,10 +5,9 @@ import argparse
 
 import pandas as pd
 
-from drugex.data.corpus.corpus import SequenceCorpus, ScaffoldGraphCorpus, ScaffoldSequenceCorpus
+from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.processing import Standardization, CorpusEncoder, RandomTrainTestSplitter
-from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, SmilesScaffoldDataSet, GraphFragDataSet, \
-    GraphScaffoldDataSet
+from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder, FragmentCorpusEncoder
