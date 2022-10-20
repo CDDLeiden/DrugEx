@@ -229,7 +229,7 @@ class GraphExplorer(Explorer):
 
     def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, monitor=None):
         monitor = monitor if monitor else NullMonitor()
-        best_score = 0
+        max_desired_ratio = 0
         self.bestState = deepcopy(self.agent.state_dict())
         monitor.saveModel(self.agent)
         last_it = -1
@@ -263,31 +263,28 @@ class GraphExplorer(Explorer):
                 trgs = []
 
                 frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-                desire = scores.DESIRE.sum() / len(smiles)
-                score = scores[self.env.getScorerKeys()].values.mean()
-                valid = scores.VALID.sum() / len(smiles)
-                unique = len(set(smiles)) / len(smiles)
+                desired_ratio = scores.DESIRE.sum() / len(smiles)
+                mean_score = scores[self.env.getScorerKeys()].values.mean()
+                valid_ratio = scores.VALID.sum() / len(smiles)
+                unique_ratio = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch}  Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
+                logger.info(f"Epoch: {epoch}  Score: {mean_score:.4f} Valid: {valid_ratio:.4f} Desire: {desired_ratio:.4f} Unique: {unique_ratio:.4f} Time: {t1-t0:.1f}s")   
         
-                if best_score < score:
+                if max_desired_ratio < desired_ratio: 
                     monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
-                    best_score = score
+                    max_desired_ratio = desired_ratio
                     last_save = epoch
                     last_it = it
                     logger.info(f"Model saved at epoch {epoch}")
 
                 smiles_scores = []
                 smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
-                logger.debug(f'Epoch: {epoch}')
                 for i, smile in enumerate(smiles):
-                    score = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    logger.debug('%s\t%s\t%s\n' % (score, frags[i], smile))
                     smiles_scores.append((smile, *scores.values[i], frags[i]))
 
-                monitor.savePerformanceInfo(None, epoch, valid_ratio=valid, desire_ratio=desire, unique_ratio=unique, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+                monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
 
@@ -397,7 +394,7 @@ class SmilesExplorer(Explorer):
     def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, monitor=None):
         self.bestState = deepcopy(self.agent.state_dict())
         monitor.saveModel(self.agent)
-        best_score = 0
+        max_desired_ratio = 0
         last_it = -1
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=self.gpus)
@@ -431,30 +428,28 @@ class SmilesExplorer(Explorer):
                 srcs, trgs = [], []
 
                 frags, smiles, scores = self.agent.evaluate(valid_loader, repeat=self.repeat, method=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-                desire = scores.DESIRE.sum() / len(smiles)
-                score = scores[self.env.getScorerKeys()].values.mean()
-                valid = scores.VALID.sum() / len(smiles)
-                unique = len(set(smiles)) / len(smiles)
+                desired_ratio = scores.DESIRE.sum() / len(smiles)
+                mean_score = scores[self.env.getScorerKeys()].values.mean()
+                valid_ratio = scores.VALID.sum() / len(smiles)
+                unique_ratio = len(set(smiles)) / len(smiles)
 
                 t1 = time.time()
-                logger.info(f"Epoch: {epoch}  Score: {score:.4f} Valid: {valid:.4f} Desire: {desire:.4f} Unique: {unique:.4f} Time: {t1-t0:.1f}s")   
+                logger.info(f"Epoch: {epoch}  Score: {mean_score:.4f} Valid: {valid_ratio:.4f} Desire: {desired_ratio:.4f} Unique: {unique_ratio:.4f} Time: {t1-t0:.1f}s")   
 
                 smiles_scores = []
                 smiles_scores_key = ['Smiles'] + list(scores.columns) + ['Frag']
                 for i, smile in enumerate(smiles):
-                    score_str = "\t".join(['%.3f' % s for s in scores.values[i]])
-                    logger.debug('%s\t%s\t%s\n' % (score_str, frags[i], smile))
                     smiles_scores.append((smile, *scores.values[i], frags[i]))
         
-                if best_score < score:
+                if max_desired_ratio < desired_ratio:
                     monitor.saveModel(self.agent)
                     self.bestState = deepcopy(self.agent.state_dict())
-                    best_score = score
+                    max_desired_ratio = desired_ratio
                     last_save = epoch
                     last_it = it
                     logger.info(f"Model saved at epoch {epoch}")
 
-                monitor.savePerformanceInfo(None, epoch, None, valid_ratio=valid, desire_ratio=desire, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+                monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
                 monitor.saveProgress(None, epoch, None, epochs)
                 monitor.endStep(None, epoch)
 
@@ -586,11 +581,12 @@ class SmilesExplorerNoFrag(PGLearner):
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, no_multifrag_smiles=True):
         monitor.saveModel(self)
         self.bestState = deepcopy(self.agent.state_dict())
-        best = 0
+        max_desired_ratio = 0
         last_smiles = []
         last_scores = []
         last_save = -1
         ## add self.epoch
+
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
@@ -602,34 +598,45 @@ class SmilesExplorerNoFrag(PGLearner):
                 self.policy_gradient(smiles, seqs, progress=monitor)
             smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=True)
  
-            desire = (scores.DESIRE).sum() / self.n_samples
+            desired_ratio = (scores.DESIRE).sum() / self.n_samples
+            valid_ratio = scores.VALID.sum() / self.n_samples
+            unique_ratio = len(set(smiles)) / len(smiles)
+
             if self.mean_func == 'arithmetic':
-                score = scores[self.env.getScorerKeys()].values.sum() / self.n_samples / len(self.env.getScorerKeys())
+                mean_score = scores[self.env.getScorerKeys()].values.sum() / self.n_samples / len(self.env.getScorerKeys())
             else:
-                score = scores[self.env.getScorerKeys()].values.prod(axis=1) ** (1.0 / len(self.env.getScorerKeys()))
-                score = score.sum() / self.n_samples
-            valid = scores.VALID.sum() / self.n_samples
+                mean_score = scores[self.env.getScorerKeys()].values.prod(axis=1) ** (1.0 / len(self.env.getScorerKeys()))
+                mean_score = mean_score.sum() / self.n_samples
+
+            t1 = time.time()
+            logger.info(f"Epoch: {epoch}  Score: {mean_score:.4f} Valid: {valid_ratio:.4f} Desire: {desired_ratio:.4f} Unique: {unique_ratio:.4f} Time: {t1-t0:.1f}s") 
+
+            smiles_scores = []
+            smiles_scores_key = ['Smiles'] + list(scores.columns)
+            for i, smile in enumerate(smiles):
+                smiles_scores.append((smile, *scores.values[i]))
  
-            logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
-                  (epoch, score, valid, desire))
             scores['Smiles'] = smiles
-            monitor.savePerformanceInfo(None, epoch, None, score=score, valid_ratio=valid, desire_ratio=desire, smiles_scores=scores.values, smiles_scores_key=scores.columns)
-            if best < score:
+            monitor.savePerformanceInfo(None, epoch, None, score=mean_score, valid_ratio=valid_ratio, desire_ratio=desired_ratio, unique_ratio=unique_ratio, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key)
+            
+            if max_desired_ratio < desired_ratio:
                 monitor.saveModel(self)
                 self.bestState = deepcopy(self.agent.state_dict())
-                best = score
-                last_smiles = smiles
-                last_scores = scores
+                max_desired_ratio = desired_ratio
                 last_save = epoch
+                logger.info(f"Model saved at epoch {epoch}")
  
             if epoch % patience == 0 and epoch != 0:
+                # Every nth epoch reset the agent and the crover networks to the best state
                 for i, smile in enumerate(last_smiles):
                     score = "\t".join(['%.3f' % s for s in last_scores.drop(columns=['Smiles']).values[i]])
                     logger.info('%s\t%s' % (score, smile))
                 self.agent.load_state_dict(self.bestState)
                 self.crover.load_state_dict(self.bestState)
+                logger.info('Resetting agent and crover to best state at epoch %d' % last_save)
             monitor.saveProgress(None, epoch, None, epochs)
             monitor.endStep(None, epoch)
+    
             if epoch - last_save > patience: break
         
         logger.info('End time reinforcement learning: %s \n' % time.strftime('%d-%m-%y %H:%M:%S', time.localtime()))

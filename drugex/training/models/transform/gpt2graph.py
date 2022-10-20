@@ -76,11 +76,15 @@ class GraphModel(Base):
         # self.optim = optim.Adam(self.parameters(), lr=1e-4)
 
     def forward(self, src, is_train=False):
+        # src: [batch_size, 80 , 5]
         if is_train:
+            # Return loss
+            # Src - not using last column (??), trg - not using first column (start token)
             src, trg = src[:, :-1, :], src[:, 1:, :]
             batch, sqlen, _ = src.shape
             triu = tri_mask(src[:, :, 0])
 
+            # dec - atom environment
             emb = self.emb_word(src[:, :, 3] + src[:, :, 0] * 4)
             emb += self.emb_site(src[:, :, 1] * self.n_grows + src[:, :, 2])
             dec = self.attn(emb.transpose(0, 1), attn_mask=triu)
@@ -107,6 +111,7 @@ class GraphModel(Base):
 
             out = [out_atom, out_curr, out_prev, out_bond]
         else:
+            # Return encoded molecules
             is_end = torch.zeros(len(src)).bool().to(src.device)
             exists = torch.zeros(len(src), self.n_grows, self.n_grows).long().to(src.device)
             vals_max = torch.zeros(len(src), self.n_grows).long().to(src.device)

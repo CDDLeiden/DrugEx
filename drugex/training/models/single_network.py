@@ -130,27 +130,34 @@ class RNN(Generator):
     def evolve(self, batch_size, epsilon=0.01, crover=None, mutate=None):
         # Start tokens
         x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
-        # Hidden states initialization for exploitation network
-        h = self.init_h(batch_size)
-        # Hidden states initialization for exploration network
-        h1 = self.init_h(batch_size)
-        h2 = self.init_h(batch_size)
+        # Hidden states initialization for exploitation network (agent)
+        hA = self.init_h(batch_size)
+        # Hidden states initialization for exploration networks (mutate and crover)
+        hM = self.init_h(batch_size)
+        hC = self.init_h(batch_size)
         # Initialization of output matrix
         sequences = torch.zeros(batch_size, self.voc.max_len).long().to(self.device)
         # labels to judge and record which sample is ended
         is_end = torch.zeros(batch_size).bool().to(self.device)
 
         for step in range(self.voc.max_len):
-            logit, h = self(x, h)
-            proba = logit.softmax(dim=-1)
+            # Get unscaled logits and hidden states from agent network and convert them to probabilities with softmax
+            logitA, hA = self(x, hA)
+            proba = logitA.softmax(dim=-1)
+
+            # If crover combine probablities from agent network and crover network
             if crover is not None:
                 ratio = torch.rand(batch_size, 1).to(self.device)
-                logit1, h1 = crover(x, h1)
-                proba = proba * ratio + logit1.softmax(dim=-1) * (1 - ratio)
+                logitC, hC = crover(x, hC)
+                proba = proba * ratio + logitC.softmax(dim=-1) * (1 - ratio)
+            
+            # If mutate replace with the epsilon-rate the probabilities with the ones from the mutation network
             if mutate is not None:
-                logit2, h2 = mutate(x, h2)
+                logitM, hM = mutate(x, hM)
                 is_mutate = (torch.rand(batch_size) < epsilon).to(self.device)
-                proba[is_mutate, :] = logit2.softmax(dim=-1)[is_mutate, :]
+                proba[is_mutate, :] = logitM.softmax(dim=-1)[is_mutate, :]
+            
+
             # sampling based on output probability distribution
             x = torch.multinomial(proba, 1).view(-1)
 
@@ -239,4 +246,3 @@ class RNN(Generator):
         if progress:
             pbar.close()
         return smiles
-
