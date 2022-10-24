@@ -16,7 +16,7 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
 
     """
 
-    def __init__(self, vocabulary=VocSmiles(), update_voc=True, throw = False):
+    def __init__(self, vocabulary=VocSmiles(True), update_voc=True, throw = False):
         self.vocabulary = vocabulary
         self.updateVoc = update_voc
         self.throw = throw

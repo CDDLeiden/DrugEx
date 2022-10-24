@@ -169,7 +169,7 @@ class TrainingTestCase(TestCase):
         encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
-                VocSmiles()
+                VocSmiles(True)
             ),
             pairs_splitter=splitter,
             n_proc=self.N_PROC
@@ -239,7 +239,7 @@ class TrainingTestCase(TestCase):
         encoder = CorpusEncoder(
                 SequenceCorpus,
                 {
-                    'vocabulary': VocSmiles()
+                    'vocabulary': VocSmiles(False)
                 },
                 n_proc=self.N_PROC
         )

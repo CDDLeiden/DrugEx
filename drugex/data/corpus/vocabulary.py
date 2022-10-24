@@ -21,22 +21,21 @@ class VocSmiles(SequenceVocabulary):
     defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH2-]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
     )
 
-    def __init__(self, words=defaultWords, max_len=100, min_len=10):
-        super().__init__(words, max_len=max_len, min_len=min_len)
+    def __init__(self, encode_frags, words=defaultWords, max_len=100, min_len=10):
+        super().__init__(encode_frags, words, min_len=min_len, max_len=max_len)
 
     def encode(self, tokens, frags=None):
         """
         Takes a list of tokens (eg '[NH]') and encodes to array of indices
         Args:
-            input: a list of SMILES squence represented as a series of tokens
+            input: a list of SMILES sequence represented as a series of tokens
 
         Returns:
-            output (torch.LongTensor): a long tensor containing all of the indices of given tokens.
+            output (torch.LongTensor): a long tensor containing all the indices of given tokens.
         """
 
         output = torch.zeros(len(tokens), self.max_len).long()
         for i, seq in enumerate(tokens):
-            # print(i, len(seq))
             for j, char in enumerate(seq):
                 output[i, j] = self.tk2ix[char]
         return output
@@ -44,7 +43,7 @@ class VocSmiles(SequenceVocabulary):
     def decode(self, tensor, is_tk=True, is_smiles=True):
         """Takes an array of indices and returns the corresponding SMILES
         Args:
-            tensor(torch.LongTensor): a long tensor containing all of the indices of given tokens.
+            tensor(torch.LongTensor): a long tensor containing all the indices of given tokens.
 
         Returns:
             smiles (str): a decoded smiles sequence.
@@ -87,11 +86,11 @@ class VocSmiles(SequenceVocabulary):
         return tokens + ['EOS']
 
     @staticmethod
-    def fromFile(path, min_len=10, max_len=100):
+    def fromFile(path, encode_frags, min_len=10, max_len=100):
         """Takes a file containing \n separated characters to initialize the vocabulary"""
         with open(path, 'r') as f:
             words = f.read().split()
-            return VocSmiles(words, max_len=max_len, min_len=min_len)
+            return VocSmiles(encode_frags, words, max_len=max_len, min_len=min_len)
 
     def calc_voc_fp(self, smiles, prefix=None):
         fps = np.zeros((len(smiles), self.max_len), dtype=np.long)
@@ -112,7 +111,7 @@ class VocGPT(VocSmiles):
     """
 
     def __init__(self, words, src_len=1000, trg_len=100, max_len=100, min_len=10):
-        super(VocGPT, self).__init__(words, max_len=max_len, min_len=min_len)
+        super(VocGPT, self).__init__(False, words, max_len=max_len, min_len=min_len)
         self.src_len = src_len
         self.trg_len = trg_len
 
@@ -315,5 +314,6 @@ class VocGraph(Vocabulary):
         return frags, smiles
 
 DEFAULT_GRAPH = VocGraph(VocGraph.defaultWords)
-DEFAULT_SMILES = VocSmiles(VocSmiles.defaultWords)
+DEFAULT_RNN_SMILES = VocSmiles(False, VocSmiles.defaultWords)
+DEFAULT_FRAG_SMILES = VocSmiles(True, VocSmiles.defaultWords)
 DEFAULT_GPT = VocGPT(VocSmiles.defaultWords)

@@ -23,7 +23,7 @@ class SmilesDataSet(DataSet):
 
     def __init__(self, path, voc=None, rewrite=False):
         super().__init__(path, rewrite=rewrite)
-        self.setVoc(voc if voc else VocSmiles())
+        self.setVoc(voc if voc else VocSmiles(False))
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
@@ -45,6 +45,10 @@ class SmilesDataSet(DataSet):
 
         self.updateVoc(result[1].getVoc())
         self.sendDataToFile([(x['seq'], x['token']) for x in result[0]], columns=self.columns)
+
+    def readVocs(self, paths, voc_class, *args, **kwargs):
+        super().readVocs(paths, voc_class=voc_class, *args, encode_frags=False, **kwargs)
+
 
 class SmilesFragDataSet(DataSet):
     """
@@ -124,6 +128,9 @@ class SmilesFragDataSet(DataSet):
         del arr
         dataset = TensorDataset(_in, _out)
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def readVocs(self, paths, voc_class, *args, **kwargs):
+        super().readVocs(paths, voc_class=voc_class, *args, encode_frags=True, **kwargs)
 
 
 class GraphFragDataSet(DataSet):

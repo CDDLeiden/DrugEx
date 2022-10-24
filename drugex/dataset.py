@@ -118,7 +118,7 @@ def v2Dataset(smiles, args):
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                'vocabulary': VocSmiles.fromFile(voc_path),
+                'vocabulary': VocSmiles.fromFile(False, voc_path),
                 'update_voc': False,
                 'throw': True
 
@@ -130,7 +130,7 @@ def v2Dataset(smiles, args):
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                'vocabulary': VocSmiles(),
+                'vocabulary': VocSmiles(False),
 
             },
             n_proc=args.n_proc,
@@ -198,7 +198,7 @@ def v3Dataset(smiles, args):
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles.fromFile(voc_path, min_len=min_len), 
+                    VocSmiles.fromFile(True, voc_path, min_len=min_len),
                     update_voc = False, 
                     throw= True),
                 pairs_splitter=splitter,
@@ -209,7 +209,7 @@ def v3Dataset(smiles, args):
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles(min_len=min_len)
+                    VocSmiles(True, min_len=min_len)
                 ),
                 pairs_splitter=splitter,
                 n_proc=args.n_proc,

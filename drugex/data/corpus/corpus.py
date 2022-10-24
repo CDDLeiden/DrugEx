@@ -16,7 +16,7 @@ class SequenceCorpus(Corpus):
     A `Corpus` to encode molecules for the sequence-based models.
     """
 
-    def __init__(self, molecules, vocabulary=VocSmiles(), update_voc=True, throw = False, check_unique=True):
+    def __init__(self, molecules, vocabulary=VocSmiles(False), update_voc=True, throw = False, check_unique=True):
         """
         Create a sequence corpus.
 

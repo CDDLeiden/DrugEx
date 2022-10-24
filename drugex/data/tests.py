@@ -123,7 +123,7 @@ class ProcessingTests(TestCase):
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                "vocabulary" : VocSmiles()
+                "vocabulary" : VocSmiles(False)
             },
             n_proc=2, chunk_size=2
         )
@@ -142,7 +142,7 @@ class ProcessingTests(TestCase):
         encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
-                VocSmiles()
+                VocSmiles(True)
             ),
             pairs_splitter=FragmentPairsSplitter(0.1, 1e4),
             n_proc=2,
@@ -161,7 +161,7 @@ class ProcessingTests(TestCase):
         encoder = FragmentCorpusEncoder(
             fragmenter=dummyMolsFromFragments(), 
             encoder=SequenceFragmentEncoder(
-                VocSmiles(min_len=2) 
+                VocSmiles(True, min_len=2)
             ),
             pairs_splitter=None, 
             n_proc=1,

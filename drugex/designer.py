@@ -100,7 +100,7 @@ def DesignerFragsDataPreparation(
         if voc_paths:
             data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     else:
-        if gen_alg == 'trans' :
+        if alg == 'trans' :
             data_set = SmilesFragDataSet(input_path)
             if voc_paths:
                 data_set.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)       
@@ -135,7 +135,7 @@ def Design(args):
             )
     else:
         voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
-        voc = VocSmiles.fromFile(voc_paths[0], max_len=100)
+        voc = VocSmiles.fromFile(True, voc_paths[0], max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
