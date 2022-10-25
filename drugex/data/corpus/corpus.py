@@ -74,17 +74,17 @@ class SequenceCorpus(Corpus):
         if self.checkUnique and seq in self._unique:
             return None
 
-        token = None
+        tokens = None
         if self.updateVoc:
-            token = self.vocabulary.addWordsFromSeq(seq)
+            tokens = self.vocabulary.addWordsFromSeq(seq)
         elif self.throw:
-            token = self.vocabulary.removeIfNew(seq)
+            tokens = self.vocabulary.removeIfNew(seq)
         else:
-            token = self.vocabulary.splitSequence(seq)
+            tokens = self.vocabulary.splitSequence(seq)
 
-        if token:
+        if tokens:
             if self.checkUnique:
                 self._unique.add(seq)
-            return {'seq' : seq, 'token': ' '.join(token)}
-        else:
-            return None
+            output = self.vocabulary.encode([tokens[: -1]])
+            code = output[0].reshape(-1).tolist()
+            return code

@@ -22,22 +22,36 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
         self.throw = throw
 
     def encodeMol(self, sequence):
-        token = None
+        tokens = None
         if self.updateVoc:
-            token = self.vocabulary.addWordsFromSeq(sequence)
+            tokens = self.vocabulary.addWordsFromSeq(sequence)
         elif self.throw:
-            token = self.vocabulary.removeIfNew(sequence)
+            tokens = self.vocabulary.removeIfNew(sequence)
 
-        return token
+        if tokens:
+            # Encode all but end tokens
+            output = self.vocabulary.encode([tokens[: -1]])
+            code = output[0].reshape(-1).tolist()
+            return tokens, code
+        return tokens, None
 
     def encodeFrag(self, mol, frag):
-        token = None
-        if self.updateVoc:
-            token = self.vocabulary.addWordsFromSeq(frag, ignoreConstraints=True)
-        elif self.throw:
-            token = self.vocabulary.removeIfNew(frag, ignoreConstraints=True)
+        """Encode a fragment.
 
-        return token
+        Is called by `FragmentPairsEncodedSupplier` with the `mol`
+        argument being the output of the above encodeMol method.
+        """
+        tokens = None
+        if self.updateVoc:
+            tokens = self.vocabulary.addWordsFromSeq(frag, ignoreConstraints=True)
+        elif self.throw:
+            tokens = self.vocabulary.removeIfNew(frag, ignoreConstraints=True)
+
+        if tokens:
+            # Encode all but end tokens
+            output = self.vocabulary.encode([tokens[: -1]])
+            code = output[0].reshape(-1).tolist()
+            return code
 
     def getVoc(self):
         return self.vocabulary
@@ -117,15 +131,15 @@ class FragmentPairsEncodedSupplier(MolSupplier):
             `tuple`: (str, str) encoded form of the molecule and one of the encoded fragments
         """
 
-        pair = next(self.pairs)
+        pair = next(self.pairs) # (fragment, molecule)
 
         # encode molecule
-        encoded_mol = self.encoder.encodeMol(pair[1])
-        if not encoded_mol:
+        tokens, encoded_mol = self.encoder.encodeMol(pair[1])
+        if not tokens:
             raise self.MoleculeEncodingException(f'Failed to encode molecule: {pair[1]}')
 
         # encode fragment
-        encoded_frag = self.encoder.encodeFrag(encoded_mol, pair[0])
+        encoded_frag = self.encoder.encodeFrag(tokens, pair[0])
         if not encoded_frag:
             raise self.FragmentEncodingException(f'Failed to encode fragment {pair[0]} from molecule: {pair[1]}')
 

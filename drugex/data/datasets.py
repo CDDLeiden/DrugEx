@@ -5,6 +5,7 @@ Created by: Martin Sicho
 On: 25.06.22, 19:42
 """
 
+from itertools import chain
 import numpy as np
 import pandas as pd
 import torch
@@ -27,9 +28,9 @@ class SmilesDataSet(DataSet):
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
-        split = np.asarray(data)[:,1]
-        tensor = torch.LongTensor(vocabulary.encode([seq.split(' ') for seq in split]))
-        loader = DataLoader(tensor, batch_size=batch_size, shuffle=True)
+        dataset = np.asarray(data)
+        dataset = torch.from_numpy(dataset).long().view(len(dataset), vocabulary.max_len)
+        loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader
 
     def __call__(self, result):
@@ -44,7 +45,10 @@ class SmilesDataSet(DataSet):
         """
 
         self.updateVoc(result[1].getVoc())
-        self.sendDataToFile([(x['seq'], x['token']) for x in result[0]], columns=self.columns)
+        self.sendDataToFile(result[0], columns=self.getColumns())
+
+    def getColumns(self):
+        return ['C%d' % d for d in range(self.getVoc().max_len)]
 
     def readVocs(self, paths, voc_class, *args, **kwargs):
         super().readVocs(paths, voc_class=voc_class, *args, encode_frags=False, **kwargs)
@@ -95,7 +99,7 @@ class SmilesFragDataSet(DataSet):
 
     def __init__(self, path, voc=None, rewrite=False):
         super().__init__(path, rewrite=rewrite)
-        self.voc = voc if voc else VocSmiles()
+        self.voc = voc if voc else VocSmiles(True)
 
     def __call__(self, result):
         """
@@ -109,25 +113,27 @@ class SmilesFragDataSet(DataSet):
         """
 
         self.updateVoc(result[1].encoder.getVoc())
-        self.sendDataToFile(
-                [
-                    (
-                        " ".join(x[1]),
-                        " ".join(x[0])
-                    )
-                    for x in result[0] if x[0] and x[1]
-                ],
-                columns=self.columns
-            )
+        self.sendDataToFile([list(chain.from_iterable(x)) for x in result[0]], columns=self.getColumns())
+
+    def createLoaders(self, data, batch_size, splitter=None, converter=None):
+        splits = []
+        if splitter:
+            splits = splitter(data)
+        else:
+            splits.append(data)
+        return [converter(split, batch_size, self.getVoc()) if converter else split for split in splits]
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
-        arr = np.asarray(data)
-        _in = vocabulary.encode([seq.split(' ') for seq in arr[:,0]])
-        _out = vocabulary.encode([seq.split(' ') for seq in arr[:,1]])
-        del arr
-        dataset = TensorDataset(_in, _out)
-        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataset = np.asarray(data)
+        # Split into molecule and fragment embedding
+        dataset = TensorDataset(torch.from_numpy(dataset[:, :vocabulary.max_len]).long().view(len(dataset), vocabulary.max_len),
+                                torch.from_numpy(dataset[:, vocabulary.max_len:]).long().view(len(dataset), vocabulary.max_len))
+        loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
+        return loader
+
+    def getColumns(self):
+        return ['C%d' % d for d in range(self.getVoc().max_len * 2)]
 
     def readVocs(self, paths, voc_class, *args, **kwargs):
         super().readVocs(paths, voc_class=voc_class, *args, encode_frags=True, **kwargs)
