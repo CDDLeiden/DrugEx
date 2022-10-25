@@ -86,7 +86,7 @@ class SmilesFragsGeneratorBase(Base):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
-        for src, trg in loader:
+        for src, trg in tqdm(loader, desc='Iterating over training batches', leave=False):
             src, trg = src.to(self.device), trg.to(self.device)
             self.optim.zero_grad()
             loss = net(src, trg)
@@ -100,8 +100,9 @@ class SmilesFragsGeneratorBase(Base):
     def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
