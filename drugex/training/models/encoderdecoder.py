@@ -43,10 +43,10 @@ class Base(Generator, ABC):
             epoch += 1
             t0 = time.time()
             self.trainNet(train_loader, monitor)
-            valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            valid, frags_desire, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             t1 = time.time()
             
-            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
+            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} FragsDesire: {frags_desire:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
 
             if loss_valid < best:
@@ -55,7 +55,7 @@ class Base(Generator, ABC):
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
                 
-            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Frags'))
+            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Frags'))
             del loss_valid
             monitor.endStep(None, epoch)
                 
