@@ -8,7 +8,6 @@ ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
 -mt smiles \
--sm \
 -nof
 echo "Test: Done."
 
@@ -17,7 +16,6 @@ python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX} \
--sm \
 -mt smi \
 -nof
 echo "Test: Done."
