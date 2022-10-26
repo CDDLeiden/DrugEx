@@ -207,7 +207,7 @@ class ProcessingTests(TestCase):
         self.assertTrue(len(fragment_collector.getList()) == (len(collectors[0].getData()) + len(collectors[1].getData())))
         for collector in collectors:
             df = collector.getData()
-            self.assertTrue(df.columns[0][0] == 'C')
+            self.assertTrue(df.shape[1] == 400)
 
     def test_gragh_scaffold_encoding(self):
         frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
@@ -224,4 +224,5 @@ class ProcessingTests(TestCase):
         fragment_collector = FragmentCorpusEncoder.FragmentPairsCollector()
         encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
         self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
-        self.assertTrue(collector.getData().columns[0][0] == 'C')
+        df = collector.getData()
+        self.assertTrue(df.shape[1] == 400)

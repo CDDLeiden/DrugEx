@@ -28,8 +28,7 @@ class SmilesDataSet(DataSet):
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
-        dataset = np.asarray(data)
-        dataset = torch.from_numpy(dataset).long().view(len(dataset), vocabulary.max_len)
+        dataset = torch.from_numpy(data).long().view(len(data), vocabulary.max_len)
         loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader
 
@@ -89,7 +88,7 @@ class SmilesFragDataSet(DataSet):
                 return collated_ix, collated_seq
 
         def __call__(self, data, batch_size, vocabulary):
-            dataset = np.asarray(data)[:,0]
+            dataset = data[:,0]
             dataset = pd.Series(dataset).drop_duplicates()
             dataset = [seq.split(' ') for seq in dataset]
             dataset = vocabulary.encode(dataset)
@@ -125,10 +124,9 @@ class SmilesFragDataSet(DataSet):
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
-        dataset = np.asarray(data)
         # Split into molecule and fragment embedding
-        dataset = TensorDataset(torch.from_numpy(dataset[:, :vocabulary.max_len]).long().view(len(dataset), vocabulary.max_len),
-                                torch.from_numpy(dataset[:, vocabulary.max_len:]).long().view(len(dataset), vocabulary.max_len))
+        dataset = TensorDataset(torch.from_numpy(data[:, :vocabulary.max_len]).long().view(len(data), vocabulary.max_len),
+                                torch.from_numpy(data[:, vocabulary.max_len:]).long().view(len(data), vocabulary.max_len))
         loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader
 
@@ -167,7 +165,6 @@ class GraphFragDataSet(DataSet):
 
     @staticmethod
     def dataToLoader(data, batch_size, vocabulary):
-        dataset = np.asarray(data)
-        dataset = torch.from_numpy(dataset).long().view(len(dataset), vocabulary.max_len, -1)
+        dataset = torch.from_numpy(data).long().view(len(data), vocabulary.max_len, -1)
         loader = DataLoader(dataset, batch_size=batch_size, drop_last=False, shuffle=True)
         return loader

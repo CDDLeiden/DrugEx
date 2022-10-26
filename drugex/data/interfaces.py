@@ -108,7 +108,7 @@ class DataSet(ResultCollector, ABC):
         if chunk_size:
             kwargs['chunksize'] = chunk_size
 
-        return pd.read_csv(self.outpath, sep='\t', header=0, **kwargs)
+        return pd.read_csv(self.outpath, sep='\t', header=0, **kwargs).to_numpy()
 
     def updateVoc(self, voc):
         """

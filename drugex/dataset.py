@@ -136,7 +136,7 @@ def v2Dataset(smiles, args):
     data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'), rewrite=True)
     encoder.apply(smiles, collector=data_collector)
 
-    df_data_collector = data_collector.getData()
+    df_data_collector = pd.DataFrame(data_collector.getData(), columns=data_collector.getColumns())
     splitter = RandomTrainTestSplitter(0.1, 1e4)
     train, test = splitter(df_data_collector)
     for df, name in zip([train, test], ['train', 'test']):
