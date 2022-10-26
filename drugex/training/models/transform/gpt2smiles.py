@@ -71,7 +71,7 @@ class GPT2Model(SmilesFragsGeneratorBase):
                               pad_idx=pad_idx)
         self.init_states()
         self.optim = ScheduledOptim(
-            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 2.0, d_model)
+            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 0.5, d_model)
         # self.optim = optim.Adam(self.parameters(), lr=1e-4)
 
     def forward(self, src, trg=None):
