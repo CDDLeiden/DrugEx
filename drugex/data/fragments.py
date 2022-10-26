@@ -22,6 +22,16 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
         self.throw = throw
 
     def encodeMol(self, sequence):
+        """
+        Encode a molecule sequence.
+
+        Args:
+            sequence: sequential representation of the molecule (i.e. SMILES)
+
+        Returns:
+            a `tuple` containing the obtained tokens from the sequence (if any) and the corresponding sequence of codes
+        """
+
         tokens = None
         if self.updateVoc:
             tokens = self.vocabulary.addWordsFromSeq(sequence)
@@ -35,11 +45,11 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
             return tokens, code
         return tokens, None
 
-    def encodeFrag(self, mol, frag):
+    def encodeFrag(self, mol, tokens, frag):
         """Encode a fragment.
 
         Is called by `FragmentPairsEncodedSupplier` with the `mol`
-        argument being the output of the above encodeMol method.
+        argument being the output of the above `encodeMol` method.
         """
         tokens = None
         if self.updateVoc:
@@ -72,9 +82,31 @@ class GraphFragmentEncoder(FragmentPairEncoder):
         self.vocabulary = vocabulary
 
     def encodeMol(self, smiles):
-        return smiles
+        """
+        Molecules are encoded together with fragments -> we just pass the smiles back as both tokens and result of encoding.
 
-    def encodeFrag(self, mol, frag):
+        Args:
+            smiles:
+
+        Returns:
+            The input smiles as both the tokens and as the encoded result.
+        """
+
+        return smiles, smiles
+
+    def encodeFrag(self, mol, mol_tokens, frag):
+        """
+        Encode molecules and fragments at once.
+
+        Args:
+            mol: parent molecule SMILES (from `encodeMol`)
+            mol_tokens: molecule SMILES (from `encodeMol`)
+            frag: SMILES of the fragment in the parent molecule
+
+        Returns:
+            One line of the graph-encoded data.
+        """
+
         if mol == frag:
             return None
         try:
@@ -139,7 +171,7 @@ class FragmentPairsEncodedSupplier(MolSupplier):
             raise self.MoleculeEncodingException(f'Failed to encode molecule: {pair[1]}')
 
         # encode fragment
-        encoded_frag = self.encoder.encodeFrag(tokens, pair[0])
+        encoded_frag = self.encoder.encodeFrag(pair[1], tokens, pair[0])
         if not encoded_frag:
             raise self.FragmentEncodingException(f'Failed to encode fragment {pair[0]} from molecule: {pair[1]}')
 
