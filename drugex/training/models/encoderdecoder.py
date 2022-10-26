@@ -131,7 +131,7 @@ class SmilesFragsGeneratorBase(Base):
 
 class Seq2Seq(SmilesFragsGeneratorBase):
 
-    @callwarning("Note that the 'Seq2Seq' ('attn') model currently does not support reinforcement learning in the current version of DrugEx.")
+    @callwarning("Note that the 'Seq2Seq' ('attn') model currently does not support reinforcement learning in the current version of DrugEx. It will soon be deperacted.", exp=DeprecationWarning)
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(Seq2Seq, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
@@ -175,7 +175,7 @@ class Seq2Seq(SmilesFragsGeneratorBase):
 
 class EncDec(SmilesFragsGeneratorBase):
 
-    @callwarning("Note that the 'EncDec' ('vec') model currently does not support reinforcement learning in the current version of DrugEx.")
+    @callwarning("Note that the 'EncDec' ('vec') model currently does not support reinforcement learning in the current version of DrugEx. It will soon be deprecated.", exp=DeprecationWarning)
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(EncDec, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
