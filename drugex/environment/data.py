@@ -74,7 +74,7 @@ class QSARDataset:
 
     def splitDataset(self):
         """
-        Splits the dataset in a train and temporal test set.
+        Splits the dataset in a train and test set.
         Calculates the predictors for the QSAR models.
         """
         # read in the dataset

@@ -17,7 +17,7 @@ class Base(nn.Module):
     Mainly, it provides the general methods for training, evaluating model and predicting the given data.
     """
 
-    def __init__(self, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs=1000, lr=1e-4, batch_size=64):
+    def __init__(self, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs=1000, lr=1e-4, batch_size=256):
         super().__init__()
         self.n_epochs = n_epochs
         self.lr = lr
@@ -49,7 +49,7 @@ class Base(nn.Module):
         if 'optim' in self.__dict__:
             optimizer = self.optim
         else:
-            optimizer = optim.Adam(self.parameters(), lr=self.lr)
+            optimizer = optim.AdamW(self.parameters(), lr=self.lr)#, weight_decay=0.5, amsgrad=True
 
         # record the minimum loss value based on the calculation of loss function by the current epoch
         best_loss = np.inf
@@ -78,7 +78,9 @@ class Base(nn.Module):
                 # loss += self.criterion(y_ * wb, yb * wb).item()
 
                 # loss function calculation based on predicted tensor and label tensor
-                loss = self.criterion(y_, yb)
+                l1_lambda = 0.01
+                l1_norm = sum(p.abs().sum() for p in self.parameters())
+                loss = self.criterion(y_, yb) + l1_lambda * l1_norm
                 loss.backward()
                 optimizer.step()
             if patience == -1:
@@ -260,8 +262,8 @@ class STFullyConnected(Base):
         extra_layer (bool): add third hidden layer
     """
 
-    def __init__(self, n_dim, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs = 1000, lr = None, batch_size=32,
-                 is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False):
+    def __init__(self, n_dim, device=DEFAULT_DEVICE, gpus=DEFAULT_GPUS, n_epochs = 1000, lr = None, batch_size=256,
+                 is_reg=True, neurons_h1 = 4000, neurons_hx = 1000, extra_layer = False, dropout_frac = 0.25):
         if not lr:
             lr = 1e-4 if is_reg else 1e-5
         super().__init__(device=device, gpus=gpus, n_epochs = n_epochs, lr = lr, batch_size=batch_size)
@@ -271,10 +273,11 @@ class STFullyConnected(Base):
         self.neurons_h1 = neurons_h1
         self.neurons_hx = neurons_hx
         self.extra_layer = extra_layer
+        self.dropout_frac = dropout_frac
         self.init_model()
 
     def init_model(self):
-        self.dropout = nn.Dropout(0.25)
+        self.dropout = nn.Dropout(self.dropout_frac)
         self.fc0 = nn.Linear(self.n_dim, self.neurons_h1)
         self.fc1 = nn.Linear(self.neurons_h1, self.neurons_hx)
         if self.extra_layer:

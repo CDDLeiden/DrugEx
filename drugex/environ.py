@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-from locale import D_FMT
 import os
 import os.path
-from pyexpat import model
 import sys
 import json
 import random

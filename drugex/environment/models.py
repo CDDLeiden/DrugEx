@@ -308,31 +308,30 @@ class QSARDNN(QSARModel):
                 ES_val_size (float): validation set size for early stopping in CV
         """
         indep_loader = self.model.get_dataloader(self.data.X_ind)
-        last_save_epoch = 0
+        last_save_epochs = 0
 
         cvs = np.zeros(self.y.shape)
         inds = np.zeros(self.y_ind.shape)
         for i, (trained, valided) in enumerate(self.data.folds):
             X_train_fold, X_val_fold, y_train_fold, y_val_fold = train_test_split(self.data.X[trained], self.y[trained], test_size=ES_val_size)
-            logger.info('cross validation fold ' +  str(i))
             train_loader = self.model.get_dataloader(X_train_fold, y_train_fold)
             ES_valid_loader = self.model.get_dataloader(X_val_fold, y_val_fold)
             valid_loader = self.model.get_dataloader(self.data.X[valided])
-            last_save_epoch += self.model.fit(train_loader, ES_valid_loader, '%s_temp' % self.out, self.patience, self.tol)
+            last_save_epoch = self.model.fit(train_loader, ES_valid_loader, '%s_temp' % self.out, self.patience, self.tol)
+            last_save_epochs += last_save_epoch
+            logger.info(f'cross validation fold {i}: last save epoch {last_save_epoch}')
             os.remove('%s_temp_weights.pkg' % self.out)
             cvs[valided] = self.model.predict(valid_loader)
-        os.remove('%s_temp.log' % self.out)
 
         if save:
-            self.optimal_epochs = int(math.ceil(last_save_epoch / self.data.n_folds)) + 1
+            self.optimal_epochs = int(math.ceil(last_save_epochs / self.data.n_folds)) + 1
             self.model = self.model.set_params(**{"n_epochs" : self.optimal_epochs})
 
             train_loader = self.model.get_dataloader(self.data.X, self.y)
             self.model.fit(train_loader, None, '%s_temp' % self.out, patience = -1)
             os.remove('%s_temp_weights.pkg' % self.out)
-            os.remove('%s_temp.log' % self.out)
+            os.remove(  '%s_temp.log' % self.out)
             inds = self.model.predict(indep_loader)
-
 
             train, test = pd.Series(self.y.flatten()).to_frame(name='Label'), pd.Series(self.y_ind.flatten()).to_frame(name='Label')
             train['Score'], test['Score'] = cvs, inds

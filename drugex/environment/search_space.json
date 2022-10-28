@@ -67,8 +67,9 @@
          "neurons_hx" : [200, 1000, 2000],
          "extra_layer" : [true, false]}, "grid"],
 ["DNN", {"lr": ["uniform", 1e-6, 1e-2],
-        "neurons_h1" : ["int", 200, 4000],
-        "neurons_hx" : ["int", 200, 2000],
-        "extra_layer": ["categorical", [true, false]]}, "bayes"],
+        "neurons_h1" : ["int", 10, 1000],
+        "neurons_hx" : ["int", 10, 1000],
+        "extra_layer": ["categorical", [true, false]],
+        "dropout_frac": ["uniform", 0.2, 0.9]}, "bayes"],
 ["MT_DNN", {}, "grid"],
 ["MT_DNN", {}, "bayes"]]
