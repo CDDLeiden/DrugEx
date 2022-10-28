@@ -11,7 +11,9 @@ from rdkit.Chem import AllChem
 
 from drugex.training.interfaces import Scorer
 from drugex.training.scorers.properties import Property
+
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class Predictor(Scorer):
@@ -80,6 +82,34 @@ class Predictor(Scorer):
             props.prop = prop
             fps[:, i] = props(mols)
         return fps
+
+    def getKey(self):
+        return self.key
+
+
+class PredictorNew(Scorer):
+
+    def __init__(self, model, features, type='CLS', name=None, modifier=None):
+        super().__init__(modifier)
+        self.type = type
+        self.model = model
+        self.features = features
+        self.key = f"{self.type}_{self.model.__class__.__name__}" if not name else name
+
+    @staticmethod
+    def fromFile(path, features, type='CLS', name="Predictor", modifier=None):
+        return Predictor(joblib.load(path), features, type=type, name=name, modifier=modifier)
+
+    def getScores(self, mols):
+        fps = np.array(self.features(mols))
+        if (self.model.__class__.__name__ == "STFullyConnected"):
+            fps_loader = DataLoader(TensorDataset(torch.Tensor(fps)))
+            scores = self.model.predict(fps_loader)
+        elif (self.type == 'CLS'):
+            scores = self.model.predict_proba(fps)[:, 1]
+        else:
+            scores = self.model.predict(fps)
+        return scores
 
     def getKey(self):
         return self.key
