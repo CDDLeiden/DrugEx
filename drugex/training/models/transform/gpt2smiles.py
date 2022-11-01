@@ -1,3 +1,5 @@
+import tempfile
+
 import torch
 import torch.nn as nn
 from torch.nn.init import kaiming_normal_
