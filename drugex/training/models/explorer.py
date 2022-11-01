@@ -589,6 +589,7 @@ class SmilesExplorerNoFrag(PGLearner):
 
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
+            t0 = time.time()
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             if epoch < patience and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)

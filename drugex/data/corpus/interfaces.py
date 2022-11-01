@@ -51,8 +51,8 @@ class SequenceVocabulary(Vocabulary, ABC):
         """
 
         super().__init__(words)
-        self.control = ('GO', 'EOS')
-        self.special = list(self.control)
+        self.control = ('_', 'GO', 'EOS')
+        self.special = list(self.control) + ['.']
         self.wordSet = set()
         if words:
             self.wordSet = set(x for x in words if x not in self.special)
