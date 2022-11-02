@@ -58,6 +58,7 @@ class SequenceVocabulary(Vocabulary, ABC):
         else:
             self.control = ('GO', 'EOS')
             self.special = list(self.control)
+
         self.wordSet = set()
         if words:
             self.wordSet = set(x for x in words if x not in self.special)
