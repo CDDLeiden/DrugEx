@@ -45,7 +45,7 @@ class SequenceFragmentEncoder(FragmentPairEncoder):
             return tokens, code
         return tokens, None
 
-    def encodeFrag(self, mol, tokens, frag):
+    def encodeFrag(self, mol, mol_tokens, frag):
         """Encode a fragment.
 
         Is called by `FragmentPairsEncodedSupplier` with the `mol`
