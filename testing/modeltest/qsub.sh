@@ -5,6 +5,8 @@
 #PBS -l walltime=720:00:00
 #PBS -m ae
 
+set -e
+
 # set important variables
 export MODEL=${MODEL}
 export CONDA_ENV=${CONDA_ENV}
@@ -16,6 +18,8 @@ export N_EPOCHS=${N_EPOCHS:-30}
 [ -z "$CONDA_ENV" ] && echo "\$CONDA_ENV is empty. Exiting..." && exit 1
 [ -z "$EXPERIMENT_ID" ] && echo "\$EXPERIMENT_ID is empty. Exiting..." && exit 1
 [ -z "$WORKDIR" ] && echo "\$WORKDIR is empty. Exiting..." && exit 1
+
+export EXPERIMENT_ID="${MODEL}_${EXPERIMENT_ID}"
 
 # work begins here
 export SCRATCHDIR=/scratch/$USER/$PBS_JOBID # this might be useful -> we can get this variable from python and fetch big data there
@@ -35,4 +39,4 @@ eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 
 python processing.py
-python pretrain.py && python plot.py && cp -TR $SCRATCHDIR/output $WORKDIR/output_${MODEL}_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
+python pretrain.py && python plot.py && cp -TR $SCRATCHDIR/output $WORKDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR

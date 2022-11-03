@@ -33,7 +33,7 @@ if not os.path.exists(f'{OUTPUT_FILE}_train.tsv'):
             'throw': True
 
         },
-        n_proc=N_PROCESSES,
+        n_proc=N_PROC,
         chunk_size=CHUNK_SIZE
     )
 

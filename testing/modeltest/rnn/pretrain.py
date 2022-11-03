@@ -11,7 +11,7 @@ from drugex.training.monitors import FileMonitor
 from settings import *
 
 data_sets = [SmilesDataSet(f'{OUTPUT_FILE}_{split}.tsv', rewrite=False) for split in ('test', 'train')]
-voc = VocSmiles.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab')
+voc = VocSmiles.fromFile(f'{OUTPUT_FILE}.tsv.vocab')
 print('Training')
 agent = RNN(voc, use_gpus=GPUS)
 monitor = FileMonitor(OUTPUT_FILE, verbose=True)
