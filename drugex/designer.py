@@ -147,6 +147,7 @@ def Design(args):
         args.base_dir,
         args.env_alg,
         args.env_task,
+        args.no_qsprpred,
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,

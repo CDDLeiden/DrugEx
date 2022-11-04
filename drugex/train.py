@@ -5,6 +5,8 @@ import json
 import argparse
 import warnings
 
+from qsprpred.data.utils.descriptorcalculator import descriptorsCalculator
+
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
@@ -30,7 +32,7 @@ def GeneratorArgParser(txt=None):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains folders 'data' (and 'envs')")
+                        help="Base directory which contains folders 'data' (and 'qsprmodels')")
     parser.add_argument('-d', '--debug', action='store_true')
     
     
@@ -89,6 +91,8 @@ def GeneratorArgParser(txt=None):
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
+    parser.add_argument('-nq', '--no_qsprpred', action='store_true',
+                        help='Include if your environment model was generated before QSPRpred and is in envs folder')
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
@@ -306,7 +310,8 @@ def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilo
 
 def CreateDesirabilityFunction(base_dir, 
                                alg, 
-                               task, 
+                               task,
+                               no_qsprpred, 
                                scheme, 
                                active_targets=[], 
                                inactive_targets=[], 
@@ -337,9 +342,10 @@ def CreateDesirabilityFunction(base_dir,
     Sets up the objectives of the desirability function.
     
     Arguments:
-        base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (list)                   : environment-predictor algoritm
+        base_dir (str)              : folder containing 'qsprmodels' folder with saved environment-predictor models
+        alg (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
+        no_qsprpred (bool)          : if environment-predictor using old system, i.e. build before QSPRpred with model in folder 'envs'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
@@ -411,7 +417,12 @@ def CreateDesirabilityFunction(base_dir,
 
         if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
 
-        path = base_dir + '/envs/' + '_'.join([algorithm, task, t]) + '.pkg'
+        if no_qsprpred:
+            path = base_dir + '/envs/' + '_'.join([algorithm, task, t]) + '.pkg'
+            feature_calc = None
+        else:
+            path = base_dir + '/qsprmodels/' + '_'.join([algorithm, task, t]) + '.pkg'
+            feature_calc = descriptorsCalculator.fromFile(base_dir + '/qsprmodels/' + '_'.join([task, t]) + 'DescCalc.json')
         
         if t in active_targets:
             
@@ -419,24 +430,24 @@ def CreateDesirabilityFunction(base_dir,
                 if task == 'CLS': 
                     log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
                 if le:
-                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(path, feature_calc, type='REG', name=t), modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
                     ths.append(0.5)
                 if lipe:
-                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(path, feature_calc, type='REG', name=t), modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
                     ths.append(0.5)            
             else:
                 predictor_modifier = active 
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+                objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
                 ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in inactive_targets:
             predictor_modifier = inactive 
-            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in window_targets:
             predictor_modifier = window
-            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
             ths.append(0.5)
 
 
@@ -592,6 +603,7 @@ def RLTrain(args):
         args.base_dir,
         args.env_alg,
         args.env_task,
+        args.no_qsprpred,
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
