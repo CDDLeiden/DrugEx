@@ -19,6 +19,7 @@ None.
 - Progress bars were added for models' fitting (pretraining, fine-tuning and reinforcement learning).
 - Tokens `_` and `.` always present in `VocSmiles` have been removed.
 - RNN models deposited on Zenodo and pretrained on ChEMBL31 and Papyrus 05.5 were updated while the RNN model pretrained on ChEMBL27 did not need to.
+- Remove QSAR modelling from DrugEx, now in a seperate repository QSPRpred
 
 
 ## New Features
