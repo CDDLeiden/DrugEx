@@ -24,11 +24,13 @@ export EXPERIMENT_ID="${MODEL}_${EXPERIMENT_ID}"
 # work begins here
 export SCRATCHDIR=/scratch/$USER/$PBS_JOBID # this might be useful -> we can get this variable from python and fetch big data there
 mkdir -p $SCRATCHDIR
+export OUTDIR=$WORKDIR/outputs
+mkdir -p $OUTDIR
 
 # append a line to a file "jobs_info.txt" containing the ID of the job and the current worker hostname
 echo "$PBS_JOBID is running on node `hostname -f`." >> $WORKDIR/jobs_info.txt
 
-# go to the working directory
+# go to the working directory and copy over files
 cp -r $WORKDIR/*.py $SCRATCHDIR/
 cp -r $WORKDIR/$MODEL/*.py $SCRATCHDIR/
 cp -r $WORKDIR/data $SCRATCHDIR/data
@@ -39,4 +41,4 @@ eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 
 python processing.py
-python pretrain.py && python plot.py && cp -TR $SCRATCHDIR/output $WORKDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
+python pretrain.py && python plot.py && cp -TR $SCRATCHDIR/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
