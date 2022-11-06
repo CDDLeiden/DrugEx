@@ -7,6 +7,7 @@ On: 06.11.22, 16:14
 import importlib
 import modeltest.settings as settings
 from modeltest.settings import *
+from modeltest.plot import plot
 
 def print_info():
     print("Using DrugEx version: ", DRUGEX_VERSION)
@@ -20,3 +21,4 @@ if __name__ == '__main__':
     print_info()
     model = importlib.import_module(f"modeltest.{MODEL}.run")
     model.test()
+    plot()

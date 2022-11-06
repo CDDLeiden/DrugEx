@@ -18,6 +18,7 @@ export N_EPOCHS=${N_EPOCHS:-30}
 [ -z "$CONDA_ENV" ] && echo "\$CONDA_ENV is empty. Exiting..." && exit 1
 [ -z "$EXPERIMENT_ID" ] && echo "\$EXPERIMENT_ID is empty. Exiting..." && exit 1
 [ -z "$WORKDIR" ] && echo "\$WORKDIR is empty. Exiting..." && exit 1
+[ -z "$INPUT_FILE" ] && echo "\$INPUT_FILE is empty. Exiting..." && exit 1
 
 export EXPERIMENT_ID="${MODEL}_${EXPERIMENT_ID}"
 export BATCH_SIZE="${BATCH_SIZE:-256}"
@@ -26,6 +27,7 @@ export N_EPOCHS="${N_EPOCHS:-30}"
 # work begins here
 export SCRATCHDIR=/scratch/$USER/$PBS_JOBID # this might be useful -> we can get this variable from python and fetch big data there
 mkdir $SCRATCHDIR
+mkdir -p $SCRATCHDIR/modeltest
 export OUTDIR=$WORKDIR/outputs
 mkdir -p $OUTDIR
 
@@ -33,14 +35,14 @@ mkdir -p $OUTDIR
 echo "$PBS_JOBID is running on node `hostname -f`." >> $WORKDIR/jobs_info.txt
 
 # go to the working directory and copy over files
-cp -r $WORKDIR/*.py $SCRATCHDIR/
-cp -r $WORKDIR/$MODEL $SCRATCHDIR/
-cp -r $WORKDIR/data $SCRATCHDIR/data
+cp -r $WORKDIR/*.py $SCRATCHDIR/modeltest
+cp -r $WORKDIR/$MODEL $SCRATCHDIR/modeltest
+cp -r $WORKDIR/data $SCRATCHDIR/modeltest/data
 cd $SCRATCHDIR
 
 # activate the conda environment
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 
-export PYTHONPATH=`pwd`:$PYTHONPATH
+export PYTHONPATH=$SCRATCHDIR:$PYTHONPATH
 python run.py && cp -TR $SCRATCHDIR/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
