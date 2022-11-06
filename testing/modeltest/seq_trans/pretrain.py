@@ -11,8 +11,7 @@ from drugex.training.monitors import FileMonitor
 from settings import *
 
 data_sets = [SmilesFragDataSet(f'{OUTPUT_FILE}_{split}.tsv', rewrite=False) for split in ('test', 'train')]
-# voc = VocSmiles.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab', True)
-voc = VocSmiles.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab')
+voc = VocSmiles.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab', True)
 print('Training')
 agent = GPT2Model(voc, use_gpus=GPUS)
 monitor = FileMonitor(OUTPUT_FILE, verbose=True)

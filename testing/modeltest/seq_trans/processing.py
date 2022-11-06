@@ -16,8 +16,7 @@ from settings import *
 
 if not os.path.exists(f'{OUTPUT_FILE}_train.tsv'):
     data_sets = [SmilesFragDataSet(f'{OUTPUT_FILE}_{split}.tsv', rewrite=True) for split in ('test', 'train')]
-    # voc = VocSmiles(True)
-    voc = VocSmiles()
+    voc = VocSmiles(True)
     print('Loading data...')
     smiles = pd.read_csv(INPUT_FILE, header=0, sep='\t', usecols=['Smiles']).squeeze('columns').tolist()
     print(len(smiles))

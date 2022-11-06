@@ -15,7 +15,7 @@ from settings import *
 
 if not os.path.exists(f'{OUTPUT_FILE}_train.tsv'):
     data_set = SmilesDataSet(f'{OUTPUT_FILE}.tsv', rewrite=True)
-    voc = VocSmiles()
+    voc = VocSmiles(False)
     print('Loading data...')
     smiles = pd.read_csv(INPUT_FILE, header=0, sep='\t', usecols=['Smiles']).squeeze('columns').tolist()
     print(len(smiles))
