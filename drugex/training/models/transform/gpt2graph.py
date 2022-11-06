@@ -275,8 +275,9 @@ class GraphModel(Base):
     def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
