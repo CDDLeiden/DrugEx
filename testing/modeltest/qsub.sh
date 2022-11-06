@@ -20,10 +20,12 @@ export N_EPOCHS=${N_EPOCHS:-30}
 [ -z "$WORKDIR" ] && echo "\$WORKDIR is empty. Exiting..." && exit 1
 
 export EXPERIMENT_ID="${MODEL}_${EXPERIMENT_ID}"
+export BATCH_SIZE="${BATCH_SIZE:-256}"
+export N_EPOCHS="${N_EPOCHS:-30}"
 
 # work begins here
 export SCRATCHDIR=/scratch/$USER/$PBS_JOBID # this might be useful -> we can get this variable from python and fetch big data there
-mkdir -p $SCRATCHDIR
+mkdir $SCRATCHDIR
 export OUTDIR=$WORKDIR/outputs
 mkdir -p $OUTDIR
 
@@ -32,7 +34,7 @@ echo "$PBS_JOBID is running on node `hostname -f`." >> $WORKDIR/jobs_info.txt
 
 # go to the working directory and copy over files
 cp -r $WORKDIR/*.py $SCRATCHDIR/
-cp -r $WORKDIR/$MODEL/*.py $SCRATCHDIR/
+cp -r $WORKDIR/$MODEL $SCRATCHDIR/
 cp -r $WORKDIR/data $SCRATCHDIR/data
 cd $SCRATCHDIR
 
@@ -40,5 +42,5 @@ cd $SCRATCHDIR
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 
-python processing.py
-python pretrain.py && python plot.py && cp -TR $SCRATCHDIR/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
+export PYTHONPATH=`pwd`:$PYTHONPATH
+python run.py && cp -TR $SCRATCHDIR/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
