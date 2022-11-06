@@ -19,6 +19,6 @@ OUTPUT_FILE = f'{OUT_DIR}/{EXPERIMENT_ID}'
 N_PROC = int(os.environ['NCPUS']) if 'NCPUS' in os.environ else 12
 GPUS = [int(x['index']) for x in nvgpu.gpu_info()]
 CHUNK_SIZE = 1000
-BATCH_SIZE = os.environ['BATCH_SIZE'] if 'BATCH_SIZE' in os.environ else 64
+BATCH_SIZE = int(os.environ['BATCH_SIZE']) if 'BATCH_SIZE' in os.environ else 64
 N_EPOCHS = 5 if not 'N_EPOCHS' in os.environ else int(os.environ['N_EPOCHS'])
 DRUGEX_VERSION = drugex.__version__

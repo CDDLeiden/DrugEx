@@ -38,11 +38,11 @@ echo "$PBS_JOBID is running on node `hostname -f`." >> $WORKDIR/jobs_info.txt
 cp -r $WORKDIR/*.py $SCRATCHDIR/modeltest
 cp -r $WORKDIR/$MODEL $SCRATCHDIR/modeltest
 cp -r $WORKDIR/data $SCRATCHDIR/modeltest/data
-cd $SCRATCHDIR
+cd $SCRATCHDIR/modeltest
 
 # activate the conda environment
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 
 export PYTHONPATH=$SCRATCHDIR:$PYTHONPATH
-python run.py && cp -TR $SCRATCHDIR/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
+python run.py && cp -TR $SCRATCHDIR/modeltest/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
