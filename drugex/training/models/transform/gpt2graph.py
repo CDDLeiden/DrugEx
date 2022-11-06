@@ -261,7 +261,7 @@ class GraphModel(Base):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
-        for src in loader:
+        for src in tqdm(loader, desc='Iterating over training batches', leave=False):
             src = src.to(self.device)
             self.optim.zero_grad()
             loss = net(src, is_train=True)
