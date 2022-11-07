@@ -125,7 +125,7 @@ class SmilesFragsGeneratorBase(Base):
                 for src, _ in loader:
                     trg = net(src.to(self.device))
                     smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                    frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
+                    frags += [self.voc_trg.decode(s, is_tk=False) for s in src]
 
         return smiles, frags
 
