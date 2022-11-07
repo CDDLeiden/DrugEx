@@ -160,7 +160,7 @@ class FragmentPairsEncodedSupplier(MolSupplier):
         Get the next pair and encode it with the encoder.
 
         Returns:
-            `tuple`: (str, str) encoded form of the molecule and one of the encoded fragments
+            `tuple`: (str, str) encoded form of fragment-molecule pair
         """
 
         pair = next(self.pairs) # (fragment, molecule)
@@ -175,7 +175,7 @@ class FragmentPairsEncodedSupplier(MolSupplier):
         if not encoded_frag:
             raise self.FragmentEncodingException(f'Failed to encode fragment {pair[0]} from molecule: {pair[1]}')
 
-        return encoded_mol, encoded_frag
+        return encoded_frag, encoded_mol
 
 
 class FragmentPairsSupplier(MolSupplier):
