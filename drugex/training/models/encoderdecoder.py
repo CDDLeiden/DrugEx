@@ -55,7 +55,7 @@ class Base(Generator, ABC):
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
 
-            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Frags'))
+            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Desire', 'Frags'))
 
             del loss_valid
             monitor.endStep(None, epoch)
@@ -113,7 +113,7 @@ class SmilesFragsGeneratorBase(Base):
         smiles_scores = []
         for idx, smile in enumerate(smiles):
             logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
         return valid, desired, loss_valid, smiles_scores
     

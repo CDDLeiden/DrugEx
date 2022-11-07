@@ -287,7 +287,7 @@ class GraphModel(Base):
         smiles_scores = []
         for idx, smile in enumerate(smiles):
             logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
         return valid, desired, loss_valid, smiles_scores
     
