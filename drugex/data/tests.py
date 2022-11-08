@@ -182,9 +182,9 @@ class ProcessingTests(TestCase):
         count = 0
         for item in encoded:
             self.assertTrue(len(item) == 2)
-            self.assertTrue(type(item[0]) == str)
-            self.assertTrue(type(item[1]) == list)
-            self.assertTrue(type(item[1][0]) == int)
+            self.assertTrue(type(item[1]) == str)
+            self.assertTrue(type(item[0]) == list)
+            self.assertTrue(type(item[0][0]) == int)
             count+=1
         self.assertTrue(count == len(pairs))
 
@@ -225,4 +225,4 @@ class ProcessingTests(TestCase):
         encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
         self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
         df = collector.getData()
-        self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len
+        self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len)

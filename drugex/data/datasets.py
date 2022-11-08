@@ -158,7 +158,8 @@ class GraphFragDataSet(DataSet):
         """
 
         self.updateVoc(result[1].encoder.getVoc())
-        self.sendDataToFile([x[1] for x in result[0]], columns=self.getColumns())
+        data = [x[0] for x in result[0]]
+        self.sendDataToFile(data, columns=self.getColumns())
 
     def getColumns(self):
         return ['C%d' % d for d in range(self.getVoc().max_len * 5)]
