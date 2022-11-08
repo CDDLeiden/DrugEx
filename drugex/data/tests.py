@@ -207,7 +207,7 @@ class ProcessingTests(TestCase):
         self.assertTrue(len(fragment_collector.getList()) == (len(collectors[0].getData()) + len(collectors[1].getData())))
         for collector in collectors:
             df = collector.getData()
-            self.assertTrue(df.shape[1] == 400)
+            self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len)
 
     def test_gragh_scaffold_encoding(self):
         frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
