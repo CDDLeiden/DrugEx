@@ -225,4 +225,4 @@ class ProcessingTests(TestCase):
         encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
         self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
         df = collector.getData()
-        self.assertTrue(df.shape[1] == 400)
+        self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len
