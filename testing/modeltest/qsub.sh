@@ -45,6 +45,7 @@ cd $SCRATCHDIR/modeltest
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
 pip freeze | grep drugex > $SCRATCHDIR/modeltest/output/version.txt
+conda env export -n $CONDA_ENV -f $SCRATCHDIR/modeltest/output/environment.yml
 
 export PYTHONPATH=$SCRATCHDIR:$PYTHONPATH
 python run.py && cp -TR $SCRATCHDIR/modeltest/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
