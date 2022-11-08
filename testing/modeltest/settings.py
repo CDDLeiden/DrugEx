@@ -11,6 +11,7 @@ import nvgpu
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 INPUT_FILE = os.path.join(DATA_DIR, 'chembl_30_1000.smi' if 'INPUT_FILE' not in os.environ else os.environ['INPUT_FILE'])
+assert os.path.exists(INPUT_FILE)
 OUT_DIR=os.path.join(os.path.dirname(__file__), 'output')
 os.makedirs(OUT_DIR, exist_ok=True)
 MODEL = 'rnn' if not 'MODEL' in os.environ else os.environ["MODEL"]
