@@ -28,6 +28,7 @@ export N_EPOCHS="${N_EPOCHS:-30}"
 export SCRATCHDIR=/scratch/$USER/$PBS_JOBID # this might be useful -> we can get this variable from python and fetch big data there
 mkdir $SCRATCHDIR
 mkdir -p $SCRATCHDIR/modeltest
+mkdir -p $SCRATCHDIR/modeltest/output
 export OUTDIR=$WORKDIR/outputs
 mkdir -p $OUTDIR
 
@@ -40,9 +41,10 @@ cp -r $WORKDIR/$MODEL $SCRATCHDIR/modeltest
 cp -r $WORKDIR/data $SCRATCHDIR/modeltest/data
 cd $SCRATCHDIR/modeltest
 
-# activate the conda environment
+# activate the conda environment and save version info
 eval "$(command conda 'shell.bash' 'hook' 2> /dev/null)"
 conda activate $CONDA_ENV
+pip freeze | grep drugex > $SCRATCHDIR/modeltest/output/version.txt
 
 export PYTHONPATH=$SCRATCHDIR:$PYTHONPATH
 python run.py && cp -TR $SCRATCHDIR/modeltest/output $OUTDIR/output_${EXPERIMENT_ID} && rm -rf $SCRATCHDIR
