@@ -13,8 +13,8 @@ from drugex.logs import logger
 from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
-from ..monitors import NullMonitor
-from ...logs.utils import callwarning
+from drugex.training.monitors import NullMonitor
+from drugex.logs.utils import callwarning
 
 
 class Base(Generator, ABC):
