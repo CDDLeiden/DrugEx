@@ -101,7 +101,9 @@ def save_vocabulary(vocs, file_base, mol_type, output):
     """
 
     voc = sum(vocs[1:], start=vocs[0])
-    voc.toFile(os.path.join(file_base, f'{output}_{mol_type}_voc.txt'))
+    path = os.path.join(file_base, f'{output}_{mol_type}_voc.txt')
+    log.info(f'Saving vocabulary file to: {file_base}')
+    voc.toFile(path)
 
 def v2Dataset(smiles, args):
 
@@ -112,10 +114,12 @@ def v2Dataset(smiles, args):
     # create sequence corpus and vocabulary (used only in v2 models)
     if args.voc_file:
         voc_path = args.base_dir + '/data/' + args.voc_file
+        voc = VocSmiles.fromFile(voc_path, False)
+        log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                'vocabulary': VocSmiles.fromFile(False, voc_path),
+                'vocabulary': voc,
                 'update_voc': False,
                 'throw': True
 
@@ -124,11 +128,11 @@ def v2Dataset(smiles, args):
             chunk_size=args.chunk_size
         )
     else:
+        log.warning(f'No vocabulary specified. DrugEx default will be used and new tokens will be added to it.')
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
                 'vocabulary': VocSmiles(False),
-
             },
             n_proc=args.n_proc,
             chunk_size=args.chunk_size
@@ -142,7 +146,7 @@ def v2Dataset(smiles, args):
     for df, name in zip([train, test], ['train', 'test']):
         df.to_csv(os.path.join(file_base, f'{args.output}_{name}_smi.txt'), header=True, index=False, sep='\t')
 
-    if args.save_voc:
+    if args.save_voc or not args.voc_file:
         save_vocabulary([data_collector.getVoc()], file_base, args.mol_type, args.output)
 
 def v3Dataset(smiles, args):
