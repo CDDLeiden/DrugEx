@@ -128,11 +128,13 @@ def v2Dataset(smiles, args):
             chunk_size=args.chunk_size
         )
     else:
-        log.warning(f'No vocabulary specified. DrugEx default will be used and new tokens will be added to it.')
+        log.warning(f'No vocabulary specified. DrugEx default will be used. Note: Molecules with unknown tokens will be discarded.')
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
                 'vocabulary': VocSmiles(False),
+                'update_voc': False,
+                'throw': True
             },
             n_proc=args.n_proc,
             chunk_size=args.chunk_size
