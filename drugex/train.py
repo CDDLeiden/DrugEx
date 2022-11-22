@@ -228,21 +228,21 @@ def DataPreparationSmiles(voc_files,
     valid_loader = None
     if args.algorithm == 'trans':
         data_set_train = SmilesFragDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesFragDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc() + data_set_test.getVoc()
     elif args.algorithm == 'rnn':
         data_set_train = SmilesDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc()

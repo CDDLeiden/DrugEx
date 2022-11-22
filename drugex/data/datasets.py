@@ -50,7 +50,7 @@ class SmilesDataSet(DataSet):
         return ['C%d' % d for d in range(self.getVoc().max_len)]
 
     def readVocs(self, paths, voc_class, *args, **kwargs):
-        super().readVocs(paths, voc_class=voc_class, *args, encode_frags=False, **kwargs)
+        super().readVocs(paths, voc_class=voc_class, *args, **kwargs)
 
 
 class SmilesFragDataSet(DataSet):
@@ -134,7 +134,7 @@ class SmilesFragDataSet(DataSet):
         return ['C%d' % d for d in range(self.getVoc().max_len * 2)]
 
     def readVocs(self, paths, voc_class, *args, **kwargs):
-        super().readVocs(paths, voc_class=voc_class, *args, encode_frags=True, **kwargs)
+        super().readVocs(paths, voc_class=voc_class, *args, **kwargs)
 
 
 class GraphFragDataSet(DataSet):
