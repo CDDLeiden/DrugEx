@@ -5,7 +5,7 @@ import json
 import argparse
 import warnings
 
-from qsprpred.data.utils.descriptorcalculator import descriptorsCalculator
+from qsprpred.scorers.predictor import Predictor
 
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
@@ -20,7 +20,6 @@ from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, Smile
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
-from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property, Uniqueness, LigandEfficiency, LipophilicEfficiency
 from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
 
@@ -416,13 +415,6 @@ def CreateDesirabilityFunction(base_dir,
         else: algorithm = alg[0] # Same algorithm for all targets
 
         if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
-
-        if no_qsprpred:
-            path = base_dir + '/envs/' + '_'.join([algorithm, task, t]) + '.pkg'
-            feature_calc = None
-        else:
-            path = base_dir + '/qsprmodels/' + '_'.join([algorithm, task, t]) + '.pkg'
-            feature_calc = descriptorsCalculator.fromFile(base_dir + '/qsprmodels/' + '_'.join([task, t]) + 'DescCalc.json')
         
         if t in active_targets:
             
@@ -430,24 +422,26 @@ def CreateDesirabilityFunction(base_dir,
                 if task == 'CLS': 
                     log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
                 if le:
-                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(path, feature_calc, type='REG', name=t), modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
                     ths.append(0.5)
                 if lipe:
-                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(path, feature_calc, type='REG', name=t), modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
                     ths.append(0.5)            
             else:
                 predictor_modifier = active 
-                objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
+                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
                 ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in inactive_targets:
             predictor_modifier = inactive 
-            objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in window_targets:
             predictor_modifier = window
-            objs.append(Predictor.fromFile(path, feature_calc, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5)
 
 

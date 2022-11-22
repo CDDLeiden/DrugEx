@@ -11,6 +11,8 @@ from unittest import TestCase
 
 import pandas as pd
 
+from qsprpred.scorers.predictor import Predictor
+
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
 from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentCorpusEncoder
@@ -24,7 +26,6 @@ from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag,
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
-from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property
 
 
@@ -107,9 +108,7 @@ class TrainingTestCase(TestCase):
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        Predictor.fromFile(
-            os.path.join(os.path.dirname(__file__), "test_data/RF_REG_P29274_0006.pkg"),
-            type="REG",
+        Predictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', th=None, scale=False, name='P29274',
             modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
         ),
 
