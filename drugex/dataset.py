@@ -193,10 +193,12 @@ def v3Dataset(smiles, args):
     elif args.mol_type == 'smiles':
         if args.voc_file:
             voc_path = args.base_dir + '/data/' + args.voc_file
+            voc = VocSmiles.fromFile(voc_path, True, min_len=min_len)
+            log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles.fromFile(voc_path, True, min_len=min_len),
+                    voc,
                     update_voc = False, 
                     throw= True),
                 pairs_splitter=splitter,
@@ -204,10 +206,13 @@ def v3Dataset(smiles, args):
                 chunk_size=args.chunk_size
             )
         else:
+            log.info(f'No vocabulary specified, the default vocabulary will be used. Note: Molecules with unknown tokens will be discarded.')
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles(True, min_len=min_len)
+                    VocSmiles(True, min_len=min_len),
+                    update_voc=False,
+                    throw=True
                 ),
                 pairs_splitter=splitter,
                 n_proc=args.n_proc,
