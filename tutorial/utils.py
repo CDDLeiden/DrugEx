@@ -1,5 +1,4 @@
 from drugex.logs import logger
-from drugex.training.monitors import FileMonitor
 
 import numpy as np
 import pandas as pd
