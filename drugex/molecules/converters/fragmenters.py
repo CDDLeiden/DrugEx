@@ -30,7 +30,7 @@ class Fragmenter(CleanSMILES):
             n_combs: maximum number of combinations of the found leaf fragments
             method: fragmentation method to use. Possible values: ('recap', 'brics')
             deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)
-            max_bonds: only accept molecules with the number of bonds above or equal to this threshold
+            max_bonds: only accept molecules with the number of bonds below or equal to this threshold
         """
 
         super().__init__(deep_clean)

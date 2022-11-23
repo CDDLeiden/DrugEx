@@ -49,7 +49,7 @@ class DictMonitor(TrainingMonitor, ABC):
                     evaluation['valid_ratio'].append(kwargs['valid_ratio'])
                     evaluation['desire_ratio'].append(kwargs['desire_ratio'] if 'desire_ratio' in kwargs else None)
                     evaluation['unique_ratio'].append(kwargs['unique_ratio'] if 'unique_ratio' in kwargs else None)
-            evaluation['mean_train_loss'].append(np.mean(losses))
+            evaluation['mean_train_loss'].append(np.mean(losses) if losses else None)
         return pd.DataFrame(evaluation)
 
     def getMoleculeSummary(self):

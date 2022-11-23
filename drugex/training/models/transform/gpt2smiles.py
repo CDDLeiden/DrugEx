@@ -136,7 +136,7 @@ class GPT2Model(SmilesFragsGeneratorBase):
                 src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
                 trg = net(src.to(self.device))
                 new_smiles = self.voc_trg.decode(trg, is_tk=False)
-                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=False)
+                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=True)
                 # drop duplicates
                 if drop_duplicates:
                     new_smiles = np.array(new_smiles)

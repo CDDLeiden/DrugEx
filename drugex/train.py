@@ -5,14 +5,13 @@ import json
 import argparse
 import warnings
 
-from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.models import GPT2Model, GraphModel, single_network
-from drugex.training.models import encoderdecoder
 from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
 from drugex.training.monitors import FileMonitor
@@ -51,18 +50,12 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pr', '--prior_model', type=str, default=None,
                         help="Name of model (w/o .pkg extension) used for the prior in RL.")
     
-    parser.add_argument('-v', '--version', type=int, default=3,
-                         help="DrugEx version")
-    
     # General parameters
     parser.add_argument('-mt', '--mol_type', type=str, default='graph',
                         help="Molecule encoding type: 'smiles' or 'graph'")    
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
-                        help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
-                             "'ved' (smiles, lstm-based encoder-decoder) or "\
-                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) " \
-                             "If '--version 2' is specified, it implies '--algorithm rnn'. " \
-                             "Note that 'ved' and 'attn' algorithms currently do not work with '--mode RL'. Reinforcement learning was not implemented for these, yet.")
+                        help="Generator algorithm: 'trans' (graph- or smiles-based transformer model) or "\
+                             "'rnn' (smiles, recurrent neural network based on DrugEx v2).")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -150,9 +143,6 @@ def GeneratorArgParser(txt=None):
     if args.output is None:
         args.output = args.input.split('_')[0]
 
-    if args.version == 2:
-        args.algorithm = 'rnn'
-
     if args.voc_files is None:
         args.voc_files = [args.input.split('_')[0]]
     
@@ -236,38 +226,28 @@ def DataPreparationSmiles(voc_files,
     voc = None
     train_loader = None
     valid_loader = None
-    if args.algorithm == 'gpt':
-        # GPT with fragments
+    if args.algorithm == 'trans':
         data_set_train = SmilesFragDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesFragDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc() + data_set_test.getVoc()
     elif args.algorithm == 'rnn':
         data_set_train = SmilesDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc()
     else:
-        # all smiles-based with fragments
-        data_set_train = SmilesFragDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
-        train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
-
-        data_set_test = SmilesFragDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
-        valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
-
-        voc = data_set_train.getVoc() + data_set_test.getVoc()
+        raise ValueError('Unknown algorithm: {}'.format(args.algorithm))
 
     return voc, train_loader, valid_loader
 
@@ -492,18 +472,15 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
     agent = None
     if mol_type == 'graph':
         agent = GraphModel(voc, use_gpus=gpus)
-    else :
-        if alg == 'ved':
-            agent = encoderdecoder.EncDec(voc, voc, use_gpus=gpus)
-        elif alg == 'attn':
-            agent = encoderdecoder.Seq2Seq(voc, voc, use_gpus=gpus)
-        elif alg == 'trans':
+    else:
+        if alg == 'trans':
             agent = GPT2Model(voc, use_gpus=gpus)
         elif alg == 'rnn':
             # TODO: add argument for is_lstm
             agent = single_network.RNN(voc, is_lstm=True, use_gpus=gpus)
-    
-    assert agent
+        else:
+            raise ValueError('Unknown algorithm: {}'.format(alg))
+
     return agent
 
 def PreTrain(args):

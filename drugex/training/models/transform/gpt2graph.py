@@ -261,7 +261,7 @@ class GraphModel(Base):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
-        for src in loader:
+        for src in tqdm(loader, desc='Iterating over training batches', leave=False):
             src = src.to(self.device)
             self.optim.zero_grad()
             loss = net(src, is_train=True)
@@ -275,8 +275,9 @@ class GraphModel(Base):
     def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
@@ -286,7 +287,7 @@ class GraphModel(Base):
         smiles_scores = []
         for idx, smile in enumerate(smiles):
             logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
         return valid, desired, loss_valid, smiles_scores
     
