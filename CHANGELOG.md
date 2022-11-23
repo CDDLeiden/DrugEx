@@ -21,7 +21,9 @@ None.
 - Tokens `_` and `.` always present in `VocSmiles` have been removed.
 - RNN models deposited on Zenodo and pretrained on ChEMBL31 and Papyrus 05.5 were updated while the RNN model pretrained on ChEMBL27 did not need to.
 - Moved encoding of tokens for SMILES-based models to the parallel preprocessing steps to improve performance
+- All testing code that is not unit tests was moved to `testing`
 
 ## New Features
 
 - Tutorial for scaffold-based generation.
+- Added tests to `testing` that allow to check consistency of models between versions.
