@@ -1,7 +1,9 @@
 import tempfile
 
+import numpy as np
 import torch
 import torch.nn as nn
+from tqdm.auto import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
@@ -13,6 +15,7 @@ from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncodi
 from .layer import tri_mask
 from drugex.training.models.encoderdecoder import Base
 from drugex.utils import ScheduledOptim
+from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
 
 from ...monitors import NullMonitor
@@ -73,11 +76,15 @@ class GraphModel(Base):
         # self.optim = optim.Adam(self.parameters(), lr=1e-4)
 
     def forward(self, src, is_train=False):
+        # src: [batch_size, 80 , 5]
         if is_train:
+            # Return loss
+            # Src - not using last column (??), trg - not using first column (start token)
             src, trg = src[:, :-1, :], src[:, 1:, :]
             batch, sqlen, _ = src.shape
             triu = tri_mask(src[:, :, 0])
 
+            # dec - atom environment
             emb = self.emb_word(src[:, :, 3] + src[:, :, 0] * 4)
             emb += self.emb_site(src[:, :, 1] * self.n_grows + src[:, :, 2])
             dec = self.attn(emb.transpose(0, 1), attn_mask=triu)
@@ -104,6 +111,7 @@ class GraphModel(Base):
 
             out = [out_atom, out_curr, out_prev, out_bond]
         else:
+            # Return encoded molecules
             is_end = torch.zeros(len(src)).bool().to(src.device)
             exists = torch.zeros(len(src), self.n_grows, self.n_grows).long().to(src.device)
             vals_max = torch.zeros(len(src), self.n_grows).long().to(src.device)
@@ -253,7 +261,7 @@ class GraphModel(Base):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
-        for src in loader:
+        for src in tqdm(loader, desc='Iterating over training batches', leave=False):
             src = src.to(self.device)
             self.optim.zero_grad()
             loss = net(src, is_train=True)
@@ -264,11 +272,12 @@ class GraphModel(Base):
             monitor.saveProgress(current_step, None, total_steps, None)
             monitor.savePerformanceInfo(current_step, None, loss.item())
                 
-    def validate(self, loader, evaluator=None):
+    def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
@@ -278,11 +287,11 @@ class GraphModel(Base):
         smiles_scores = []
         for idx, smile in enumerate(smiles):
             logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
         return valid, desired, loss_valid, smiles_scores
     
-    def sample(self, loader, repeat=1):
+    def sample(self, loader, repeat=1, pbar=None):
         net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():
@@ -296,9 +305,10 @@ class GraphModel(Base):
         return smiles, frags
 
 
-    def sampleFromSmiles(self, smiles, repeat=1, min_samples=100, n_proc=1, fragmenter=None):
+    def sample_smiles(self, input_smiles, num_samples=100, batch_size=32, n_proc=1, fragmenter=None, 
+                      keep_frags=True, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
         standardizer = Standardization(n_proc=n_proc)
-        smiles = standardizer.apply(smiles)
+        smiles = standardizer.apply(input_smiles)
 
         fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
         encoder = FragmentCorpusEncoder(
@@ -310,13 +320,42 @@ class GraphModel(Base):
         )
         out_data = GraphFragDataSet(tempfile.NamedTemporaryFile().name)
         encoder.apply(smiles, encodingCollectors=[out_data])
+        
+        # Duplicate of self.sample to allow dropping molecules
+        # and progress bar on the fly without additional
+        # overhead caused by calling nn.DataParallel a few times
+        net = nn.DataParallel(self, device_ids=self.gpus)
+
+        if progress:
+            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
+            pbar = tqdm(**tqdm_kwargs)
 
         smiles, frags = [], []
-        while not len(smiles) >= min_samples:
-            new_s, new_f = self.sample(out_data.asDataLoader(32), repeat=repeat)
-            smiles.extend(new_s)
-            frags.extend(new_f)
-
-        return smiles, frags
-
+        while not len(smiles) >= num_samples:
+            with torch.no_grad():
+                src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
+                trg = net(src.to(self.device))
+                new_frags, new_smiles = self.voc_trg.decode(trg)
+                # drop duplicates
+                if drop_duplicates:
+                    new_smiles = np.array(new_smiles)
+                    new_frags = np.array(new_frags)[np.logical_not(np.isin(new_smiles, smiles))].tolist()
+                    new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
+                # drop invalid smiles
+                if drop_invalid:
+                    # Make sure both valid molecules and include input fragments
+                    scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags).sum(axis=1)
+                    new_smiles = np.array(new_smiles)[scores > 1].tolist()
+                    new_frags = np.array(new_frags)[scores > 1].tolist()
+                smiles += new_smiles
+                frags += new_frags
+                # Update progress bar
+                if progress:
+                    pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        if progress:
+            pbar.close()
+        smiles = smiles[:num_samples]
+        if keep_frags:
+            return smiles, frags
+        return smiles
 

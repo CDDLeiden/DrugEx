@@ -57,6 +57,8 @@ class DataSet(ResultCollector, ABC):
         """
 
         self.outpath = path
+        if not os.path.exists(os.path.dirname(self.outpath)):
+            os.makedirs(os.path.dirname(self.outpath))
         self.voc = None
         try:
             self.fromFile(self.outpath)
@@ -106,7 +108,7 @@ class DataSet(ResultCollector, ABC):
         if chunk_size:
             kwargs['chunksize'] = chunk_size
 
-        return pd.read_csv(self.outpath, sep='\t', header=0, **kwargs)
+        return pd.read_csv(self.outpath, sep='\t', header=0, **kwargs).to_numpy()
 
     def updateVoc(self, voc):
         """
@@ -273,21 +275,22 @@ class FragmentPairEncoder(ABC):
             mol: molecule as SMILES
 
         Returns:
-            the encoded representation of this molecule
+            a `tuple` of the molecule tokens (as determined by the specified vocabulary) and the encoded representation
         """
         pass
 
     @abstractmethod
-    def encodeFrag(self, mol, frag):
+    def encodeFrag(self, mol, mol_tokens, frag):
         """
         Encode fragment.
 
         Args:
             mol: the parent molecule of this fragment
+            mol_tokens: the encoded representation of the parent molecule
             frag: the fragment to encode
 
         Returns:
-            the encoded representation of the fragment
+            the encoded representation of the fragment-molecule pair (i.e. the generated tokens corresponding to both the fragment and the parent molecule)
         """
         pass
 
