@@ -13,8 +13,8 @@ from drugex.logs import logger
 from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
-from ..monitors import NullMonitor
-from ...logs.utils import callwarning
+from drugex.training.monitors import NullMonitor
+from drugex.logs.utils import callwarning
 
 
 class Base(Generator, ABC):
@@ -43,10 +43,10 @@ class Base(Generator, ABC):
             epoch += 1
             t0 = time.time()
             self.trainNet(train_loader, monitor)
-            valid, _, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            valid, frags_desire, loss_valid, smiles_scores = self.validate(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             t1 = time.time()
             
-            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} Time: {int(t1-t0)}s")
+            logger.info(f"Epoch: {epoch} Validation loss: {loss_valid:.3f} Valid: {valid:.3f} FragsDesire: {frags_desire:.3f} Time: {int(t1-t0)}s")
             monitor.saveProgress(None, epoch, None, epochs)
 
             if loss_valid < best:
@@ -54,8 +54,9 @@ class Base(Generator, ABC):
                 best = loss_valid
                 last_save = epoch
                 logger.info(f"Model was saved at epoch {epoch}")     
-                
-            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Frags'))
+
+            monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Desire', 'Frags'))
+
             del loss_valid
             monitor.endStep(None, epoch)
                 
@@ -86,7 +87,7 @@ class SmilesFragsGeneratorBase(Base):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
-        for src, trg in loader:
+        for src, trg in tqdm(loader, desc='Iterating over training batches', leave=False):
             src, trg = src.to(self.device), trg.to(self.device)
             self.optim.zero_grad()
             loss = net(src, trg)
@@ -100,8 +101,9 @@ class SmilesFragsGeneratorBase(Base):
     def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-        
-        frags, smiles, scores = self.evaluate(loader, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         valid = scores.VALID.mean() 
         desired = scores.DESIRE.mean()
                 
@@ -111,7 +113,7 @@ class SmilesFragsGeneratorBase(Base):
         smiles_scores = []
         for idx, smile in enumerate(smiles):
             logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], frags[idx]))
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
         return valid, desired, loss_valid, smiles_scores
     
@@ -123,14 +125,14 @@ class SmilesFragsGeneratorBase(Base):
                 for src, _ in loader:
                     trg = net(src.to(self.device))
                     smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                    frags += [self.voc_trg.decode(s, is_tk=False, is_smiles=False) for s in src]                        
+                    frags += [self.voc_trg.decode(s, is_tk=False) for s in src]
 
         return smiles, frags
 
 
 class Seq2Seq(SmilesFragsGeneratorBase):
 
-    @callwarning("Note that the 'Seq2Seq' ('attn') model currently does not support reinforcement learning in the current version of DrugEx.")
+    @callwarning("Note that the 'Seq2Seq' ('attn') model currently does not support reinforcement learning in the current version of DrugEx. It will soon be deperacted.", exp=DeprecationWarning)
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(Seq2Seq, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
@@ -174,7 +176,7 @@ class Seq2Seq(SmilesFragsGeneratorBase):
 
 class EncDec(SmilesFragsGeneratorBase):
 
-    @callwarning("Note that the 'EncDec' ('vec') model currently does not support reinforcement learning in the current version of DrugEx.")
+    @callwarning("Note that the 'EncDec' ('vec') model currently does not support reinforcement learning in the current version of DrugEx. It will soon be deprecated.", exp=DeprecationWarning)
     def __init__(self, voc_src, voc_trg, emb_sharing=True, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(EncDec, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'

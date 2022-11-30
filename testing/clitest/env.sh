@@ -1,7 +1,5 @@
 set -e
 
-export PYTHONPATH=".."
-
 # input data and base directory
 export TEST_BASE="."
 export TEST_DATA_PRETRAINING='ZINC_raw_small.tsv'

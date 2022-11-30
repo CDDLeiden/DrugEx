@@ -29,16 +29,6 @@ class CorpusTest(TestCase):
 
         return smiles
 
-    def test_sequence_corpus_smiles(self):
-        smiles = self.getMols()
-        corpus = SequenceCorpus(smiles)
-        lines = []
-        for line in corpus:
-            self.assertTrue("@" not in line['seq'])
-            self.assertTrue("@" not in line['token'])
-            lines.append(line)
-        self.assertTrue(len(lines) == 2)
-
     def test_sequence_corpus_file(self):
         smiles = self.getMols()
         corpus = SequenceCorpus(
@@ -47,9 +37,7 @@ class CorpusTest(TestCase):
 
         count = 0
         for line in corpus:
-            seq = line['seq']
-            token = line['token']
-            self.assertTrue(token.replace(' ', '').startswith(seq))
+            self.assertTrue(len(line) == corpus.getVoc().max_len)
             count += 1
         self.assertTrue(count > 0)
 

@@ -101,7 +101,9 @@ def save_vocabulary(vocs, file_base, mol_type, output):
     """
 
     voc = sum(vocs[1:], start=vocs[0])
-    voc.toFile(os.path.join(file_base, f'{output}_{mol_type}_voc.txt'))
+    path = os.path.join(file_base, f'{output}_{mol_type}_voc.txt')
+    log.info(f'Saving vocabulary file to: {file_base}')
+    voc.toFile(path)
 
 def v2Dataset(smiles, args):
 
@@ -109,16 +111,15 @@ def v2Dataset(smiles, args):
 
     file_base = os.path.join(args.base_dir, 'data')
 
-    # load get voc path if voc file given (used to filter out molecules with tokens not occuring in voc)
-    if args.voc_file:
-        voc_path = args.base_dir + '/data/' + args.voc_file
-
     # create sequence corpus and vocabulary (used only in v2 models)
     if args.voc_file:
+        voc_path = args.base_dir + '/data/' + args.voc_file
+        voc = VocSmiles.fromFile(voc_path, False)
+        log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                'vocabulary': VocSmiles.fromFile(voc_path),
+                'vocabulary': voc,
                 'update_voc': False,
                 'throw': True
 
@@ -127,11 +128,13 @@ def v2Dataset(smiles, args):
             chunk_size=args.chunk_size
         )
     else:
+        log.warning(f'No vocabulary specified. DrugEx default will be used. Note: Molecules with unknown tokens will be discarded.')
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                'vocabulary': VocSmiles(),
-
+                'vocabulary': VocSmiles(False),
+                'update_voc': False,
+                'throw': True
             },
             n_proc=args.n_proc,
             chunk_size=args.chunk_size
@@ -139,13 +142,13 @@ def v2Dataset(smiles, args):
     data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'), rewrite=True)
     encoder.apply(smiles, collector=data_collector)
 
-    df_data_collector = data_collector.getData()
+    df_data_collector = pd.DataFrame(data_collector.getData(), columns=data_collector.getColumns())
     splitter = RandomTrainTestSplitter(0.1, 1e4)
     train, test = splitter(df_data_collector)
     for df, name in zip([train, test], ['train', 'test']):
         df.to_csv(os.path.join(file_base, f'{args.output}_{name}_smi.txt'), header=True, index=False, sep='\t')
 
-    if args.save_voc:
+    if args.save_voc or not args.voc_file:
         save_vocabulary([data_collector.getVoc()], file_base, args.mol_type, args.output)
 
 def v3Dataset(smiles, args):
@@ -155,15 +158,10 @@ def v3Dataset(smiles, args):
     file_base = os.path.join(args.base_dir, 'data')
     file_prefix = os.path.join(file_base, f'{args.output}')
 
-    # load get voc path if voc file given (used to filter out molecules with tokens not occuring in voc)
-    if args.voc_file:
-        voc_path = args.base_dir + '/data/' + args.voc_file
-
     if args.scaffolds:
         fragmenter = dummyMolsFromFragments()
         splitter = None
         min_len = 2
-
     else:
         fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
         pair_collectors = dict()
@@ -193,12 +191,14 @@ def v3Dataset(smiles, args):
             save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
     
     elif args.mol_type == 'smiles':
-
         if args.voc_file:
+            voc_path = args.base_dir + '/data/' + args.voc_file
+            voc = VocSmiles.fromFile(voc_path, True, min_len=min_len)
+            log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles.fromFile(voc_path, min_len=min_len), 
+                    voc,
                     update_voc = False, 
                     throw= True),
                 pairs_splitter=splitter,
@@ -206,10 +206,13 @@ def v3Dataset(smiles, args):
                 chunk_size=args.chunk_size
             )
         else:
+            log.info(f'No vocabulary specified, the default vocabulary will be used. Note: Molecules with unknown tokens will be discarded.')
             encoder = FragmentCorpusEncoder(
                 fragmenter=fragmenter,
                 encoder=SequenceFragmentEncoder(
-                    VocSmiles(min_len=min_len)
+                    VocSmiles(True, min_len=min_len),
+                    update_voc=False,
+                    throw=True
                 ),
                 pairs_splitter=splitter,
                 n_proc=args.n_proc,
