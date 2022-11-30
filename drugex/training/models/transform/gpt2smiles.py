@@ -1,3 +1,5 @@
+import tempfile
+
 import torch
 import torch.nn as nn
 from torch.nn.init import kaiming_normal_
@@ -71,7 +73,7 @@ class GPT2Model(SmilesFragsGeneratorBase):
                               pad_idx=pad_idx)
         self.init_states()
         self.optim = ScheduledOptim(
-            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 2.0, d_model)
+            optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 0.5, d_model)
         # self.optim = optim.Adam(self.parameters(), lr=1e-4)
 
     def forward(self, src, trg=None):
@@ -134,7 +136,7 @@ class GPT2Model(SmilesFragsGeneratorBase):
                 src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
                 trg = net(src.to(self.device))
                 new_smiles = self.voc_trg.decode(trg, is_tk=False)
-                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=False)
+                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=True)
                 # drop duplicates
                 if drop_duplicates:
                     new_smiles = np.array(new_smiles)

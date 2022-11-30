@@ -14,7 +14,7 @@ import pandas as pd
 from qsprpred.scorers.predictor import Predictor
 
 from drugex.data.corpus.corpus import SequenceCorpus
-from drugex.data.corpus.vocabulary import VocSmiles, VocGraph, VocGPT
+from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
 from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
@@ -168,7 +168,7 @@ class TrainingTestCase(TestCase):
         encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
-                VocSmiles()
+                VocSmiles(True)
             ),
             pairs_splitter=splitter,
             n_proc=self.N_PROC
@@ -238,7 +238,7 @@ class TrainingTestCase(TestCase):
         encoder = CorpusEncoder(
                 SequenceCorpus,
                 {
-                    'vocabulary': VocSmiles()
+                    'vocabulary': VocSmiles(False)
                 },
                 n_proc=self.N_PROC
         )
@@ -343,55 +343,11 @@ class TrainingTestCase(TestCase):
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_smiles_frags_vec(self):
-        pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
-
-        # pretraining
-        pretrained = EncDec(vocabulary, vocabulary)
-        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
-
-        # fine-tuning
-        finetuned = EncDec(vocabulary, vocabulary)
-        finetuned.loadStates(pretrained.getModel())
-        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
-
-        # RL
-        # FIXME: RL for these models currently not working
-        # environment = self.getTestEnvironment()
-        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
-        # monitor = TestModelMonitor()
-        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        # self.assertTrue(monitor.getModel())
-        # self.assertTrue(monitor.allMethodsExecuted())
-
-    def test_smiles_frags_attn(self):
-        pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
-
-        # pretraining
-        pretrained = Seq2Seq(vocabulary, vocabulary)
-        pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
-
-        # fine-tuning
-        finetuned = Seq2Seq(vocabulary, vocabulary)
-        finetuned.loadStates(pretrained.getModel())
-        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
-        self.assertTrue(finetuned)
-        self.assertTrue(monitor.getModel())
-
-        # RL
-        # FIXME: RL for these models currently not working
-        # environment = self.getTestEnvironment()
-        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
-        # monitor = TestModelMonitor()
-        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        # self.assertTrue(monitor.getModel())
-        # self.assertTrue(monitor.allMethodsExecuted())
-
     def test_smiles_frags_gpt(self):
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
 
         # pretraining
-        vocab_gpt = VocGPT(vocabulary.words)
+        vocab_gpt = VocSmiles(vocabulary.words)
         pretrained = GPT2Model(vocab_gpt)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
@@ -407,6 +363,52 @@ class TrainingTestCase(TestCase):
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
+
+    # the models below are not tested anymore because they will be deprecated in the future
+
+    # def test_smiles_frags_vec(self):
+    #     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
+    #
+    #     # pretraining
+    #     pretrained = EncDec(vocabulary, vocabulary)
+    #     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
+    #
+    #     # fine-tuning
+    #     finetuned = EncDec(vocabulary, vocabulary)
+    #     finetuned.loadStates(pretrained.getModel())
+    #     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+
+        # RL
+        # FIXME: RL for this model is currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
+
+    # def test_smiles_frags_attn(self):
+    #     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
+    #
+    #     # pretraining
+    #     pretrained = Seq2Seq(vocabulary, vocabulary)
+    #     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
+    #
+    #     # fine-tuning
+    #     finetuned = Seq2Seq(vocabulary, vocabulary)
+    #     finetuned.loadStates(pretrained.getModel())
+    #     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+    #     self.assertTrue(finetuned)
+    #     self.assertTrue(monitor.getModel())
+
+        # RL
+        # FIXME: RL for this model currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
 
 
 

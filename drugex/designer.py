@@ -5,7 +5,7 @@ import math
 import argparse
 import pandas as pd
 
-from drugex.data.corpus.vocabulary import VocGraph, VocGPT, VocSmiles
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
 from drugex.data.utils import getVocPaths
 from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
@@ -45,7 +45,7 @@ def DesignArgParser(txt=None):
         
     # Load parameters generator/environment from trained model
     designer_args = vars(args)
-    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task', 'no_qsprpred', 
+    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
         'ra_score_model', 'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
@@ -100,14 +100,9 @@ def DesignerFragsDataPreparation(
         if voc_paths:
             data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     else:
-        if gen_alg == 'trans' :
-            data_set = SmilesFragDataSet(input_path)
-            if voc_paths:
-                data_set.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)       
-        else:
-            data_set = SmilesFragDataSet(input_path)
-            if voc_paths:
-                data_set.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set = SmilesFragDataSet(input_path)
+        if voc_paths:
+            data_set.readVocs(voc_paths, VocSmiles, max_len=100)
     voc = data_set.getVoc()
 
     loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples)
@@ -135,7 +130,7 @@ def Design(args):
             )
     else:
         voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
-        voc = VocSmiles.fromFile(voc_paths[0], max_len=100)
+        voc = VocSmiles.fromFile(True, voc_paths[0], max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
@@ -147,7 +142,6 @@ def Design(args):
         args.base_dir,
         args.env_alg,
         args.env_task,
-        args.no_qsprpred,
         args.scheme,
         active_targets=args.active_targets,
         inactive_targets=args.inactive_targets,
