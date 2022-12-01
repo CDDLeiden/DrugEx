@@ -398,26 +398,26 @@ def CreateDesirabilityFunction(base_dir,
                 if task == 'CLS': 
                     log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
                 if le:
-                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
                                 modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
                     ths.append(0.5)
                 if lipe:
-                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
                                 modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
                     ths.append(0.5)            
             else:
                 predictor_modifier = active 
-                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
                 ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in inactive_targets:
             predictor_modifier = inactive 
-            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in window_targets:
             predictor_modifier = window
-            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=activity_threshold, scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5)
 
 
