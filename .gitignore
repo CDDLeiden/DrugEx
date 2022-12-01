@@ -8,6 +8,11 @@
 /tutorial/data
 /tutorial/CLI
 /tutorial/advanced/data
+/testing/clitest/data/*.txt
+/testing/clitest/data/*.vocab
+/testing/clitest/data/backup*
+/testing/clitest/data/dataset.json
+/testing/clitest/generators/
 /docs/_build
 *.pkg
 *.tgz
