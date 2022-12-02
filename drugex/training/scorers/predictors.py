@@ -11,34 +11,33 @@ from rdkit.Chem import AllChem
 
 from drugex.training.interfaces import Scorer
 from drugex.training.scorers.properties import Property
+
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class Predictor(Scorer):
 
-    def __init__(self, model, type='CLS', name=None, modifier=None):
+    def __init__(self, model, feature_calc, type='CLS', name=None, modifier=None):
         super().__init__(modifier)
         self.type = type
         self.model = model
+        self.feature_calc = feature_calc if feature_calc else self.calculateDescriptors
         self.key = f"{self.type}_{self.model.__class__.__name__}" if not name else name
 
     @staticmethod
-    def fromFile(path, type='CLS', name="Predictor", modifier=None):
-        if "DNN" in path:
-            model = joblib.load(path)
-            model.load_state_dict(torch.load(f"{path[:-4]}_weights.pkg"))
-            return Predictor(model, type=type, name=name, modifier=modifier)
-        return Predictor(joblib.load(path), type=type, name=name, modifier=modifier)
+    def fromFile(path, feature_calc=None, type='CLS', name="Predictor", modifier=None):
+        return Predictor(joblib.load(path), feature_calc, type=type, name=name, modifier=modifier)
 
     def getScores(self, mols, frags=None):
-        fps = self.calculateDescriptors(mols)
+        features = np.array(self.feature_calc(mols))
         if (self.model.__class__.__name__ == "STFullyConnected"):
-            fps_loader = self.model.get_dataloader(fps)
-            scores = self.model.predict(fps_loader).flatten()
+            features_loader = DataLoader(TensorDataset(torch.Tensor(features)))
+            scores = self.model.predict(features_loader)
         elif (self.type == 'CLS'):
-            scores = self.model.predict_proba(fps)[:, 1]
+            scores = self.model.predict_proba(features)[:, 1]
         else:
-            scores = self.model.predict(fps)
+            scores = self.model.predict(features)
         return scores
 
     @staticmethod

@@ -5,6 +5,8 @@ import json
 import argparse
 import warnings
 
+from qsprpred.scorers.predictor import Predictor
+
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
@@ -17,7 +19,6 @@ from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, Smile
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
-from drugex.training.scorers.predictors import Predictor
 from drugex.training.scorers.properties import Property, Uniqueness, LigandEfficiency, LipophilicEfficiency
 from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
 
@@ -29,7 +30,7 @@ def GeneratorArgParser(txt=None):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains folders 'data' (and 'envs')")
+                        help="Base directory which contains folders 'data' (and 'qsprmodels')")
     parser.add_argument('-d', '--debug', action='store_true')
     
     
@@ -286,7 +287,7 @@ def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilo
 
 def CreateDesirabilityFunction(base_dir, 
                                alg, 
-                               task, 
+                               task,
                                scheme, 
                                active_targets=[], 
                                inactive_targets=[], 
@@ -317,8 +318,8 @@ def CreateDesirabilityFunction(base_dir,
     Sets up the objectives of the desirability function.
     
     Arguments:
-        base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (list)                   : environment-predictor algoritm
+        base_dir (str)              : folder containing 'qsprmodels' folder with saved environment-predictor models
+        alg (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
@@ -390,8 +391,6 @@ def CreateDesirabilityFunction(base_dir,
         else: algorithm = alg[0] # Same algorithm for all targets
 
         if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
-
-        path = base_dir + '/envs/' + '_'.join([algorithm, task, t]) + '.pkg'
         
         if t in active_targets:
             
@@ -399,24 +398,26 @@ def CreateDesirabilityFunction(base_dir,
                 if task == 'CLS': 
                     log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
                 if le:
-                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
                     ths.append(0.5)
                 if lipe:
-                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(path, type='REG', name=t), modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
                     ths.append(0.5)            
             else:
                 predictor_modifier = active 
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
                 ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in inactive_targets:
             predictor_modifier = inactive 
-            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
         
         elif t in window_targets:
             predictor_modifier = window
-            objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5)
 
 

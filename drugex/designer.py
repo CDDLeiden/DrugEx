@@ -45,7 +45,7 @@ def DesignArgParser(txt=None):
         
     # Load parameters generator/environment from trained model
     designer_args = vars(args)
-    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task', 
+    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
         'ra_score_model', 'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:

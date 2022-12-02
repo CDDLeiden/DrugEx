@@ -22,7 +22,6 @@ function cleanup() {
   rm -rf ${TEST_BASE}/data/${VOC_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/*.log;
   rm -rf ${TEST_BASE}/data/*.json;
-  rm -rf ${TEST_BASE}/envs;
   rm -rf ${TEST_BASE}/generators;
   rm -rf ${TEST_BASE}/logs;
 }
@@ -49,21 +48,6 @@ export N_TRIALS=2
 export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sv -sif"
 export DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nf ${N_COMBINATIONS} -nf ${N_FRAGS}"
 
-###############
-# ENVIRONMENT #
-###############
-export ENVIRON_COMMON_ARGS="-b ${TEST_BASE} -d"
-python -m drugex.environ \
-${ENVIRON_COMMON_ARGS} \
--i ${TEST_DATA_ENVIRONMENT} \
--l \
--s \
--m RF \
--r CLS \
--ncpu ${N_CPUS} \
--o ${OPTIMIZATION} \
--ss ${SEARCH_SPACE} \
--nt ${N_TRIALS}
 
 ############
 # TRAINING #
@@ -77,5 +61,5 @@ export TARGET_ID="P29274"
 export ENVIRON_MODE="CLS"
 export ENVIRON_ALG="RF"
 export ENVIRON_THRESHOLD=6.5
-export TRAIN_RL_ARGS="-ta ${TARGET_ID} -et ${ENVIRON_MODE} -ea ${ENVIRON_ALG} -at ${ENVIRON_THRESHOLD}"
+export TRAIN_RL_ARGS="-ng -ta ${TARGET_ID} -et ${ENVIRON_MODE} -ea ${ENVIRON_ALG} -at ${ENVIRON_THRESHOLD}"
 
