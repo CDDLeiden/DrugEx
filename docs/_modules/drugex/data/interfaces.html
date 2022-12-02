@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.interfaces &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.data.interfaces &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -132,6 +132,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">outpath</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">)):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">)</span>
@@ -181,7 +183,7 @@
         <span class="k">if</span> <span class="n">chunk_size</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;chunksize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chunk_size</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="DataSet.updateVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.updateVoc">[docs]</a>    <span class="k">def</span> <span class="nf">updateVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">voc</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -348,21 +350,22 @@
 <span class="sd">            mol: molecule as SMILES</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the encoded representation of this molecule</span>
+<span class="sd">            a `tuple` of the molecule tokens (as determined by the specified vocabulary) and the encoded representation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="FragmentPairEncoder.encodeFrag"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.encodeFrag">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">mol_tokens</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode fragment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            mol: the parent molecule of this fragment</span>
+<span class="sd">            mol_tokens: the encoded representation of the parent molecule</span>
 <span class="sd">            frag: the fragment to encode</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the encoded representation of the fragment</span>
+<span class="sd">            the encoded representation of the fragment-molecule pair (i.e. the generated tokens corresponding to both the fragment and the parent molecule)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 

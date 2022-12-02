@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.designer &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.designer &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -80,7 +80,7 @@
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">VocGPT</span><span class="p">,</span> <span class="n">VocSmiles</span>
+<span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">VocSmiles</span>
 <span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="n">GraphFragDataSet</span><span class="p">,</span> <span class="n">SmilesFragDataSet</span>
 <span class="kn">from</span> <span class="nn">drugex.data.utils</span> <span class="kn">import</span> <span class="n">getVocPaths</span>
 <span class="kn">from</span> <span class="nn">drugex.logs.utils</span> <span class="kn">import</span> <span class="n">enable_file_logger</span><span class="p">,</span> <span class="n">commit_hash</span><span class="p">,</span> <span class="n">backUpFiles</span>
@@ -175,14 +175,9 @@
         <span class="k">if</span> <span class="n">voc_paths</span><span class="p">:</span>
             <span class="n">data_set</span><span class="o">.</span><span class="n">readVocs</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">,</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">n_frags</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">gen_alg</span> <span class="o">==</span> <span class="s1">&#39;trans&#39;</span> <span class="p">:</span>
-            <span class="n">data_set</span> <span class="o">=</span> <span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">voc_paths</span><span class="p">:</span>
-                <span class="n">data_set</span><span class="o">.</span><span class="n">readVocs</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">,</span> <span class="n">VocGPT</span><span class="p">,</span> <span class="n">src_len</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">trg_len</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>       
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data_set</span> <span class="o">=</span> <span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">voc_paths</span><span class="p">:</span>
-                <span class="n">data_set</span><span class="o">.</span><span class="n">readVocs</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">,</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">data_set</span> <span class="o">=</span> <span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">voc_paths</span><span class="p">:</span>
+            <span class="n">data_set</span><span class="o">.</span><span class="n">readVocs</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">,</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
     <span class="n">voc</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span>
 
     <span class="n">loader</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
@@ -210,7 +205,7 @@
             <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">voc_paths</span> <span class="o">=</span> <span class="n">getVocPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">voc_files</span><span class="p">,</span> <span class="s1">&#39;smiles&#39;</span><span class="p">)</span>
-        <span class="n">voc</span> <span class="o">=</span> <span class="n">VocSmiles</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">voc</span> <span class="o">=</span> <span class="n">VocSmiles</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">voc_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
     
     <span class="c1"># Load generator model</span>
     <span class="n">gen_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">+</span> <span class="s1">&#39;/generators/&#39;</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">generator</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span>
@@ -244,12 +239,9 @@
     <span class="c1"># Generate molecules and save them</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;rnn&#39;</span><span class="p">:</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-        <span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">num</span> <span class="o">&gt;</span> <span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
-            <span class="n">repeat</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">num</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
-        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">],</span> <span class="n">scores</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">repeat</span> <span class="o">=</span> <span class="n">repeat</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">scores</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">],</span> <span class="n">scores</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_smiles</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">scores</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">frags</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
         <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Frags&#39;</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frags</span><span class="p">,</span> <span class="n">smiles</span>

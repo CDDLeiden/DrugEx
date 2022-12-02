@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.models.single_network &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.training.models.single_network &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -77,6 +77,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
 <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">DEFAULT_GPUS</span>
@@ -160,10 +161,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
             <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">score</span> <span class="o">*</span> <span class="n">reward</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
                 <span class="n">progress</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">progress</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
             <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
             <span class="n">step_idx</span> <span class="o">+=</span> <span class="mi">1</span></div>
@@ -186,7 +187,7 @@
 
         <span class="k">return</span> <span class="n">sequences</span></div>
 
-<div class="viewcode-block" id="RNN.evaluate"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.single_network.RNN.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_duplicates</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="RNN.evaluate"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.single_network.RNN.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_duplicates</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="n">smiles</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
             <span class="n">sequences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
@@ -196,36 +197,42 @@
             <span class="n">ix</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]))</span>
             <span class="n">smiles</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">scores</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span></div>
 
 <div class="viewcode-block" id="RNN.evolve"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.single_network.RNN.evolve">[docs]</a>    <span class="k">def</span> <span class="nf">evolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># Start tokens</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">tk2ix</span><span class="p">[</span><span class="s1">&#39;GO&#39;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="c1"># Hidden states initialization for exploitation network</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
-        <span class="c1"># Hidden states initialization for exploration network</span>
-        <span class="n">h1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
-        <span class="n">h2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="c1"># Hidden states initialization for exploitation network (agent)</span>
+        <span class="n">hA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="c1"># Hidden states initialization for exploration networks (mutate and crover)</span>
+        <span class="n">hM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">hC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_h</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="c1"># Initialization of output matrix</span>
         <span class="n">sequences</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">max_len</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="c1"># labels to judge and record which sample is ended</span>
         <span class="n">is_end</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">max_len</span><span class="p">):</span>
-            <span class="n">logit</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
-            <span class="n">proba</span> <span class="o">=</span> <span class="n">logit</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Get unscaled logits and hidden states from agent network and convert them to probabilities with softmax</span>
+            <span class="n">logitA</span><span class="p">,</span> <span class="n">hA</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">hA</span><span class="p">)</span>
+            <span class="n">proba</span> <span class="o">=</span> <span class="n">logitA</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># If crover combine probablities from agent network and crover network</span>
             <span class="k">if</span> <span class="n">crover</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">ratio</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                <span class="n">logit1</span><span class="p">,</span> <span class="n">h1</span> <span class="o">=</span> <span class="n">crover</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">h1</span><span class="p">)</span>
-                <span class="n">proba</span> <span class="o">=</span> <span class="n">proba</span> <span class="o">*</span> <span class="n">ratio</span> <span class="o">+</span> <span class="n">logit1</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ratio</span><span class="p">)</span>
+                <span class="n">logitC</span><span class="p">,</span> <span class="n">hC</span> <span class="o">=</span> <span class="n">crover</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">hC</span><span class="p">)</span>
+                <span class="n">proba</span> <span class="o">=</span> <span class="n">proba</span> <span class="o">*</span> <span class="n">ratio</span> <span class="o">+</span> <span class="n">logitC</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ratio</span><span class="p">)</span>
+            
+            <span class="c1"># If mutate replace with the epsilon-rate the probabilities with the ones from the mutation network</span>
             <span class="k">if</span> <span class="n">mutate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logit2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">mutate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">h2</span><span class="p">)</span>
+                <span class="n">logitM</span><span class="p">,</span> <span class="n">hM</span> <span class="o">=</span> <span class="n">mutate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">hM</span><span class="p">)</span>
                 <span class="n">is_mutate</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                <span class="n">proba</span><span class="p">[</span><span class="n">is_mutate</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">logit2</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="n">is_mutate</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">proba</span><span class="p">[</span><span class="n">is_mutate</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">logitM</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="n">is_mutate</span><span class="p">,</span> <span class="p">:]</span>
+            
+
             <span class="c1"># sampling based on output probability distribution</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">proba</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
@@ -241,7 +248,7 @@
         <span class="n">last_save</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="c1"># threshold for number of epochs without change that will trigger early stopping</span>
         <span class="n">max_interval</span> <span class="o">=</span> <span class="mi">50</span>
-        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Fitting model&#39;</span><span class="p">):</span>
             <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader_train</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader_train</span><span class="p">):</span>
@@ -285,10 +292,35 @@
             <span class="n">monitor</span><span class="o">.</span><span class="n">endStep</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">epoch</span> <span class="o">-</span> <span class="n">last_save</span> <span class="o">&gt;</span> <span class="n">max_interval</span><span class="p">:</span> <span class="k">break</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
-        <span class="n">monitor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+        <span class="n">monitor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-
-
+<div class="viewcode-block" id="RNN.sample_smiles"><a class="viewcode-back" href="../../../../api/drugex.training.models.html#drugex.training.models.single_network.RNN.sample_smiles">[docs]</a>    <span class="k">def</span> <span class="nf">sample_smiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tqdm_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="n">tqdm_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;total&#39;</span><span class="p">:</span> <span class="n">num_samples</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">:</span> <span class="s1">&#39;Generating molecules&#39;</span><span class="p">})</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="o">**</span><span class="n">tqdm_kwargs</span><span class="p">)</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_samples</span><span class="p">:</span>
+            <span class="c1"># sample SMILES</span>
+            <span class="n">sequences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+            <span class="c1"># decode according to vocabulary</span>
+            <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">canonicalize_list</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sequences</span><span class="p">])</span>
+            <span class="c1"># drop duplicates</span>
+            <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+                <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span>
+                <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">new_smiles</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">smiles</span><span class="p">))]</span>
+                <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">new_smiles</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="c1"># drop invalid smiles</span>
+            <span class="k">if</span> <span class="n">drop_invalid</span><span class="p">:</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+                <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)[</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">smiles</span> <span class="o">+=</span> <span class="n">new_smiles</span>
+            <span class="c1"># Update progress bar</span>
+            <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span> <span class="k">if</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">num_samples</span> <span class="k">else</span> <span class="n">num_samples</span> <span class="o">-</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">smiles</span></div></div>
 </pre></div>
 
            </div>

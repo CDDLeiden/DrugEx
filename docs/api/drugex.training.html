@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training package &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.training package &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -156,7 +156,7 @@ On: 06.06.22, 16:51</p>
 <p>Original implementation of the environment scoring strategy for DrugEx v3.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.environment.DrugExEnvironment.getScores">
-<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/environment.html#DrugExEnvironment.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.environment.DrugExEnvironment.getScores" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/environment.html#DrugExEnvironment.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.environment.DrugExEnvironment.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the scores of all objectives for all of samples
 :param smiles: the list of generated molecules
 :type smiles: list
@@ -1158,18 +1158,8 @@ Returns:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.test_smiles_frags_attn">
-<span class="sig-name descname"><span class="pre">test_smiles_frags_attn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TrainingTestCase.test_smiles_frags_attn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.test_smiles_frags_attn" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.test_smiles_frags_gpt">
 <span class="sig-name descname"><span class="pre">test_smiles_frags_gpt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TrainingTestCase.test_smiles_frags_gpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.test_smiles_frags_gpt" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.test_smiles_frags_vec">
-<span class="sig-name descname"><span class="pre">test_smiles_frags_vec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TrainingTestCase.test_smiles_frags_vec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.test_smiles_frags_vec" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

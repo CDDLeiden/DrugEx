@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data package &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.data package &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -155,12 +155,6 @@ On: 25.06.22, 19:42</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="drugex.data.datasets.GraphScaffoldDataSet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.datasets.</span></span><span class="sig-name descname"><span class="pre">GraphScaffoldDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#GraphScaffoldDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.GraphScaffoldDataSet" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.data.datasets.GraphFragDataSet" title="drugex.data.datasets.GraphFragDataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphFragDataSet</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="drugex.data.datasets.SmilesDataSet">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.datasets.</span></span><span class="sig-name descname"><span class="pre">SmilesDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesDataSet" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a></p>
@@ -184,6 +178,30 @@ On: 25.06.22, 19:42</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>typically an instance of PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> generated from “data”, but depends on the implementation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.datasets.SmilesDataSet.getColumns">
+<span class="sig-name descname"><span class="pre">getColumns</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesDataSet.getColumns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesDataSet.getColumns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.datasets.SmilesDataSet.readVocs">
+<span class="sig-name descname"><span class="pre">readVocs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_class</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesDataSet.readVocs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesDataSet.readVocs" title="Permalink to this definition"></a></dt>
+<dd><p>Read vocabularies from files and add them together to form the full vocabulary for this <a class="reference internal" href="#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>paths</strong> – file paths to vocabulary files</p></li>
+<li><p><strong>voc_class</strong> – <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> implementation to initialize from the files</p></li>
+<li><p><strong>*args</strong> – any positional arguments passed to the <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> constructor besides “words”</p></li>
+<li><p><strong>**kwargs</strong> – any keyword arguments passed to the <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> constructor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -219,6 +237,25 @@ On: 25.06.22, 19:42</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.datasets.SmilesFragDataSet.createLoaders">
+<span class="sig-name descname"><span class="pre">createLoaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesFragDataSet.createLoaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesFragDataSet.createLoaders" title="Permalink to this definition"></a></dt>
+<dd><p>Facilitates splitting and conversion of data to <a href="#id1"><span class="problematic" id="id2">`</span></a>DataLoader`s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – data to convert</p></li>
+<li><p><strong>batch_size</strong> – batch size</p></li>
+<li><p><strong>splitter</strong> – the <code class="xref any docutils literal notranslate"><span class="pre">ChunkSplitter</span></code> to use</p></li>
+<li><p><strong>converter</strong> – the <a class="reference internal" href="#drugex.data.interfaces.DataToLoader" title="drugex.data.interfaces.DataToLoader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataToLoader</span></code></a> instance to convert with</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of created data loaders (same length as the “splitter” return value)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.datasets.SmilesFragDataSet.dataToLoader">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dataToLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesFragDataSet.dataToLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesFragDataSet.dataToLoader" title="Permalink to this definition"></a></dt>
 <dd><p>The default method to use to convert data (as returned from <a class="reference internal" href="#drugex.data.interfaces.DataSet.getData" title="drugex.data.interfaces.DataSet.getData"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">DataSet.getData()</span></code></a>) to a PyTorch <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code>. Basically, mirrors the <a class="reference internal" href="#drugex.data.interfaces.DataToLoader" title="drugex.data.interfaces.DataToLoader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataToLoader</span></code></a> interface.</p>
@@ -236,12 +273,30 @@ On: 25.06.22, 19:42</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.datasets.SmilesFragDataSet.getColumns">
+<span class="sig-name descname"><span class="pre">getColumns</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesFragDataSet.getColumns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesFragDataSet.getColumns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.datasets.SmilesFragDataSet.readVocs">
+<span class="sig-name descname"><span class="pre">readVocs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_class</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesFragDataSet.readVocs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesFragDataSet.readVocs" title="Permalink to this definition"></a></dt>
+<dd><p>Read vocabularies from files and add them together to form the full vocabulary for this <a class="reference internal" href="#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>paths</strong> – file paths to vocabulary files</p></li>
+<li><p><strong>voc_class</strong> – <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> implementation to initialize from the files</p></li>
+<li><p><strong>*args</strong> – any positional arguments passed to the <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> constructor besides “words”</p></li>
+<li><p><strong>**kwargs</strong> – any keyword arguments passed to the <a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a> constructor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="drugex.data.datasets.SmilesScaffoldDataSet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.datasets.</span></span><span class="sig-name descname"><span class="pre">SmilesScaffoldDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/datasets.html#SmilesScaffoldDataSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.datasets.SmilesScaffoldDataSet" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.data.datasets.SmilesFragDataSet" title="drugex.data.datasets.SmilesFragDataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmilesFragDataSet</span></code></a></p>
 </dd></dl>
 
 </section>
@@ -267,7 +322,7 @@ On: 25.06.22, 19:42</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mols</strong> – <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of molecules as SMILES strings</p></li>
-<li><p><strong>fragmentPairsCollector</strong> – an instance of <a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> to collect results of the fragmentation (the generated fragment-molecule <a href="#id1"><span class="problematic" id="id2">`</span></a>tuple`s from the given “fragmenter”).</p></li>
+<li><p><strong>fragmentPairsCollector</strong> – an instance of <a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> to collect results of the fragmentation (the generated fragment-molecule <a href="#id3"><span class="problematic" id="id4">`</span></a>tuple`s from the given “fragmenter”).</p></li>
 <li><p><strong>encodingCollectors</strong> – a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> instances matching in length the number of splits given by the “pairs_splitter”. Each <a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> receives a (data, <a class="reference internal" href="#drugex.data.fragments.FragmentPairsEncodedSupplier" title="drugex.data.fragments.FragmentPairsEncodedSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier</span></code></a>) <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a> of the currently finished process.</p></li>
 </ul>
 </dd>
@@ -284,7 +339,7 @@ On: 25.06.22, 19:42</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pairs</strong> – <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of (fragment, molecule) <a href="#id3"><span class="problematic" id="id4">`</span></a>tuple`s to encode</p></li>
+<li><p><strong>pairs</strong> – <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of (fragment, molecule) <a href="#id5"><span class="problematic" id="id6">`</span></a>tuple`s to encode</p></li>
 <li><p><strong>collector</strong> – The <a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> to apply to fetch encoding data from each process.</p></li>
 </ul>
 </dd>
@@ -352,7 +407,7 @@ On: 25.06.22, 19:42</p>
 <dd><p>Get the next pair and encode it with the encoder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>(str, str) encoded form of the molecule and one of the encoded fragments</p>
+<dd class="field-odd"><p>(str, str) encoded form of fragment-molecule pair</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a></p>
@@ -394,17 +449,18 @@ On: 25.06.22, 19:42</p>
 <p>Encode molecules and fragments for the graph-based transformer (<a class="reference internal" href="drugex.training.models.transform.html#drugex.training.models.transform.gpt2graph.GraphModel" title="drugex.training.models.transform.gpt2graph.GraphModel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GraphModel</span></code></a>).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.fragments.GraphFragmentEncoder.encodeFrag">
-<span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#GraphFragmentEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.GraphFragmentEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
-<dd><p>Encode fragment.</p>
+<span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#GraphFragmentEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.GraphFragmentEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
+<dd><p>Encode molecules and fragments at once.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol</strong> – the parent molecule of this fragment</p></li>
-<li><p><strong>frag</strong> – the fragment to encode</p></li>
+<li><p><strong>mol</strong> – parent molecule SMILES (from <a class="reference internal" href="#drugex.data.fragments.GraphFragmentEncoder.encodeMol" title="drugex.data.fragments.GraphFragmentEncoder.encodeMol"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">encodeMol</span></code></a>)</p></li>
+<li><p><strong>mol_tokens</strong> – molecule SMILES (from <a class="reference internal" href="#drugex.data.fragments.GraphFragmentEncoder.encodeMol" title="drugex.data.fragments.GraphFragmentEncoder.encodeMol"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">encodeMol</span></code></a>)</p></li>
+<li><p><strong>frag</strong> – SMILES of the fragment in the parent molecule</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of the fragment</p>
+<dd class="field-even"><p>One line of the graph-encoded data.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -412,13 +468,13 @@ On: 25.06.22, 19:42</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.fragments.GraphFragmentEncoder.encodeMol">
 <span class="sig-name descname"><span class="pre">encodeMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#GraphFragmentEncoder.encodeMol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.GraphFragmentEncoder.encodeMol" title="Permalink to this definition"></a></dt>
-<dd><p>Encode molecule.</p>
+<dd><p>Molecules are encoded together with fragments -&gt; we just pass the smiles back as both tokens and result of encoding.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>mol</strong> – molecule as SMILES</p>
+<dd class="field-odd"><p><strong>smiles</strong> – </p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of this molecule</p>
+<dd class="field-even"><p>The input smiles as both the tokens and as the encoded result.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -443,31 +499,22 @@ On: 25.06.22, 19:42</p>
 <p>Encode fragment-molecule pairs for the sequence-based models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.fragments.SequenceFragmentEncoder.encodeFrag">
-<span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#SequenceFragmentEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.SequenceFragmentEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
-<dd><p>Encode fragment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mol</strong> – the parent molecule of this fragment</p></li>
-<li><p><strong>frag</strong> – the fragment to encode</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of the fragment</p>
-</dd>
-</dl>
+<span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#SequenceFragmentEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.SequenceFragmentEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
+<dd><p>Encode a fragment.</p>
+<p>Is called by <a class="reference internal" href="#drugex.data.fragments.FragmentPairsEncodedSupplier" title="drugex.data.fragments.FragmentPairsEncodedSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier</span></code></a> with the <a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.mol" title="drugex.molecules.mol"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">mol</span></code></a>
+argument being the output of the above <a class="reference internal" href="#drugex.data.fragments.SequenceFragmentEncoder.encodeMol" title="drugex.data.fragments.SequenceFragmentEncoder.encodeMol"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">encodeMol</span></code></a> method.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.fragments.SequenceFragmentEncoder.encodeMol">
 <span class="sig-name descname"><span class="pre">encodeMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/fragments.html#SequenceFragmentEncoder.encodeMol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.fragments.SequenceFragmentEncoder.encodeMol" title="Permalink to this definition"></a></dt>
-<dd><p>Encode molecule.</p>
+<dd><p>Encode a molecule sequence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>mol</strong> – molecule as SMILES</p>
+<dd class="field-odd"><p><strong>sequence</strong> – sequential representation of the molecule (i.e. SMILES)</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of this molecule</p>
+<dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a> containing the obtained tokens from the sequence (if any) and the corresponding sequence of codes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -519,7 +566,7 @@ On: 07.05.22, 15:54</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.interfaces.DataSet.createLoaders">
 <span class="sig-name descname"><span class="pre">createLoaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/interfaces.html#DataSet.createLoaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.interfaces.DataSet.createLoaders" title="Permalink to this definition"></a></dt>
-<dd><p>Facilitates splitting and conversion of data to <a href="#id5"><span class="problematic" id="id6">`</span></a>DataLoader`s.</p>
+<dd><p>Facilitates splitting and conversion of data to <a href="#id7"><span class="problematic" id="id8">`</span></a>DataLoader`s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -672,17 +719,18 @@ On: 07.05.22, 15:54</p>
 <p>Encode fragments and the associated molecules for the fragment-based DrugEx models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.interfaces.FragmentPairEncoder.encodeFrag">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/interfaces.html#FragmentPairEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.interfaces.FragmentPairEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encodeFrag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/interfaces.html#FragmentPairEncoder.encodeFrag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.interfaces.FragmentPairEncoder.encodeFrag" title="Permalink to this definition"></a></dt>
 <dd><p>Encode fragment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mol</strong> – the parent molecule of this fragment</p></li>
+<li><p><strong>mol_tokens</strong> – the encoded representation of the parent molecule</p></li>
 <li><p><strong>frag</strong> – the fragment to encode</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of the fragment</p>
+<dd class="field-even"><p>the encoded representation of the fragment-molecule pair (i.e. the generated tokens corresponding to both the fragment and the parent molecule)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -696,7 +744,7 @@ On: 07.05.22, 15:54</p>
 <dd class="field-odd"><p><strong>mol</strong> – molecule as SMILES</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the encoded representation of this molecule</p>
+<dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a> of the molecule tokens (as determined by the specified vocabulary) and the encoded representation</p>
 </dd>
 </dl>
 </dd></dl>
@@ -841,6 +889,11 @@ On: 18.05.22, 11:49</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.tests.ProcessingTests.test_gragh_scaffold_encoding">
+<span class="sig-name descname"><span class="pre">test_gragh_scaffold_encoding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/tests.html#ProcessingTests.test_gragh_scaffold_encoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.tests.ProcessingTests.test_gragh_scaffold_encoding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.tests.ProcessingTests.test_graph_frag_encoder">
 <span class="sig-name descname"><span class="pre">test_graph_frag_encoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/tests.html#ProcessingTests.test_graph_frag_encoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.tests.ProcessingTests.test_graph_frag_encoder" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -853,6 +906,11 @@ On: 18.05.22, 11:49</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.tests.ProcessingTests.test_smiles_frag_encoder">
 <span class="sig-name descname"><span class="pre">test_smiles_frag_encoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/tests.html#ProcessingTests.test_smiles_frag_encoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.tests.ProcessingTests.test_smiles_frag_encoder" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.tests.ProcessingTests.test_smiles_scaffold_encoding">
+<span class="sig-name descname"><span class="pre">test_smiles_scaffold_encoding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/tests.html#ProcessingTests.test_smiles_scaffold_encoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.tests.ProcessingTests.test_smiles_scaffold_encoding" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

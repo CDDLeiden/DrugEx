@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex package &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex package &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -235,27 +235,7 @@ On: 24.06.22, 10:36</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.dataset.Dataset">
 <span class="sig-prename descclassname"><span class="pre">drugex.dataset.</span></span><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/dataset.html#Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.dataset.Dataset" title="Permalink to this definition"></a></dt>
-<dd><p>Prepare input files for DrugEx generators containing encoded molecules for three different cases:</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>SMILES w/o fragments: {output}_corpus.txt and [opt] {voc}_smiles.txt containing the SMILES-token-encoded molecules</dt><dd><p>and the token-vocabulary respectively</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>SMILES w/ fragments: {output}_{mf/sf}_{frag_method}_[train/test]_smi.txt and [opt] {voc}_smiles.txt containing</dt><dd><p>the SMILES-token-encoded fragment-molecule pairs for the train and test sets and
-the token-vocabulary respectively</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Graph fragments: {output}_{mf/sf}_{frag_method}_[train/test]_graph.txt and [opt] {voc}_graph.txt containing the</dt><dd><p>encoded graph-matrices of fragement-molecule pairs for the train and test sets and
-the token-vocabulary respectively</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.dataset.DatasetArgParser">
@@ -297,6 +277,18 @@ the token-vocabulary respectively</p>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.dataset.v2Dataset">
+<span class="sig-prename descclassname"><span class="pre">drugex.dataset.</span></span><span class="sig-name descname"><span class="pre">v2Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/dataset.html#v2Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.dataset.v2Dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Prepare data for SMILES-based RNN generator (v2)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.dataset.v3Dataset">
+<span class="sig-prename descclassname"><span class="pre">drugex.dataset.</span></span><span class="sig-name descname"><span class="pre">v3Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/dataset.html#v3Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.dataset.v3Dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Prepare data for SMILES- or graph-based transformer generators (v3)</p>
 </dd></dl>
 
 </section>
@@ -359,7 +351,7 @@ loader                      : torch DataLoader containing input fragements</p>
 <span id="drugex-train-module"></span><h2>drugex.train module<a class="headerlink" href="#module-drugex.train" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="drugex.train.CreateDesirabilityFunction">
-<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateDesirabilityFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'XBG'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateDesirabilityFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateDesirabilityFunction" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateDesirabilityFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'XBG'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">140]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ECFP6'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_tw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">1.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[4,</span> <span class="pre">6]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateDesirabilityFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateDesirabilityFunction" title="Permalink to this definition"></a></dt>
 <dd><p>Sets up the objectives of the desirability function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -380,14 +372,23 @@ loader                      : torch DataLoader containing input fragements</p>
 <li><p><strong>mw_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – molecular weight thresholds to penalize large molecules</p></li>
 <li><p><strong>logP</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, molecules with logP values are penalized in the desirability function</p></li>
 <li><p><strong>logP_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – logP thresholds to penalize large molecules</p></li>
+<li><p><strong>tpsa</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, tpsa used in the desirability function</p></li>
+<li><p><strong>tpsa_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – tpsa thresholds</p></li>
+<li><p><strong>sim_smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – reference molecules used for similarity calculation</p></li>
+<li><p><strong>sim_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – type of fingerprint or ‘graph’ used for similarity calculation</p></li>
+<li><p><strong>sim_th</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – threshold for similarity desirability</p></li>
+<li><p><strong>sim_tw</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – tversky similarity weights</p></li>
+<li><p><strong>le</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, ligand efficiency used instead of activity for active targets in the desirability function</p></li>
+<li><p><strong>le_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – ligand efficiency thresholds</p></li>
+<li><p><strong>lipe</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, lipophilic efficiency used instead of activity for active targets in the desirability function</p></li>
+<li><p><strong>lipe_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – lipophilic efficiency thresholds</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of selected scorers
-ths (lst)                   : list desirability thresholds per scorer</p>
+<dd class="field-even"><p>environment-predictor model</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>objs (lst)</p>
+<dd class="field-odd"><p><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment" title="drugex.training.environment.DrugExEnvironment">DrugExEnvironment</a> (torch model)</p>
 </dd>
 </dl>
 </dd></dl>

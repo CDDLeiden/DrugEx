@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus.tests &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.data.corpus.tests &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -104,16 +104,6 @@
 
         <span class="k">return</span> <span class="n">smiles</span></div>
 
-<div class="viewcode-block" id="CorpusTest.test_sequence_corpus_smiles"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.tests.CorpusTest.test_sequence_corpus_smiles">[docs]</a>    <span class="k">def</span> <span class="nf">test_sequence_corpus_smiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMols</span><span class="p">()</span>
-        <span class="n">corpus</span> <span class="o">=</span> <span class="n">SequenceCorpus</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="s2">&quot;@&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="s1">&#39;seq&#39;</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="s2">&quot;@&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span></div>
-
 <div class="viewcode-block" id="CorpusTest.test_sequence_corpus_file"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.tests.CorpusTest.test_sequence_corpus_file">[docs]</a>    <span class="k">def</span> <span class="nf">test_sequence_corpus_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMols</span><span class="p">()</span>
         <span class="n">corpus</span> <span class="o">=</span> <span class="n">SequenceCorpus</span><span class="p">(</span>
@@ -122,9 +112,7 @@
 
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
-            <span class="n">seq</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="s1">&#39;seq&#39;</span><span class="p">]</span>
-            <span class="n">token</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">==</span> <span class="n">corpus</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span><span class="o">.</span><span class="n">max_len</span><span class="p">)</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
 

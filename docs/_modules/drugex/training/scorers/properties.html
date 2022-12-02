@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.properties &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.training.scorers.properties &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -85,12 +85,12 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 
-<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span><span class="p">,</span> <span class="n">DataStructs</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem.QED</span> <span class="kn">import</span> <span class="n">qed</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem.GraphDescriptors</span> <span class="kn">import</span> <span class="n">BertzCT</span>
+<span class="kn">from</span> <span class="nn">rdkit.Chem.Fraggle</span> <span class="kn">import</span> <span class="n">FraggleSim</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">Descriptors</span> <span class="k">as</span> <span class="n">desc</span><span class="p">,</span> <span class="n">Crippen</span><span class="p">,</span> <span class="n">AllChem</span><span class="p">,</span> <span class="n">Lipinski</span>
 
-<span class="kn">from</span> <span class="nn">drugex.utils.fingerprints</span> <span class="kn">import</span> <span class="n">get_fingerprint</span>
 <span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.sascorer</span> <span class="kn">import</span> <span class="n">calculateScore</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.modifiers</span> <span class="kn">import</span> <span class="n">Gaussian</span>
@@ -233,27 +233,6 @@
 <div class="viewcode-block" id="Isomer.getKey"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Isomer (mean_func=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_func</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
 
-<div class="viewcode-block" id="Similarity"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Similarity">[docs]</a><span class="k">class</span> <span class="nc">Similarity</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smile</span><span class="p">,</span> <span class="n">fp_type</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">smile</span> <span class="o">=</span> <span class="n">smile</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smile</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fp_type</span> <span class="o">=</span> <span class="n">fp_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">=</span> <span class="n">get_fingerprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="n">fp_type</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Similarity.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Similarity.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">mols</span><span class="p">)):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">fp</span> <span class="o">=</span> <span class="n">get_fingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fp_type</span><span class="p">)</span>
-                <span class="n">scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataStructs</span><span class="o">.</span><span class="n">TanimotoSimilarity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span> <span class="k">continue</span>
-        <span class="k">return</span> <span class="n">scores</span></div>
-
-<div class="viewcode-block" id="Similarity.getKey"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Similarity.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Similarity (fp_type=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp_type</span><span class="si">}</span><span class="s2">, smile=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">smile</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
-
-
 <div class="viewcode-block" id="Scaffold"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold">[docs]</a><span class="k">class</span> <span class="nc">Scaffold</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smart</span><span class="p">,</span> <span class="n">is_match</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
@@ -291,6 +270,45 @@
 
 <div class="viewcode-block" id="Uniqueness.getKey"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;Unique&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="LipophilicEfficiency"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency">[docs]</a><span class="k">class</span> <span class="nc">LipophilicEfficiency</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the lipophilic efficiency of a molecule: LiPE = pChEMBL value - logP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span> <span class="o">=</span> <span class="n">qsar_scorer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LipE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+
+<div class="viewcode-block" id="LipophilicEfficiency.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">pChEMBL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="n">logP</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="s1">&#39;logP&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">pChEMBL</span> <span class="o">-</span> <span class="n">logP</span>
+        <span class="k">return</span> <span class="n">scores</span></div>
+
+<div class="viewcode-block" id="LipophilicEfficiency.getKey"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span></div></div>
+
+<div class="viewcode-block" id="LigandEfficiency"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency">[docs]</a><span class="k">class</span> <span class="nc">LigandEfficiency</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the ligand efficiency of a molecule: LE = 1.4 * pChEMBL / nAtoms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span> <span class="o">=</span> <span class="n">qsar_scorer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+
+<div class="viewcode-block" id="LigandEfficiency.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">pChEMBL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="n">nAtoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">mol</span><span class="o">.</span><span class="n">GerNumAtoms</span><span class="p">()</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mols</span><span class="p">]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="mf">1.4</span> <span class="o">*</span> <span class="n">pChEMBL</span> <span class="o">/</span> <span class="n">nAtoms</span>
+        <span class="k">return</span> <span class="n">scores</span></div>
+
+<div class="viewcode-block" id="LigandEfficiency.getKey"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span></div></div>
 </pre></div>
 
            </div>

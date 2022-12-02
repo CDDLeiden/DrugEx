@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.monitors &mdash; DrugEx 3.2.0 documentation</title>
+  <title>drugex.training.monitors &mdash; DrugEx 3.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.2.0
+                v3.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -106,6 +106,7 @@
 <div class="viewcode-block" id="DictMonitor.getEpochSummary"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getEpochSummary">[docs]</a>    <span class="k">def</span> <span class="nf">getEpochSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">evaluation</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;loss_train&#39;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s1">&#39;loss_valid&#39;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s1">&#39;valid_ratio&#39;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s1">&#39;unique_ratio&#39;</span><span class="p">:</span> <span class="p">[],</span>
@@ -124,7 +125,8 @@
                     <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">])</span>
                     <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;desire_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;desire_ratio&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;desire_ratio&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
                     <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;unique_ratio&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;unique_ratio&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;unique_ratio&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;mean_train_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">losses</span><span class="p">))</span>
+                    <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;loss_train&#39;</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">evaluation</span><span class="p">[</span><span class="s1">&#39;mean_train_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span> <span class="k">if</span> <span class="n">losses</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">evaluation</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DictMonitor.getMoleculeSummary"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.DictMonitor.getMoleculeSummary">[docs]</a>    <span class="k">def</span> <span class="nf">getMoleculeSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
