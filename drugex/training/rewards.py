@@ -72,15 +72,11 @@ class SimilarityRanking(RankingStrategy):
         """
         Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.
         Args:
-            swarm (np.ndarray): m x n scoring matrix, where m is the number of samples
-                and n is the number of objectives.
-            fps (np.ndarray): m-d vector as fingerprints for all the molecules
-
-            is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,
-                it will be implemented by Numpy and ran on CPUs.
+            smiles (list): List of SMILES sequence to be ranked
+            scores (np.ndarray): matrix of scores for the multiple objectives
 
         Returns:
-            rank (np.array): m-d vector as the index of well-ranked solutions.
+            rank (np.array): SMILES sequences ranked with the similarity ranking method
         """
 
         mols = [Chem.MolFromSmiles(smile) for smile in smiles]
