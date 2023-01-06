@@ -68,17 +68,19 @@ class SimilarityRanking(RankingStrategy):
                 fps.append(None)
         return fps
 
-    def __call__(self, smiles, scores):
+    def __call__(self, smiles, scores, func='min'):
         """
         Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.
         Args:
             smiles (list): List of SMILES sequence to be ranked
             scores (np.ndarray): matrix of scores for the multiple objectives
+            func (str): 'min' takes minimium tanimoto distance, 'avg' takes average tanimoto distance
 
         Returns:
             rank (np.array): SMILES sequences ranked with the similarity ranking method
         """
 
+        func = np.min if func == 'min' else np.mean
         mols = [Chem.MolFromSmiles(smile) for smile in smiles]
         fps = self.calc_fps(mols)
 
@@ -89,10 +91,10 @@ class SimilarityRanking(RankingStrategy):
             front_fps = [fps[f] for f in front]
             if len(front) > 2 and None not in front_fps:
                 dist = np.zeros(len(front))
-                # find the avarage tanimoto distance for each fingerprint to all other fingerprints in the front
-                dist = np.array([
-                    np.sum(1 - np.array(DataStructs.BulkTanimotoSimilarity(fp, front_fps))) / len(front)
-                    for fp in front_fps])
+                # find the min/average tanimoto distance for each fingerprint to all other fingerprints in the front
+                dist = np.array(
+                    [func(1 - np.array(DataStructs.BulkTanimotoSimilarity(fp, list(np.delete(front_fps, idx)))))
+                     for idx, fp in enumerate(front_fps)])
                 fronts[i] = front[dist.argsort()]
             elif None in front_fps:
                 logger.warning("Invalid molecule in front. Front not ranked.")
