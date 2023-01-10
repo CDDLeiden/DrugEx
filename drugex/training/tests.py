@@ -9,9 +9,8 @@ import tempfile
 from collections import OrderedDict
 from unittest import TestCase
 
+import numpy as np
 import pandas as pd
-
-from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -20,8 +19,8 @@ from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTe
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.interfaces import TrainingMonitor
-from drugex.training.models import GPT2Model, EncDec, Seq2Seq, RNN, GraphModel
+from drugex.training.interfaces import TrainingMonitor, Scorer
+from drugex.training.models import GPT2Model, RNN, GraphModel
 from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
@@ -86,6 +85,28 @@ class TestModelMonitor(TrainingMonitor):
         return all([self.execution[key] for key in self.execution])
 
 
+class MockScorer(Scorer):
+
+    def getScores(self, mols, frags=None):
+        return list(np.random.random(len(mols)))
+
+
+    def getKey(self):
+        return "MockScorer"
+
+
+def getPredictor():
+    activity_threshold = 6.5
+    pad = 3.5
+    try:
+        from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
+        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', th=None, scale=False, name='P29274',
+            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+        )
+    except ImportError:
+        ret = MockScorer()
+    return ret
+
 class TrainingTestCase(TestCase):
 
     # input file information
@@ -101,18 +122,12 @@ class TrainingTestCase(TestCase):
     BATCH_SIZE = 8
 
     # environment objectives (TODO: we should test more options and combinations here)
-    activity_threshold = 6.5
-    pad = 3.5
     scorers = [
         Property(
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        
-        QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', th=None, scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
-        ),
-
+        getPredictor()
     ]
     thresholds = [0.5, 0.99]
 

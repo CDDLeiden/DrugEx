@@ -501,8 +501,8 @@ class SmilesExplorerNoFrag(PGLearner):
         mutate (models.Generator): The pre-trained network which is constructed by deep learning model
                                    and ensure the agent to explore the approriate chemical space.
     """
-    def __init__(self, agent, env, mutate=None, crover=None, mean_func='geometric', memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, mean_func=mean_func, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
+    def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
  
     def forward(self, crover=None, memory=None, epsilon=None):
         seqs = []
