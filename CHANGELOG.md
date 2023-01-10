@@ -24,6 +24,7 @@ None.
 - All testing code that is not unit tests was moved to `testing`
 - Remove QSAR modelling from DrugEx, now in a seperate repository QSPRpred
 - Revised SimilarityRanking, now uses the minimum (default) or average Tanimoto distance to rank the solutions in the same front.
+- QSPRpred is an optional dependency (only required for the CLI)
 
 
 ## New Features
