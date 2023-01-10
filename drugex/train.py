@@ -5,8 +5,6 @@ import json
 import argparse
 import warnings
 
-from qsprpred.scorers.predictor import Predictor
-
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
@@ -30,7 +28,7 @@ def GeneratorArgParser(txt=None):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains folders 'data' (and 'qsprmodels')")
+                        help="Base directory which contains folders 'data' (and 'qspr')")
     parser.add_argument('-d', '--debug', action='store_true')
     
     
@@ -318,7 +316,7 @@ def CreateDesirabilityFunction(base_dir,
     Sets up the objectives of the desirability function.
     
     Arguments:
-        base_dir (str)              : folder containing 'qsprmodels' folder with saved environment-predictor models
+        base_dir (str)              : folder containing 'qspr' folder with saved environment-predictor models
         alg (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
@@ -349,6 +347,8 @@ def CreateDesirabilityFunction(base_dir,
         DrugExEnvironment (torch model) : environment-predictor model
         
     """
+
+    from qsprpred.scorers.predictor import Predictor
 
     schemes = {
         "PR" : ParetoSimilarity(),
