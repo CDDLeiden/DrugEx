@@ -1,13 +1,13 @@
 """
 tests
 
+
 Created by: Martin Sicho
 On: 18.05.22, 11:49
 """
+import pandas as pd
 import tempfile
 from unittest import TestCase
-
-import pandas as pd
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -17,6 +17,7 @@ from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.standardizers import DefaultStandardizer
+from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
 from drugex.molecules.suppliers import StandardizedSupplier
 
@@ -42,8 +43,9 @@ class FragmentPairs(TestCase):
         voc = encoder.getVoc()
         self.assertTrue('Br' not in voc.words)
         for encoded in encoded_pairs:
-            self.assertTrue(encoded[0][-1] == 'EOS')
-            self.assertTrue(encoded[1][-1] == 'EOS')
+            self.assertTrue(len(encoded) == 2)
+            self.assertTrue(len(encoded[0]) == encoder.getVoc().max_len)
+            self.assertTrue(len(encoded[1]) == encoder.getVoc().max_len)
 
     def test_pair_encode_smiles_parallel(self):
         pairs_df = pd.Series(self.getPairs()).sample(100, replace=True)
@@ -54,10 +56,12 @@ class FragmentPairs(TestCase):
 
         def collect(result):
             data = result[0]
+            encoder = result[1].encoder
             for item in data:
-                self.assertTrue(item[0][-1] == 'EOS')
-                self.assertTrue(item[1][-1] == 'EOS')
-            voc = result[1].encoder.getVoc()
+                self.assertTrue(len(item) == 2)
+                self.assertTrue(len(item[0]) == encoder.getVoc().max_len)
+                self.assertTrue(len(item[1]) == encoder.getVoc().max_len)
+            voc = encoder.getVoc()
             self.assertTrue('Br' not in voc.words)
 
         evaluator.apply(pairs_df, collect)
@@ -122,7 +126,7 @@ class ProcessingTests(TestCase):
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
-                "vocabulary" : VocSmiles()
+                "vocabulary" : VocSmiles(False)
             },
             n_proc=2, chunk_size=2
         )
@@ -133,7 +137,7 @@ class ProcessingTests(TestCase):
         voc = collector.getVoc()
         self.assertTrue('R' in voc.words)
         df = collector.getData()
-        self.assertTrue(df.shape == (11, 2))
+        self.assertTrue(df.shape == (len(mols), voc.max_len))
 
     def test_smiles_frag_encoder(self):
         mols = self.getTestMols()
@@ -141,7 +145,7 @@ class ProcessingTests(TestCase):
         encoder = FragmentCorpusEncoder(
             fragmenter=Fragmenter(4, 4, 'brics'),
             encoder=SequenceFragmentEncoder(
-                VocSmiles()
+                VocSmiles(True)
             ),
             pairs_splitter=FragmentPairsSplitter(0.1, 1e4),
             n_proc=2,
@@ -153,7 +157,24 @@ class ProcessingTests(TestCase):
         encoder.apply(mols, encodingCollectors=collectors)
         for collector in collectors:
             df = collector.getData()
-            self.assertTrue(df.Input[0].endswith('EOS') and df.Output[0].endswith('EOS'))
+            self.assertTrue(df.shape[1] == 2 * collector.getVoc().max_len)
+
+    def test_smiles_scaffold_encoding(self):
+        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
+        encoder = FragmentCorpusEncoder(
+            fragmenter=dummyMolsFromFragments(), 
+            encoder=SequenceFragmentEncoder(
+                VocSmiles(True, min_len=2)
+            ),
+            pairs_splitter=None, 
+            n_proc=1,
+            chunk_size=1
+        )
+        collector = SmilesFragDataSet(self.getRandomFile())
+        encoder.apply(list(frags), encodingCollectors=[collector])
+        df = collector.getData()
+        self.assertTrue(df.shape == (2, 2 * collector.getVoc().max_len))
+
 
     def test_frag_suppliers(self):
         pairs = FragmentPairsSupplier(self.getTestMols(), Fragmenter(4, 4, 'brics')).toList()
@@ -161,9 +182,9 @@ class ProcessingTests(TestCase):
         count = 0
         for item in encoded:
             self.assertTrue(len(item) == 2)
-            self.assertTrue(type(item[0]) == str)
-            self.assertTrue(type(item[1]) == list)
-            self.assertTrue(type(item[1][0]) == int)
+            self.assertTrue(type(item[1]) == str)
+            self.assertTrue(type(item[0]) == list)
+            self.assertTrue(type(item[0][0]) == int)
             count+=1
         self.assertTrue(count == len(pairs))
 
@@ -186,4 +207,22 @@ class ProcessingTests(TestCase):
         self.assertTrue(len(fragment_collector.getList()) == (len(collectors[0].getData()) + len(collectors[1].getData())))
         for collector in collectors:
             df = collector.getData()
-            self.assertTrue(df.columns[0][0] == 'C')
+            self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len)
+
+    def test_gragh_scaffold_encoding(self):
+        frags = ['c1cnccn1', 'c1cnccn1.c1cnccn1' ]  
+        encoder = FragmentCorpusEncoder(
+            fragmenter=dummyMolsFromFragments(), 
+            encoder=GraphFragmentEncoder(
+                VocGraph(n_frags=4) 
+            ),
+            pairs_splitter=None, 
+            n_proc=1,
+            chunk_size=1
+        )
+        collector = GraphFragDataSet(self.getRandomFile())
+        fragment_collector = FragmentCorpusEncoder.FragmentPairsCollector()
+        encoder.apply(list(frags), fragmentPairsCollector=fragment_collector, encodingCollectors=[collector])
+        self.assertTrue(len(fragment_collector.getList()) == len(collector.getData()))
+        df = collector.getData()
+        self.assertTrue(df.shape[1] == 5 * collector.getVoc().max_len)

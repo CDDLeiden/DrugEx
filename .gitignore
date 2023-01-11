@@ -7,6 +7,13 @@
 /tutorial/jupyter
 /tutorial/data
 /tutorial/CLI
+/tutorial/download.json
+/tutorial/advanced/data
+/testing/clitest/data/*.txt
+/testing/clitest/data/*.vocab
+/testing/clitest/data/backup*
+/testing/clitest/data/dataset.json
+/testing/clitest/generators/
 /docs/_build
 *.pkg
 *.tgz

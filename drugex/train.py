@@ -5,21 +5,20 @@ import json
 import argparse
 import warnings
 
-from drugex.data.corpus.vocabulary import VocGraph, VocSmiles, VocGPT
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.models import GPT2Model, GraphModel, single_network
-from drugex.training.models import encoderdecoder
 from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
-from drugex.training.scorers.predictors import Predictor
-from drugex.training.scorers.properties import Property, Uniqueness
+from drugex.training.scorers.properties import Property, Uniqueness, LigandEfficiency, LipophilicEfficiency
+from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
 
 warnings.filterwarnings("ignore")
     
@@ -29,7 +28,7 @@ def GeneratorArgParser(txt=None):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains folders 'data' (and 'envs')")
+                        help="Base directory which contains folders 'data' (and 'qspr')")
     parser.add_argument('-d', '--debug', action='store_true')
     
     
@@ -50,18 +49,12 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pr', '--prior_model', type=str, default=None,
                         help="Name of model (w/o .pkg extension) used for the prior in RL.")
     
-    parser.add_argument('-v', '--version', type=int, default=3,
-                         help="DrugEx version")
-    
     # General parameters
     parser.add_argument('-mt', '--mol_type', type=str, default='graph',
                         help="Molecule encoding type: 'smiles' or 'graph'")    
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
-                        help="Generator algorithm: 'trans' for (graph/smiles, transformer) or "\
-                             "'ved' (smiles, lstm-based encoder-decoder) or "\
-                             "'attn' (smiles, lstm-based encoder-decoder with attention mechanism) " \
-                             "If '--version 2' is specified, it implies '--algorithm rnn'. " \
-                             "Note that 'ved' and 'attn' algorithms currently do not work with '--mode RL'. Reinforcement learning was not implemented for these, yet.")
+                        help="Generator algorithm: 'trans' (graph- or smiles-based transformer model) or "\
+                             "'rnn' (smiles, recurrent neural network based on DrugEx v2).")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -83,13 +76,29 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-pa', '--patience', type=int, default=50,
                         help="Number of epochs to wait before early stop if no progress on test set score")
 
+    # Affinity models
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
+    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
+                        help="Target IDs for which activity is desirable")
+    parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which activity is undesirable")
+    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
+                        help="Target IDs for which selectivity window is calculated")
+    parser.add_argument('-le', '--ligand_efficiency', action='store_true', 
+                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")
+    parser.add_argument('-le_ths', '--le_thresholds', type=float, nargs=2, default=[0.0, 0.5],
+                        help='Thresholds used calculate ligand efficiency clipped scores in the desirability function.')
+    parser.add_argument('-lipe', '--lipophilic_efficiency', action='store_true',
+                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")           
+    parser.add_argument('-lipe_ths', '--lipe_thresholds', type=float, nargs=2, default=[4.0, 6.0],
+                        help='Thresholds used calculate lipophilic efficiency clipped scores in the desirability function.')
     
+    # Pre-implemented properties
     parser.add_argument('-qed', '--qed', action='store_true',
                         help="If on, QED is used in desirability function")
     parser.add_argument('-unq', '--uniqueness', action='store_true',
@@ -108,30 +117,30 @@ def GeneratorArgParser(txt=None):
                         help='If on, compounds with logP values outside a range set by mw_thersholds are penalized in the desirability function')
     parser.add_argument('-logP_ths', '--logP_thresholds', type=float, nargs='*', default=[-5, 5],
                         help='Thresholds used calculate logP clipped scores in the desirability function')
+    parser.add_argument('-tpsa', '--tpsa', action='store_true',
+                        help='If on, topology polar surface area is used in desirability function')
+    parser.add_argument('-tpsa_ths', '--tpsa_thresholds', type=float, nargs=2, default=[0, 140],
+                        help='Thresholds used calculate TPSA clipped scores in the desirability function')
+    parser.add_argument('-sim_mol', '--similarity_mol', type=str, default=None,
+                        help='SMILES string of a reference molecule to which the similarity is used as an objective. Similarity metric and threshold set by --sim_metric and --sim_th.')
+    parser.add_argument('-sim_type', '--similarity_type', type=str, default='fraggle',
+                        help="'fraggle' for Fraggle similarity, 'graph' for Tversky similarity between graphs or fingerprints name ('AP', 'PHCO', 'BPF', 'BTF', 'PATH', 'ECFP4', 'ECFP6', 'FCFP4', 'FCFP6') for Tversky similarity between fingeprints")
+    parser.add_argument('-sim_th', '--similarity_threshold', type=float, default=0.5,
+                        help="Threshold for molecular similarity to reference molecule")
+    parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3],
+                        help="Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.")       
     
-    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
-                        help="Target IDs for which activity is desirable")
-    parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which activity is undesirable")
-    parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which selectivity window is calculated")
+
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
 
-    
-    # Load some arguments from string --> usefull functions called eg. in a notebook
-    if txt:
-        args = parser.parse_args(txt)
-    else:
-        args = parser.parse_args()
             
+    args = parser.parse_args()
+    
     # Setting output file prefix from input file
     if args.output is None:
         args.output = args.input.split('_')[0]
-
-    if args.version == 2:
-        args.algorithm = 'rnn'
 
     if args.voc_files is None:
         args.voc_files = [args.input.split('_')[0]]
@@ -216,38 +225,28 @@ def DataPreparationSmiles(voc_files,
     voc = None
     train_loader = None
     valid_loader = None
-    if args.algorithm == 'gpt':
-        # GPT with fragments
+    if args.algorithm == 'trans':
         data_set_train = SmilesFragDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesFragDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocGPT, src_len=100, trg_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc() + data_set_test.getVoc()
     elif args.algorithm == 'rnn':
         data_set_train = SmilesDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
 
         data_set_test = SmilesDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
+        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
 
         voc = data_set_train.getVoc()
     else:
-        # all smiles-based with fragments
-        data_set_train = SmilesFragDataSet(train_path)
-        data_set_train.readVocs(voc_paths, VocSmiles, max_len=100)
-        train_loader = data_set_train.asDataLoader(batch_size=batch_size, n_samples=n_samples)
-
-        data_set_test = SmilesFragDataSet(test_path)
-        data_set_test.readVocs(voc_paths, VocSmiles, max_len=100)
-        valid_loader = data_set_test.asDataLoader(batch_size=batch_size, n_samples=n_samples, n_samples_ratio=0.2)
-
-        voc = data_set_train.getVoc() + data_set_test.getVoc()
+        raise ValueError('Unknown algorithm: {}'.format(args.algorithm))
 
     return voc, train_loader, valid_loader
 
@@ -286,7 +285,7 @@ def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilo
 
 def CreateDesirabilityFunction(base_dir, 
                                alg, 
-                               task, 
+                               task,
                                scheme, 
                                active_targets=[], 
                                inactive_targets=[], 
@@ -300,14 +299,25 @@ def CreateDesirabilityFunction(base_dir,
                                mw=False,
                                mw_ths=[200,600],
                                logP=False,
-                               logP_ths=[0,5]):
+                               logP_ths=[0,5],
+                               tpsa=False,
+                               tpsa_ths=[0,140],
+                               sim_smiles=None,
+                               sim_type='ECFP6',
+                               sim_th=0.6,
+                               sim_tw=[1.,1.],
+                               le = False,
+                               le_ths=[0,1],
+                               lipe = False,
+                               lipe_ths=[4,6],
+                               ):
     
     """
     Sets up the objectives of the desirability function.
     
     Arguments:
-        base_dir (str)              : folder containing 'envs' folder with saved environment-predictor models
-        alg (list)                   : environment-predictor algoritm
+        base_dir (str)              : folder containing 'qspr' folder with saved environment-predictor models
+        alg (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
         active_targets (lst), opt   : list of active target IDs
@@ -322,12 +332,23 @@ def CreateDesirabilityFunction(base_dir,
         mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
         logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
         logP_ths (list), opt        : logP thresholds to penalize large molecules
+        tpsa (bool), opt            : if True, tpsa used in the desirability function
+        tpsa_ths (list), opt        : tpsa thresholds
+        sim_smiles (str), opt       : reference molecules used for similarity calculation
+        sim_type (str), opt         : type of fingerprint or 'graph' used for similarity calculation
+        sim_th (float), opt         : threshold for similarity desirability  
+        sim_tw (list), opt          : tversky similarity weights
+        le (bool), opt              : if True, ligand efficiency used instead of activity for active targets in the desirability function
+        le_ths (list), opt          : ligand efficiency thresholds
+        lipe (bool), opt            : if True, lipophilic efficiency used instead of activity for active targets in the desirability function
+        lipe_ths (list), opt        : lipophilic efficiency thresholds
     
     Returns:
-        objs (lst)                  : list of selected scorers
-        ths (lst)                   : list desirability thresholds per scorer
+        DrugExEnvironment (torch model) : environment-predictor model
         
     """
+
+    from qsprpred.scorers.predictor import Predictor
 
     schemes = {
         "PR" : ParetoSimilarity(),
@@ -363,39 +384,42 @@ def CreateDesirabilityFunction(base_dir,
             window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
       
     
+    
     for i, t in enumerate(targets):
+        
+        if len(alg) > 1:  algorithm = alg[i] # Different algorithms for different targets
+        else: algorithm = alg[0] # Same algorithm for all targets
+
+        if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
+        
         if t in active_targets:
-            predictor_modifier = active 
-            ths.append(0.5 if scheme == 'WS' else 0.99)
+            
+            if le or lipe:
+                if task == 'CLS': 
+                    log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
+                if le:
+                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
+                    ths.append(0.5)
+                if lipe:
+                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                                modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
+                    ths.append(0.5)            
+            else:
+                predictor_modifier = active 
+                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+                ths.append(0.5 if scheme == 'WS' else 0.99)
+        
         elif t in inactive_targets:
             predictor_modifier = inactive 
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5 if scheme == 'WS' else 0.99)
+        
         elif t in window_targets:
             predictor_modifier = window
+            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
             ths.append(0.5)
-        
-        for a in alg:
-            if a.startswith('MT_'):
-                sys.exit('TO DO: using multitask model')
 
-        if len(alg) > 1:
-            try:
-                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except:
-                path_false = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg[i], task, t]) + '.pkg'
-                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-        else:
-            try :
-                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
-            except:
-                path_false = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                path = base_dir + '/envs/' + '_'.join([alg[0], task, t]) + '.pkg'
-                #log.warning('Using model from {} instead of model from {}'.format(path, path_false))
-                objs.append(Predictor.fromFile(path, type=task, name=t, modifier=predictor_modifier))
 
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -416,7 +440,20 @@ def CreateDesirabilityFunction(base_dir,
     if logP:
         objs.append(Property('logP', modifier=SmoothHump(lower_x=logP_ths[0], upper_x=logP_ths[1], sigma=1)))
         ths.append(0.99)
-    
+    if tpsa:
+        objs.append(Property('TPSA', modifier=SmoothHump(lower_x=tpsa_ths[0], upper_x=tpsa_ths[1], sigma=10)))
+        ths.append(0.99)
+    if sim_smiles:
+        if sim_type == 'fraggle':
+            objs.append(FraggleSimilarity(sim_smiles))
+        if sim_type == 'graph':
+            objs.append(TverskyGraphSimilarity(sim_smiles, sim_tw[0], sim_tw[1]))
+        else:
+            objs.append(TverskyFingerprintSimilarity(sim_smiles, sim_type, sim_tw[0], sim_tw[1]))
+        ths.append(sim_th)
+
+    for o in objs: print(o.getKey())
+
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
 def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
@@ -436,18 +473,15 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
     agent = None
     if mol_type == 'graph':
         agent = GraphModel(voc, use_gpus=gpus)
-    else :
-        if alg == 'ved':
-            agent = encoderdecoder.EncDec(voc, voc, use_gpus=gpus)
-        elif alg == 'attn':
-            agent = encoderdecoder.Seq2Seq(voc, voc, use_gpus=gpus)
-        elif alg == 'trans':
+    else:
+        if alg == 'trans':
             agent = GPT2Model(voc, use_gpus=gpus)
         elif alg == 'rnn':
             # TODO: add argument for is_lstm
             agent = single_network.RNN(voc, is_lstm=True, use_gpus=gpus)
-    
-    assert agent
+        else:
+            raise ValueError('Unknown algorithm: {}'.format(alg))
+
     return agent
 
 def PreTrain(args):
@@ -550,6 +584,16 @@ def RLTrain(args):
         mw_ths=args.mw_thresholds,
         logP=args.logP,
         logP_ths=args.logP_thresholds,
+        tpsa=args.tpsa,
+        tpsa_ths=args.tpsa_thresholds,
+        sim_smiles=args.similarity_mol,
+        sim_type=args.similarity_type,
+        sim_th=args.similarity_threshold,
+        sim_tw=args.similarity_tversky_weights,
+        le=args.ligand_efficiency,
+        le_ths=args.le_thresholds,
+        lipe=args.lipophilic_efficiency,
+        lipe_ths=args.lipe_thresholds,
     )
 
     # Initialize evolver algorithm

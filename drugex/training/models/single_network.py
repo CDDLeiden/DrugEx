@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 import torch
+from tqdm.auto import tqdm
 from torch import nn
 from torch import optim
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
@@ -85,10 +86,10 @@ class RNN(Generator):
             self.zero_grad()
             score = self.likelihood(seq)
             loss = score * reward
+            loss = -loss.mean()
             if progress:
                 progress.saveProgress(step_idx, None, total_steps, None)
-                progress.savePerformanceInfo(step_idx, None, loss.mean().item())
-            loss = -loss.mean()
+                progress.savePerformanceInfo(step_idx, None, loss.item())
             loss.backward()
             self.optim.step()
             step_idx += 1
@@ -111,7 +112,7 @@ class RNN(Generator):
 
         return sequences
 
-    def evaluate(self, batch_size, repeat=1, method = None, drop_duplicates = False):
+    def evaluate(self, batch_size, repeat=1, method = None, drop_duplicates = False, no_multifrag_smiles=True):
         smiles = []
         for _ in range(repeat):
             sequences = self.sample(batch_size)
@@ -121,36 +122,42 @@ class RNN(Generator):
             ix = utils.unique(np.array([[s] for s in smiles]))
             smiles = smiles[ix]
         if method is None:
-            scores = SmilesChecker.checkSmiles(smiles)
+            scores = SmilesChecker.checkSmiles(smiles, no_multifrag_smiles=no_multifrag_smiles)
         else:
             scores = method.getScores(smiles)
-
         return smiles, scores
 
     def evolve(self, batch_size, epsilon=0.01, crover=None, mutate=None):
         # Start tokens
         x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
-        # Hidden states initialization for exploitation network
-        h = self.init_h(batch_size)
-        # Hidden states initialization for exploration network
-        h1 = self.init_h(batch_size)
-        h2 = self.init_h(batch_size)
+        # Hidden states initialization for exploitation network (agent)
+        hA = self.init_h(batch_size)
+        # Hidden states initialization for exploration networks (mutate and crover)
+        hM = self.init_h(batch_size)
+        hC = self.init_h(batch_size)
         # Initialization of output matrix
         sequences = torch.zeros(batch_size, self.voc.max_len).long().to(self.device)
         # labels to judge and record which sample is ended
         is_end = torch.zeros(batch_size).bool().to(self.device)
 
         for step in range(self.voc.max_len):
-            logit, h = self(x, h)
-            proba = logit.softmax(dim=-1)
+            # Get unscaled logits and hidden states from agent network and convert them to probabilities with softmax
+            logitA, hA = self(x, hA)
+            proba = logitA.softmax(dim=-1)
+
+            # If crover combine probablities from agent network and crover network
             if crover is not None:
                 ratio = torch.rand(batch_size, 1).to(self.device)
-                logit1, h1 = crover(x, h1)
-                proba = proba * ratio + logit1.softmax(dim=-1) * (1 - ratio)
+                logitC, hC = crover(x, hC)
+                proba = proba * ratio + logitC.softmax(dim=-1) * (1 - ratio)
+            
+            # If mutate replace with the epsilon-rate the probabilities with the ones from the mutation network
             if mutate is not None:
-                logit2, h2 = mutate(x, h2)
+                logitM, hM = mutate(x, hM)
                 is_mutate = (torch.rand(batch_size) < epsilon).to(self.device)
-                proba[is_mutate, :] = logit2.softmax(dim=-1)[is_mutate, :]
+                proba[is_mutate, :] = logitM.softmax(dim=-1)[is_mutate, :]
+            
+
             # sampling based on output probability distribution
             x = torch.multinomial(proba, 1).view(-1)
 
@@ -166,7 +173,7 @@ class RNN(Generator):
         last_save = -1
         # threshold for number of epochs without change that will trigger early stopping
         max_interval = 50
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
             total_steps = len(loader_train)
             for i, batch in enumerate(loader_train):
@@ -212,5 +219,30 @@ class RNN(Generator):
         torch.cuda.empty_cache()
         monitor.close()
 
-
-
+    def sample_smiles(self, num_samples, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+        if progress:
+            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
+            pbar = tqdm(**tqdm_kwargs)
+        smiles = []
+        while len(smiles) < num_samples:
+            # sample SMILES
+            sequences = self.sample(batch_size)
+            # decode according to vocabulary
+            new_smiles = utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
+            # drop duplicates
+            if drop_duplicates:
+                new_smiles = np.array(new_smiles)
+                new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))]
+                new_smiles = new_smiles.tolist()
+            # drop invalid smiles
+            if drop_invalid:
+                scores = SmilesChecker.checkSmiles(new_smiles, frags=None).ravel()
+                new_smiles = np.array(new_smiles)[scores > 0].tolist()
+            smiles += new_smiles
+            # Update progress bar
+            if progress:
+                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        smiles = smiles[:num_samples]
+        if progress:
+            pbar.close()
+        return smiles

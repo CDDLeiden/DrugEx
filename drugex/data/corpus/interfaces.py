@@ -43,16 +43,22 @@ class SequenceVocabulary(Vocabulary, ABC):
     Generic vocabulary for sequence-based models.
     """
 
-    def __init__(self, words, max_len=100, min_len=10):
+    def __init__(self, encode_frags, words, max_len=100, min_len=10):
         """
         Args:
+            encode_frags: boolean indicating if used to also encode fragments
             words: iterable of words in this vocabulary
             max_len: the maximum number of tokens contained in one SMILES
         """
 
         super().__init__(words)
-        self.control = ('_', 'GO', 'EOS')
-        self.special = list(self.control) + ['.']
+        if encode_frags: # Allow fragments for fragment-based models
+            self.control = ('_', 'GO', 'EOS') # '_' used during model fitting
+            self.special = list(self.control) + ['.']
+        else:
+            self.control = ('GO', 'EOS')
+            self.special = list(self.control)
+
         self.wordSet = set()
         if words:
             self.wordSet = set(x for x in words if x not in self.special)
@@ -84,7 +90,7 @@ class SequenceVocabulary(Vocabulary, ABC):
     def removeIfNew(self, seq, ignoreConstraints=False):
         token = self.splitSequence(seq)
         if ignoreConstraints or (self.min_len < len(token) <= self.max_len):
-            diff = set(token) - self.wordSet - {'EOS'}
+            diff = set(token) - self.wordSet - set(self.special)
             if len(diff) > 0:
                 logger.warning(f"Tokens: {set(diff)} do not occur in voc. Molecule: {seq} will be ignored.")
                 return None
@@ -121,7 +127,7 @@ class Corpus(MolSupplier, ABC):
         try:
             ret = self.processMolecule(representation)
         except Exception as exp:
-            logger.warning(f'Exception occurred when generating corpus data for molecule: {molecule}. Cause:')
+            logger.warning(f'Exception occurred when generating corpus data for molecule: {representation}. Cause:')
             logger.exception(exp)
             return next(self)
         return ret

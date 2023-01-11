@@ -24,8 +24,10 @@ pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 
 #### Optional Dependencies
 
+**[QSPRPred](https://github.com/CDDLeiden/QSPRPred.git)** - Optional package to install if you want to use the command line interface of DrugEx, which requires the models to be serialized with this package. It is also used by some examples in the tutorial.
+
 **[RAscore](https://github.com/reymond-group/RAscore)** - If you want to use the Retrosynthesis Accessibility Score in the desirability function.
-- The installation of RAscore might degrade the Scikit-Learn packages. If this happens, Scikit-Learn should be re-upgraded.
+- The installation of RAscore might downgrade the scikit-Learn packages. If this happens, scikit-Learn should be re-upgraded.
 
 
 ### Use
@@ -38,7 +40,7 @@ This repository contains almost all models implemented throughout DrugEx history
 |--------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | 	     ChEMBL 27          | 	     [Zenodo](https://doi.org/10.5281/zenodo.7096837)                     | 	       NA                                                                             | 	         [Zenodo](https://doi.org/10.5281/zenodo.7096823)                                                |
 | 	        ChEMBL 31       | 	               [Zenodo](https://doi.org/10.5281/zenodo.7096845)           | 	                                                      NA                              | 	                                                        [Zenodo](https://doi.org/10.5281/zenodo.7085629) |
-| 	       [Papyrus 05.5](https://doi.org/10.26434/chemrxiv-2021-1rxhk) | 	          [Zenodo](https://doi.org/10.5281/zenodo.7096859)                                      | 	                             NA                                                       | 	       [Zenodo](https://doi.org/10.5281/zenodo.7096823)                                                                        |
+| 	       [Papyrus 05.5](https://doi.org/10.26434/chemrxiv-2021-1rxhk) | 	          [Zenodo](https://doi.org/10.5281/zenodo.7096859)                                      | 	                             NA                                                       | 	       [Zenodo](https://doi.org/10.5281/zenodo.7085421)                                                                        |
 
 You will find more information about the history of the project and the newest models below.
 

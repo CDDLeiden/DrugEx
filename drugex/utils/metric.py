@@ -90,45 +90,45 @@ def logP_mw(fnames, is_active=False):
     return df
 
 
-def dimension(fnames, fp='ECFP', alg='PCA', maximum=int(1e5)):
-    from drugex.training.scorers.predictors import Predictor
-    df = pd.DataFrame()
-    for i, fname in enumerate(fnames):
-        sub = pd.read_table(fname).dropna(subset=['Smiles'])
-        sub = sub.drop_duplicates(subset=['Smiles'])
-        if len(sub) > 1e5:
-            sub = sub.sample(int(1e5))
-        if 'Valid' in sub.columns:
-            sub = sub[sub.Valid == True]
-        if maximum is not None and len(sub) > maximum:
-            sub = sub.sample(maximum)
-        # if ref not in fname:
-        #     sub = sub[sub.Valid == True]
-        sub = sub.drop_duplicates(subset='Smiles')
-        sub['LABEL'] = i
-        df = df.append(sub)
+# def dimension(fnames, fp='ECFP', alg='PCA', maximum=int(1e5)):
+#     from drugex.training.scorers.predictors import Predictor
+#     df = pd.DataFrame()
+#     for i, fname in enumerate(fnames):
+#         sub = pd.read_table(fname).dropna(subset=['Smiles'])
+#         sub = sub.drop_duplicates(subset=['Smiles'])
+#         if len(sub) > 1e5:
+#             sub = sub.sample(int(1e5))
+#         if 'Valid' in sub.columns:
+#             sub = sub[sub.Valid == True]
+#         if maximum is not None and len(sub) > maximum:
+#             sub = sub.sample(maximum)
+#         # if ref not in fname:
+#         #     sub = sub[sub.Valid == True]
+#         sub = sub.drop_duplicates(subset='Smiles')
+#         sub['LABEL'] = i
+#         df = df.append(sub)
 
-    mols = [Chem.MolFromSmiles(s) for s in df.Smiles]
-    df['QED'] = [QED.qed(m) for m in mols]
-    if fp == 'similarity':
-        ref = df[(df.LABEL == 0)]
-        refs = [Chem.MolFromSmiles(s) for s in ref.Smiles]
-        refs = Predictor.calc_ecfp_rd(refs)
-        fps = Predictor.calc_ecfp_rd(mols)
-        from rdkit.Chem import DataStructs
-        fps = np.array([DataStructs.BulkTanimotoSimilarity(fp, refs) for fp in fps])
-    else:
-        fp_alg = Predictor.calc_ecfp if fp == 'ECFP' else Predictor.calc_physchem
-        fps = fp_alg(mols)
-    fps = Scaler().fit_transform(fps)
-    pca = PCA(n_components=2) if alg == 'PCA' else TSNE(n_components=2, n_jobs=10, n_iter=10000)
-    xy = pca.fit_transform(fps)
-    df['X'], df['Y'] = xy[:, 0], xy[:, 1]
-    if alg == 'PCA':
-        ratio = pca.explained_variance_ratio_[:2]
-        return df, ratio
-    else:
-        return df, None
+#     mols = [Chem.MolFromSmiles(s) for s in df.Smiles]
+#     df['QED'] = [QED.qed(m) for m in mols]
+#     if fp == 'similarity':
+#         ref = df[(df.LABEL == 0)]
+#         refs = [Chem.MolFromSmiles(s) for s in ref.Smiles]
+#         refs = Predictor.calc_ecfp_rd(refs)
+#         fps = Predictor.calc_ecfp_rd(mols)
+#         from rdkit.Chem import DataStructs
+#         fps = np.array([DataStructs.BulkTanimotoSimilarity(fp, refs) for fp in fps])
+#     else:
+#         fp_alg = Predictor.calc_ecfp if fp == 'ECFP' else Predictor.calc_physchem
+#         fps = fp_alg(mols)
+#     fps = Scaler().fit_transform(fps)
+#     pca = PCA(n_components=2) if alg == 'PCA' else TSNE(n_components=2, n_jobs=10, n_iter=10000)
+#     xy = pca.fit_transform(fps)
+#     df['X'], df['Y'] = xy[:, 0], xy[:, 1]
+#     if alg == 'PCA':
+#         ratio = pca.explained_variance_ratio_[:2]
+#         return df, ratio
+#     else:
+#         return df, None
 
 
 def substructure(fname, sub, is_desired=False):

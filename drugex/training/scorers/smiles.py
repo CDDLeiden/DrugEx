@@ -11,9 +11,12 @@ from rdkit import Chem
 class SmilesChecker:
 
     @staticmethod
-    def checkSmiles(smiles, frags=None):
+    def checkSmiles(smiles, frags=None, no_multifrag_smiles=True):
         shape = (len(smiles), 1) if frags is None else (len(smiles), 2)
         valids = np.zeros(shape)
+        if no_multifrag_smiles:
+            # Check if SMILES is not fragmented
+            smiles = [smi if smi.count('.') == 0 else None for smi in smiles]
         for j, smile in enumerate(smiles):
             # 1. Check if SMILES can be parsed by rdkit
             try:
@@ -31,4 +34,5 @@ class SmilesChecker:
                     valids[j, 1] = np.all([mol.HasSubstructMatch(sub) for sub in subs])
                 except:
                     valids[j, 1] = 0
+    
         return pd.DataFrame(valids, columns=['VALID', 'DESIRE']) if frags is not None else valids

@@ -10,12 +10,12 @@ import tqdm
 import numpy as np
 from typing import List
 
-from rdkit import Chem, DataStructs
+from rdkit import Chem
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
+from rdkit.Chem.Fraggle import FraggleSim
 from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
 
-from drugex.utils.fingerprints import get_fingerprint
 from drugex.training.interfaces import Scorer
 from drugex.training.scorers.sascorer import calculateScore
 from drugex.training.scorers.modifiers import Gaussian
@@ -158,27 +158,6 @@ class Isomer(Scorer):
     def getKey(self):
         return f"Isomer (mean_func={self.mean_func})"
 
-class Similarity(Scorer):
-    def __init__(self, smile, fp_type, modifier=None):
-        super().__init__(modifier)
-        self.smile = smile
-        self.mol = Chem.MolFromSmiles(smile)
-        self.fp_type = fp_type
-        self.fp = get_fingerprint(self.mol, fp_type=fp_type)
-
-    def getScores(self, mols, frags=None):
-        scores = np.zeros(len(mols))
-        for i, mol in enumerate(tqdm.tqdm(mols)):
-            try:
-                fp = get_fingerprint(mol, fp_type=self.fp_type)
-                scores[i] = DataStructs.TanimotoSimilarity(self.fp, fp)
-            except: continue
-        return scores
-
-    def getKey(self):
-        return f"Similarity (fp_type={self.fp_type}, smile={self.smile})"
-
-
 class Scaffold(Scorer):
     def __init__(self, smart, is_match, modifier=None):
         super().__init__(modifier)
@@ -216,3 +195,42 @@ class Uniqueness(Scorer):
 
     def getKey(self):
         return "Unique"
+
+
+class LipophilicEfficiency(Scorer):
+    """
+    Calculates the lipophilic efficiency of a molecule: LiPE = pChEMBL value - logP
+    """
+
+    def __init__(self, qsar_scorer, modifier=None):
+        super().__init__(modifier)
+        self.qsar_scorer = qsar_scorer
+        self.key = f'LipE_{qsar_scorer.getKey()}'
+
+    def getScores(self, mols : List[str], frags=None):
+        pChEMBL = self.qsar_scorer.getScores(mols)
+        logP = Property('logP').getScores(mols)
+        scores = pChEMBL - logP
+        return scores
+
+    def getKey(self):
+        return self.key
+
+class LigandEfficiency(Scorer):
+    """
+    Calculates the ligand efficiency of a molecule: LE = 1.4 * pChEMBL / nAtoms
+    """
+
+    def __init__(self, qsar_scorer, modifier=None):
+        super().__init__(modifier)
+        self.qsar_scorer = qsar_scorer
+        self.key = f'LE_{qsar_scorer.getKey()}'
+
+    def getScores(self, mols : List[str], frags=None):
+        pChEMBL = self.qsar_scorer.getScores(mols)
+        nAtoms = [mol.GerNumAtoms() for mol in mols]
+        scores = 1.4 * pChEMBL / nAtoms
+        return scores
+
+    def getKey(self):
+        return self.key

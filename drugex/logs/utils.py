@@ -11,6 +11,7 @@ import json
 import shutil
 import logging
 import datetime
+import warnings
 
 import git
 
@@ -114,10 +115,13 @@ def backUpFiles(base_dir : str, folder : str, output_prefixes : tuple, cp_suffix
     else:
         return ''
 
-def callwarning(warning_text):
+def callwarning(warning_text, exp=None):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            logger.warning(warning_text)
+            if exp:
+                warnings.warn(warning_text, exp, stacklevel=2)
+            else:
+                logger.warning(warning_text)
             return func(*args, **kwargs)
         return wrapper
     return decorator
