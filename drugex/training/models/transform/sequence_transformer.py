@@ -11,10 +11,11 @@ from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.data.fragments import SequenceFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import Standardization
 from drugex.data.datasets import SmilesFragDataSet
+from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
 from .layer import pad_mask, tri_mask
-from drugex.training.models.encoderdecoder import SmilesFragsGeneratorBase
+from drugex.training.models.base_generator import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
@@ -62,7 +63,7 @@ class GPT2Layer(nn.Module):
         return hidden_states
 
 
-class SequenceTransformer(SmilesFragsGeneratorBase):
+class SequenceTransformer(BaseGenerator):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
@@ -104,6 +105,53 @@ class SequenceTransformer(SmilesFragsGeneratorBase):
                 if is_end.all(): break
             out = out[:, self.voc_trg.max_len:].detach()
         return out
+
+    def trainNet(self, loader, monitor=None):
+        monitor = monitor if monitor else NullMonitor()
+        net = nn.DataParallel(self, device_ids=self.gpus)
+        total_steps = len(loader)
+        current_step = 0
+        for src, trg in tqdm(loader, desc='Iterating over training batches', leave=False):
+            src, trg = src.to(self.device), trg.to(self.device)
+            self.optim.zero_grad()
+            loss = net(src, trg)
+            loss = -loss.mean()     
+            loss.backward()
+            self.optim.step()
+            current_step += 1
+            monitor.saveProgress(current_step, None, total_steps, None)
+            monitor.savePerformanceInfo(current_step, None, loss.item())
+
+    def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
+        
+        net = nn.DataParallel(self, device_ids=self.gpus)
+
+        pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
+        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+        valid = scores.VALID.mean() 
+        desired = scores.DESIRE.mean()
+                
+        with torch.no_grad():
+            loss_valid = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
+                
+        smiles_scores = []
+        for idx, smile in enumerate(smiles):
+            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
+            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
+                
+        return valid, desired, loss_valid, smiles_scores
+    
+    def sample(self, loader, repeat=1):
+        net = nn.DataParallel(self, device_ids=self.gpus)
+        frags, smiles = [], []
+        with torch.no_grad():
+            for _ in range(repeat):                
+                for src, _ in loader:
+                    trg = net(src.to(self.device))
+                    smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
+                    frags += [self.voc_trg.decode(s, is_tk=False) for s in src]
+
+        return smiles, frags
 
     def sample_smiles(self, input_smiles, num_samples=100, batch_size=32, n_proc=1, fragmenter=None,
                       keep_frags=True, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):

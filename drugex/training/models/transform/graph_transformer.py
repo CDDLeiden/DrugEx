@@ -13,7 +13,7 @@ from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
-from drugex.training.models.encoderdecoder import BaseGenerator
+from drugex.training.models.base_generator import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
