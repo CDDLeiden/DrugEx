@@ -3,7 +3,9 @@
 set -e
 
 # pretraining data
+echo $line
 echo "Test: Generate data for pretraining the fragment-based graph transformer..."
+echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
@@ -12,7 +14,9 @@ ${DATASET_COMMON_ARGS} \
 echo "Test: Done."
 
 # finetuning data
+echo $line
 echo "Test: Generate data for finetuning the fragment-based graph transformer..."
+echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
@@ -21,9 +25,23 @@ ${DATASET_COMMON_ARGS} \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
-# pretraining
+# scaffold-based RL data
+echo $line
+echo "Test: Generate data for scaffold-based RL of the fragment-based graph models..."
+echo $line
+python -m drugex.dataset \
+${DATASET_COMMON_ARGS} \
+-i ${TEST_DATA_SCAFFOLD} \
+-o ${SCAFFOLD_PREFIX} \
+-mt graph \
+-s \
+${DATASET_FRAGMENT_ARGS}
+echo "Test: Done."
 
+# pretraining
+echo $line
 echo "Test: Pretrain fragment-based graph transformer..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
@@ -34,8 +52,9 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 # finetuning
-
+echo $line
 echo "Test: Fine-tune fragment-based graph transformer..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
@@ -46,18 +65,34 @@ ${TRAIN_VOCAB_ARGS} \
 -a graph
 echo "Test: Done."
 
-# reinforcement learning
+# # reinforcement learning
+# echo $line
+# echo "Test: RL for the fragment-based graph transformer..."
+# echo $line
+# python -m drugex.train \
+# ${TRAIN_COMMON_ARGS} \
+# ${TRAIN_VOCAB_ARGS} \
+# ${TRAIN_RL_ARGS} \
+# -i "${FINETUNING_PREFIX}" \
+# -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
+# -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+# -o "${FINETUNING_PREFIX}_${RL}" \
+# -m RL \
+# -a graph
+# echo "Test: Done."
 
-echo "Test: RL for the fragment-based graph transformer..."
+# scaffold-based RL
+echo $line
+echo "Test: scaffold-based RL for the fragment-based graph transformer..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
--i "${FINETUNING_PREFIX}" \
+-i "${SCAFFOLD_PREFIX}_graph.txt" \
 -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
 -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
--o "${FINETUNING_PREFIX}_${RL}" \
+-o "${SCAFFOLD_PREFIX}_RL" \
 -m RL \
--a graph
+-a graph 
 echo "Test: Done."
-
