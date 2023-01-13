@@ -28,6 +28,8 @@ def download_file(url, out_path, extract_out_path=None, byte_size=None, sha256su
         progress (bool): should progress be shown
         callback (Callable[[], Any]): callback function to be called after each chunk of the file is downloaded
     """
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    os.makedirs(os.path.dirname(extract_out_path), exist_ok=True)
     fname = os.path.basename(out_path)
     fdir = os.path.dirname(out_path)
     # Ensure path exists
@@ -70,7 +72,7 @@ def download_file(url, out_path, extract_out_path=None, byte_size=None, sha256su
     if fname.endswith('.zip'):
         with zipfile.ZipFile(out_path) as zip_handle:
             for name in zip_handle.namelist():
-                subpath = extract_out_path if extract_out_path is not None else os.path.join(out_path, os.path.pardir)
+                subpath = extract_out_path if extract_out_path is not None else out_path
                 zip_handle.extract(name, subpath)
         os.remove(out_path)
         if progress:
@@ -80,7 +82,7 @@ def download_file(url, out_path, extract_out_path=None, byte_size=None, sha256su
         with tarfile.open(out_path) as tar_handle:
             tar_handle.extractall(extract_out_path
                                   if extract_out_path is not None
-                                  else os.path.join(out_path, os.path.pardir))
+                                  else out_path)
         os.remove(out_path)
         if progress:
             pbar.close()
