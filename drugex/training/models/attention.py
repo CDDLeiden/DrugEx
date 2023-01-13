@@ -5,23 +5,6 @@ import math
 from drugex import utils
 
 
-class Attn(nn.Module):
-    def __init__(self, h_dim):
-        super(Attn, self).__init__()
-        self.h_dim = h_dim
-        self.main = nn.Sequential(
-            nn.Linear(h_dim, 100),
-            nn.ReLU(True),
-            nn.Linear(100, 1)
-        )
-
-    def forward(self, encoder_outputs):
-        b_size = encoder_outputs.size(0)
-        attn = self.main(encoder_outputs.contiguous().view(-1, self.h_dim))  # (b, s, h) -> (b * s, 1)
-        attn = F.softmax(attn.contiguous().view(b_size, -1), dim=1).unsqueeze(2)  # (b*s, 1) -> (b, s, 1)
-        return attn
-
-
 class Attention(nn.Module):
     def __init__(self, hidden_size, method='general'):
         super(Attention, self).__init__()

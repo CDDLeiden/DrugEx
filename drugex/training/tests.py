@@ -20,7 +20,7 @@ from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragData
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor, Scorer
-from drugex.training.models import GPT2Model, SequenceRNN, GraphTransformer
+from drugex.training.models import SequenceTransformer, SequenceRNN, GraphTransformer
 from drugex.training.models.explorer import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
@@ -364,11 +364,11 @@ class TrainingTestCase(TestCase):
 
         # pretraining
         vocab_gpt = VocSmiles(vocabulary.words)
-        pretrained = GPT2Model(vocab_gpt)
+        pretrained = SequenceTransformer(vocab_gpt)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuned = GPT2Model(vocab_gpt)
+        finetuned = SequenceTransformer(vocab_gpt)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 

@@ -13,7 +13,7 @@ from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
 from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
 from .layer import tri_mask
-from drugex.training.models.encoderdecoder import Base
+from drugex.training.models.encoderdecoder import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
@@ -49,7 +49,7 @@ class AtomLayer(nn.Module):
         return x
 
 
-class GraphTransformer(Base):
+class GraphTransformer(BaseGenerator):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(GraphTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'

@@ -33,9 +33,9 @@ class Block(nn.Module):
         return x
 
 
-class SequenceTransformer(nn.Module):
+class GPT2Layer(nn.Module):
     def __init__(self, voc, d_emb=512, d_model=512, n_head=12, d_inner=1024, n_layer=12, pad_idx=0):
-        super(SequenceTransformer, self).__init__()
+        super(GPT2Layer, self).__init__()
         self.n_layer = n_layer
         self.d_emb = d_emb
         self.d_model = d_model
@@ -62,13 +62,13 @@ class SequenceTransformer(nn.Module):
         return hidden_states
 
 
-class GPT2Model(SmilesFragsGeneratorBase):
+class SequenceTransformer(SmilesFragsGeneratorBase):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(GPT2Model, self).__init__(device=device, use_gpus=use_gpus)
+        super(SequenceTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx
-        self.gpt2 = SequenceTransformer(self.voc_trg, d_emb=d_emb, d_model=d_model,
+        self.gpt2 = GPT2Layer(self.voc_trg, d_emb=d_emb, d_model=d_model,
                               n_head=n_head, d_inner=d_inner, n_layer=n_layer,
                               pad_idx=pad_idx)
         self.init_states()
