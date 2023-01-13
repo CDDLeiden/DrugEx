@@ -21,7 +21,7 @@ from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor, Scorer
 from drugex.training.models import GPT2Model, RNN, GraphModel
-from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
+from drugex.training.models.explorer import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
@@ -287,7 +287,7 @@ class TrainingTestCase(TestCase):
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorerNoFrag(pretrained, env=environment, mutate=finetuned, crover=pretrained)
+        explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
@@ -353,7 +353,7 @@ class TrainingTestCase(TestCase):
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
@@ -374,7 +374,7 @@ class TrainingTestCase(TestCase):
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())

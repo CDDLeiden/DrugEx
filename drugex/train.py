@@ -12,7 +12,7 @@ from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.models import GPT2Model, GraphModel, single_network
-from drugex.training.models.explorer import SmilesExplorer, GraphExplorer, SmilesExplorerNoFrag
+from drugex.training.models.explorer import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
@@ -273,12 +273,12 @@ def InitializeEvolver(agent, env, prior, mol_type, algorithm, batch_size, epsilo
     
     if mol_type == 'graph':
         # FIXME:  sigma=beta? strange...
-        evolver = GraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
+        evolver = FragGraphExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
     else :
         if algorithm == 'rnn':
-            evolver = SmilesExplorerNoFrag(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
+            evolver = SequenceExplorer(agent, env, mutate=prior, crover=agent, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
         else:
-            evolver = SmilesExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
+            evolver = FragSequenceExplorer(agent, env, mutate=prior, batch_size=batch_size, epsilon=epsilon, sigma=beta, repeat=1, n_samples=n_samples, use_gpus=gpus)
         
     return evolver
     

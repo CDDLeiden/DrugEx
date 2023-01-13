@@ -17,13 +17,13 @@ from drugex.training.interfaces import Explorer
 from drugex.training.monitors import NullMonitor
 
 
-class GraphExplorer(Explorer):
+class FragGraphExplorer(Explorer):
     """
-    Graph-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
+    `Explorer` to optimize a graph-based fragment-using agent with the given `Environment`.
     """
 
     def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS, no_multifrag_smiles=True):
-        super(GraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
+        super(FragGraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
         self.voc_trg = agent.voc_trg
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
@@ -282,13 +282,13 @@ class GraphExplorer(Explorer):
         self.monitor.close()
 
 
-class SmilesExplorer(Explorer):
+class FragSequenceExplorer(Explorer):
     """
-    Smiles-based `Explorer` to optimize a  graph-based agent with the given `Environment`.
+    `Explorer` to optimize a sequence-based fragment-using agent with the given `Environment`.
     """
 
     def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS, no_multifrag_smiles=True):
-        super(SmilesExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
+        super(FragSequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
         # self.optim = optim.Adam(self.parameters(), lr=1e-5)
@@ -427,64 +427,66 @@ class SmilesExplorer(Explorer):
         torch.cuda.empty_cache()
 
 
-class PGLearner(Explorer, ABC):
-    """ Reinforcement learning framework with policy gradient. This class is the base structure for the
-        drugex v1 and v2 policy gradient-based  deep reinforcement learning models.
+# class PGLearner(Explorer, ABC):
+#     """ Reinforcement learning framework with policy gradient. This class is the base structure for the
+#         drugex v1 and v2 policy gradient-based  deep reinforcement learning models.
  
-    Arguments:
+#     Arguments:
  
-        agent (models.Generator): The agent which generates the desired molecules
+#         agent (models.Generator): The agent which generates the desired molecules
  
-        env (utils.Env): The environment which provides the reward and judge
-                                 if the generated molecule is valid and desired.
+#         env (utils.Env): The environment which provides the reward and judge
+#                                  if the generated molecule is valid and desired.
  
-        prior: The auxiliary model which is defined differently in each methods.
-    """
-    def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, batch_size=128, epsilon=1e-3,
-                 sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
-        self.replay = 10
-        self.n_samples = 128  # * 8
-        self.penalty = 0
-        self.out = None
-        self.memory = memory
+#         prior: The auxiliary model which is defined differently in each methods.
+#     """
+#     def __init__(self, agent, env=None, mutate=None, crover=None, memory=None, batch_size=128, epsilon=1e-3,
+#                  sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+#         super().__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
+#         self.replay = 10
+#         self.n_samples = 128  # * 8
+#         self.penalty = 0
+#         self.out = None
+#         self.memory = memory
  
-    @abstractmethod
-    def policy_gradient(self, smiles=None, seqs=None, memory=None):
-        pass
+#     @abstractmethod
+#     def policy_gradient(self, smiles=None, seqs=None, memory=None):
+#         pass
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, no_multifrag_smiles=True):
-        best = 0
-        last_save = 0
-        log = open(self.out + '.log', 'w')
-        for epoch in range(1000):
-            logger.info('\n----------\nEPOCH %d\n----------' % epoch)
-            self.policy_gradient()
-            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=no_multifrag_smiles)
+#     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, no_multifrag_smiles=True):
+#         best = 0
+#         last_save = 0
+#         log = open(self.out + '.log', 'w')
+#         for epoch in range(1000):
+#             logger.info('\n----------\nEPOCH %d\n----------' % epoch)
+#             self.policy_gradient()
+#             smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=no_multifrag_smiles)
  
-            desire = (scores.DESIRE).sum() / self.n_samples
-            score = scores[self.env.getScorerKeys()].values.mean()
-            valid = scores.VALID.mean()
+#             desire = (scores.DESIRE).sum() / self.n_samples
+#             score = scores[self.env.getScorerKeys()].values.mean()
+#             valid = scores.VALID.mean()
  
-            if best <= score:
-                torch.save(self.agent.state_dict(), self.out + '.pkg')
-                best = score
-                last_save = epoch
+#             if best <= score:
+#                 torch.save(self.agent.state_dict(), self.out + '.pkg')
+#                 best = score
+#                 last_save = epoch
  
-            logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
-                  (epoch, score, valid, desire), file=log)
-            for i, smile in enumerate(smiles):
-                score = "\t".join(['%0.3f' % s for s in scores.values[i]])
-                print('%s\t%s' % (score, smile), file=log)
-            if epoch - last_save > 50:
-                break
-        for param_group in self.agent.optim.param_groups:
-            param_group['lr'] *= (1 - 0.01)
-        log.close()
+#             logger.info("Epoch: %d average: %.4f valid: %.4f desired: %.4f" %
+#                   (epoch, score, valid, desire), file=log)
+#             for i, smile in enumerate(smiles):
+#                 score = "\t".join(['%0.3f' % s for s in scores.values[i]])
+#                 print('%s\t%s' % (score, smile), file=log)
+#             if epoch - last_save > 50:
+#                 break
+#         for param_group in self.agent.optim.param_groups:
+#             param_group['lr'] *= (1 - 0.01)
+#         log.close()
  
  
-class SmilesExplorerNoFrag(PGLearner):
-    """ DrugEx algorithm (version 2.0)
+class SequenceExplorer(Explorer):
+
+    """ 
+    `Explorer` to optimize a sequence-based agent (RNN) with the given `Environment`.
  
     Reference: Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v2: De Novo Design of Drug Molecule by
                Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.
@@ -502,8 +504,13 @@ class SmilesExplorerNoFrag(PGLearner):
                                    and ensure the agent to explore the approriate chemical space.
     """
     def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(SmilesExplorerNoFrag, self).__init__(agent, env, mutate, crover, memory=memory, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
- 
+        super(SequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
+        self.replay = 10
+        self.n_samples = 128  # * 8
+        self.penalty = 0
+        self.out = None
+        self.memory = memory
+
     def forward(self, crover=None, memory=None, epsilon=None):
         seqs = []
         for _ in range(self.replay):
@@ -514,7 +521,6 @@ class SmilesExplorerNoFrag(PGLearner):
             mems = [memory, seqs]
             seqs = torch.cat(mems)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
-        # smiles = np.array(utils.canonicalize_list(smiles))
         ix = utils.unique(np.array([[s] for s in smiles]))
         smiles = smiles[ix]
         seqs = seqs[torch.LongTensor(ix).to(self.device)]
@@ -540,7 +546,6 @@ class SmilesExplorerNoFrag(PGLearner):
 
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
-            t0 = time.time()
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             if epoch < patience and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
