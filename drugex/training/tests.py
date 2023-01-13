@@ -20,7 +20,7 @@ from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragData
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor, Scorer
-from drugex.training.models import GPT2Model, RNN, GraphModel
+from drugex.training.models import GPT2Model, SequenceRNN, GraphTransformer
 from drugex.training.models.explorer import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
@@ -272,7 +272,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = RNN(vocabulary, is_lstm=True)
+        pretrained = SequenceRNN(vocabulary, is_lstm=True)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
@@ -281,7 +281,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = RNN(vocabulary, is_lstm=True)
+        finetuned = SequenceRNN(vocabulary, is_lstm=True)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
@@ -332,7 +332,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = GraphModel(vocabulary)
+        pretrained = GraphTransformer(vocabulary)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # test molecule generation
@@ -347,7 +347,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = GraphModel(vocabulary)
+        finetuned = GraphTransformer(vocabulary)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 

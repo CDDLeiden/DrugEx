@@ -4,6 +4,7 @@ import sys
 import json
 import argparse
 import warnings
+from DrugEx.drugex.training.models import sequence_rnn
 
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
@@ -11,7 +12,7 @@ from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.models import GPT2Model, GraphModel, single_network
+from drugex.training.models import GPT2Model, GraphTransformer
 from drugex.training.models.explorer import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
 
 from drugex.training.monitors import FileMonitor
@@ -472,13 +473,13 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
     
     agent = None
     if mol_type == 'graph':
-        agent = GraphModel(voc, use_gpus=gpus)
+        agent = GraphTransformer(voc, use_gpus=gpus)
     else:
         if alg == 'trans':
             agent = GPT2Model(voc, use_gpus=gpus)
         elif alg == 'rnn':
             # TODO: add argument for is_lstm
-            agent = single_network.RNN(voc, is_lstm=True, use_gpus=gpus)
+            agent = sequence_rnn.SequenceRNN(voc, is_lstm=True, use_gpus=gpus)
         else:
             raise ValueError('Unknown algorithm: {}'.format(alg))
 

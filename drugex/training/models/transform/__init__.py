@@ -1,3 +1,3 @@
-from .gpt2smiles import *
+from .sequence_transformer import *
 from .vanilla import *
-from .gpt2graph import GraphModel
+from .graph_transformer import GraphTransformer

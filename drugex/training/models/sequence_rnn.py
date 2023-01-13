@@ -12,9 +12,9 @@ from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 
 
-class RNN(Generator):
+class SequenceRNN(Generator):
     def __init__(self, voc, embed_size=128, hidden_size=512, is_lstm=True, lr=1e-3, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(RNN, self).__init__(device=device, use_gpus=use_gpus)
+        super(SequenceRNN, self).__init__(device=device, use_gpus=use_gpus)
         self.voc = voc
         self.embed_size = embed_size
         self.hidden_size = hidden_size

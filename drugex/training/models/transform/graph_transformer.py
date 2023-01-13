@@ -49,9 +49,9 @@ class AtomLayer(nn.Module):
         return x
 
 
-class GraphModel(Base):
+class GraphTransformer(Base):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(GraphModel, self).__init__(device=device, use_gpus=use_gpus)
+        super(GraphTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'
         self.voc_trg = voc_trg
         self.pad_idx = pad_idx
