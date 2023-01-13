@@ -24,7 +24,7 @@ def DesignArgParser(txt=None):
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
                         help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
-    parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
+    parser.add_argumelogP_thresholdsnt('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
     parser.add_argument('-n', '--num', type=int, default=1,
                         help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
@@ -47,7 +47,7 @@ def DesignArgParser(txt=None):
     designer_args = vars(args)
     train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
-        'ra_score_model', 'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
+        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
@@ -150,7 +150,6 @@ def Design(args):
         qed=args.qed,
         sa_score=args.sa_score,
         ra_score=args.ra_score,
-        ra_score_model=args.ra_score_model,
         mw=args.molecular_weight,
         mw_ths=args.mw_thresholds,
         logP=args.logP,
