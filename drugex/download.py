@@ -30,6 +30,8 @@ def DownloadTutorial(args):
     link_pretrained_model1 = "https://zenodo.org/record/7378923/files/DrugEx_v2_PT_Papyrus05.5.zip?download=1"
     # Link to DrugEx v3 pretrained model (graph-based; Papyrus 05.5)
     link_pretrained_model2 = "https://zenodo.org/record/7085421/files/DrugEx_PT_Papyrus05.5.zip?download=1"
+    # Link to QSAR example model
+    link_qsar_model = "https://zenodo.org/record/7537771/files/qspr.zip?download=1"
 
     # Download model files
     pretrained_models_path = os.path.join(args.out_dir, 'models', 'pretrained')
@@ -37,8 +39,12 @@ def DownloadTutorial(args):
                   os.path.join(pretrained_models_path, 'smiles-rnn', 'PT_model1.zip'),
                   os.path.join(pretrained_models_path, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT'))
     download_file(link_pretrained_model2,
-                  os.path.join(pretrained_models_path, 'smiles-graph', 'PT_model2.zip'),
-                  os.path.join(pretrained_models_path, 'smiles-graph', 'Papyrus05.5_graph_trans_PT'))
+                  os.path.join(pretrained_models_path, 'graph-trans', 'PT_model2.zip'),
+                  os.path.join(pretrained_models_path, 'graph-trans', 'Papyrus05.5_graph_trans_PT'))
+    qsar_models_path = os.path.join(args.out_dir, 'models', 'qsar')
+    download_file(link_qsar_model,
+                  os.path.join(qsar_models_path, 'qspr.zip'),
+                  os.path.join(qsar_models_path, 'qspr'))
 
     # Download data files
     logger.info("Downloading data files from Papyrus database.")
