@@ -1,0 +1,3 @@
+jupyterlab
+mols2grid
+git+https://gitlab.services.universiteitleiden.nl/cdd/QSPRpred.git@master#egg=qsprpred

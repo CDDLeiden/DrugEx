@@ -4,11 +4,8 @@
 !.gitignore
 /build/
 /base_test/
-/tutorial/jupyter
 /tutorial/data
-/tutorial/CLI
 /tutorial/download.json
-/tutorial/advanced/data
 /testing/clitest/data/*.txt
 /testing/clitest/data/*.vocab
 /testing/clitest/data/backup*
