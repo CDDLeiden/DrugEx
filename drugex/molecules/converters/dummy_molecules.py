@@ -68,13 +68,11 @@ class dummyMolsFromFragments():
                         fpos = natoms_mol + k
                         comb.AddBond(mpos, fpos, order=Chem.rdchem.BondType.SINGLE)
                         smiles = Chem.MolToSmiles(comb.GetMol())
-                        if Chem.MolFromSmiles(smiles) is not None: break   
-            return smiles
-            
+                        if Chem.MolFromSmiles(smiles) is not None: break
         except Exception as e:
-            logger.error(f"Skipped: couldn't build a molecule from the {frags} fragments.")
-            logger.exception(e)
-            return smiles
+            logger.warning(f"Skipped: couldn't build a molecule from the {frags} fragments. Caused by: {e}")
+
+        return smiles
             
 
     def __call__(self, frag):
@@ -94,6 +92,6 @@ class dummyMolsFromFragments():
             else: # single leaf fragment
                 smiles = self.addCCToFragments(frag)
             return [(frag, smiles)]
-        except:
-            logger.warning(f"Skipped: couldn't build a molecule from {frag}.")
+        except Exception as e:
+            logger.warning(f"Skipped: couldn't build a molecule from {frag}. Caused by: {e}")
             return None     
