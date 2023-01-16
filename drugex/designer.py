@@ -47,7 +47,7 @@ def DesignArgParser(txt=None):
     designer_args = vars(args)
     train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
-        'ra_score_model', 'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
+        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
@@ -150,7 +150,6 @@ def Design(args):
         qed=args.qed,
         sa_score=args.sa_score,
         ra_score=args.ra_score,
-        ra_score_model=args.ra_score_model,
         mw=args.molecular_weight,
         mw_ths=args.mw_thresholds,
         logP=args.logP,
