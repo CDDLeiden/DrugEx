@@ -22,7 +22,7 @@ from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor, Scorer
 from drugex.training.models import SequenceTransformer, SequenceRNN, GraphTransformer
-from drugex.training.models.explorer import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
+from drugex.training.models.explorers import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
@@ -385,8 +385,8 @@ class TrainingTestCase(TestCase):
         vocabulary = VocGraph()
 
         # set pretrained and finetuned models
-        pretrained = GraphModel(vocabulary)
-        finetuned = GraphModel(vocabulary)
+        pretrained = GraphTransformer(vocabulary)
+        finetuned = GraphTransformer(vocabulary)
 
         # train and test data loaders
         train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
@@ -396,7 +396,7 @@ class TrainingTestCase(TestCase):
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
@@ -453,8 +453,8 @@ class TrainingTestCase(TestCase):
         vocab_gpt = VocSmiles(vocabulary.words)
 
         # set pretrained and finetuned models
-        pretrained = GPT2Model(vocab_gpt)
-        finetuned = GPT2Model(vocab_gpt)
+        pretrained = SequenceTransformer(vocab_gpt)
+        finetuned = SequenceTransformer(vocab_gpt)
 
         # train and test data loaders
         train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
@@ -464,7 +464,7 @@ class TrainingTestCase(TestCase):
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
