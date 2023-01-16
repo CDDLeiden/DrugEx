@@ -1,15 +1,20 @@
 set -e
 
+# Terminal formatting
+export line=$(printf -vl "%${COLUMNS:-`tput cols 2>&-||echo 80`}s\n" && echo ${l// /-})
+
 # input data and base directory
 export TEST_BASE="."
 export TEST_DATA_PRETRAINING='ZINC_raw_small.tsv'
 export TEST_DATA_FINETUNING='A2AR_raw_small.tsv'
 export TEST_DATA_ENVIRONMENT='A2AR_raw_small_env.tsv'
+export TEST_DATA_SCAFFOLD='pyrazines.tsv'
 
 # prefixes for output files
 export VOC_PREFIX='vocabulary'
 export PRETRAINING_PREFIX='pre'
 export FINETUNING_PREFIX='ft'
+export SCAFFOLD_PREFIX='scaffold'
 
 function cleanup() {
   rm -rf ${TEST_BASE}/data/backup_*;

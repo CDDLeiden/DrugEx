@@ -2,7 +2,9 @@
 
 set -e
 
+echo $line
 echo "Test: Generate data for pretraining the regular (no fragments) sequence model..."
+echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
@@ -12,7 +14,9 @@ ${DATASET_COMMON_ARGS} \
 -nof
 echo "Test: Done."
 
+echo $line
 echo "Test: Generate data for finetuning the regular (no fragments) sequence model..."
+echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
@@ -22,7 +26,9 @@ ${DATASET_COMMON_ARGS} \
 -nof
 echo "Test: Done."
 
+echo $line
 echo "Test: Pretrain regular (no fragments) single-network RNN model..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
@@ -33,7 +39,9 @@ ${TRAIN_VOCAB_ARGS} \
 -mt smiles
 echo "Test: Done."
 
+echo $line
 echo "Test: Fine-tune regular (no fragments) single-network RNN model..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
@@ -45,7 +53,9 @@ ${TRAIN_VOCAB_ARGS} \
 -mt smiles
 echo "Test: Done."
 
+echo $line
 echo "Test: RL for the regular (no fragments) single-network RNN model..."
+echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \

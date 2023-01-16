@@ -10,10 +10,23 @@ from rdkit import Chem
 from drugex.logs import logger
 
 class dummyMolsFromFragments():
+    """
+    A converter to create dummy molecules from fragments.
+    """
 
-    def addCBrToFragments(self, frag):
+    @staticmethod
+    def addCCToFragments(frag):
+        """
+        Add CC to a single fragment to build a dummy molecule.
 
-        repl = Chem.MolFromSmiles('CBr')
+        Args:
+            frag: fragment to be converted to a dummy molecule
+
+        Returns:
+
+        """
+
+        repl = Chem.MolFromSmiles('CC')
         patt = Chem.MolFromSmarts('[#1;$([#1])]')   
 
         try:
@@ -22,53 +35,63 @@ class dummyMolsFromFragments():
             mol = Chem.RemoveHs(molH[0])
             return Chem.MolToSmiles(mol)
         except:
-            logger.debug(f"Skipped: couldn't build a molecule from {frag}.")
+            logger.debug(f"Skipped: couldn't build a molecule from the {frag} fragment.")
             return None
 
-    def bridgeFragments(self, frags):
+    @staticmethod
+    def bridgeFragments(frags):
+        """
+        Bridge multiple fragments together into one dummy molecule.
 
+        Args:
+            frags: fragments to be bridged together
+
+        Returns:
+            a `str` of a SMILES representation of the bridged fragments
+        """
+
+        smiles = None
         try:
             frags_rdkit = [Chem.MolFromSmiles(f) for f in frags.split('.') ]
             mol = frags_rdkit[0] # set 1st fragment as base of molecule
             
             for i in range(1,len(frags_rdkit)): # iterate over other fragments to be combined with the base molecule
                 frag = frags_rdkit[i] 
-                nfrag = frag.GetNumAtoms()
-                nmol = mol.GetNumAtoms()
+                natoms_frag = frag.GetNumAtoms()
+                natoms_mol = mol.GetNumAtoms()
 
-                # iterate over bridging position until creation of valid molecule
-                for j in range(nmol): 
-                    for k in range(nfrag):
+                # iterate over bridging positions until creation of valid molecule
+                for j in range(natoms_mol): 
+                    for k in range(natoms_frag):
                         comb = Chem.EditableMol( Chem.CombineMols(mol, frag ))
-                        mpos = nmol - j -1
-                        fpos = nmol + k
+                        mpos = natoms_mol - j -1
+                        fpos = natoms_mol + k
                         comb.AddBond(mpos, fpos, order=Chem.rdchem.BondType.SINGLE)
                         smiles = Chem.MolToSmiles(comb.GetMol())
-                        if Chem.MolFromSmiles(smiles) is not None: break                    
-            return smiles
-            
-        except:
-            logger.warning(f"Skipped: couldn't build a molecule from {frags}")
-            return None
+                        if Chem.MolFromSmiles(smiles) is not None: break
+        except Exception as e:
+            logger.warning(f"Skipped: couldn't build a molecule from the {frags} fragments. Caused by: {e}")
+
+        return smiles
             
 
     def __call__(self, frag):
 
         """ 
-        Create molecule from by adding CBr to single fragments or bridge multiple fragment
+        Create dummy molecule by adding CC to single fragments or bridge multiple fragments together.
         
         Args:
-            frags : SMILES of fragment(s)
+            frag (str): fragment(s) to be converted to a dummy molecule
         Return:
-            a list of `tuple`s of format  (fragment, smiles), fragment is the same as the input in "fragments"
+            a `list` of `tuple`s of format  (fragment, smiles), fragment is the same as the input in the 'frag' argument
         """
 
         try:
             if '.' in frag: # multiple leaf fragments
                 smiles = self.bridgeFragments(frag)
             else: # single leaf fragment
-                smiles = self.addCBrToFragments(frag)
+                smiles = self.addCCToFragments(frag)
             return [(frag, smiles)]
-        except:
-            logger.warning(f"Skipped: couldn't build a molecule from {frag}.")
+        except Exception as e:
+            logger.warning(f"Skipped: couldn't build a molecule from {frag}. Caused by: {e}")
             return None     
