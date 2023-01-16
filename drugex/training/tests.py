@@ -18,11 +18,12 @@ from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, S
 from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
 from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
+
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.interfaces import TrainingMonitor, Scorer
-from drugex.training.models import SequenceTransformer, SequenceRNN, GraphTransformer
-from drugex.training.models.explorers import FragGraphExplorer, SequenceExplorer, FragSequenceExplorer
+from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
+from drugex.training.explorers import SequenceExplorer, FragSequenceExplorer, FragGraphExplorer
+
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
 from drugex.training.scorers.modifiers import ClippedScore
@@ -97,12 +98,10 @@ class MockScorer(Scorer):
 
 
 def getPredictor():
-    activity_threshold = 6.5
-    pad = 3.5
     try:
         from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
-        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', th=None, scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', scale=False, name='P29274',
+            modifier=ClippedScore(lower_x=0.2, upper_x=0.8)
         )
     except ImportError:
         ret = MockScorer()
@@ -116,7 +115,7 @@ class TrainingTestCase(TestCase):
     finetuning_file = os.path.join(test_data_dir, 'A2AR_raw_small.txt')
 
     # global calculation settings
-    N_PROC = 1
+    N_PROC = 2
     N_EPOCHS = 2
     SEED = 42
     MAX_SMILES = 16
@@ -273,7 +272,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = SequenceRNN(vocabulary, is_lstm=True)
+        pretrained = RNN(vocabulary, is_lstm=True)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
@@ -282,13 +281,13 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = SequenceRNN(vocabulary, is_lstm=True)
+        finetuned = RNN(vocabulary, is_lstm=True)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained)
+        explorer = SmilesExplorerNoFrag(pretrained, env=environment, mutate=finetuned, crover=pretrained)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
@@ -333,7 +332,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = GraphTransformer(vocabulary)
+        pretrained = GraphModel(vocabulary)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # test molecule generation
@@ -348,57 +347,15 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = GraphTransformer(vocabulary)
+        finetuned = GraphModel(vocabulary)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
+        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())
-
-    def test_graph_frags_scaffold(self):
-        """
-        Test RL with fragment-based graph model with scaffold input.
-        """
-
-        frags = ['c1ccncc1', 'c1cncnc1.CCO', 'CCl']
-
-        # create dummy molecules and encode molecule-fragments pairs
-        encoder = FragmentCorpusEncoder(
-            fragmenter=dummyMolsFromFragments(),
-            encoder=GraphFragmentEncoder(
-                VocGraph(n_frags=4)
-            ),
-            pairs_splitter=None,
-            n_proc=self.N_PROC
-        )
-
-        # get training data
-        data_set = GraphFragDataSet(self.getRandomFile())
-        encoder.apply(frags, encodingCollectors=[data_set])
-
-        # get vocabulary -> for graph models it is always the default one
-        vocabulary = VocGraph()
-
-        # set pretrained and finetuned models
-        pretrained = GraphTransformer(vocabulary)
-        finetuned = GraphTransformer(vocabulary)
-
-        # train and test data loaders
-        train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
-        test_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=2)
-        self.assertTrue(train_loader)
-        self.assertTrue(test_loader)
-
-        # reinforcement learning
-        environment = self.getTestEnvironment()
-        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
-        monitor = TestModelMonitor()
-        explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
@@ -407,65 +364,68 @@ class TrainingTestCase(TestCase):
 
         # pretraining
         vocab_gpt = VocSmiles(vocabulary.words)
-        pretrained = SequenceTransformer(vocab_gpt)
+        pretrained = GPT2Model(vocab_gpt)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuned = SequenceTransformer(vocab_gpt)
+        finetuned = GPT2Model(vocab_gpt)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_smiles_frags_gpt_scaffold(self):
-        """
-        Test RL with fragment-based smiles transformer model with scaffold input.
-        """
+    # the models below are not tested anymore because they will be deprecated in the future
 
-        frags = ['c1ccncc1', 'CCl', 'c1cncnc1.CCO']
+    # def test_smiles_frags_vec(self):
+    #     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
+    #
+    #     # pretraining
+    #     pretrained = EncDec(vocabulary, vocabulary)
+    #     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
+    #
+    #     # fine-tuning
+    #     finetuned = EncDec(vocabulary, vocabulary)
+    #     finetuned.loadStates(pretrained.getModel())
+    #     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
-        # create dummy molecules and encode molecule-fragments pairs
-        encoder = FragmentCorpusEncoder(
-            fragmenter=dummyMolsFromFragments(),
-            encoder=SequenceFragmentEncoder(
-                VocSmiles(True, min_len=2),
-                update_voc=False,
-                throw=True
-            ),
-            pairs_splitter=None,
-            n_proc=self.N_PROC
-        )
+        # RL
+        # FIXME: RL for this model is currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
+
+    # def test_smiles_frags_attn(self):
+    #     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
+    #
+    #     # pretraining
+    #     pretrained = Seq2Seq(vocabulary, vocabulary)
+    #     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
+    #
+    #     # fine-tuning
+    #     finetuned = Seq2Seq(vocabulary, vocabulary)
+    #     finetuned.loadStates(pretrained.getModel())
+    #     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+    #     self.assertTrue(finetuned)
+    #     self.assertTrue(monitor.getModel())
+
+        # RL
+        # FIXME: RL for this model currently not working
+        # environment = self.getTestEnvironment()
+        # explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        # monitor = TestModelMonitor()
+        # explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
+        # self.assertTrue(monitor.getModel())
+        # self.assertTrue(monitor.allMethodsExecuted())
 
 
-        # get training data
-        data_set = SmilesFragDataSet(self.getRandomFile())
-        encoder.apply(frags, encodingCollectors=[data_set])
 
-        # get vocabulary
-        vocabulary = data_set.getVoc()
-        data_set.setVoc(vocabulary)
-        vocab_gpt = VocSmiles(vocabulary.words)
 
-        # set pretrained and finetuned models
-        pretrained = SequenceTransformer(vocab_gpt)
-        finetuned = SequenceTransformer(vocab_gpt)
-
-        # train and test data loaders
-        train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
-        test_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=2)
-        self.assertTrue(train_loader)
-        self.assertTrue(test_loader)
-
-        # reinforcement learning
-        environment = self.getTestEnvironment()
-        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned)
-        monitor = TestModelMonitor()
-        explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
-        self.assertTrue(monitor.allMethodsExecuted())

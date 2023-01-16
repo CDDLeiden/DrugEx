@@ -11,8 +11,8 @@ from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
 from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.training.models.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
-from drugex.training.models.base_generator import BaseGenerator
+from drugex.training.generators.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
+from drugex.training.generators.base import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim

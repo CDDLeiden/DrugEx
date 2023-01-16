@@ -4,7 +4,6 @@ import sys
 import json
 import argparse
 import warnings
-from drugex.training.models import sequence_rnn
 
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
@@ -12,8 +11,8 @@ from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.models import SequenceTransformer, GraphTransformer
-from drugex.training.models.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
+from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
+from drugex.training.explorers.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
