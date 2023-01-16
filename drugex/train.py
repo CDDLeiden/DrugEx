@@ -107,8 +107,6 @@ def GeneratorArgParser(txt=None):
                         help="If on, Synthetic Accessibility score is used in desirability function")       
     parser.add_argument('-ras', '--ra_score', action='store_true',
                         help="If on, Retrosynthesis Accessibility score is used in desirability function")
-    parser.add_argument('-ras_model', '--ra_score_model', type=str, default='XBG',
-                        help="RAScore model: 'XBG'")
     parser.add_argument('-mw', '--molecular_weight', action='store_true',
                         help='If on, compounds with molecular weights outside a range set by mw_thersholds are penalized in the desirability function')
     parser.add_argument('-mw_ths', '--mw_thresholds', type=int, nargs='*', default=[200, 600],
@@ -295,7 +293,6 @@ def CreateDesirabilityFunction(base_dir,
                                unique=False,
                                sa_score=False,
                                ra_score=False, 
-                               ra_score_model='XBG',
                                mw=False,
                                mw_ths=[200,600],
                                logP=False,
@@ -327,7 +324,6 @@ def CreateDesirabilityFunction(base_dir,
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         unique (bool), opt          : if Trye, molecule uniqueness in an epoch included in the desirability function
         ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
-        ra_score_model (str), opt   : RAscore algorithm: 'NN' or 'XGB'
         mw (bool), opt              : if True, large molecules are penalized in the desirability function
         mw_ths (list), opt          : molecular weight thresholds to penalize large molecules
         logP (bool), opt            : if True, molecules with logP values are penalized in the desirability function
@@ -432,7 +428,7 @@ def CreateDesirabilityFunction(base_dir,
         ths.append(0.5)
     if ra_score:
         from drugex.training.scorers.ra_scorer import RetrosyntheticAccessibilityScorer
-        objs.append(RetrosyntheticAccessibilityScorer(use_xgb_model=False if ra_score_model == 'NN' else True, modifier=ClippedScore(lower_x=0, upper_x=1.0)))
+        objs.append(RetrosyntheticAccessibilityScorer(modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
         objs.append(Property('MW', modifier=SmoothHump(lower_x=mw_ths[0], upper_x=mw_ths[1], sigma=100)))
@@ -579,7 +575,6 @@ def RLTrain(args):
         unique=args.uniqueness, 
         sa_score=args.sa_score,
         ra_score=args.ra_score,
-        ra_score_model=args.ra_score_model,
         mw=args.molecular_weight,
         mw_ths=args.mw_thresholds,
         logP=args.logP,
