@@ -24,7 +24,7 @@ def DesignArgParser(txt=None):
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
                         help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
-    parser.add_argumelogP_thresholdsnt('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
+    parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
     parser.add_argument('-n', '--num', type=int, default=1,
                         help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
