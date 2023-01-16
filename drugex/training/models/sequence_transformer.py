@@ -13,8 +13,7 @@ from drugex.data.processing import Standardization
 from drugex.data.datasets import SmilesFragDataSet
 from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
-from .layer import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection
-from .layer import pad_mask, tri_mask
+from drugex.training.models.transformer_utils import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection, pad_mask, tri_mask
 from drugex.training.models.base_generator import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker

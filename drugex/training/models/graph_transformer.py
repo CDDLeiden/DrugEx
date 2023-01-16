@@ -11,14 +11,13 @@ from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
 from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
-from .layer import PositionwiseFeedForward, SublayerConnection, PositionalEncoding
-from .layer import tri_mask
+from drugex.training.models.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
 from drugex.training.models.base_generator import BaseGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
 
-from ...monitors import NullMonitor
+from ..monitors import NullMonitor
 
 
 class Block(nn.Module):
