@@ -1,7 +1,6 @@
 ''' Define the Layers '''
 import torch
 import torch.nn as nn
-from torch.nn import MultiheadAttention
 import math
 
 
@@ -33,7 +32,7 @@ class PositionwiseFeedForward(nn.Module):
 
 class SublayerConnection(nn.Module):
     """
-    a residual connection followed by a layer norm
+    A residual connection followed by a layer norm
     """
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
@@ -49,6 +48,9 @@ class SublayerConnection(nn.Module):
 
 
 class PositionalEmbedding(nn.Module):
+    """ 
+    Positional embedding for sequence transformer
+    """
     def __init__(self, d_model: int, max_len=100, batch_first=False):
         super(PositionalEmbedding, self).__init__()
 
@@ -74,6 +76,9 @@ class PositionalEmbedding(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
+    """
+    Positional encoding for graph transformer
+    """
     def __init__(self, d_model: int, max_len=100, batch_first=False):
         super(PositionalEncoding, self).__init__()
 

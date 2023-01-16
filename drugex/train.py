@@ -13,7 +13,7 @@ from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.models import SequenceTransformer, GraphTransformer
-from drugex.training.models.explorer import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
+from drugex.training.models.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum

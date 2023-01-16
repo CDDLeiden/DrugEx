@@ -8,13 +8,10 @@ from tqdm import tqdm
 from tqdm.auto import tqdm
 from torch import nn
 
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.logs import logger
-from .attention import DecoderAttn
 from drugex.training.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 from drugex.training.monitors import NullMonitor
-from drugex.logs.utils import callwarning
 
 
 class BaseGenerator(Generator, ABC):
