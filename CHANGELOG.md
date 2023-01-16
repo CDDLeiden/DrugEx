@@ -22,9 +22,10 @@ None.
 - RNN models deposited on Zenodo and pretrained on ChEMBL31 and Papyrus 05.5 were updated while the RNN model pretrained on ChEMBL27 did not need to.
 - Moved encoding of tokens for SMILES-based models to the parallel preprocessing steps to improve performance
 - All testing code that is not unit tests was moved to `testing`
-- Remove QSAR modelling from DrugEx, now in a seperate repository QSPRpred
+- Remove QSAR modelling from DrugEx, now in a separate repository QSPRpred
+  - QSPRpred is an optional dependency (only required for the CLI)
+  - Unittests for QSAR modelling were also moved to QSPRPred, but QSPRPred models are still loaded and used during testing if QSPRPred is installed (if not, a dummy scorer is used instead)
 - Revised SimilarityRanking, now uses the minimum (default) or average Tanimoto distance to rank the solutions in the same front.
-- QSPRpred is an optional dependency (only required for the CLI)
 
 
 ## New Features
