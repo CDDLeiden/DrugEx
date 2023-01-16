@@ -66,20 +66,20 @@ ${TRAIN_VOCAB_ARGS} \
 echo "Test: Done."
 
 # # reinforcement learning
-# echo $line
-# echo "Test: RL for the fragment-based graph transformer..."
-# echo $line
-# python -m drugex.train \
-# ${TRAIN_COMMON_ARGS} \
-# ${TRAIN_VOCAB_ARGS} \
-# ${TRAIN_RL_ARGS} \
-# -i "${FINETUNING_PREFIX}" \
-# -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
-# -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
-# -o "${FINETUNING_PREFIX}_${RL}" \
-# -m RL \
-# -a graph
-# echo "Test: Done."
+ echo $line
+ echo "Test: RL for the fragment-based graph transformer..."
+ echo $line
+ python -m drugex.train \
+ ${TRAIN_COMMON_ARGS} \
+ ${TRAIN_VOCAB_ARGS} \
+ ${TRAIN_RL_ARGS} \
+ -i "${FINETUNING_PREFIX}" \
+ -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
+ -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+ -o "${FINETUNING_PREFIX}_${RL}" \
+ -m RL \
+ -a graph
+ echo "Test: Done."
 
 # scaffold-based RL
 echo $line

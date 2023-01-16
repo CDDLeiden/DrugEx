@@ -63,21 +63,21 @@ ${TRAIN_VOCAB_ARGS} \
 -mt smiles
 echo "Test: Done."
 
-# echo $line
-# echo "Test: RL for the fragment-based sequence transformer..."
-# echo $line
-# python -m drugex.train \
-# ${TRAIN_COMMON_ARGS} \
-# ${TRAIN_VOCAB_ARGS} \
-# ${TRAIN_RL_ARGS} \
-# -i "${FINETUNING_PREFIX}" \
-# -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
-# -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
-# -o "${FINETUNING_PREFIX}_RL" \
-# -m RL \
-# -a trans \
-# -mt smiles
-# echo "Test: Done."
+ echo $line
+ echo "Test: RL for the fragment-based sequence transformer..."
+ echo $line
+ python -m drugex.train \
+ ${TRAIN_COMMON_ARGS} \
+ ${TRAIN_VOCAB_ARGS} \
+ ${TRAIN_RL_ARGS} \
+ -i "${FINETUNING_PREFIX}" \
+ -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
+ -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
+ -o "${FINETUNING_PREFIX}_RL" \
+ -m RL \
+ -a trans \
+ -mt smiles
+ echo "Test: Done."
 
 echo $line
 echo "Test: scaffold-based RL for the fragment-based sequence transformer..."
