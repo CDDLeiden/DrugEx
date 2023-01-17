@@ -49,6 +49,9 @@ class AtomLayer(nn.Module):
 
 
 class GraphTransformer(Generator):
+    """
+    Graph Transformer for molecule generation from fragments
+    """
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(GraphTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'
@@ -77,20 +80,53 @@ class GraphTransformer(Generator):
         self.model_name = 'GraphTransformer'
 
     def init_states(self):
+        """
+        Initialize model parameters
+        
+        Notes:
+        -----
+        Xavier initialization for all parameters except for the embedding layer
+        """
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
         self.attachToGPUs(self.gpus)
 
     def attachToGPUs(self, gpus):
+        """
+        Attach model to GPUs
+
+        Parameters:
+        ----------
+        gpus: `tuple`
+            A tuple of GPU ids to use
+        
+        Returns:
+        -------
+        None
+        """
         self.gpus = gpus
         self.to(self.device)
 
     def forward(self, src, is_train=False):
-        # src: [batch_size, 80 , 5]
+
+        """
+        Forward pass
+        
+        Parameters:
+        ----------
+        src: `torch.Tensor`
+            Input tensor of shape [batch_size, 80, 5] (transpose of the encoded graphs as drawn in the paper)
+        is_train: `bool`
+            Whether the model is in training mode
+        
+        Returns:
+        -------
+        TODO : fill outputs
+        """
+        
         if is_train:
             # Return loss
-            # Src - not using last column (??), trg - not using first column (start token)
             src, trg = src[:, :-1, :], src[:, 1:, :]
             batch, sqlen, _ = src.shape
             triu = tri_mask(src[:, :, 0])
@@ -268,6 +304,25 @@ class GraphTransformer(Generator):
         return out
     
     def trainNet(self, loader, epoch, epochs):
+
+        """
+        Train the network for one epoch
+        
+        Parameters
+        ----------
+        loader : torch.utils.data.DataLoader
+            The data loader for the training set
+        epoch : int
+            The current epoch
+        epochs : int
+            The total number of epochs
+            
+        Returns
+        -------
+        loss : float
+            The training loss of the epoch
+        """
+
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
@@ -286,27 +341,67 @@ class GraphTransformer(Generator):
                 
     def validateNet(self, loader, evaluator=None, no_multifrag_smiles=True):
 
+        """
+        Validate the network
+        
+        Parameters
+        ----------
+        loader : torch.utils.data.DataLoader
+            A dataloader object to iterate over the validation data
+        evaluator : Evaluator
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles : bool
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns
+        -------
+        valid_metrics : dict
+            Dictionary containing the validation metrics
+        scores : pandas.DataFrame
+            DataFrame containing Smiles, frags and the scores for each SMILES    
+
+        Notes
+        -----
+        The validation metrics are:
+            - valid_ratio: the ratio of valid SMILES
+            - accurate_ratio: the ratio of SMILES that are valid and have the desired fragments
+            - loss_valid: the validation loss
+        """
+
         valid_metrics = {}
         
         net = nn.DataParallel(self, device_ids=self.gpus)
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+        scores['Smiles'] = smiles
+        scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.VALID.mean() 
         valid_metrics['accurate_ratio'] = scores.DESIRE.mean()
                 
         with torch.no_grad():
-            valid_metrics['loss_valid'] = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )
-                
-        scores['Smiles'] = smiles
-        scores['Frags'] = frags
-        # smiles_scores = []
-        # for idx, smile in enumerate(smiles):
-        #     smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
+            valid_metrics['loss_valid'] = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )                
                 
         return valid_metrics, scores
     
-    def sample(self, loader, repeat=1, pbar=None):
+    def sample(self, loader, repeat=1):
+        """
+        Sample SMILES from the network
+        
+        Parameters
+        ----------
+        loader : torch.utils.data.DataLoader
+            The data loader for the input fragments
+        repeat : int
+            The number of times to repeat the sampling
+        
+        Returns
+        -------
+        smiles : list
+            List of SMILES
+        frags : list
+            List of fragments
+        """
         net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():
@@ -322,6 +417,7 @@ class GraphTransformer(Generator):
 
     def sample_smiles(self, input_smiles, num_samples=100, batch_size=32, n_proc=1, fragmenter=None, 
                       keep_frags=True, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+    
         standardizer = Standardization(n_proc=n_proc)
         smiles = standardizer.apply(input_smiles)
 

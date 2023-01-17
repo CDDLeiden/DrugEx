@@ -63,6 +63,9 @@ class GPT2Layer(nn.Module):
 
 
 class SequenceTransformer(Generator):
+    """
+    Sequence Transformer for molecule generation from fragments
+    """
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'smiles'
@@ -79,16 +82,51 @@ class SequenceTransformer(Generator):
         self.model_name = 'SequenceTransformer'
 
     def init_states(self):
+        """
+        Initialize model parameters
+        
+        Notes:
+        -----
+        Xavier initialization for all parameters except for the embedding layer
+        """
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
         self.attachToGPUs(self.gpus)
 
     def attachToGPUs(self, gpus):
+        """
+        Attach model to GPUs
+
+        Parameters:
+        ----------
+        gpus: `tuple`
+            A tuple of GPU ids to use
+        
+        Returns:
+        -------
+        None
+        """
         self.gpus = gpus
         self.to(self.device)
 
     def forward(self, src, trg=None):
+        """
+        Forward pass of the model
+        
+        Parameters:
+        ----------
+        src: `torch.Tensor`
+            TODO: check that the shape is correct
+            Source tensor of shape [batch_size, 200] 
+        trg: `torch.Tensor`
+            Target tensor of shape [batch_size, 200]
+
+        Returns:
+        -------
+        TODO: fill outputs
+        """
+
         if trg is not None:
             input = torch.cat([src, trg], dim=1)
             key_mask = pad_mask(input, self.pad_idx)
@@ -118,6 +156,24 @@ class SequenceTransformer(Generator):
         return out
 
     def trainNet(self, loader, epoch, epochs):
+        """
+        Train the model for one epoch
+        
+        Parameters:
+        ----------
+        loader: `torch.utils.data.DataLoader`
+            A dataloader object to iterate over the training data
+        epoch: `int`
+            Current epoch number
+        epochs: `int`
+            Total number of epochs
+        
+        Returns:
+        -------
+        loss: `float`
+            The loss value for the current epoch
+        """
+
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
@@ -135,6 +191,32 @@ class SequenceTransformer(Generator):
         return loss.item()
 
     def validateNet(self, loader, evaluator=None, no_multifrag_smiles=True):
+        """
+        Validate the model
+        
+        Parameters:
+        ----------
+        loader: `torch.utils.data.DataLoader`
+            A dataloader object to iterate over the validation data
+        evaluator: `Evaluator`
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles: `bool`
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns:
+        -------
+        valid_metrics: `dict`
+            A dictionary containing the validation metrics
+        scores: `pandas.DataFrame`
+            DataFrame containing Smiles, frags and the scores for each SMILES
+
+        Notes:
+        -----
+        The validation metrics are:
+            - valid_ratio: ratio of valid SMILES
+            - accurate_ratio: ratio of SMILES that are valid and have the desired fragments
+            - loss_valid: loss on the validation set
+         """
         
         valid_metrics = {}
 
@@ -142,21 +224,34 @@ class SequenceTransformer(Generator):
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+        scores['Smiles'] = smiles
+        scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.VALID.mean() 
         valid_metrics['accurate_ratio'] = scores.DESIRE.mean()
                 
         with torch.no_grad():
             valid_metrics['loss_valid'] = sum( [ sum([-l.mean().item() for l in net(src, trg)]) for src, trg in loader ] )
-                
-        scores['Smiles'] = smiles
-        scores['Frags'] = frags
-        #smiles_scores = []
-        # for idx, smile in enumerate(smiles):
-        #     smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
-                
+            
         return valid_metrics, scores
     
     def sample(self, loader, repeat=1):
+        """
+        Sample SMILES from the model
+        
+        Parameters:
+        ----------
+        loader: `torch.utils.data.DataLoader`
+            A dataloader object to iterate over the input fragments 
+        repeat: `int`
+            Number of times to repeat the sampling
+
+        Returns:
+        -------
+        smiles: `list`
+            A list of sampled SMILES
+        frags: `list`
+            A list of input fragments
+        """
         net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
         with torch.no_grad():

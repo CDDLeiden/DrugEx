@@ -14,6 +14,9 @@ from drugex.training.monitors import NullMonitor
 
 
 class SequenceRNN(Generator):
+    """
+    Sequence RNN model for molecule generation.
+    """
     def __init__(self, voc, embed_size=128, hidden_size=512, is_lstm=True, lr=1e-3, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceRNN, self).__init__(device=device, use_gpus=use_gpus)
         self.voc = voc
@@ -35,11 +38,14 @@ class SequenceRNN(Generator):
         """
         This model currently uses only one GPU. Therefore, only the first one from the list will be used.
 
-        Args:
-            gpus: a `tuple` of GPU IDs to attach this model to (only the first one will be used)
-
+        Parameters:
+        ----------
+        gpus: `tuple`
+            A tuple of GPU indices.
+        
         Returns:
-
+        -------
+        None
         """
         self.device = torch.device(f'cuda:{gpus[0]}')
         self.to(self.device)
@@ -47,12 +53,45 @@ class SequenceRNN(Generator):
 
 
     def forward(self, input, h):
+        """
+        Forward pass of the model.
+        
+        Parameters:
+        ----------
+        input: `torch.Tensor`
+            Input tensor of shape (batch_size, 1).
+        h: `torch.Tensor`
+            # TODO: Verify h shape.
+            Hidden state tensor of shape (num_layers, batch_size, hidden_size).
+        
+        Returns:
+        -------
+        TODO: fill outputs
+        """
         output = self.embed(input.unsqueeze(-1))
         output, h_out = self.rnn(output, h)
         output = self.linear(output).squeeze(1)
         return output, h_out
 
     def init_h(self, batch_size, labels=None):
+        """
+        Initialize hidden state of the model.
+
+        Hidden state is initialized with random values.
+        If labels are provided, the first hidden state will be set to the labels.
+        
+        Parameters:
+        ----------
+        batch_size: `int`
+            Batch size.
+        labels: `torch.Tensor`
+            Labels tensor of shape (batch_size, 1).
+            
+        Returns:
+        -------
+        TODO: fill outputs
+        """
+
         h = torch.rand(3, batch_size, 512).to(self.device)
         if labels is not None:
             h[0, batch_size, 0] = labels
@@ -61,6 +100,20 @@ class SequenceRNN(Generator):
         return (h, c) if self.is_lstm else h
 
     def likelihood(self, target):
+        """
+        Calculate the likelihood of the target sequence.
+        
+        Parameters:
+        ----------
+        target: `torch.Tensor`
+            Target tensor of shape (batch_size, seq_len).
+        
+        Returns:
+        -------
+        scores: `torch.Tensor`
+            Scores tensor of shape (batch_size, seq_len).
+        """
+
         batch_size, seq_len = target.size()
         x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
         h = self.init_h(batch_size)
@@ -74,6 +127,22 @@ class SequenceRNN(Generator):
         return scores
 
     def PGLoss(self, loader, progress=None):
+        """
+        Calculate the policy gradient loss and update the model.
+        
+        Parameters:
+        ----------
+        loader: `torch.utils.data.DataLoader`
+            Data loader.
+        progress: `drugex.training.monitors.ProgressMonitor`
+            Progress monitor.
+        
+        Returns:
+        -------
+        None
+
+        TODO: This function should be maybe moved to the explorer as part of RL (+ this is the case for the Transformer models)
+        """
         total_steps = len(loader)
         step_idx = 0
         for seq, reward in loader:
@@ -89,6 +158,19 @@ class SequenceRNN(Generator):
             step_idx += 1
     
     def sample(self, batch_size):
+        """
+        Sample a SMILES from the model.
+        
+        Parameters:
+        ----------
+        batch_size: `int`
+            Batch size.
+            
+        Returns:
+        -------
+        smiles: `list`
+            List of SMILES.
+        """
         x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
         h = self.init_h(batch_size)
         sequences = torch.zeros(batch_size, self.voc.max_len).long().to(self.device)
@@ -107,6 +189,24 @@ class SequenceRNN(Generator):
         return [self.voc.decode(s, is_tk = False) for s in sequences]
 
     def evolve(self, batch_size, epsilon=0.01, crover=None, mutate=None):
+        """
+        Evolve a SMILES from the model by sequantial addition of tokens.
+        
+        Parameters:
+        ----------
+        batch_size: `int`
+            Batch size.
+        epsilon: `float`
+            Probability using the mutate network to generate the next token.
+        crover: `drugex.models.Crover`
+            Crover network.
+        mutate: `drugex.models.Mutate`
+            Mutate network.
+        
+        Returns:
+        -------
+        TODO: check if ouput smiles are still encoded"""
+        
         # Start tokens
         x = torch.LongTensor([self.voc.tk2ix['GO']] * batch_size).to(self.device)
         # Hidden states initialization for exploitation network (agent)
@@ -135,7 +235,6 @@ class SequenceRNN(Generator):
                 logitM, hM = mutate(x, hM)
                 is_mutate = (torch.rand(batch_size) < epsilon).to(self.device)
                 proba[is_mutate, :] = logitM.softmax(dim=-1)[is_mutate, :]
-            
 
             # sampling based on output probability distribution
             x = torch.multinomial(proba, 1).view(-1)
@@ -148,7 +247,23 @@ class SequenceRNN(Generator):
 
     def trainNet(self, loader, epoch, epochs):
 
-        """Train the RNN network"""
+        """
+        Train the RNN network for one epoch
+
+        Parameters:
+        -----------
+        loader : torch.utils.data.DataLoader
+            The data loader for the training set
+        epoch : int
+            The current epoch
+        epochs : int
+            The total number of epochs
+            
+        Returns
+        -------
+        loss : float
+            The training loss of the epoch
+        """
 
         total_steps = len(loader)
         for i, batch in enumerate(loader):
@@ -160,33 +275,43 @@ class SequenceRNN(Generator):
             self.monitor.saveProgress(i, epoch, total_steps, epochs)
             self.monitor.savePerformanceInfo(i, epoch, loss.item())
 
-
         return loss.item()
 
     def validateNet(self, batch_size, loader_valid=None, evaluator=None, no_multifrag_smiles=True):
 
-        """Validate the RNN network by sampling SMILES and evaluate them or check their validity
+        """
+        Validate the network
         
-        Parameters:
-        -----------
-        batch: int
-            Number of SMILES to sample
-        loader (opt): DataLoader
-            DataLoader used to calculate the validation loss
-        evaluator (opt): Evaluator
-            Evaluator to evaluate the SMILES
-
-        Returns:
-        --------
-        valid_metrics: dict
+        Parameters
+        ----------
+        batch_size : int
+            The batch size to use for validation
+        loader : torch.utils.data.DataLoader
+            A dataloader object to iterate over the validation data to compute the validation loss
+        evaluator : Evaluator
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles : bool
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns
+        -------
+        valid_metrics : dict
             Dictionary containing the validation metrics
-        scores: pd.DataFrame
-            DataFrame containing the SMILES and their scores
-        """ 
+        scores : pandas.DataFrame
+            DataFrame containing Smiles, frags and the scores for each SMILES    
+
+        Notes
+        -----
+        The validation metrics are:
+            - valid_ratio: the ratio of valid SMILES
+            - accurate_ratio: the ratio of SMILES that are valid and have the desired fragments
+            - loss_valid: the validation loss
+        """
 
         valid_metrics = {}
         smiles = self.sample(batch_size)
         scores = self.evaluate(smiles, evaluator=evaluator)
+        scores['Smiles'] = smiles
         valid_metrics['valid_ratio'] = scores.VALID.mean()
 
         # If a separate validation set is provided, use it to compute the validation loss 
@@ -197,87 +322,7 @@ class SequenceRNN(Generator):
                 loss_valid += -self.likelihood(batch.to(self.device)).sum().item()
             valid_metrics['loss_valid'] = loss_valid / size / self.voc.max_len
 
-        scores['Smiles'] = smiles
-
         return valid_metrics, scores       
-    
-
-    # def fit(self, loader_train, loader_valid=None, epochs=100, monitor=None, lr=1e-3, patience=50):
-        
-    #     self.monitor = monitor if monitor else NullMonitor() 
-    #     best_value = float('inf')
-    #     last_save = -1
-
-    #     self.optim = optim.Adam(self.parameters(), lr=lr)
-        
-    #     for epoch in tqdm(range(epochs), desc='Fitting model'):
-    #         epoch += 1
-            
-    #         # Train the model
-    #         train_loss = self.trainNet(loader_train, epoch, epochs)
-            
-    #         # Validate the model
-    #         batch_size = loader_train.batch_size * 2 # Sohvi: why training batch size *2?
-    #         valid_ratio, valid_loss, smiles_scores = self.validateNet(batch_size, evaluator=None)
-    #         self.monitor.saveProgress(None, epoch, None, epochs)
-
-    #         # If validation loss given, save the model if the validation loss is the best so far
-    #         # Otherwise, save the model if the validation error rate is the best so far
-    #         if valid_loss is not None: value = valid_loss
-    #         else : value = 1 - valid_ratio
-
-    #         if value < best_value:
-    #             self.monitor.saveModel(self)
-    #             best_value = value
-    #             last_save = epoch
-    #             logger.info(f"Model was saved at epoch {epoch}") 
-
-    #         self.monitor.savePerformanceInfo(None, epoch, train_loss.item(), loss_valid=valid_loss, smiles_scores=smiles_scores, smiles_scores_key=['Smiles', 'VALID'], valid_ratio=valid_ratio, error = 1 - valid_ratio)     
-            
-    #         del train_loss, valid_loss
-    #         monitor.endStep(None, epoch)
-
-    #         if epoch - last_save > patience:
-    #             break
-
-    #         torch.cuda.empty_cache()
-    #         monitor.close()
-            
-        #     # each epoch sample SMILES generated by model to assess error rate    
-        #     seqs = self.sample(len(batch * 2))
-        #     ix = utils.unique(seqs)
-        #     seqs = seqs[ix]
-        #     smiles = [self.voc.decode(s, is_tk = False) for s in seqs]
-        #     valids = SmilesChecker.checkSmiles(smiles, frags=None)
-        #     error = (1 - sum(valids) / len(seqs))[0]
-        #     info = "Epoch: %d error_rate: %.3f loss_train: %.3f" % (epoch, error, loss_train.item())
-        #     loss_valid = None
-        #     if loader_valid is not None:
-        #         loss_valid, size = 0, 0
-        #         for j, batch in enumerate(loader_valid):
-        #             size += batch.size(0)
-        #             loss_valid += -self.likelihood(batch.to(self.device)).sum().item()
-        #         loss_valid = loss_valid / size / self.voc.max_len
-        #         if loss_valid < best_error:
-        #             monitor.saveModel(self)
-        #             best_error = loss_valid
-        #             last_save = epoch
-        #         info += ' loss_valid: %.3f' % loss_valid
-        #     elif error < best_error:
-        #         monitor.saveModel(self)
-        #         best_error = error
-        #         last_save = epoch
-        #     logger.info(info)
-        #     smiles_scores = []
-        #     for i, smile in enumerate(smiles):
-        #         smiles_scores.append((smile, valids[i][0]))
-        #         logger.debug('%d\t%s' % (valids[i][0], smile))
-        #     monitor.savePerformanceInfo(None, epoch, loss_train.item(), loss_valid=loss_valid, smiles_scores=smiles_scores, smiles_scores_key=['Smiles', 'VALID'], error=error, valid_ratio=1 - error)
-        #     logger.info(info)
-        #     monitor.endStep(None, epoch)
-        #     if epoch - last_save > max_interval: break
-        # torch.cuda.empty_cache()
-        # monitor.close()
 
     def sample_smiles(self, num_samples, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
         if progress:

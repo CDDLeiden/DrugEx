@@ -476,7 +476,6 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus, gru=False):
         if alg == 'trans':
             agent = SequenceTransformer(voc, use_gpus=gpus)
         elif alg == 'rnn':
-            # TODO: add argument for is_lstm
             agent = SequenceRNN(voc, is_lstm=False if gru else True, use_gpus=gpus)
         else:
             raise ValueError('Unknown algorithm: {}'.format(alg))
