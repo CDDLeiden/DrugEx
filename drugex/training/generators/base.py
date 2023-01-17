@@ -62,6 +62,7 @@ class BaseGenerator(Generator, ABC):
         torch.cuda.empty_cache()
         monitor.close()
 
+    # Sohvi : drop_duplicates missing?
     def evaluate(self, loader, repeat=1, method=None, no_multifrag_smiles=True):
         smiles, frags = self.sample(loader, repeat)
 

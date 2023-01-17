@@ -35,4 +35,4 @@ class SmilesChecker:
                 except:
                     valids[j, 1] = 0
     
-        return pd.DataFrame(valids, columns=['VALID', 'DESIRE']) if frags is not None else valids
+        return pd.DataFrame(valids, columns=['VALID', 'DESIRE']) if frags is not None else pd.DataFrame(valids[:,0], columns=['VALID'])
