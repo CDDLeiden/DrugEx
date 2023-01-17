@@ -12,7 +12,7 @@ from drugex.data.datasets import GraphFragDataSet
 from drugex.logs import logger
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.generators.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
-from drugex.training.generators.base import BaseGenerator
+from drugex.training.interfaces import Generator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
@@ -48,7 +48,7 @@ class AtomLayer(nn.Module):
         return x
 
 
-class GraphTransformer(BaseGenerator):
+class GraphTransformer(Generator):
     def __init__(self, voc_trg, d_emb=512, d_model=512, n_head=8, d_inner=1024, n_layer=12, pad_idx=0, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(GraphTransformer, self).__init__(device=device, use_gpus=use_gpus)
         self.mol_type = 'graph'
@@ -73,6 +73,18 @@ class GraphTransformer(BaseGenerator):
         self.optim = ScheduledOptim(
             optim.Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 0.1, d_model)
         # self.optim = optim.Adam(self.parameters(), lr=1e-4)
+
+        self.model_name = 'GraphTransformer'
+
+    def init_states(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+        self.attachToGPUs(self.gpus)
+
+    def attachToGPUs(self, gpus):
+        self.gpus = gpus
+        self.to(self.device)
 
     def forward(self, src, is_train=False):
         # src: [batch_size, 80 , 5]
@@ -255,8 +267,7 @@ class GraphTransformer(BaseGenerator):
             out = src
         return out
     
-    def trainNet(self, loader, monitor=None):
-        monitor = monitor if monitor else NullMonitor()
+    def trainNet(self, loader, epoch, epochs):
         net = nn.DataParallel(self, device_ids=self.gpus)
         total_steps = len(loader)
         current_step = 0
@@ -268,27 +279,32 @@ class GraphTransformer(BaseGenerator):
             loss.backward()
             self.optim.step()
             current_step += 1
-            monitor.saveProgress(current_step, None, total_steps, None)
-            monitor.savePerformanceInfo(current_step, None, loss.item())
+            self.monitor.saveProgress(current_step, epoch, total_steps, epochs)
+            self.monitor.savePerformanceInfo(current_step, epoch, loss.item())
+
+        return loss.item()
                 
-    def validate(self, loader, evaluator=None, no_multifrag_smiles=True):
+    def validateNet(self, loader, evaluator=None, no_multifrag_smiles=True):
+
+        valid_metrics = {}
         
         net = nn.DataParallel(self, device_ids=self.gpus)
-
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
-        frags, smiles, scores = self.evaluate(pbar, method=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-        valid = scores.VALID.mean() 
-        desired = scores.DESIRE.mean()
+        smiles, frags = self.sample(pbar)
+        scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+        valid_metrics['valid_ratio'] = scores.VALID.mean() 
+        valid_metrics['accurate_ratio'] = scores.DESIRE.mean()
                 
         with torch.no_grad():
-            loss_valid = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )
+            valid_metrics['loss_valid'] = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )
                 
-        smiles_scores = []
-        for idx, smile in enumerate(smiles):
-            logger.debug(f"{scores.VALID[idx]}\t{frags[idx]}\t{smile}")
-            smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
+        scores['Smiles'] = smiles
+        scores['Frags'] = frags
+        # smiles_scores = []
+        # for idx, smile in enumerate(smiles):
+        #     smiles_scores.append((smile, scores.VALID[idx], scores.DESIRE[idx], frags[idx]))
                 
-        return valid, desired, loss_valid, smiles_scores
+        return valid_metrics, scores
     
     def sample(self, loader, repeat=1, pbar=None):
         net = nn.DataParallel(self, device_ids=self.gpus)

@@ -138,7 +138,8 @@ class FragSequenceExplorer(Explorer):
                 srcs, trgs = [], []
 
                 # Evaluate model
-                frags, smiles, scores = self.agent.evaluate(loader, repeat=self.repeat, method=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
+                smiles, frags = self.agent.sample(valid_loader, self.repeat)
+                scores = self.agent.evaluate(smiles, frags, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
                 scores['Smiles'], scores['Frags'] = smiles, frags             
 
                 # Save evaluate criteria and save best model

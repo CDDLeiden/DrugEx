@@ -86,7 +86,8 @@ class SequenceExplorer(Explorer):
                 self.policy_gradient(smiles, seqs)
 
             # Evaluate the model on the validation set
-            smiles, scores = self.agent.evaluate(self.n_samples, method=self.env, drop_duplicates=True, no_multifrag_smiles=True)
+            smiles = self.agent.sample(self.n_samples)
+            scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=True)
             scores['Smiles'] =  smiles           
 
             # Save evaluate criteria and save best model

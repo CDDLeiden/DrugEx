@@ -29,7 +29,8 @@ class SequenceRNN(Generator):
         self.optim = optim.Adam(self.parameters(), lr=lr)
         self.attachToGPUs(self.gpus)
 
-    # Sohvi: different from BaseGenerator
+        self.model_name = 'SequenceRNN'
+
     def attachToGPUs(self, gpus):
         """
         This model currently uses only one GPU. Therefore, only the first one from the list will be used.
@@ -44,17 +45,6 @@ class SequenceRNN(Generator):
         self.to(self.device)
         self.gpus = (gpus[0],)
 
-    
-    # Sohvi: same as in BaseGenerator 
-    def getModel(self):
-        """
-        Return a copy of this model as a state dictionary.
-
-        Returns:
-            a serializable copy of this model as a state dictionary
-        """
-
-        return deepcopy(self.state_dict())
 
     def forward(self, input, h):
         output = self.embed(input.unsqueeze(-1))
@@ -114,24 +104,7 @@ class SequenceRNN(Generator):
             isEnd = torch.ge(isEnd + end_token, 1)
             if (isEnd == 1).all(): break
 
-        return sequences
-
-    # Sohvi: different from BaseGenerator but maybe could be adapted to a more general version
-    def evaluate(self, batch_size, repeat=1, method = None, drop_duplicates = False, no_multifrag_smiles=True):
-        smiles = []
-        for _ in range(repeat):
-            sequences = self.sample(batch_size)
-            smiles += [self.voc.decode(s, is_tk = False) for s in sequences]
-        print(smiles)
-        if drop_duplicates:
-            smiles = np.array(utils.canonicalize_list(smiles))
-            ix = utils.unique(np.array([[s] for s in smiles]))
-            smiles = smiles[ix]
-        if method is None:
-            scores = SmilesChecker.checkSmiles(smiles, no_multifrag_smiles=no_multifrag_smiles)
-        else:
-            scores = method.getScores(smiles)
-        return smiles, scores
+        return [self.voc.decode(s, is_tk = False) for s in sequences]
 
     def evolve(self, batch_size, epsilon=0.01, crover=None, mutate=None):
         # Start tokens
@@ -180,15 +153,17 @@ class SequenceRNN(Generator):
         total_steps = len(loader)
         for i, batch in enumerate(loader):
             self.optim.zero_grad()
-            loss_train = self.likelihood(batch.to(self.device))
-            loss_train = -loss_train.mean()
-            loss_train.backward()
+            loss = self.likelihood(batch.to(self.device))
+            loss = -loss.mean()
+            loss.backward()
             self.optim.step()
             self.monitor.saveProgress(i, epoch, total_steps, epochs)
+            self.monitor.savePerformanceInfo(i, epoch, loss.item())
 
-        return loss_train
 
-    def validate(self, batch_size, loader_valid=None, evaluator=None):
+        return loss.item()
+
+    def validateNet(self, batch_size, loader_valid=None, evaluator=None, no_multifrag_smiles=True):
 
         """Validate the RNN network by sampling SMILES and evaluate them or check their validity
         
@@ -197,22 +172,22 @@ class SequenceRNN(Generator):
         batch: int
             Number of SMILES to sample
         loader (opt): DataLoader
-            DataLoader to sample SMILES from
+            DataLoader used to calculate the validation loss
         evaluator (opt): Evaluator
             Evaluator to evaluate the SMILES
 
         Returns:
         --------
-        valid_rate: float
-            Rate of valid SMILES
-        loss_valid: float
-            Loss on the validation set
-        smiles_scores: list
-            List of tuples (SMILES, score)
+        valid_metrics: dict
+            Dictionary containing the validation metrics
+        scores: pd.DataFrame
+            DataFrame containing the SMILES and their scores
         """ 
-        # Sohvi: if drop_duplicates is True, then canonicalize_list is called and removes invalid SMILES
-        smiles, scores = self.evaluate(batch_size, method=evaluator, drop_duplicates=False)
-        valid_ratio = scores.VALID.mean()
+
+        valid_metrics = {}
+        smiles = self.sample(batch_size)
+        scores = self.evaluate(smiles, evaluator=evaluator)
+        valid_metrics['valid_ratio'] = scores.VALID.mean()
 
         # If a separate validation set is provided, use it to compute the validation loss 
         if loader_valid is not None:
@@ -220,57 +195,53 @@ class SequenceRNN(Generator):
             for j, batch in enumerate(loader_valid):
                 size += batch.size(0)
                 loss_valid += -self.likelihood(batch.to(self.device)).sum().item()
-            loss_valid = loss_valid / size / self.voc.max_len
-        else:
-            loss_valid = None
+            valid_metrics['loss_valid'] = loss_valid / size / self.voc.max_len
 
-        smiles_scores = []
-        for idx, smile in enumerate(smiles):
-            smiles_scores.append((smile, scores.VALID[idx]))
+        scores['Smiles'] = smiles
 
-        return valid_ratio, loss_valid, smiles_scores       
+        return valid_metrics, scores       
     
 
-    def fit(self, loader_train, loader_valid=None, epochs=100, monitor=None, lr=1e-3, patience=50):
+    # def fit(self, loader_train, loader_valid=None, epochs=100, monitor=None, lr=1e-3, patience=50):
         
-        self.monitor = monitor if monitor else NullMonitor() 
-        best_value = float('inf')
-        last_save = -1
+    #     self.monitor = monitor if monitor else NullMonitor() 
+    #     best_value = float('inf')
+    #     last_save = -1
 
-        self.optim = optim.Adam(self.parameters(), lr=lr)
+    #     self.optim = optim.Adam(self.parameters(), lr=lr)
         
-        for epoch in tqdm(range(epochs), desc='Fitting model'):
-            epoch += 1
+    #     for epoch in tqdm(range(epochs), desc='Fitting model'):
+    #         epoch += 1
             
-            # Train the model
-            train_loss = self.trainNet(loader_train, epoch, epochs)
+    #         # Train the model
+    #         train_loss = self.trainNet(loader_train, epoch, epochs)
             
-            # Validate the model
-            batch_size = loader_train.batch_size * 2 # Sohvi: why training batch size *2?
-            valid_ratio, valid_loss, smiles_scores = self.validate(batch_size, evaluator=None)
-            self.monitor.saveProgress(None, epoch, None, epochs)
+    #         # Validate the model
+    #         batch_size = loader_train.batch_size * 2 # Sohvi: why training batch size *2?
+    #         valid_ratio, valid_loss, smiles_scores = self.validateNet(batch_size, evaluator=None)
+    #         self.monitor.saveProgress(None, epoch, None, epochs)
 
-            # If validation loss given, save the model if the validation loss is the best so far
-            # Otherwise, save the model if the validation error rate is the best so far
-            if valid_loss is not None: value = valid_loss
-            else : value = 1 - valid_ratio
+    #         # If validation loss given, save the model if the validation loss is the best so far
+    #         # Otherwise, save the model if the validation error rate is the best so far
+    #         if valid_loss is not None: value = valid_loss
+    #         else : value = 1 - valid_ratio
 
-            if value < best_value:
-                self.monitor.saveModel(self)
-                best_value = value
-                last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}") 
+    #         if value < best_value:
+    #             self.monitor.saveModel(self)
+    #             best_value = value
+    #             last_save = epoch
+    #             logger.info(f"Model was saved at epoch {epoch}") 
 
-            self.monitor.savePerformanceInfo(None, epoch, train_loss.item(), loss_valid=valid_loss, smiles_scores=smiles_scores, smiles_scores_key=['Smiles', 'VALID'], valid_ratio=valid_ratio, error = 1 - valid_ratio)     
+    #         self.monitor.savePerformanceInfo(None, epoch, train_loss.item(), loss_valid=valid_loss, smiles_scores=smiles_scores, smiles_scores_key=['Smiles', 'VALID'], valid_ratio=valid_ratio, error = 1 - valid_ratio)     
             
-            del train_loss, valid_loss
-            monitor.endStep(None, epoch)
+    #         del train_loss, valid_loss
+    #         monitor.endStep(None, epoch)
 
-            if epoch - last_save > patience:
-                break
+    #         if epoch - last_save > patience:
+    #             break
 
-            torch.cuda.empty_cache()
-            monitor.close()
+    #         torch.cuda.empty_cache()
+    #         monitor.close()
             
         #     # each epoch sample SMILES generated by model to assess error rate    
         #     seqs = self.sample(len(batch * 2))
@@ -315,9 +286,9 @@ class SequenceRNN(Generator):
         smiles = []
         while len(smiles) < num_samples:
             # sample SMILES
-            sequences = self.sample(batch_size)
+            smiles = self.sample(batch_size)
             # decode according to vocabulary
-            new_smiles = utils.canonicalize_list([self.voc.decode(s, is_tk = False) for s in sequences])
+            new_smiles = utils.canonicalize_list(smiles)
             # drop duplicates
             if drop_duplicates:
                 new_smiles = np.array(new_smiles)

@@ -9,13 +9,17 @@ from copy import deepcopy
 
 import numpy as np
 from scipy.stats import gmean
+from typing import List, Tuple, Union, Dict, Optional
 
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
 from drugex.utils import gpu_non_dominated_sort, cpu_non_dominated_sort
+from drugex.training.scorers.smiles import SmilesChecker
+#from drugex.training.monitors import NullMonitor
 
 
 
@@ -361,31 +365,126 @@ class Generator(Model, ABC):
     The base generator class for fitting and evaluating a DrugEx generator.
     """
 
+    # @abstractmethod
+    # def fit(self, train_loader, valid_loader, epochs=1000, evaluator=None, monitor=None):
+    #     """
+    #     Start training.
+
+    #     Args:
+    #         train_loader: training data loader (see `DataSet`)
+    #         valid_loader: testing data loader (see `DataSet`)
+    #         epochs: maximum number of epochs for which to train
+    #         evaluator: a `ModelEvaluator`
+    #         monitor:
+
+    #     Returns:
+
+    #     """
+
+    #     pass
+
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
+        self.monitor = monitor #if monitor else NullMonitor()
+        best = float('inf')
+        last_save = -1
+         
+        for epoch in tqdm(range(epochs), desc='Fitting model'):
+            epoch += 1
+            
+            # Train model
+            loss_train = self.trainNet(train_loader, epoch, epochs)
+
+            # Validate model
+            if self.model_name == 'SequenceRNN':
+                valid_metrics, smiles_scores = self.validateNet(train_loader.batch_size*2, loader_valid=valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            else:
+                valid_metrics, smiles_scores = self.validateNet(valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+            # Save model based on validation loss or valid ratio
+            if 'loss_valid' in valid_metrics.keys(): value = valid_metrics['loss_valid']
+            else : value = 1 - valid_metrics['valid_ratio']
+
+            if value < best:
+                monitor.saveModel(self)    
+                best = value
+                last_save = epoch
+                logger.info(f"Model was saved at epoch {epoch}")   
+            
+            # Save performance info and generate smiles
+            valid_metrics['loss_train'] = loss_train
+            valid_metrics['best_value'] = best
+            # monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Desire', 'Frags'))
+            monitor.savePerformanceInfo(None, epoch, None, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores.keys(), **valid_metrics)
+
+            del loss_train, valid_metrics, smiles_scores
+            monitor.endStep(None, epoch)
+                
+            # Early stopping
+            if epoch - last_save > patience : break
+        
+        torch.cuda.empty_cache()
+        monitor.close()
+
     @abstractmethod
-    def fit(self, train_loader, valid_loader, epochs=1000, evaluator=None, monitor=None):
+    def trainNet(self, loader, epoch, epochs):
         """
-        Start training.
+        Train the generator for a single epoch.
 
         Args:
-            train_loader: training data loader (see `DataSet`)
-            valid_loader: testing data loader (see `DataSet`)
-            epochs: maximum number of epochs for which to train
-            evaluator: a `ModelEvaluator`
-            monitor:
+            loader: a `DataLoader` instance to use for training
+            epoch: the current epoch
+            epochs: the total number of epochs
 
         Returns:
-
+            `None`
         """
 
-        pass
-
-    @abstractmethod
-    def evaluate(self, n_samples, method=None, drop_duplicates=True):
         pass
 
     @abstractmethod
     def sample(self, *args, **kwargs):
+        """
+        Samples molcules from the generator.
+        """
         pass
+
+    def evaluate(self, smiles : List[str], frags : List[str]=None, evaluator=None, no_multifrag_smiles : bool=True):
+        """
+        Evaluate molecules by using the given evaluator or checking for validity.
+
+        Args:
+            smiles (List): a list of SMILES-based molecules
+            frags (List): a list of fragments
+            evaluator (ModelEvaluator): a `ModelEvaluator` instance
+            no_multifrag_smiles (bool): if `True`, only single-fragment SMILES are considered valid
+        
+        Returns:
+            scores (DataFrame): a `DataFrame` with the scores for each molecule
+        """
+
+        if evaluator is None:
+            scores = SmilesChecker.checkSmiles(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
+        else:
+            scores = evaluator.getScores(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
+        
+        return scores
+
+    @abstractmethod
+    def validateNet(self, *args, **kwargs):
+        """
+        Validate the performance of the generator.
+        """
+        pass
+
+    def getModel(self):
+        """
+        Return a copy of this model as a state dictionary.
+
+        Returns:
+            a serializable copy of this model as a state dictionary
+        """
+
+        return deepcopy(self.state_dict())   
 
 class Explorer(Model, ABC):
     """
