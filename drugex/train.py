@@ -12,7 +12,7 @@ from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
 
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
-from drugex.training.explorers.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
+from drugex.training.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
 
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
@@ -55,6 +55,8 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
                         help="Generator algorithm: 'trans' (graph- or smiles-based transformer model) or "\
                              "'rnn' (smiles, recurrent neural network based on DrugEx v2).")
+    parser.add_argument('-gru', '--gru', action='store_true',
+                        help="Use GRU instead of LSTM in RNN")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -452,7 +454,7 @@ def CreateDesirabilityFunction(base_dir,
 
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
-def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
+def SetGeneratorAlgorithm(voc, mol_type, alg, gpus, gru=False):
     
     """
     Initializes the generator algorithm
@@ -462,6 +464,7 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
         mol_type (str) : molecule type
         alg (str): agent algorithm type
         gpus (tuple): a tuple of GPU IDs to use with the initialized model
+        gru (bool): whether to use GRU or LSTM for RNN model
     Return:
         agent (torch model): molecule generator 
     """
@@ -474,7 +477,7 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus):
             agent = SequenceTransformer(voc, use_gpus=gpus)
         elif alg == 'rnn':
             # TODO: add argument for is_lstm
-            agent = sequence_rnn.SequenceRNN(voc, is_lstm=True, use_gpus=gpus)
+            agent = SequenceRNN(voc, is_lstm=False if gru else True, use_gpus=gpus)
         else:
             raise ValueError('Unknown algorithm: {}'.format(alg))
 
@@ -498,7 +501,7 @@ def PreTrain(args):
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
 
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, gru=args.gru)
     monitor = FileMonitor(pt_path, verbose=True)
     agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
         
