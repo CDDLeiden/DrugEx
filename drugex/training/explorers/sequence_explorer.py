@@ -23,17 +23,32 @@ class SequenceExplorer(Explorer):
                Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.
                J Cheminform (2021). https://doi.org/10.1186/s13321-019-0355-6
  
-    Arguments:
- 
-        agent (models.Generator): The agent network which is constructed by deep learning model
-                                   and generates the desired molecules.
- 
-        env (utils.Env): The environment which provides the reward and judge
-                                 if the genrated molecule is valid and desired.
- 
-        mutate (models.Generator): The pre-trained network which is constructed by deep learning model
-                                   and ensure the agent to explore the approriate chemical space.
+    Parameters
+    ----------
+    agent: drugex.training.generators.SequenceRNN
+        The agent network which is optimised to generates the desired molecules.
+    env : drugex.training.interfaces.Environment
+        The environment which provides the reward and judge if the genrated molecule is valid and desired.
+    mutate : drugex.training.generators.SequenceRNN
+        The pre-trained network which increases the exploration of the chemical space.
+    crover : drugex.training.generators.SequenceRNN
+        The iteratively updated network which increases the exploitation of the chemical space.
+    batch_size : int
+        The number of molecules generated in each iteration.
+    epsilon : float
+        The probability of using the `mutate` network to generate molecules.
+    sigma : float
+        TODO: what is this?
+    repeat : int
+        The number of times the `agent` network is used to generate molecules.
+    n_samples : int
+        The number of molecules to be generated in each epoch.
+    device : torch.device
+        The device to run the network.
+    use_gpus : tuple
+        The GPU ids to run the network.
     """
+
     def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size=batch_size, epsilon=epsilon, sigma=sigma, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
         self.replay = 10
@@ -43,6 +58,28 @@ class SequenceExplorer(Explorer):
         self.memory = memory
 
     def forward(self, crover=None, memory=None, epsilon=None):
+        """
+        Generate molecules with the given `agent` network.
+        
+        Parameters
+        ----------
+        crover : drugex.training.generators.SequenceRNN
+            The iteratively updated network which increases the exploitation of the chemical space.
+        memory : torch.Tensor
+            TODO: what is this?
+        epsilon : float
+            The probability of using the `mutate` network to generate molecules.
+
+        Returns
+        -------
+        smiles : list
+            The generated SMILES.
+        seqs : torch.Tensor
+            The generated sequences. (encoded smiles?)
+
+        TODO: why is crover, memory and epsilon passed as parameters and not called from self?
+        """
+    
         seqs = []
         for _ in range(self.replay):
             seq = self.agent.evolve(self.batchSize, epsilon=epsilon, crover=crover, mutate=self.mutate)
@@ -58,6 +95,24 @@ class SequenceExplorer(Explorer):
         return smiles, seqs
    
     def policy_gradient(self, smiles=None, seqs=None, memory=None):
+        """
+        Policy gradient training.
+ 
+        Novel molecules are scored by the environment.
+        The policy gradient is calculated using the REINFORCE algorithm and the agent is updated.
+        
+        Parameters
+        ----------
+        smiles : list
+            The generated SMILES.
+        seqs : torch.Tensor
+            The generated sequences. (encoded smiles?)
+        memory : torch.Tensor
+            TODO: what is this?
+
+        TODO : harmonize to do same thing as for the transformers: generation, reward, update all in here
+        """
+
         # function need to get smiles
         scores = self.env.getRewards(smiles, frags=None)
         if memory is not None:
@@ -71,6 +126,34 @@ class SequenceExplorer(Explorer):
         self.agent.PGLoss(loader, progress=self.monitor)
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100, no_multifrag_smiles=True):
+        
+        """
+        Fit the graph explorer to the training data.
+        
+        Parameters
+        ----------
+        train_loader : torch.utils.data.DataLoader
+            Data loader for training data
+        valid_loader : torch.utils.data.DataLoader
+            Data loader for validation data
+        epochs : int
+            Number of epochs to train for
+        patience : int
+            Number of epochs to wait for improvement before early stopping
+        criteria : str
+            Criteria to use for early stopping
+        min_epochs : int
+            Minimum number of epochs to train for
+        monitor : Monitor
+            Monitor to use for logging and saving model
+        no_multifrag_smiles : bool
+            TODO: why here?
+            
+        Returns
+        -------
+        None
+        """
+        
         self.monitor = monitor if monitor else NullMonitor()
         self.monitor.saveModel(self)
         self.bestState = deepcopy(self.agent.state_dict())
