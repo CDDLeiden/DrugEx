@@ -68,3 +68,49 @@ ${TRAIN_RL_ARGS} \
 -a rnn \
 -mt smiles
 echo "Test: Done."
+
+echo $line
+echo "Test: Pretrain regular (no fragments) single-network RNN model with GRUs..."
+echo $line
+python -m drugex.train \
+${TRAIN_COMMON_ARGS} \
+${TRAIN_VOCAB_ARGS} \
+-i "${PRETRAINING_PREFIX}" \
+-o "${PRETRAINING_PREFIX}_${GRU_PREFIX}" \
+-m PT \
+-a rnn \
+-gru \
+-mt smiles
+echo "Test: Done."
+
+echo $line
+echo "Test: Fine-tune regular (no fragments) single-network RNN model with GRUs..."
+echo $line
+python -m drugex.train \
+${TRAIN_COMMON_ARGS} \
+${TRAIN_VOCAB_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-pt "${PRETRAINING_PREFIX}_${GRU_PREFIX}" \
+-o "${FINETUNING_PREFIX}_${GRU_PREFIX}" \
+-m FT \
+-a rnn \
+-gru \
+-mt smiles
+echo "Test: Done."
+
+echo $line
+echo "Test: RL for the regular (no fragments) single-network RNN model with GRUs..."
+echo $line
+python -m drugex.train \
+${TRAIN_COMMON_ARGS} \
+${TRAIN_VOCAB_ARGS} \
+${TRAIN_RL_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_${GRU_PREFIX}_smiles_rnn_PT" \
+-pr "${FINETUNING_PREFIX}_${GRU_PREFIX}_smiles_rnn_FT" \
+-o "${FINETUNING_PREFIX}_${GRU_PREFIX}_${RL}" \
+-m RL \
+-a rnn \
+-gru \
+-mt smiles
+echo "Test: Done."
