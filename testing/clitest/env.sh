@@ -13,6 +13,7 @@ export TEST_DATA_SCAFFOLD='pyrazines.tsv'
 # prefixes for output files
 export VOC_PREFIX='vocabulary'
 export PRETRAINING_PREFIX='pre'
+export GRU_PREFIX='gru'
 export FINETUNING_PREFIX='ft'
 export SCAFFOLD_PREFIX='scaffold'
 
