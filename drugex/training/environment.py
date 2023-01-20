@@ -17,11 +17,11 @@ class DrugExEnvironment(Environment):
 
     """
 
-    def getScores(self, smiles, frags=None, no_multifrag_smiles=True):
+    def getScores(self, smiles, frags=None, no_multifrag_smiles=True, unmodified=False):
         preds = {}
         mols = [Chem.MolFromSmiles(s) for s in smiles]
         for scorer in self.scorers:
-            score = scorer(mols)
+            score = scorer(mols) if not unmodified else scorer.getScores(mols)
             preds[scorer.getKey()] = score
         preds = pd.DataFrame(preds)
         undesire = (preds < self.thresholds)  # ^ self.objs.on
