@@ -97,12 +97,10 @@ class MockScorer(Scorer):
 
 
 def getPredictor():
-    activity_threshold = 6.5
-    pad = 3.5
     try:
         from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
-        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='REG', th=None, scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='CLS', scale=False, name='P29274',
+            modifier=ClippedScore(lower_x=0.2, upper_x=0.8)
         )
     except ImportError:
         ret = MockScorer()

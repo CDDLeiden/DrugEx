@@ -55,8 +55,8 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
                         help="Generator algorithm: 'trans' (graph- or smiles-based transformer model) or "\
                              "'rnn' (smiles, recurrent neural network based on DrugEx v2).")
-    parser.add_argument('-gru', '--gru', action='store_true',
-                        help="Use GRU instead of LSTM in RNN")
+    parser.add_argument('-gru', '--use_gru', action='store_true',
+                        help="If on, use GRU units for the RNN model. Ignore if algorithm is not 'rnn'")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
                         help="Number of epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
@@ -454,7 +454,7 @@ def CreateDesirabilityFunction(base_dir,
 
     return DrugExEnvironment(objs, ths, schemes[scheme])
 
-def SetGeneratorAlgorithm(voc, mol_type, alg, gpus, gru=False):
+def SetGeneratorAlgorithm(voc, mol_type, alg, gpus, use_gru):
     
     """
     Initializes the generator algorithm
@@ -476,7 +476,7 @@ def SetGeneratorAlgorithm(voc, mol_type, alg, gpus, gru=False):
         if alg == 'trans':
             agent = SequenceTransformer(voc, use_gpus=gpus)
         elif alg == 'rnn':
-            agent = SequenceRNN(voc, is_lstm=False if gru else True, use_gpus=gpus)
+            agent = SequenceRNN(voc, is_lstm=not use_gru, use_gpus=gpus)
         else:
             raise ValueError('Unknown algorithm: {}'.format(alg))
 
@@ -500,7 +500,7 @@ def PreTrain(args):
         print('Pretraining SMILES-based ({}) model ...'.format(args.algorithm))
 
     pt_path = os.path.join(args.base_dir, 'generators', args.output_long)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, gru=args.gru)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
     monitor = FileMonitor(pt_path, verbose=True)
     agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
         
@@ -530,7 +530,7 @@ def FineTune(args):
         voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size)
         print('Fine-tuning SMILES-based ({}) model ...'.format(args.algorithm))
     
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
     agent.loadStatesFromFile(pt_path)
     monitor = FileMonitor(ft_path, verbose=True)
     agent.fit(train_loader, valid_loader, epochs=args.epochs, monitor=monitor, patience=args.patience)
@@ -553,10 +553,10 @@ def RLTrain(args):
         voc, train_loader, valid_loader = DataPreparationSmiles(args.voc_files, args.base_dir, args.input, args.batch_size, unique_frags=True if args.algorithm != 'rnn' else False, n_samples=args.n_samples)
     
     # Initialize agent and prior by loading pretrained model
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
     ag_path = args.base_dir + '/generators/' + args.agent_model + '.pkg'       
     agent.loadStatesFromFile(ag_path)
-    prior = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    prior = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
     pr_path = args.base_dir + '/generators/' + args.prior_model + '.pkg'
     prior.loadStatesFromFile(pr_path)
 
