@@ -9,7 +9,7 @@ import numpy as np
 from rdkit import DataStructs
 from rdkit.Chem import AllChem
 
-from drugex.training.interfaces import Scorer
+from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.properties import Property
 
 import torch

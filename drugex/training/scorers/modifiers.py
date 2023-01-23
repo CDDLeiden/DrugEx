@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 
-from drugex.training.interfaces import ScoreModifier
+from drugex.training.scorers.interfaces import ScoreModifier
 
 
 class Chained(ScoreModifier):

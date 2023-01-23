@@ -14,7 +14,7 @@ from rdkit.Chem.Fraggle import FraggleSim
 from rdkit.Chem import Descriptors as  rdFMCS
 
 from drugex.utils.fingerprints import get_fingerprint
-from drugex.training.interfaces import Scorer
+from drugex.training.scorers.interfaces import Scorer
 
 class TverskyFingerprintSimilarity(Scorer):
 

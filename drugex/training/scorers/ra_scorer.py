@@ -4,7 +4,7 @@ import numpy as np
 from rdkit.Chem import MolToSmiles
 from RAscore import RAscore_XGB
 
-from drugex.training.interfaces import Scorer
+from drugex.training.scorers.interfaces import Scorer
 
 XGB_MODEL_PATH = None
 

@@ -16,7 +16,7 @@ from rdkit.Chem.GraphDescriptors import BertzCT
 from rdkit.Chem.Fraggle import FraggleSim
 from rdkit.Chem import Descriptors as desc, Crippen, AllChem, Lipinski
 
-from drugex.training.interfaces import Scorer
+from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.sascorer import calculateScore
 from drugex.training.scorers.modifiers import Gaussian
 
