@@ -1,14 +1,16 @@
 from copy import deepcopy
 
 import numpy as np
+import pandas as pd
 import torch
 from tqdm.auto import tqdm
 from torch import nn
 from torch import optim
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
+from rdkit import Chem
 
 from drugex.logs import logger
-from drugex.training.interfaces import Generator
+from drugex.training.generators.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
 from drugex.training.monitors import NullMonitor
 
@@ -277,21 +279,21 @@ class SequenceRNN(Generator):
 
         return loss.item()
 
-    def validateNet(self, batch_size, loader_valid=None, evaluator=None, no_multifrag_smiles=True):
+    def validateNet(self, loader=None, evaluator=None, no_multifrag_smiles=True, n_samples=128):
 
         """
         Validate the network
         
         Parameters
         ----------
-        batch_size : int
-            The batch size to use for validation
         loader : torch.utils.data.DataLoader
             A dataloader object to iterate over the validation data to compute the validation loss
         evaluator : Evaluator
             An evaluator object to evaluate the generated SMILES
         no_multifrag_smiles : bool
             If `True`, only single-fragment SMILES are considered valid
+        n_samples : int
+            The number of SMILES to sample from the model
         
         Returns
         -------
@@ -309,45 +311,113 @@ class SequenceRNN(Generator):
         """
 
         valid_metrics = {}
-        smiles = self.sample(batch_size)
+        smiles = self.sample(n_samples)
         scores = self.evaluate(smiles, evaluator=evaluator)
         scores['Smiles'] = smiles
         valid_metrics['valid_ratio'] = scores.VALID.mean()
 
         # If a separate validation set is provided, use it to compute the validation loss 
-        if loader_valid is not None:
+        if loader is not None:
             loss_valid, size = 0, 0
-            for j, batch in enumerate(loader_valid):
+            for j, batch in enumerate(loader):
                 size += batch.size(0)
                 loss_valid += -self.likelihood(batch.to(self.device)).sum().item()
             valid_metrics['loss_valid'] = loss_valid / size / self.voc.max_len
 
         return valid_metrics, scores       
 
-    def sample_smiles(self, num_samples, batch_size=100, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
+    def generate(self, num_samples=100, batch_size=32, n_proc=1,
+                keep_frags=True, drop_duplicates=True, drop_invalid=True, 
+                evaluator=None, no_multifrag_smiles=True, drop_undesired=True, raw_scores=True, compute_desirability=True,
+                progress=True, tqdm_kwargs={}):
+
         if progress:
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
+
         smiles = []
-        while len(smiles) < num_samples:
-            # sample SMILES
-            smiles = self.sample(batch_size)
-            # decode according to vocabulary
-            new_smiles = utils.canonicalize_list(smiles)
-            # drop duplicates
-            if drop_duplicates:
-                new_smiles = np.array(new_smiles)
-                new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))]
-                new_smiles = new_smiles.tolist()
-            # drop invalid smiles
-            if drop_invalid:
-                scores = SmilesChecker.checkSmiles(new_smiles, frags=None).ravel()
-                new_smiles = np.array(new_smiles)[scores > 0].tolist()
-            smiles += new_smiles
-            # Update progress bar
-            if progress:
-                pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
-        smiles = smiles[:num_samples]
+        while not len(smiles) >= num_samples:
+            with torch.no_grad():
+                new_smiles = self.sample(batch_size)    
+
+                # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
+                # valid molecules are canonicalized and optionally extra filtering is applied
+                # else invalid molecules are kept and no filtering is applied
+                if drop_invalid:
+                    new_smiles = self.filterNewMolecules(smiles, new_smiles, drop_duplicates=drop_duplicates, 
+                                                        drop_undesired=drop_undesired, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+                # Update list of smiles
+                smiles += new_smiles
+                
+                # Update progress bar
+                if progress:
+                    pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        
         if progress:
             pbar.close()
-        return smiles
+        
+        smiles = smiles[:num_samples]
+
+        # Post-processing
+        df_smiles = pd.DataFrame({'SMILES': smiles})
+
+        if compute_desirability:
+            df_smiles['Desired'] = self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).DESIRE
+        if raw_scores:
+            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
+        if not keep_frags:
+            df_smiles = df_smiles.drop('Frags', axis=1)
+
+        return df_smiles
+
+    def filterNewMolecules(self, smiles, new_smiles, drop_duplicates=True, drop_undesired=True, evaluator=None, no_multifrag_smiles=True):
+        """
+        Filter the generated SMILES
+        
+        Parameters:
+        ----------
+        smiles: `list`
+            A list of previous SMILES
+        new_smiles: `list`
+            A list of additional generated SMILES
+        drop_duplicates: `bool`
+            If `True`, duplicate SMILES are dropped
+        drop_undesired: `bool`
+            If `True`, SMILES that do not fulfill the desired objectives
+        evaluator: `Evaluator`
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles: `bool`
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns:
+        -------
+        new_smiles: `list`
+            A list of filtered SMILES
+        new_frags: `list`
+            A list of filtered input fragments
+        """
+        
+        # Make sure both valid molecules and include input fragments
+        scores = SmilesChecker.checkSmiles(new_smiles, no_multifrag_smiles=no_multifrag_smiles)
+        new_smiles = np.array(new_smiles)[scores.VALID == 1].tolist()
+        
+        # Canonalize SMILES
+        new_smiles = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in new_smiles]    
+
+        # drop duplicates
+        if drop_duplicates:
+            new_smiles = np.array(new_smiles)
+            new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
+
+        # drop undesired molecules
+        if drop_undesired:
+            if evaluator is None:
+                raise ValueError('Evaluator must be provided to filter molecules by desirability')
+            # Compute desirability scores
+            scores = self.evaluate(new_smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            # Filter out undesired molecules
+            new_smiles = np.array(new_smiles)[scores.DESIRE == 1].tolist()
+
+
+        return new_smiles

@@ -20,11 +20,12 @@ from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragData
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.interfaces import TrainingMonitor, Scorer
+from drugex.training.interfaces import TrainingMonitor
 from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
 from drugex.training.explorers import SequenceExplorer, FragSequenceExplorer, FragGraphExplorer
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoSimilarity
+from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
 
@@ -329,10 +330,10 @@ class TrainingTestCase(TestCase):
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # test molecule generation
-        pretrained.sample_smiles([
+        pretrained.generate([
             "c1ccncc1CCC",
             "CCO"
-        ], num_samples=1)
+        ], num_samples=1, drop_undesired=False)
 
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(self.BATCH_SIZE)
@@ -351,6 +352,12 @@ class TrainingTestCase(TestCase):
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
+
+        # test molecule generation
+        pretrained.generate([
+            "c1ccncc1CCC",
+            "CCO"
+        ], num_samples=1, evaluator=environment, drop_undesired=False)
 
     def test_graph_transformer_scaffold(self):
         """

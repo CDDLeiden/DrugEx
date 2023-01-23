@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 import numpy as np
 
 from drugex.logs import logger
-from drugex.training.interfaces import Explorer
+from drugex.training.explorers.interfaces import Explorer
 from drugex.training.monitors import NullMonitor
 
  

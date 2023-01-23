@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
 from drugex.logs import logger
-from drugex.training.interfaces import Explorer
+from drugex.training.explorers.interfaces import Explorer
 from drugex.training.monitors import NullMonitor
 
 

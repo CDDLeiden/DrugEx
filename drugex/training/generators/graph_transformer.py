@@ -1,6 +1,7 @@
 import tempfile
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from tqdm.auto import tqdm
@@ -9,10 +10,9 @@ from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
-from drugex.logs import logger
-from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.training.generators.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
-from drugex.training.interfaces import Generator
+from drugex.training.generators.interfaces import FragGenerator
 from drugex.utils import ScheduledOptim
 from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
@@ -48,7 +48,7 @@ class AtomLayer(nn.Module):
         return x
 
 
-class GraphTransformer(Generator):
+class GraphTransformer(FragGenerator):
     """
     Graph Transformer for molecule generation from fragments
     """
@@ -171,8 +171,6 @@ class GraphTransformer(Generator):
 
             # The part of growing
             for step in range(1, self.n_grows):
-               # if step == 70:
-               #     print(step)
                 if is_end.all():
                     src[:, step, :] = 0
                     continue
@@ -339,7 +337,7 @@ class GraphTransformer(Generator):
 
         return loss.item()
                 
-    def validateNet(self, loader, evaluator=None, no_multifrag_smiles=True):
+    def validateNet(self, loader, evaluator=None, no_multifrag_smiles=True, n_samples=None):
 
         """
         Validate the network
@@ -414,27 +412,56 @@ class GraphTransformer(Generator):
                         
         return smiles, frags
 
-
-    def sample_smiles(self, input_smiles, num_samples=100, batch_size=32, n_proc=1, fragmenter=None, 
-                      keep_frags=True, drop_duplicates=True, drop_invalid=True, progress=True, tqdm_kwargs={}):
-    
-        standardizer = Standardization(n_proc=n_proc)
-        smiles = standardizer.apply(input_smiles)
-
-        fragmenter = Fragmenter(4, 4, 'brics') if not fragmenter else fragmenter
+    def loaderFromFrags(self, frags, batch_size=32, n_proc=1):
+        """
+        Encode the input fragments and create a dataloader object
+        
+        Parameters:
+        ----------
+        frags: `list`
+            A list of input fragments (in SMILES format)
+        batch_size: `int`
+            Batch size for the dataloader
+        n_proc: `int`
+            Number of processes to use for encoding the fragments
+        
+        Returns:
+        -------
+        loader: `torch.utils.data.DataLoader`
+            A dataloader object to iterate over the input fragments 
+        """
+        
+        # Encode the input fragments
         encoder = FragmentCorpusEncoder(
-            fragmenter=fragmenter,
+            fragmenter=dummyMolsFromFragments(),
             encoder=GraphFragmentEncoder(
                 self.voc_trg
             ),
             n_proc=n_proc
         )
         out_data = GraphFragDataSet(tempfile.NamedTemporaryFile().name)
-        encoder.apply(smiles, encodingCollectors=[out_data])
+        encoder.apply(frags, encodingCollectors=[out_data])
+        loader = out_data.asDataLoader(batch_size, n_samples=batch_size)
         
-        # Duplicate of self.sample to allow dropping molecules
-        # and progress bar on the fly without additional
-        # overhead caused by calling nn.DataParallel a few times
+        return loader
+
+    def generate(self, input_frags = None, input_loader = None, num_samples=100, batch_size=32, n_proc=1,
+                keep_frags=True, drop_duplicates=True, drop_invalid=True, 
+                evaluator=None, no_multifrag_smiles=True, drop_undesired=True, raw_scores=True, compute_desirability=True,
+                progress=True, tqdm_kwargs={}):
+
+        if input_loader and input_frags:
+            raise ValueError('Only one of input_loader and input_frags can be provided')
+        elif not input_loader and not input_frags:
+            raise ValueError('Either input_loader or input_frags must be provided')
+        elif input_frags:
+            # Create a dataloader object from the input fragments
+            loader = self.loaderFromFrags(input_frags, batch_size=batch_size, n_proc=n_proc)
+        else:
+            loader = input_loader
+
+        # Duplicate of self.sample to allow dropping molecules and progress bar on the fly
+        # without additional overhead caused by calling nn.DataParallel a few times
         net = nn.DataParallel(self, device_ids=self.gpus)
 
         if progress:
@@ -444,29 +471,39 @@ class GraphTransformer(Generator):
         smiles, frags = [], []
         while not len(smiles) >= num_samples:
             with torch.no_grad():
-                src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
+                src = next(iter(loader))
                 trg = net(src.to(self.device))
                 new_frags, new_smiles = self.voc_trg.decode(trg)
-                # drop duplicates
-                if drop_duplicates:
-                    new_smiles = np.array(new_smiles)
-                    new_frags = np.array(new_frags)[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-                    new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-                # drop invalid smiles
+
+                # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
+                # valid molecules are canonicalized and optionally extra filtering is applied
+                # else invalid molecules are kept and no filtering is applied
                 if drop_invalid:
-                    # Make sure both valid molecules and include input fragments
-                    scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags).sum(axis=1)
-                    new_smiles = np.array(new_smiles)[scores > 1].tolist()
-                    new_frags = np.array(new_frags)[scores > 1].tolist()
+                    new_smiles, new_frags = self.filterNewMolecules(smiles, new_smiles, new_frags, drop_duplicates=drop_duplicates, 
+                                                              drop_undesired=drop_undesired, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+
+                # Update list of smiles and frags
                 smiles += new_smiles
                 frags += new_frags
+                
                 # Update progress bar
                 if progress:
                     pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+        
         if progress:
             pbar.close()
+        
         smiles = smiles[:num_samples]
-        if keep_frags:
-            return smiles, frags
-        return smiles
+        frags = frags[:num_samples]
 
+        # Post-processing
+        df_smiles = pd.DataFrame({'SMILES': smiles, 'Frags': frags})
+
+        if compute_desirability:
+            df_smiles['Desired'] = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).DESIRE
+        if raw_scores:
+            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
+        if not keep_frags:
+            df_smiles = df_smiles.drop('Frags', axis=1)
+
+        return df_smiles
