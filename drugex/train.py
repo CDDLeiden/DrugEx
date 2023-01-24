@@ -182,11 +182,13 @@ def DataPreparationGraph(voc_files,
     # Load train data
     data_set_train = GraphFragDataSet(train_path)
     if voc_paths:
+        # TODO: SOFTCODE number of fragments !!!!
         data_set_train.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
 
     # Load test data
     data_set_test = GraphFragDataSet(test_path)
     if voc_paths:
+        # TODO: SOFTCODE number of fragments !!!!
         data_set_test.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     
     voc = data_set_train.getVoc() + data_set_test.getVoc()
