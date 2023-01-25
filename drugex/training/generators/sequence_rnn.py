@@ -327,10 +327,10 @@ class SequenceRNN(Generator):
         return valid_metrics, scores       
 
     def generate(self, num_samples=100, batch_size=32, n_proc=1,
-                keep_frags=True, drop_duplicates=True, drop_invalid=True, 
+                drop_duplicates=True, drop_invalid=True, 
                 evaluator=None, no_multifrag_smiles=True, drop_undesired=True, raw_scores=True, compute_desirability=True,
                 progress=True, tqdm_kwargs={}):
-
+        
         if progress:
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
@@ -366,8 +366,6 @@ class SequenceRNN(Generator):
             df_smiles['Desired'] = self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).DESIRE
         if raw_scores:
             df_smiles = pd.concat([df_smiles, self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
-        if not keep_frags:
-            df_smiles = df_smiles.drop('Frags', axis=1)
 
         return df_smiles
 

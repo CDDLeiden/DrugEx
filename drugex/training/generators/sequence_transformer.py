@@ -315,7 +315,7 @@ class SequenceTransformer(FragGenerator):
         # Duplicate of self.sample to allow dropping molecules and progress bar on the fly
         # without additional overhead caused by calling nn.DataParallel a few times
         net = nn.DataParallel(self, device_ids=self.gpus)
-
+        
         if progress:
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
@@ -323,10 +323,10 @@ class SequenceTransformer(FragGenerator):
         smiles, frags = [], []
         while not len(smiles) >= num_samples:
             with torch.no_grad():
-                src = next(iter(loader))
+                src, _ = next(iter(loader))
                 trg = net(src.to(self.device))
-                new_smiles = self.voc_trg.decode(trg, is_tk=False)
-                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=True)
+                new_smiles = [self.voc_trg.decode(s, is_tk=False) for s in trg]
+                new_frags = [self.voc_trg.decode(s, is_tk=False) for s in src]
 
                 # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
                 # valid molecules are canonicalized and optionally extra filtering is applied
@@ -342,7 +342,7 @@ class SequenceTransformer(FragGenerator):
                 # Update progress bar
                 if progress:
                     pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
-        
+                
         if progress:
             pbar.close()
         
