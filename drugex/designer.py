@@ -19,7 +19,6 @@ def DesignArgParser(txt=None):
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
     parser.add_argument('-d', '--debug', action='store_true')
-
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
@@ -47,7 +46,7 @@ def DesignArgParser(txt=None):
     designer_args = vars(args)
     train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
-        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds' ]
+        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds', 'use_gru' ]
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
@@ -91,18 +90,20 @@ def DesignerFragsDataPreparation(
         input_path = data_path + input_file
         assert os.path.exists(input_path)
     except:
-        input_path = data_path + '_'.join(input_file, 'test', mol_type,) + '.txt'
+        input_path = data_path + '_'.join([input_file, 'test', mol_type if mol_type == 'graph' else 'smi']) + '.txt'
         assert os.path.exists(input_path)
     logSettings.log.info(f'Loading input fragments from {input_path}')
 
     if mol_type == 'graph' :
         data_set = GraphFragDataSet(input_path)
         if voc_paths:
+            # TODO: SOFTCODE number of fragments !!!!
             data_set.readVocs(voc_paths, VocGraph, max_len=80, n_frags=4)
     else:
         data_set = SmilesFragDataSet(input_path)
         if voc_paths:
-            data_set.readVocs(voc_paths, VocSmiles, max_len=100)
+            # TODO: SOFTCODE number of fragments !!!!
+            data_set.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=True)
     voc = data_set.getVoc()
 
     loader = data_set.asDataLoader(batch_size=batch_size, n_samples=n_samples)
@@ -130,12 +131,12 @@ def Design(args):
             )
     else:
         voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
-        voc = VocSmiles.fromFile(True, voc_paths[0], max_len=100)
+        voc = VocSmiles.fromFile(voc_paths[0], True, max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     assert os.path.exists(gen_path)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu)
+    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
     agent.loadStatesFromFile(gen_path)
     # Set up environment-predictor
     env = CreateDesirabilityFunction(
@@ -158,20 +159,23 @@ def Design(args):
     if not args.modify:
         for scorer in env.scorers:
             scorer.modifier=None
+    
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
-    if args.algorithm == 'rnn':
-        df = pd.DataFrame()
-        batch_size = min(args.num, args.batch_size)
-        df['Smiles'], scores = agent.evaluate(batch_size, num_smiles=args.num, method=env)
-        scores = pd.concat([df, scores], axis=1)
-    else:
-        frags, smiles, scores = agent.evaluate(loader, repeat=1, method=env)
-        scores['Frags'], scores['SMILES'] = frags, smiles
-    if not args.modify:
-        scores = scores.drop(columns=['DESIRE'])
-    scores.to_csv(out, index=False, sep='\t', float_format='%.2f')
+    # TODO: implement arguments for flexible filtering of molecules
+    gen_kwargs = dict(num_samples=args.num, batch_size=args.batch_size, n_proc=8,
+        drop_invalid=False, no_multifrag_smiles=True, drop_duplicates=True, drop_undesired=True, 
+        evaluator=env, compute_desirability=True, raw_scores=True)
+    
+    if args.algorithm != 'rnn':
+        gen_kwargs['input_loader'] = loader
+        gen_kwargs['keep_frags'] = True
+
+    print(gen_kwargs)
+    
+    df_mols = agent.generate(**gen_kwargs)
+    df_mols.to_csv(out, index=False, sep='\t', float_format='%.2f')
 
 
 if __name__ == "__main__":

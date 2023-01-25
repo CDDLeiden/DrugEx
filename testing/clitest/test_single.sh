@@ -63,7 +63,7 @@ ${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -ag "${PRETRAINING_PREFIX}_smiles_rnn_PT" \
 -pr "${FINETUNING_PREFIX}_smiles_rnn_FT" \
--o "${FINETUNING_PREFIX}_${RL}" \
+-o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
 -m RL \
 -a rnn \
 -mt smiles
@@ -108,9 +108,19 @@ ${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -ag "${PRETRAINING_PREFIX}_${GRU_PREFIX}_smiles_rnn_PT" \
 -pr "${FINETUNING_PREFIX}_${GRU_PREFIX}_smiles_rnn_FT" \
--o "${FINETUNING_PREFIX}_${GRU_PREFIX}_${RL}" \
+-o "${FINETUNING_PREFIX}_${GRU_PREFIX}_${RL_PREFIX}" \
 -m RL \
 -a rnn \
 -gru \
--mt smiles
+-mt smiles 
+echo "Test: Done."
+
+echo $line
+echo "Test: Generate molecules with sequence RNN ..."
+echo $line
+python -m drugex.designer \
+${DESIGN_COMMON_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_rnn_RL" \
+-vfs "${FINETUNING_PREFIX}" 
 echo "Test: Done."

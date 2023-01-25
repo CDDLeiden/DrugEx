@@ -73,7 +73,7 @@ echo "Test: Done."
  -i "${FINETUNING_PREFIX}" \
  -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
  -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
- -o "${FINETUNING_PREFIX}_RL" \
+ -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
  -m RL \
  -a trans \
  -mt smiles
@@ -89,8 +89,19 @@ ${TRAIN_RL_ARGS} \
 -i "${SCAFFOLD_PREFIX}_smi.txt" \
 -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
--o "${SCAFFOLD_PREFIX}_RL" \
+-o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
 -m RL \
 -a trans \
--mt smiles
+-mt smiles \
+-ns 32
+echo "Test: Done."
+
+echo $line
+echo "Test: Generate molecules with sequence transformer ..."
+echo $line
+python -m drugex.designer \
+${DESIGN_COMMON_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
+-vfs "${FINETUNING_PREFIX}" 
 echo "Test: Done."

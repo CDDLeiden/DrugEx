@@ -76,7 +76,7 @@ echo "Test: Done."
  -i "${FINETUNING_PREFIX}" \
  -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
  -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
- -o "${FINETUNING_PREFIX}_${RL}" \
+ -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
  -m RL \
  -a graph
  echo "Test: Done."
@@ -92,7 +92,19 @@ ${TRAIN_RL_ARGS} \
 -i "${SCAFFOLD_PREFIX}_graph.txt" \
 -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
 -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
--o "${SCAFFOLD_PREFIX}_RL" \
+-o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
 -m RL \
--a graph 
+-a graph \
+-ns "${TRAIN_BATCH}" 
+echo "Test: Done."
+
+# generate
+echo $line
+echo "Test: Generate molecules with graph transformer ..."
+echo $line
+python -m drugex.designer \
+${DESIGN_COMMON_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_graph_RL" \
+-vfs "${FINETUNING_PREFIX}" 
 echo "Test: Done."
