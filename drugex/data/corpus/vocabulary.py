@@ -120,7 +120,6 @@ class VocNonGPT(VocSmiles):
         seq_len = self.trg_len if is_smiles else self.src_len
         output = torch.zeros(len(input), seq_len).long()
         for i, seq in enumerate(input):
-            # print(i, len(seq))
             for j, char in enumerate(seq):
                 output[i, j] = self.tk2ix[char] if is_smiles else self.tk2ix['|' + char]
         return output
@@ -307,8 +306,7 @@ class VocGraph(Vocabulary):
                 Chem.SanitizeMol(emol)
                 Chem.SanitizeMol(esub)
             except Exception as e:
-                print(adj)
-                # raise e
+                raise e
             frags.append(Chem.MolToSmiles(esub))
             smiles.append(Chem.MolToSmiles(emol))
         return frags, smiles

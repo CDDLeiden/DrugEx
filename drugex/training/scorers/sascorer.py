@@ -114,6 +114,7 @@ def calculateScore(m):
 
 
 def processMols(mols):
+    # TODO: what is this for?
     print('smiles\tName\tsa_score')
     for i, m in enumerate(mols):
         if m is None:

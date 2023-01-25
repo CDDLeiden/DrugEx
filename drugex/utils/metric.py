@@ -46,6 +46,7 @@ def kl_div(p_logit, q_logit, reduce=False):
 
 
 def logP_mw(fnames, is_active=False):
+    # TODO: check this file for obsolete functions
     """ logP and molecular weight calculation for logP ~ MW chemical space visualization
 
     Arguments:
