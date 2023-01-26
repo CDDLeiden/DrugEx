@@ -252,7 +252,7 @@ class FragGraphExplorer(FragExplorer):
             
         return loader
 
-    def batchOutputs(self, net, src):
+    def getBatchOutputs(self, net, src):
         
         """
         Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.
@@ -280,89 +280,30 @@ class FragGraphExplorer(FragExplorer):
         loss = sum(loss).squeeze(dim=-1)
 
         return frags, smiles, loss
-        
 
-    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100, monitor=None):
-        
+    def sampleEncodedPairsToLoader(self, net, loader):
+
         """
-        Fit the graph explorer to the training data.
-        
+        Sample new fragments-molecule pairs from a data loader.
+
         Parameters
         ----------
-        train_loader : torch.utils.data.DataLoader
-            Data loader for training data
-        valid_loader : torch.utils.data.DataLoader
-            Data loader for validation data
-        epochs : int
-            Number of epochs to train for
-        patience : int
-            Number of epochs to wait for improvement before early stopping
-        criteria : str
-            Criteria to use for early stopping
-        min_epochs : int
-            Minimum number of epochs to train for
-        monitor : Monitor
-            Monitor to use for logging and saving model
-            
+        net : torch.nn.Module
+            Agent
+        loader : torch.utils.data.DataLoader
+            Data loader for original fragments-molecule pairs
+
         Returns
         -------
-        None
+        torch.utils.data.DataLoader
+            Data loader for sampled fragments-molecule pairs
         """
-        
-        self.monitor = monitor if monitor else NullMonitor()
-        self.bestState = deepcopy(self.agent.state_dict())
-        self.monitor.saveModel(self.agent)
 
-        n_iters = 1 if self.crover is None else 10
-        net = nn.DataParallel(self, device_ids=self.gpus)
         trgs = []
-        logger.info(' ')
+        for src in tqdm(loader, desc='Iterating over training batches', leave=False):
+            with torch.no_grad():
+                trg = net(src.to(self.device))
+                trgs.append(trg.detach().cpu())
+        trgs = torch.cat(trgs, dim=0)
         
-        for it in range(n_iters):
-            if n_iters > 1:
-                logger.info('\n----------\nITERATION %d/%d\n----------' % (it, n_iters))
-            for epoch in tqdm(range(epochs), desc='Fitting graph explorer'):
-                epoch += 1
-
-                # If nSamples is set, sample a subset of the training data at each epoch              
-                if self.nSamples > 0:
-                    if epoch == 1:
-                        train_loader_original = train_loader
-                        valid_loader_original = valid_loader
-                    train_loader = self.sample_input(train_loader_original)
-                    valid_loader = self.sample_input(valid_loader_original, is_test=True)
-
-                
-                # Sample encoded molecules from the network
-                for i, src in enumerate(tqdm(train_loader, desc='Iterating over training batches', leave=False)):
-                    with torch.no_grad():
-                        trg = net(src.to(self.device))
-                        trgs.append(trg.detach().cpu())
-                trgs = torch.cat(trgs, dim=0)
-                
-                # Train the agent with policy gradient
-                loader = DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=False)
-                self.policy_gradient(loader)
-                trgs = []
-
-                # Evaluate model
-                smiles, frags = self.agent.sample(valid_loader, self.repeat)
-                scores = self.agent.evaluate(smiles, frags, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-                scores['Smiles'], scores['Frags'] = smiles, frags             
-
-                # Save evaluate criteria and save best model
-                self.saveBestState(scores, criteria, epoch, it)
-
-                # Log performance and genearated compounds
-                self.logPerformanceAndCompounds(epoch, epochs, scores)
-        
-                # Early stopping
-                if (epoch >= min_epochs) and  (epoch - self.last_save > patience) : break
-
-            if self.crover is not None:
-                self.agent.load_state_dict(self.bestState)
-                self.crover.load_state_dict(self.bestState)
-            if it - self.last_iter > 1: break
-
-        torch.cuda.empty_cache()
-        self.monitor.close()
+        return DataLoader(trgs, batch_size=self.batchSize, shuffle=True, drop_last=False)

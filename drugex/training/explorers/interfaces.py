@@ -18,6 +18,7 @@ from tqdm import tqdm
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
 from drugex.training.interfaces import Model
+from torch.utils.data import DataLoader
 #from drugex.training.monitors import NullMonitor
 
 class Explorer(Model, ABC):
@@ -163,7 +164,7 @@ class FragExplorer(Explorer):
     """
 
     @abstractmethod
-    def batchOutputs(self, src, net):
+    def getBatchOutputs(self, src, net):
         """
         Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.
         """
@@ -190,7 +191,7 @@ class FragExplorer(Explorer):
         for step_idx, src in enumerate(tqdm(loader, desc='Iterating over validation batches', leave=False)):
 
             # Decode fragments and smiles, and get loss
-            frags, smiles, loss = self.batchOutputs(net, src)
+            frags, smiles, loss = self.getBatchOutputs(net, src)
             
             # Get rewards
             reward = self.env.getRewards(smiles, frags=frags)
@@ -210,3 +211,96 @@ class FragExplorer(Explorer):
             self.monitor.saveProgress(step_idx, None, total_steps, None)
             self.monitor.savePerformanceInfo(step_idx, None, loss.item())
             del loss
+
+    @abstractmethod
+    def sampleEncodedPairsToLoader(self, net, loader):
+        """
+        Sample new fragments-molecule pairs from a data loader.
+        """
+        pass
+
+    @abstractmethod
+    def sample_input(self, loader, is_test=False):
+        
+        """
+        Sample a batch of fragments-molecule pairs from the training data loader.
+        """
+        pass
+
+    def fit(self, train_loader, valid_loader=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100, monitor=None):
+        
+        """
+        Fit the graph explorer to the training data.
+        
+        Parameters
+        ----------
+        train_loader : torch.utils.data.DataLoader
+            Data loader for training data
+        valid_loader : torch.utils.data.DataLoader
+            Data loader for validation data
+        epochs : int
+            Number of epochs to train for
+        patience : int
+            Number of epochs to wait for improvement before early stopping
+        criteria : str
+            Criteria to use for early stopping
+        min_epochs : int
+            Minimum number of epochs to train for
+        monitor : Monitor
+            Monitor to use for logging and saving model
+            
+        Returns
+        -------
+        None
+        """
+        
+        self.monitor = monitor if monitor else NullMonitor()
+        self.bestState = deepcopy(self.agent.state_dict())
+        self.monitor.saveModel(self.agent)
+
+        n_iters = 1 if self.crover is None else 10
+        net = nn.DataParallel(self, device_ids=self.gpus)
+        logger.info(' ')
+        
+        for it in range(n_iters):
+            if n_iters > 1:
+                logger.info('\n----------\nITERATION %d/%d\n----------' % (it, n_iters))
+            for epoch in tqdm(range(epochs), desc='Fitting graph explorer'):
+                epoch += 1
+
+                # If nSamples is set, sample a subset of the training data at each epoch              
+                if self.nSamples > 0:
+                    if epoch == 1:
+                        train_loader_original = train_loader
+                        valid_loader_original = valid_loader
+                    train_loader = self.sample_input(train_loader_original)
+                    valid_loader = self.sample_input(valid_loader_original, is_test=True)
+
+                
+                # Sample encoded molecules from the network
+                loader = self.sampleEncodedPairsToLoader(net, train_loader)
+                
+                # Train the agent with policy gradient
+                self.policy_gradient(loader)
+
+                # Evaluate model
+                smiles, frags = self.agent.sample(valid_loader, self.repeat)
+                scores = self.agent.evaluate(smiles, frags, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
+                scores['Smiles'], scores['Frags'] = smiles, frags             
+
+                # Save evaluate criteria and save best model
+                self.saveBestState(scores, criteria, epoch, it)
+
+                # Log performance and genearated compounds
+                self.logPerformanceAndCompounds(epoch, epochs, scores)
+        
+                # Early stopping
+                if (epoch >= min_epochs) and  (epoch - self.last_save > patience) : break
+
+            if self.crover is not None:
+                self.agent.load_state_dict(self.bestState)
+                self.crover.load_state_dict(self.bestState)
+            if it - self.last_iter > 1: break
+
+        torch.cuda.empty_cache()
+        self.monitor.close()
