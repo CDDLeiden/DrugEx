@@ -150,7 +150,8 @@ class SequenceRNN(Generator):
         for seq, reward in loader:
             self.zero_grad()
             score = self.likelihood(seq)
-            loss = score * reward
+            # TODO: add baseline reward once moved to explorer
+            loss = score * reward 
             loss = -loss.mean()
             if progress:
                 progress.saveProgress(step_idx, None, total_steps, None)

@@ -26,7 +26,7 @@ class Explorer(Model, ABC):
     Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, n_samples=-1,
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1,
                  repeat=1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super().__init__(device=device, use_gpus=use_gpus)
         self.agent = agent
@@ -34,7 +34,7 @@ class Explorer(Model, ABC):
         self.crover = crover
         self.batchSize = batch_size
         self.epsilon = epsilon
-        self.sigma = sigma
+        self.beta = beta
         self.repeat = repeat
         self.env = env
         self.nSamples = n_samples
@@ -203,7 +203,7 @@ class FragExplorer(Explorer):
             
             # Train model with policy gradient
             self.optim.zero_grad()
-            loss = loss * reward
+            loss = loss * ( reward - self.beta )
             loss = -loss.mean()
             loss.backward()
             self.optim.step()

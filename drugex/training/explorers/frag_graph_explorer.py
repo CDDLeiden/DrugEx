@@ -18,8 +18,8 @@ class FragGraphExplorer(FragExplorer):
     `Explorer` to optimize a graph-based fragment-using agent with the given `Environment`.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, sigma=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS, no_multifrag_smiles=True):
-        super(FragGraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, sigma, n_samples, repeat, device=device, use_gpus=use_gpus)
+    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, beta=0.0, repeat=1, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS, no_multifrag_smiles=True):
+        super(FragGraphExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, beta, n_samples, repeat, device=device, use_gpus=use_gpus)
         """
         Parameters
         ----------
