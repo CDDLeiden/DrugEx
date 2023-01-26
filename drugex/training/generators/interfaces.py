@@ -19,7 +19,7 @@ from rdkit import Chem
 from drugex.logs import logger
 from drugex.training.scorers.smiles import SmilesChecker
 from drugex.training.interfaces import Model   
-#from drugex.training.monitors import NullMonitor
+from drugex.training.monitors import NullMonitor
 
 class Generator(Model, ABC):
     """
@@ -121,7 +121,7 @@ class Generator(Model, ABC):
         pass 
 
     def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
-        self.monitor = monitor #if monitor else NullMonitor()
+        self.monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
          
