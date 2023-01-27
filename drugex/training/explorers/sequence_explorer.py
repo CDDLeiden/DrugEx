@@ -56,6 +56,7 @@ class SequenceExplorer(Explorer):
         self.penalty = 0
         self.out = None
         self.memory = memory
+        self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3)
 
     def forward(self, crover=None, memory=None, epsilon=None):
         """
@@ -75,7 +76,7 @@ class SequenceExplorer(Explorer):
         smiles : list
             The generated SMILES.
         seqs : torch.Tensor
-            The generated sequences. (encoded smiles?)
+            The generated encoded sequences.
 
         TODO: why is crover, memory and epsilon passed as parameters and not called from self?
         """
@@ -106,24 +107,37 @@ class SequenceExplorer(Explorer):
         smiles : list
             The generated SMILES.
         seqs : torch.Tensor
-            The generated sequences. (encoded smiles?)
+            The generated encoded sequences. 
         memory : torch.Tensor
             TODO: what is this?
-
-        TODO : harmonize to do same thing as for the transformers: generation, reward, update all in here
         """
 
-        # function need to get smiles
-        scores = self.env.getRewards(smiles, frags=None)
+        # Calculate the reward from SMILES with the environment
+        reward = self.env.getRewards(smiles, frags=None)
+        
+        # TODO: understand what is this
         if memory is not None:
             scores[:len(memory), 0] = 1
             ix = scores[:, 0].argsort()[-self.batchSize * 4:]
             seqs, scores = seqs[ix, :], scores[ix, :]
-        ds = TensorDataset(seqs, torch.Tensor(scores).to(self.device))
+
+        # Move rewards to device and create a loader containing the sequences and the rewards
+        ds = TensorDataset(seqs, torch.Tensor(reward).to(self.device))
         loader = DataLoader(ds, batch_size=self.n_samples, shuffle=True)
- 
-        # updating loss is done in rnn.py
-        self.agent.PGLoss(loader, progress=self.monitor)
+        total_steps = len(loader)
+
+        # Train model with policy gradient
+        for step_idx, (seq, reward) in enumerate(tqdm(loader, desc='Iterating over validation batches', leave=False)):
+            self.optim.zero_grad()
+            loss = self.agent.likelihood(seq)
+            loss = loss * (reward - self.beta) 
+            loss = -loss.mean()
+            loss.backward()
+            self.optim.step()
+            
+            self.monitor.saveProgress(step_idx, None, total_steps, None)
+            self.monitor.savePerformanceInfo(step_idx, None, loss.item())
+            del loss
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100, no_multifrag_smiles=True):
         

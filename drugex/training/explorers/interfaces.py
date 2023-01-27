@@ -148,6 +148,13 @@ class Explorer(Model, ABC):
     def fit(self, train_loader, valid_loader=None, epochs=1000, monitor=None):
         pass
 
+    @abstractmethod
+    def policy_gradient(self, *args, **kwargs):
+        """
+        Policy gradient training.
+        """
+        pass
+
     def getModel(self):
         """
         Returns the current state of the agent

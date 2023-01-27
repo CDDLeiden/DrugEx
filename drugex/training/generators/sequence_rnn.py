@@ -127,38 +127,6 @@ class SequenceRNN(Generator):
             scores[:, step] = score
             x = target[:, step]
         return scores
-
-    def PGLoss(self, loader, progress=None):
-        """
-        Calculate the policy gradient loss and update the model.
-        
-        Parameters:
-        ----------
-        loader: `torch.utils.data.DataLoader`
-            Data loader.
-        progress: `drugex.training.monitors.ProgressMonitor`
-            Progress monitor.
-        
-        Returns:
-        -------
-        None
-
-        TODO: This function should be maybe moved to the explorer as part of RL (+ this is the case for the Transformer models)
-        """
-        total_steps = len(loader)
-        step_idx = 0
-        for seq, reward in loader:
-            self.zero_grad()
-            score = self.likelihood(seq)
-            # TODO: add baseline reward once moved to explorer
-            loss = score * reward 
-            loss = -loss.mean()
-            if progress:
-                progress.saveProgress(step_idx, None, total_steps, None)
-                progress.savePerformanceInfo(step_idx, None, loss.item())
-            loss.backward()
-            self.optim.step()
-            step_idx += 1
     
     def sample(self, batch_size):
         """

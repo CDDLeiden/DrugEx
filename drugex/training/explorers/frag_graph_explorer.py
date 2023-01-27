@@ -36,8 +36,8 @@ class FragGraphExplorer(FragExplorer):
             The batch size of the training.
         epsilon : float
             The probability of using the `mutate` network to generate the molecules.
-        sigma : float
-            TODO: what is this?
+        beta : float
+            The baseline for the reward.
         repeat : int
             TODO: what is this here?
         n_samples : int
