@@ -39,8 +39,6 @@ class SequenceExplorer(Explorer):
         The probability of using the `mutate` network to generate molecules.
     beta : float
         The baseline for the reward.
-    repeat : int
-        The number of times the `agent` network is used to generate molecules.
     n_samples : int
         The number of molecules to be generated in each epoch.
     device : torch.device
@@ -49,8 +47,8 @@ class SequenceExplorer(Explorer):
         The GPU ids to run the network.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, beta=0.0, repeat=1, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(SequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size=batch_size, epsilon=epsilon, beta=beta, repeat=repeat, n_samples=n_samples, device=device, use_gpus=use_gpus)
+    def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+        super(SequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size=batch_size, epsilon=epsilon, beta=beta, n_samples=n_samples, device=device, use_gpus=use_gpus)
         self.replay = 10
         self.n_samples = 128  # * 8
         self.penalty = 0

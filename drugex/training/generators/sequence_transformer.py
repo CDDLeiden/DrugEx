@@ -235,7 +235,7 @@ class SequenceTransformer(FragGenerator):
             
         return valid_metrics, scores
     
-    def sample(self, loader, repeat=1):
+    def sample(self, loader):
         """
         Sample SMILES from the model
         
@@ -243,8 +243,6 @@ class SequenceTransformer(FragGenerator):
         ----------
         loader: `torch.utils.data.DataLoader`
             A dataloader object to iterate over the input fragments 
-        repeat: `int`
-            Number of times to repeat the sampling
 
         Returns:
         -------
@@ -255,12 +253,11 @@ class SequenceTransformer(FragGenerator):
         """
         net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
-        with torch.no_grad():
-            for _ in range(repeat):                
-                for src, _ in loader:
-                    trg = net(src.to(self.device))
-                    smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
-                    frags += [self.voc_trg.decode(s, is_tk=False) for s in src]
+        with torch.no_grad():             
+            for src, _ in loader:
+                trg = net(src.to(self.device))
+                smiles += [self.voc_trg.decode(s, is_tk=False) for s in trg]
+                frags += [self.voc_trg.decode(s, is_tk=False) for s in src]
 
         return smiles, frags
 

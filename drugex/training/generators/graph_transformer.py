@@ -382,7 +382,7 @@ class GraphTransformer(FragGenerator):
                 
         return valid_metrics, scores
     
-    def sample(self, loader, repeat=1):
+    def sample(self, loader):
         """
         Sample SMILES from the network
         
@@ -390,8 +390,6 @@ class GraphTransformer(FragGenerator):
         ----------
         loader : torch.utils.data.DataLoader
             The data loader for the input fragments
-        repeat : int
-            The number of times to repeat the sampling
         
         Returns
         -------
@@ -402,13 +400,12 @@ class GraphTransformer(FragGenerator):
         """
         net = nn.DataParallel(self, device_ids=self.gpus)
         frags, smiles = [], []
-        with torch.no_grad():
-            for _ in range(repeat):                
-                for i, src in enumerate(loader):
-                    trg = net(src.to(self.device))
-                    f, s = self.voc_trg.decode(trg)
-                    frags += f
-                    smiles += s
+        with torch.no_grad():              
+            for src in loader:
+                trg = net(src.to(self.device))
+                f, s = self.voc_trg.decode(trg)
+                frags += f
+                smiles += s
                         
         return smiles, frags
 
