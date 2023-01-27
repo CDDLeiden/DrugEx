@@ -22,52 +22,50 @@ class SequenceExplorer(Explorer):
     Reference: Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v2: De Novo Design of Drug Molecule by
                Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.
                J Cheminform (2021). https://doi.org/10.1186/s13321-019-0355-6
- 
-    Parameters
-    ----------
-    agent: drugex.training.generators.SequenceRNN
-        The agent network which is optimised to generates the desired molecules.
-    env : drugex.training.interfaces.Environment
-        The environment which provides the reward and judge if the genrated molecule is valid and desired.
-    mutate : drugex.training.generators.SequenceRNN
-        The pre-trained network which increases the exploration of the chemical space.
-    crover : drugex.training.generators.SequenceRNN
-        The iteratively updated network which increases the exploitation of the chemical space.
-    batch_size : int
-        The number of molecules generated in each iteration.
-    epsilon : float
-        The probability of using the `mutate` network to generate molecules.
-    beta : float
-        The baseline for the reward.
-    n_samples : int
-        The number of molecules to be generated in each epoch.
-    device : torch.device
-        The device to run the network.
-    use_gpus : tuple
-        The GPU ids to run the network.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, memory=None, batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
-        super(SequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size=batch_size, epsilon=epsilon, beta=beta, n_samples=n_samples, device=device, use_gpus=use_gpus)
-        self.replay = 10
-        self.n_samples = 128  # * 8
-        self.penalty = 0
-        self.out = None
-        self.memory = memory
-        self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3)
-
-    def forward(self, crover=None, memory=None, epsilon=None):
+    def __init__(self, agent, env, mutate=None, crover=None, memory=None, no_multifrag_smiles=True,
+        batch_size=128, epsilon=0.1, beta=0.0, n_samples=128, optim=None,
+        device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+        super(SequenceExplorer, self).__init__(agent, env, mutate, crover, no_multifrag_smiles, batch_size, epsilon, beta, n_samples, device, use_gpus)
         """
-        Generate molecules with the given `agent` network.
-        
         Parameters
         ----------
+        agent: drugex.training.generators.SequenceRNN
+            The agent network which is optimised to generates the desired molecules.
+        env : drugex.training.interfaces.Environment
+            The environment which provides the reward and judge if the genrated molecule is valid and desired.
+        mutate : drugex.training.generators.SequenceRNN
+            The pre-trained network which increases the exploration of the chemical space.
         crover : drugex.training.generators.SequenceRNN
             The iteratively updated network which increases the exploitation of the chemical space.
         memory : torch.Tensor
-            TODO: what is this?
+            The memory of the agent network.
+        no_multifrag_smiles : bool
+            If True, only single-fragment SMILES are valid.
+        batch_size : int
+            The number of molecules generated in each iteration.
         epsilon : float
             The probability of using the `mutate` network to generate molecules.
+        beta : float
+            The baseline for the reward.
+        n_samples : int
+            The number of molecules to be generated in each epoch.
+        optim : torch.optim
+            The optimizer to update the agent network.
+        device : torch.device
+            The device to run the network.
+        use_gpus : tuple
+            The GPU ids to run the network.
+        """
+        
+        self.repeats_per_epoch = 10
+        self.memory = memory
+        self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3) if optim is None else optim
+
+    def forward(self):
+        """
+        Generate molecules with the given `agent` network.
 
         Returns
         -------
@@ -75,17 +73,15 @@ class SequenceExplorer(Explorer):
             The generated SMILES.
         seqs : torch.Tensor
             The generated encoded sequences.
-
-        TODO: why is crover, memory and epsilon passed as parameters and not called from self?
         """
     
         seqs = []
-        for _ in range(self.replay):
-            seq = self.agent.evolve(self.batchSize, epsilon=epsilon, crover=crover, mutate=self.mutate)
+        for _ in range(self.repeats_per_epoch):
+            seq = self.agent.evolve(self.batchSize, epsilon=self.epsilon, crover=self.crover, mutate=self.mutate)
             seqs.append(seq)
         seqs = torch.cat(seqs, dim=0)
-        if memory is not None:
-            mems = [memory, seqs]
+        if self.memory is not None:
+            mems = [self.memory, seqs]
             seqs = torch.cat(mems)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
         ix = utils.unique(np.array([[s] for s in smiles]))
@@ -93,7 +89,7 @@ class SequenceExplorer(Explorer):
         seqs = seqs[torch.LongTensor(ix).to(self.device)]
         return smiles, seqs
    
-    def policy_gradient(self, smiles=None, seqs=None, memory=None):
+    def policy_gradient(self, smiles=None, seqs=None):
         """
         Policy gradient training.
  
@@ -106,22 +102,20 @@ class SequenceExplorer(Explorer):
             The generated SMILES.
         seqs : torch.Tensor
             The generated encoded sequences. 
-        memory : torch.Tensor
-            TODO: what is this?
         """
 
         # Calculate the reward from SMILES with the environment
         reward = self.env.getRewards(smiles, frags=None)
         
         # TODO: understand what is this
-        if memory is not None:
-            scores[:len(memory), 0] = 1
+        if self.memory is not None:
+            scores[:len(self.memory), 0] = 1
             ix = scores[:, 0].argsort()[-self.batchSize * 4:]
             seqs, scores = seqs[ix, :], scores[ix, :]
 
         # Move rewards to device and create a loader containing the sequences and the rewards
         ds = TensorDataset(seqs, torch.Tensor(reward).to(self.device))
-        loader = DataLoader(ds, batch_size=self.n_samples, shuffle=True)
+        loader = DataLoader(ds, batch_size=self.nSamples, shuffle=True)
         total_steps = len(loader)
 
         # Train model with policy gradient
@@ -137,7 +131,7 @@ class SequenceExplorer(Explorer):
             self.monitor.savePerformanceInfo(step_idx, None, loss.item())
             del loss
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100, no_multifrag_smiles=True):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
         
         """
         Fit the graph explorer to the training data.
@@ -158,8 +152,6 @@ class SequenceExplorer(Explorer):
             Minimum number of epochs to train for
         monitor : Monitor
             Monitor to use for logging and saving model
-        no_multifrag_smiles : bool
-            TODO: why here?
             
         Returns
         -------
@@ -173,16 +165,19 @@ class SequenceExplorer(Explorer):
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
+            
+            # TODO: once we understand what is this, maybe the if-else can be removed as forward()
+            # does not have any arguments anymore (all arguments are now class attributes)
             if epoch < patience and self.memory is not None:
                 smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
                 self.policy_gradient(smiles, seqs, memory=self.memory)
             else:
-                smiles, seqs = self.forward(crover=self.crover, epsilon=self.epsilon)
+                smiles, seqs = self.forward()
                 self.policy_gradient(smiles, seqs)
 
             # Evaluate the model on the validation set
-            smiles = self.agent.sample(self.n_samples)
-            scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=True)
+            smiles = self.agent.sample(self.nSamples)
+            scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
             scores['Smiles'] =  smiles           
 
             # Save evaluate criteria and save best model

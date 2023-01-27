@@ -22,7 +22,7 @@ class FragSequenceExplorer(FragExplorer):
     """
 
     def __init__(self, agent, env=None, crover=None, mutate=None, batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, optim=None, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS, no_multifrag_smiles=True):
-        super(FragSequenceExplorer, self).__init__(agent, env, mutate, crover, batch_size, epsilon, beta, n_samples, device=device, use_gpus=use_gpus)
+        super(FragSequenceExplorer, self).__init__(agent, env, mutate, crover, no_multifrag_smiles, batch_size, epsilon, beta, n_samples, device=device, use_gpus=use_gpus)
         """
         Parameters
         ----------
@@ -53,11 +53,8 @@ class FragSequenceExplorer(FragExplorer):
             If True, the molecules with multiple fragments are not considered as valid molecules.
         """
         
-        
         self.optim = utils.ScheduledOptim(
             Adam(self.parameters(), betas=(0.9, 0.98), eps=1e-9), 1.0, 512) if not optim else optim
-        # self.optim = optim.Adam(self.parameters(), lr=1e-5)
-        self.no_multifrag_smiles = no_multifrag_smiles
 
     def forward(self, src):
         """

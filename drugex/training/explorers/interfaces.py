@@ -26,7 +26,10 @@ class Explorer(Model, ABC):
     Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+    def __init__(self, agent, env, mutate=None, crover=None, no_multifrag_smiles=True,
+        batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, 
+        device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+        
         super().__init__(device=device, use_gpus=use_gpus)
         self.agent = agent
         self.mutate = mutate
@@ -36,6 +39,7 @@ class Explorer(Model, ABC):
         self.beta = beta
         self.env = env
         self.nSamples = n_samples
+        self.no_multifrag_smiles = no_multifrag_smiles
         self.bestState = None
         self.best_value = 0
         self.last_save = -1
@@ -175,7 +179,7 @@ class FragExplorer(Explorer):
         """
         pass
 
-    def policy_gradient(self, loader, no_multifrag_smiles=True):
+    def policy_gradient(self, loader):
         """
         Policy gradient training.
  
@@ -186,8 +190,6 @@ class FragExplorer(Explorer):
         ----------
         loader : torch.utils.data.DataLoader
             Data loader for training data
-        no_multifrag_smiles : bool
-            If True, multi-fragment SMILES are not considered valid and reward is set to 0
         """
 
         net = nn.DataParallel(self.agent, device_ids=self.gpus)
