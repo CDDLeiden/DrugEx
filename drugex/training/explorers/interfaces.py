@@ -74,14 +74,25 @@ class Explorer(Model, ABC):
         
         dct = {}
         ntot = len(scores) 
+        
         # Valid compounds
-        valid = scores[scores.VALID == 1]
+        valid = scores[scores.Valid == 1]
         dct['valid_ratio'] = len(valid) / ntot
+        
+        # Accurate compounds
+        if 'Accurate' in scores.columns:
+            accurate = valid[valid.Accurate == 1]
+            dct['accurate_ratio'] = len(accurate) / ntot
+        else:
+            accurate = valid
+
         # Unique compounds
-        unique = valid.drop_duplicates(subset='Smiles')
+        unique = accurate.drop_duplicates(subset='Smiles')
         dct['unique_ratio'] = len(unique) / ntot
+        
         # Desired compounds
-        dct['desired_ratio'] = unique.DESIRE.sum() / ntot
+        dct['desired_ratio'] = unique.Desired.sum() / ntot
+        
         # Average artithmetic and geometric mean score 
         dct['aMeanScore'] = unique[self.env.getScorerKeys()].values.mean()
         dct['gMeanScore'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
@@ -99,9 +110,17 @@ class Explorer(Model, ABC):
             value (float): value of selection criteria
         """
         
-        unique = scores[(scores.VALID == 1)].drop_duplicates(subset='Smiles')
+        # Get accurate or valid molecules and drop duplicates
         try:
-            if criteria == 'desired_ratio': return unique.DESIRE.sum() / len(scores)
+            # If accurate column is present, use it to filter wanted molecules
+            unique = scores[(scores.Accurate == 1)].drop_duplicates(subset='Smiles')
+        except:
+            # Otherwise, use valid column
+            unique = scores[(scores.Valid == 1)].drop_duplicates(subset='Smiles')
+        
+        # Get value of selection criteria
+        try:
+            if criteria == 'desired_ratio': return unique.Desired.sum() / len(scores)
             elif criteria == 'amean_score': return unique[self.env.getScorerKeys()].values.mean()
             elif criteria == 'gmean_score': return unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
             else: return criteria(scores)

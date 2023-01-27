@@ -37,7 +37,7 @@ class ModelEvaluator(ABC):
             frags: given input fragments
 
         Returns:
-            scores (DataFrame): a data frame with columns name 'VALID' and 'DESIRE' indicating the validity of the SMILES and the degree of desirability
+            scores
         """
 
         pass
@@ -185,8 +185,8 @@ class Environment(ModelEvaluator):
                 n is the number of array which equals to the size of smiles.
         """
         scores = self.getScores(smiles, frags=frags)
-        valid = scores.VALID.values
-        desire = scores.DESIRE.sum()
+        valid = scores.Valid.values
+        desire = scores.Desired.sum()
         undesire = len(scores) - desire
         scores = scores[self.getScorerKeys()].values
 

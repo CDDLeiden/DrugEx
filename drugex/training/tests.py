@@ -290,6 +290,8 @@ class TrainingTestCase(TestCase):
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
+        pretrained.generate(num_samples=10, evaluator=environment, drop_undesired=False)
+
     def test_graph_transformer(self):
         """
         Test fragment-based graph transformer model.
@@ -328,12 +330,6 @@ class TrainingTestCase(TestCase):
 
         pretrained = GraphTransformer(vocabulary)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
-
-        # test molecule generation
-        pretrained.generate([
-            "c1ccncc1CCC",
-            "CCO"
-        ], num_samples=1, drop_undesired=False)
 
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(self.BATCH_SIZE)
@@ -424,6 +420,11 @@ class TrainingTestCase(TestCase):
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
+
+        pretrained.generate([
+            "c1ccncc1CCC",
+            "CCO"
+        ], num_samples=1, evaluator=environment, drop_undesired=False)
 
     def test_sequence_transformer_scaffold(self):
         """

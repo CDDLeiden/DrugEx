@@ -49,7 +49,7 @@ class Scorer(ABC):
             frags: input fragments
 
         Returns:
-            scores (DataFrame): a data frame with columns name 'VALID' and 'DESIRE' indicating the validity of the SMILES and the degree of desirability
+            scores 
         """
 
         return self.getModifiedScores(self.getScores(mols, frags))

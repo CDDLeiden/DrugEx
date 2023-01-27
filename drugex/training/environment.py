@@ -37,18 +37,22 @@ class DrugExEnvironment(Environment):
             Dataframe with the scores from the scorers and the validity and desireability of the molecules.
         """
 
-        preds = {}
         mols = [Chem.MolFromSmiles(s) for s in smiles]
-        for scorer in self.scorers:
-            score = scorer(mols)
-            preds[scorer.getKey()] = score
-        preds = pd.DataFrame(preds)
-        undesire = (preds < self.thresholds)  # ^ self.objs.on
-        preds['DESIRE'] = (undesire.sum(axis=1) == 0).astype(int)
-        preds['VALID'] = SmilesChecker.checkSmiles(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles).all(axis=1).astype(int)
+        
+        # Check molecule validity and accuracy
+        scores = SmilesChecker.checkSmiles(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
 
-        preds[preds['VALID'] == 0] = 0
-        return preds
+        # Get scores per objective from the scorers
+        for scorer in self.scorers:
+            scores.loc[:, scorer.getKey()] = scorer.getScores(mols)
+
+        # Check if the molecule is desirable
+        undesire = (scores[self.getScorerKeys()] < self.thresholds)  # ^ self.objs.on
+        scores['Desired'] = (undesire.sum(axis=1) == 0).astype(int)
+
+        # TODO: Maybe smiles and frags should be added to the dataframe as well?
+        
+        return scores
 
     def getUnmodifiedScores(self, smiles):
 

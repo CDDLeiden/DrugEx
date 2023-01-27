@@ -374,8 +374,8 @@ class GraphTransformer(FragGenerator):
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
         scores['Smiles'] = smiles
         scores['Frags'] = frags
-        valid_metrics['valid_ratio'] = scores.VALID.mean() 
-        valid_metrics['accurate_ratio'] = scores.DESIRE.mean()
+        valid_metrics['valid_ratio'] = scores.Valid.mean() 
+        valid_metrics['accurate_ratio'] = scores.Accurate.mean()
                 
         with torch.no_grad():
             valid_metrics['loss_valid'] = sum( [ sum([-l.float().mean().item() for l in net(src, is_train=True)]) for src in loader ] )                
@@ -497,7 +497,9 @@ class GraphTransformer(FragGenerator):
         df_smiles = pd.DataFrame({'SMILES': smiles, 'Frags': frags})
 
         if compute_desirability:
-            df_smiles['Desired'] = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).DESIRE
+            if evaluator is None:
+                raise ValueError('Evaluator must be provided to compute desirability')
+            df_smiles['Desired'] = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).Desired
         if raw_scores:
             df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
         if not keep_frags:

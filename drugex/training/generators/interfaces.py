@@ -282,9 +282,9 @@ class FragGenerator(Generator):
         """
         
         # Make sure both valid molecules and include input fragments
-        scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags, no_multifrag_smiles=no_multifrag_smiles).sum(axis=1)
-        new_smiles = np.array(new_smiles)[scores > 1].tolist()
-        new_frags = np.array(new_frags)[scores > 1].tolist()
+        scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags, no_multifrag_smiles=no_multifrag_smiles)
+        new_smiles = np.array(new_smiles)[scores.Accurate == 1].tolist()
+        new_frags = np.array(new_frags)[scores.Accurate == 1].tolist()
         
         # Canonalize SMILES
         new_smiles = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in new_smiles]    
@@ -302,7 +302,7 @@ class FragGenerator(Generator):
             # Compute desirability scores
             scores = self.evaluate(new_smiles, new_frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             # Filter out undesired molecules
-            new_smiles = np.array(new_smiles)[scores.DESIRE == 1].tolist()
-            new_frags = np.array(new_frags)[scores.DESIRE == 1].tolist()
+            new_smiles = np.array(new_smiles)[scores.Desired == 1].tolist()
+            new_frags = np.array(new_frags)[scores.Desired == 1].tolist()
 
         return new_smiles, new_frags

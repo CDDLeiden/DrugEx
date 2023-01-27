@@ -283,7 +283,7 @@ class SequenceRNN(Generator):
         smiles = self.sample(n_samples)
         scores = self.evaluate(smiles, evaluator=evaluator)
         scores['Smiles'] = smiles
-        valid_metrics['valid_ratio'] = scores.VALID.mean()
+        valid_metrics['valid_ratio'] = scores.Valid.mean()
 
         # If a separate validation set is provided, use it to compute the validation loss 
         if loader is not None:
@@ -332,7 +332,7 @@ class SequenceRNN(Generator):
         df_smiles = pd.DataFrame({'SMILES': smiles})
 
         if compute_desirability:
-            df_smiles['Desired'] = self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).DESIRE
+            df_smiles['Desired'] = self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).Desired
         if raw_scores:
             df_smiles = pd.concat([df_smiles, self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
 
@@ -365,9 +365,9 @@ class SequenceRNN(Generator):
             A list of filtered input fragments
         """
         
-        # Make sure both valid molecules and include input fragments
+        # Make sure both valid molecules 
         scores = SmilesChecker.checkSmiles(new_smiles, no_multifrag_smiles=no_multifrag_smiles)
-        new_smiles = np.array(new_smiles)[scores.VALID == 1].tolist()
+        new_smiles = np.array(new_smiles)[scores.Valid == 1].tolist()
         
         # Canonalize SMILES
         new_smiles = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in new_smiles]    
