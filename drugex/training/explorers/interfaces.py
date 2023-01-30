@@ -29,6 +29,35 @@ class Explorer(Model, ABC):
     def __init__(self, agent, env, mutate=None, crover=None, no_multifrag_smiles=True,
         batch_size=128, epsilon=0.1, beta=0.0, n_samples=-1, 
         device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
+
+        """
+        Initialize the explorer.
+
+        Parameters
+        ----------
+        agent : Model
+            The agent model optimized by the explorer.
+        env : Environment
+            The environment in which the agent operates.
+        mutate : Generator
+            The pre-trained network which increases the exploration of the chemical space.
+        crover : Generator
+            The iteratively updated network which increases the exploitation of the chemical space.
+        no_multifrag_smiles : bool
+            If True, only single-fragment SMILES are considered valid.
+        batch_size : int
+            The batch size used for training.
+        epsilon : float
+            The probability of using the mutate network to generate new molecules.
+        beta : float
+            The baseline for the reward function.
+        n_samples : int
+            The number of samples to generate in each iteration. If -1, the whole dataset is used per epoch.
+        device : str
+            The device on which the model is trained.
+        use_gpus : tuple   
+            The GPUs to use for training.
+        """
         
         super().__init__(device=device, use_gpus=use_gpus)
         self.agent = agent
@@ -47,6 +76,16 @@ class Explorer(Model, ABC):
 
 
     def attachToGPUs(self, gpus):
+
+        """ 
+        Attach the model to GPUs
+
+        Parameters
+        ----------
+        gpus : tuple
+            The GPUs to use for training.
+        """
+
         if hasattr(self, 'agent'):
             self.agent.attachToGPUs(gpus)
         if hasattr(self, 'mutate') and self.mutate:
@@ -58,18 +97,21 @@ class Explorer(Model, ABC):
     def getNovelMoleculeMetrics(self, scores):
 
         """ Get metrics for novel molecules
-
-        Metrics:
-            valid_ratio (float): ratio of valid molecules
-            unique_ratio (float): ratio of valid and unique molecules
-            desired_ratio (float): ratio of valid, unique and desired molecules
-            aMeanScore (float): arithmetic mean score of valid and unique molecules
-            gMeanScore (float): geometric mean score of valid and unique molecules
         
-        Args:
-            scores (pd.DataFrame): scores for each molecule
-        Returns:
-            dict: metrics
+        Parameters
+        ----------
+        scores : pd.DataFrame
+            The scores for each molecule.
+        
+        Returns
+        -------
+        dict
+            The metrics:
+                - valid_ratio (float): ratio of valid molecules
+                - unique_ratio (float): ratio of valid and unique molecules
+                - desired_ratio (float): ratio of valid, unique and desired molecules
+                - aMeanScore (float): arithmetic mean score of valid and unique molecules
+                - gMeanScore (float): geometric mean score of valid and unique molecules
         """
         
         dct = {}
@@ -101,13 +143,24 @@ class Explorer(Model, ABC):
 
     def getCriteriaValue(self, scores, criteria):
 
-        """ Get value of selection criteria
+        """
+        Get value of selection criteria
 
-        Args:
-            scores (pd.DataFrame): scores for each molecule
-            criteria (str or function): selection criteria
-        Returns:
-            value (float): value of selection criteria
+        Parameters
+        ----------
+        scores : pd.DataFrame
+            The scores for each molecule.
+        criteria : str or callable
+            The selection criteria. If str, one of the following:
+                - desired_ratio: ratio of valid, unique and desired molecules
+                - aMeanScore: arithmetic mean score of valid and unique molecules
+                - gMeanScore: geometric mean score of valid and unique molecules
+            If callable, it must take a pd.DataFrame as input and return a float.
+
+        Returns
+        -------
+        float
+            The value of the selection criteria.
         """
         
         # Get accurate or valid molecules and drop duplicates
@@ -129,15 +182,22 @@ class Explorer(Model, ABC):
 
     def saveBestState(self, scores, criteria, epoch, it):
 
-        """ Save best state based on selection criteria
+        """
+        Save best state based on selection criteria
 
-        Args:
-            scores (pd.DataFrame): scores for each molecule
-            criteria (str or function): selection criteria
-            epoch (int): current epoch
-            it (int): current iteration
-        Returns:
-            value (float): value of selection criteria
+        Parameters
+        ----------
+        scores : pd.DataFrame
+            The scores for each molecule.
+        criteria : str or callable
+            The selection criteria. If str, one of the following:
+                - desired_ratio: ratio of valid, unique and desired molecules
+                - aMeanScore: arithmetic mean score of valid and unique molecules
+                - gMeanScore: geometric mean score of valid and unique molecules
+            If callable, it must take a pd.DataFrame as input and return a float.
+        epoch : int
+            The current epoch.
+        it : int
         """
         
         value = self.getCriteriaValue(scores, criteria)
@@ -151,11 +211,17 @@ class Explorer(Model, ABC):
 
     def logPerformanceAndCompounds(self, epoch, epochs, scores):
 
-        """ Log performance of model
+        """
+        Log performance of model
 
-        Args:
-            scores (pd.DataFrame): scores for each molecule
-            criteria (str): selection criteria
+        Parameters
+        ----------
+        epoch : int
+            The current epoch.
+        epochs : int
+            The total number of epochs.
+        scores : pd.DataFrame
+            The scores for each molecule.
         """
         
         smiles_scores = list(scores.itertuples(index=False, name=None))
@@ -180,8 +246,10 @@ class Explorer(Model, ABC):
         """
         Returns the current state of the agent
 
-        Returns:
-
+        Returns
+        -------
+        torch.nn.Module
+            The current state of the agent
         """
         return deepcopy(self.agent.state_dict())
 
@@ -247,7 +315,6 @@ class FragExplorer(Explorer):
 
     @abstractmethod
     def sample_input(self, loader, is_test=False):
-        
         """
         Sample a batch of fragments-molecule pairs from the training data loader.
         """
@@ -274,10 +341,6 @@ class FragExplorer(Explorer):
             Minimum number of epochs to train for
         monitor : Monitor
             Monitor to use for logging and saving model
-            
-        Returns
-        -------
-        None
         """
         
         self.monitor = monitor if monitor else NullMonitor()

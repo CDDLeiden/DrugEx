@@ -11,20 +11,25 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-
 from drugex.data.corpus.corpus import SequenceCorpus
-from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
-from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentCorpusEncoder
-from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
-from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
-from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
+from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
+                                  SmilesFragDataSet)
+from drugex.data.fragments import (FragmentCorpusEncoder,
+                                   FragmentPairsSplitter, GraphFragmentEncoder,
+                                   SequenceFragmentEncoder)
+from drugex.data.processing import (CorpusEncoder, RandomTrainTestSplitter,
+                                    Standardization)
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
+from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
+from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
+                                       SequenceExplorer)
+from drugex.training.generators import (GraphTransformer, SequenceRNN,
+                                        SequenceTransformer)
 from drugex.training.interfaces import TrainingMonitor
-from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
-from drugex.training.explorers import SequenceExplorer, FragSequenceExplorer, FragGraphExplorer
 from drugex.training.monitors import FileMonitor
-from drugex.training.rewards import ParetoSimilarity
+from drugex.training.rewards import ParetoTanimotoDistance
 from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
@@ -137,21 +142,33 @@ class TrainingTestCase(TestCase):
     def getTestEnvironment(self, scheme=None):
         """
         Get the testing environment
-        Returns:
 
+        Parameters
+        ----------
+        scheme: RewardScheme
+            The reward scheme to use. If None, the default ParetoTanimotoDistance is used.
+        
+        Returns
+        -------
+        DrugExEnvironment
         """
 
-        scheme = ParetoSimilarity() if not scheme else scheme
+        scheme = ParetoTanimotoDistance() if not scheme else scheme
         return DrugExEnvironment(self.scorers, thresholds=self.thresholds, reward_scheme=scheme)
 
     def getSmiles(self, _file):
         """
         Read and standardize SMILES from a file.
-        Args:
-            _file: input .tsv file with smiles
-
-        Returns:
-
+        
+        Parameters
+        ----------
+        _file: str
+            The file to read from (must be a .tsv file with a column named "CANONICAL_SMILES")
+        
+        Returns
+        -------
+        list
+            The list of SMILES
         """
 
         return self.standardize(pd.read_csv(_file, header=0, sep='\t')['CANONICAL_SMILES'].sample(self.MAX_SMILES, random_state=self.SEED).tolist())
@@ -160,11 +177,15 @@ class TrainingTestCase(TestCase):
         """
         Standardize the input SMILES
 
-        Args:
-            smiles: smiles as `list`
-
-        Returns:
-
+        Parameters
+        ----------
+        smiles: list
+            The list of SMILES to standardize
+        
+        Returns
+        -------
+        list
+            The list of standardized SMILES
         """
         return Standardization(n_proc=self.N_PROC).apply(smiles)
 
@@ -172,8 +193,10 @@ class TrainingTestCase(TestCase):
         """
         Create inputs for the fragment-based SMILES models.
 
-        Returns:
-
+        Returns
+        -------
+        tuple
+            The tuple of (pretraining training dataloader, pretraining test dataloader, finetuning training dataloader, finetuning test dataloader, vocabulary)
         """
 
         pre_smiles = self.getSmiles(self.pretraining_file)
@@ -224,13 +247,32 @@ class TrainingTestCase(TestCase):
         """
         Generate a random temporary file and return its path.
 
-        Returns:
-            path: pth to the file created
+        Returns
+        -------
+        str
+            The path to the temporary file
         """
-
         return tempfile.NamedTemporaryFile().name
 
     def fitTestModel(self, model, train_loader, test_loader):
+        """
+        Fit a model and return the best model.
+
+        Parameters
+        ----------
+        model: Model
+            The model to fit
+        train_loader: DataLoader
+            The training data loader
+        test_loader: DataLoader
+            The test data loader
+
+        Returns
+        -------
+        tuple
+            The tuple of (fitted model, monitor)
+        """
+
         monitor = TestModelMonitor()
         model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
         pr_model = monitor.getModel()

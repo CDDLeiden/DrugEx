@@ -32,14 +32,18 @@ class ModelEvaluator(ABC):
         """
         Score molecules.
 
-        Args:
-            mols: molecules to score
-            frags: given input fragments
+        Parameters
+        ----------
+        mols : list
+            List of SMILES strings of the molecules to score.
+        frags : list, optional
+            List of SMILES strings of the fragments used to generate the molecules.
 
-        Returns:
-            scores
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the scores for the molecules.
         """
-
         pass
 
 
@@ -55,8 +59,10 @@ class RankingStrategy(ABC):
         """
         Constructor allows to specify a GPU or CPU device for Pareto fronts calculation.
 
-        Args:
-            device:
+        Parameters
+        ----------
+        device : torch.device
+            The device to use for the ranking.
         """
 
         self.device = device
@@ -65,11 +71,15 @@ class RankingStrategy(ABC):
         """
         Returns Pareto fronts.
 
-        Args:
-            scores: matrix of scores for the multiple objectives
-
-        Returns:
-            fronts (list): `list` of Pareto fronts.
+        Parameters
+        ----------
+        scores : np.ndarray
+            Matrix of scores for the multiple objectives
+        
+        Returns
+        -------
+        list
+            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.
         """
 
         if self.device == torch.device('cuda'):
@@ -83,14 +93,13 @@ class RankingStrategy(ABC):
         """
         Return ranks of the molecules based on the given scores.
 
-        Args:
-            smiles: SMILES of the molecules
-            scores: the matrix of scores ("len(smiles) x len(objectives)")
-
-        Returns:
-
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to rank.
+        scores : np.ndarray
+            Matrix of scores for the multiple objectives
         """
-
         pass
 
 
@@ -104,36 +113,43 @@ class RewardScheme(ABC):
         """
         Exception to catch errors in the calculation of rewards.
         """
-
         pass
 
     def __init__(self, ranking=None):
         """
         The `RankingStrategy` function to use for ranking solutions.
 
-        Args:
-            ranking: a `RankingStrategy`
+        Parameters
+        ----------
+        ranking : RankingStrategy
+            The ranking strategy to use for ranking solutions.
         """
 
         self.ranking = ranking
 
     @abstractmethod
-    def __call__(self, smiles, scores, valid, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, desire, undesire, thresholds):
         """
         Calculate the rewards for generated molecules and rank them according to teh given `RankingStrategy`.
 
-        Args:
-            smiles (list): SMILES strings of the generated molecules
-            scores (DataFrame): the full scoring table ("len(smiles) x len(thresholds)")
-            valid (list):  ratio of valid molecules
-            desire (list): ratio of desired molecules
-            undesire (list): ratio of undesired molecules
-            thresholds (list): score thresholds for the calculated scores in "scores"
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to rank.
+        scores : np.ndarray
+            Matrix of scores for the multiple objectives
+        desire : int
+            Number of molecules that are desirable.
+        undesire : int
+            Number of molecules that are undesirable.
+        thresholds : list
+            List of thresholds for the objectives.
 
-        Returns:
-            rewards (list): rewards based on
+        Returns
+        -------
+        np.ndarray
+            Array of rewards for the molecules.
         """
-
         pass
 
 class Environment(ModelEvaluator):
@@ -145,10 +161,23 @@ class Environment(ModelEvaluator):
         """
         Initialize environment with objective functions and their desirability thresholds. Molecules scoring above thresholds are desirable.
 
-        Args:
-            scorers: scoring functions to calculate the objective functions for molecules
-            thresholds: desirability thresholds for each scoring function (passed to the reward scheme as well), should be the same length as "scorers". If `None`, they will be set to 0.99.
-            reward_scheme: a `RewardScheme`, predefined schemes are available in `drugex.training.rewards`
+        Parameters
+        ----------
+        scorers : list
+            List of objective functions to use for scoring molecules.
+        thresholds : list, optional
+            List of desirability thresholds for the objective functions. If `None`, all thresholds are set to 0.99.
+        reward_scheme : RewardScheme, optional
+            The reward scheme to use for ranking solutions. If `None`, the `DefaultRewardScheme` is used.
+        
+        Raises
+        ------
+        AssertionError
+            If the number of scorers and thresholds does not match.
+        
+        Notes
+        -----
+        The `scorers` and `thresholds` are passed to the `RewardScheme` as well.
         """
 
         self.scorers = scorers
@@ -157,44 +186,95 @@ class Environment(ModelEvaluator):
         self.rewardScheme = reward_scheme
 
     def __call__(self, smiles, frags=None):
+        """
+        Score molecules.
+        
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to score.
+        frags : list, optional
+            List of SMILES strings of the fragments used to generate the molecules.
+        
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the scores for the molecules."""
         return self.getScores(smiles, frags)
 
     @abstractmethod
     def getScores(self, smiles, frags=None):
         """
-        Calculate the scores of all objectives for all of samples
-        Args:
-            smiles (list): the list of generated molecules
-            frags (list): the list of input fragments
+        Calculate the scores of all objectives per molecule and qualify generated molecules (valid, accurate, desired).
 
-        Returns:
-            scores (DataFrame): The scores of all objectives for all of samples which also includes validity
-                and desirability for each SMILES.
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to score.
+        frags : list, optional
+            List of SMILES strings of the fragments used to generate the molecules.
+        
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the scores and qualifications for the molecules.
         """
+        pass
 
+    @abstractmethod
+    def getUnmodifiedScores(self, smiles):
+        """
+        Calculate the scores without applying modifiers of all objectives per molecule.
+
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to score.
+        
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the scores for the molecules.
+        """
         pass
 
     def getRewards(self, smiles, frags=None):
         """
-        Calculate the single value as the reward for each molecule used for reinforcement learning
-        Args:
-            smiles (List):  a list of SMILES-based molecules
+        Calculate the single value as the reward for each molecule used for reinforcement learning.
 
-        Returns:
-            rewards (np.ndarray): n-d array in which the element is the reward for each molecule, and
-                n is the number of array which equals to the size of smiles.
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES strings of the molecules to score.
+        frags : list, optional
+            List of SMILES strings of the fragments used to generate the molecules.
+        
+        Returns
+        -------
+        np.ndarray
+            Array of rewards for the molecules.
         """
+
         scores = self.getScores(smiles, frags=frags)
         valid = scores.Valid.values
         desire = scores.Desired.sum()
         undesire = len(scores) - desire
         scores = scores[self.getScorerKeys()].values
 
-        rewards = self.rewardScheme(smiles, scores, valid, desire, undesire, self.thresholds)
+        rewards = self.rewardScheme(smiles, scores, desire, undesire, self.thresholds)
         rewards[valid == 0] = 0
+        
         return rewards
 
     def getScorerKeys(self):
+        """
+        Get the keys of the scorers.
+
+        Returns
+        -------
+        list
+            List of keys of the scorers.
+        """
         return [x.getKey() for x in self.scorers]
 
 class ModelProvider(ABC):
@@ -207,8 +287,10 @@ class ModelProvider(ABC):
         """
         Return the current model as a `Model` instance or in serialized form.
 
-        Returns:
-            model (`Model` or serialized states)
+        Returns
+        -------
+        Model or dict
+            The current model or its serialized form.
         """
 
         pass
@@ -220,11 +302,33 @@ class Model(nn.Module, ModelProvider, ABC):
 
     def __init__(self, device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super().__init__()
+        """
+        Initialize the model with the given device and GPUs.
+
+        Parameters
+        ----------
+        device : torch.device, optional
+            The device to use for the model. If `None`, the default device is used.
+        use_gpus : list, optional
+            List of GPUs to use for the model. If `None`, the default GPUs are used.
+        """
+
         self.device = None
         self.gpus = None
         self.updateDevices(device, use_gpus)
 
     def updateDevices(self, device, gpus):
+        """
+        Update the device and GPUs used by the model.
+
+        Parameters
+        ----------
+        device : torch.device
+            The device to use for the model.
+        gpus : list
+            List of GPUs to use for the model.
+        """
+
         if device.type == 'cpu':
             self.device = torch.device('cpu')
             self.gpus = (-1,)
@@ -241,44 +345,57 @@ class Model(nn.Module, ModelProvider, ABC):
 
         Subclasses should also make sure to set "self.device" to the currently used device and "self.gpus" to GPU ids of the currently used GPUs
 
-        Args:
-            gpus: a `tuple` of new GPU IDs
-
-        Returns:
-            `None`
+        Parameters
+        ----------
+        gpus : tuple
+            Tuple of GPU ids to use.
         """
-
         pass
 
     @abstractmethod
-    def fit(self, train_loader, valid_loader, epochs=1000, monitor=None):
+    def fit(self, train_loader, valid_loader, epochs=1000, monitor=None, **kwargs):
         """
         Train and validate the model with a given training and validation loader (see `DataSet` and its implementations docs to learn how to generate them).
 
-        Args:
-            train_loader: PyTorch `DataLoader` with training data.
-            valid_loader: PyTorch `DataLoader` with validation data.
-            epochs: number of epochs for training the model
-            monitor: a `TrainingMonitor`
-
-        Returns:
-            `None`
+        Parameters
+        ----------
+        train_loader : torch.utils.data.DataLoader
+            The training data loader.
+        valid_loader : torch.utils.data.DataLoader
+            The validation data loader.
+        epochs : int, optional
+            The number of epochs to train the model for.
+        monitor : TrainingMonitor, optional
+            A `TrainingMonitor` instance to monitor the training process.     
+        **kwargs
+            Additional keyword arguments to pass to the training loop.  
         """
-
         pass
 
     def loadStatesFromFile(self, path):
         """
         Load the model states from a file.
 
-        Args:
-            path: path to file
+        Parameters
+        ----------
+        path : str
+            The path to the file containing the model states.
         """
 
         self.loadStates(torch.load(path, map_location=self.device))
 
 
     def loadStates(self, state_dict, strict=True):
+        """
+        Load the model states from a dictionary.
+
+        Parameters
+        ----------
+        state_dict : dict
+            The dictionary containing the model states.
+        strict : bool, optional
+            Whether to raise an error if the dictionary contains keys that do not match the model.
+        """
         self.load_state_dict(state_dict, strict=strict)
 
 class TrainingMonitor(ModelProvider, ABC):
@@ -291,8 +408,10 @@ class TrainingMonitor(ModelProvider, ABC):
         """
         Save the state dictionary of the `Model` instance currently being trained or serialize the model any other way.
 
-        Args:
-            model: a DrugEx `Model`
+        Parameters
+        ----------
+        model : Model
+            The model to save.
         """
         pass
 
@@ -301,14 +420,19 @@ class TrainingMonitor(ModelProvider, ABC):
         """
         Save performance data.
 
-        Args:
-            current_step: Current training step (batch).
-            current_epoch: Current epoch.
-            loss: current value of the training loss
-            *args: other arguments depending on the model type
-            **kwargs: other keyword arguments depending on the model type
+        Parameters
+        ----------
+        current_step : int, optional
+            The current training step (i.e. batch).
+        current_epoch : int, optional
+            The current epoch.
+        loss : float, optional
+            The current loss.
+        *args
+            Additional arguments depending on the model type.
+        **kwargs
+            Additional keyword arguments depending on the model type.
         """
-
         pass
 
     @abstractmethod
@@ -316,15 +440,21 @@ class TrainingMonitor(ModelProvider, ABC):
         """
         Notifies the monitor of the current progress of the training.
 
-        Args:
-            current_step: Current training step (batch).
-            current_epoch: Current epoch.
-            total_steps: Total number of training steps (batches).
-            total_epochs: Total number of epochs.
-            *args: other arguments depending on the model type
-            **kwargs: other keyword arguments depending on the model type
+        Parameters
+        ----------
+        current_step : int, optional
+            The current training step (i.e. batch).
+        current_epoch : int, optional
+            The current epoch.
+        total_steps : int, optional
+            The total number of training steps.
+        total_epochs : int, optional
+            The total number of epochs.
+        *args
+            Additional arguments depending on the model type.
+        **kwargs
+            Additional keyword arguments depending on the model type.
         """
-
         pass
 
     @abstractmethod
@@ -332,11 +462,13 @@ class TrainingMonitor(ModelProvider, ABC):
         """
         Notify the monitor that a step of the training has finished.
 
-        Args:
-            step: Current training step (batch).
-            epoch: Current epoch.
+        Parameters
+        ----------
+        step : int
+            The current training step (i.e. batch).
+        epoch : int
+            The current epoch.
         """
-
         pass
 
     @abstractmethod
@@ -344,5 +476,4 @@ class TrainingMonitor(ModelProvider, ABC):
         """
         Close this monitor. Training has finished.
         """
-
         pass

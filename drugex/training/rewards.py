@@ -16,16 +16,23 @@ class NSGAIIRanking(RankingStrategy):
     def __call__(self, smiles, scores):
         """
         Crowding distance algorithm to rank the solutions in the same pareto frontier.
-        Args:
-            swarm (np.ndarray): m x n scoring matrix, where m is the number of samples
-                and n is the number of objectives.
 
-            is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,
-                it will be implemented by Numpy and ran on CPUs.
+        Paper: Deb, Kalyanmoy, et al. "A fast and elitist multiobjective genetic algorithm: NSGA-II." IEEE transactions on
+        evolutionary computation 6.2 (2002): 182-197.
 
-        Returns:
-            rank (np.array): m-d vector as the index of well-ranked solutions.
-        """
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES sequence to be ranked
+            TODO : why here smiles are needed?
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+
+        Returns
+        -------
+        rank : np.array
+            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
+        """        
 
         fronts = self.getParetoFronts(scores)
 
@@ -58,8 +65,27 @@ class NSGAIIRanking(RankingStrategy):
 
 class SimilarityRanking(RankingStrategy):
 
+    """
+    Revised crowding distance algorithm to rank the solutions in the same pareto frontier with Tanimoto-distance.
+    """
+
     @staticmethod
     def calc_fps(mols, fp_type='ECFP6'):
+        """
+        Calculate fingerprints for a list of molecules.
+
+        Parameters
+        ----------
+        mols : list
+            List of RDKit molecules
+        fp_type : str
+            Type of fingerprint to use
+
+        Returns
+        -------
+        fps : list
+            List of RDKit fingerprints
+        """   
         fps = []
         for i, mol in enumerate(mols):
             try:
@@ -71,13 +97,20 @@ class SimilarityRanking(RankingStrategy):
     def __call__(self, smiles, scores, func='min'):
         """
         Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.
-        Args:
-            smiles (list): List of SMILES sequence to be ranked
-            scores (np.ndarray): matrix of scores for the multiple objectives
-            func (str): 'min' takes minimium tanimoto distance, 'avg' takes average tanimoto distance
 
-        Returns:
-            rank (np.array): SMILES sequences ranked with the similarity ranking method
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES sequence to be ranked
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        func : str
+            'min' takes minimium tanimoto distance, 'avg' takes average tanimoto distance in the front
+
+        Returns
+        -------
+        rank : np.array
+            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
         """
 
         func = np.min if func == 'min' else np.mean
@@ -102,12 +135,38 @@ class SimilarityRanking(RankingStrategy):
         return rank
 
 
-class ParetoSimilarity(RewardScheme):
+class ParetoTanimotoDistance(RewardScheme):
+    """
+    Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
+    """
 
     def __init__(self, ranking=SimilarityRanking()):
         super().__init__(ranking)
+        """
+        Parameters
+        ----------
+        ranking : RankingStrategy
+            Ranking strategy to use
+        """
 
-    def __call__(self, smiles, scores, valid, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, desire, undesire, thresholds):
+        """
+        Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
+
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES sequence to be ranked
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        desire : int
+            Number of desired molecules
+        undesire : int
+            Number of undesired molecules
+        thresholds : np.ndarray
+            Thresholds for the multiple objectives
+        """
+
         if not self.ranking:
             raise self.RewardException(f"{self.__class__.__name__} reward scheme requires a ranking strategy.")
 
@@ -119,11 +178,41 @@ class ParetoSimilarity(RewardScheme):
 
 
 class ParetoCrowdingDistance(RewardScheme):
+    """
+    Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.
+    """
 
     def __init__(self, ranking=NSGAIIRanking()):
         super().__init__(ranking)
+        """
+        Parameters
+        ----------
+        ranking : RankingStrategy
+            Ranking strategy to use
+        """
 
-    def __call__(self, smiles, scores, valid, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, desire, undesire, thresholds):
+        """
+        Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.
+        
+        Parameters
+        ----------
+        smiles : list  
+            List of SMILES sequence to be ranked
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        desire : int
+            array of desired molecules
+        undesire : int
+            array of undesired molecules
+        thresholds : np.ndarray
+            Thresholds for the multiple objectives
+
+        Returns
+        -------
+        rewards : np.ndarray
+            Array of rewards for the SMILES sequences
+        """
         ranks = self.ranking(smiles, scores)
         rewards = np.zeros((len(smiles), 1))
         rewards[ranks, 0] = np.arange(len(scores)) / len(scores)
@@ -131,8 +220,33 @@ class ParetoCrowdingDistance(RewardScheme):
 
 
 class WeightedSum(RewardScheme):
+    """
+    Reward scheme that uses the weighted sum ranking strategy to rank the solutions.
+    """
 
-    def __call__(self, smiles, scores, valid, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, desire, undesire, thresholds):
+        """
+        Reward scheme that uses the weighted sum ranking strategy to rank the solutions.
+
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES sequence to be ranked
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        desire : int
+            array of desired molecules
+        undesire : int
+            array of undesired molecules
+        thresholds : np.ndarray
+            Thresholds for the multiple objectives
+
+        Returns
+        -------
+        rewards : np.ndarray
+            Array of rewards for the SMILES sequences
+        """
+        
         weight = ((scores < thresholds).mean(axis=0, keepdims=True) + 0.01) / \
             ((scores >= thresholds).mean(axis=0, keepdims=True) + 0.01)
         weight = weight / weight.sum()

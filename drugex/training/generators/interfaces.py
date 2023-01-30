@@ -30,6 +30,13 @@ class Generator(Model, ABC):
     def sample(self, *args, **kwargs):
         """
         Samples molcules from the generator.
+
+        Returns
+        -------
+        smiles : List
+            List of SMILES strings
+        frags : List, optional
+            List of fragments used to generate the molecules
         """
         pass
 
@@ -121,6 +128,27 @@ class Generator(Model, ABC):
         pass 
 
     def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
+        """
+        Fit the generator.
+
+        Parameters
+        ----------
+        train_loader : DataLoader
+            a `DataLoader` instance to use for training
+        valid_loader : DataLoader
+            a `DataLoader` instance to use for validation
+        epochs : int
+            the number of epochs to train for
+        patience : int
+            the number of epochs to wait for improvement before early stopping
+        evaluator : ModelEvaluator
+            a `ModelEvaluator` instance to use for validation
+            TODO: maybe the evaluator should be hard coded to None here as during PT/FT training we don't need it
+        monitor : Monitor
+            a `Monitor` instance to use for saving the model and performance info
+        no_multifrag_smiles : bool
+            if `True`, only single-fragment SMILES are considered valid
+        """
         self.monitor = monitor if monitor else NullMonitor()
         best = float('inf')
         last_save = -1
@@ -165,15 +193,23 @@ class Generator(Model, ABC):
         """
         Evaluate molecules by using the given evaluator or checking for validity.
 
-        Args:
-            smiles (List): a list of SMILES-based molecules
-            frags (List): a list of fragments
-            evaluator (ModelEvaluator): a `ModelEvaluator` instance
-            no_multifrag_smiles (bool): if `True`, only single-fragment SMILES are considered valid
-            unmodified_scores (bool): if `True`, the scores are not modified by the evaluator
-        
-        Returns:
-            scores (DataFrame): a `DataFrame` with the scores for each molecule
+        Parameters:
+        ----------
+        smiles: List
+            List of SMILES to evaluate
+        frags: List
+            List of fragments used to generate the SMILES
+        evaluator: ModelEvaluator
+            A `ModelEvaluator` instance used to evaluate the molecules
+        no_multifrag_smiles: bool
+            If `True`, only single-fragment SMILES are considered valid
+        unmodified_scores: bool
+            If `True`, the scores are not modified by the evaluator
+
+        Returns
+        -------
+        scores: DataFrame
+            A `DataFrame` with the scores for each molecule
         """
 
         if evaluator is None:
@@ -190,10 +226,11 @@ class Generator(Model, ABC):
         """
         Return a copy of this model as a state dictionary.
 
-        Returns:
-            a serializable copy of this model as a state dictionary
+        Returns
+        -------
+        model: dict
+            A serializable copy of this model as a state dictionary
         """
-
         return deepcopy(self.state_dict())   
 
 class FragGenerator(Generator):
@@ -223,10 +260,6 @@ class FragGenerator(Generator):
         ----------
         gpus: `tuple`
             A tuple of GPU ids to use
-        
-        Returns:
-        -------
-        None
         """
         self.gpus = gpus
         self.to(self.device)

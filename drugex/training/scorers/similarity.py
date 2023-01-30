@@ -25,11 +25,20 @@ class TverskyFingerprintSimilarity(Scorer):
 
     def __init__(self, smiles : str, fp_type : str, alpha : float = 1., beta : float = 1., modifier=None):
         """
-        Args:
-            smiles (str)        : reference compound
-            fp_type (str)       : fingerprint type
-            alpha (float), opt  : weight of the features of the reference compound
-            beta (float), opt   : weight of the features of the compound to be scored
+        Initialize the TverskyFingerprintSimilarity scorer.
+
+        Parameters
+        ----------
+        smiles : str
+            The SMILES string of the reference molecule.
+        fp_type : str
+            The type of fingerprint to use.
+        alpha : float, optional
+            The weight of the features of the reference compound.
+        beta : float, optional
+            The weight of the features of the compound to be scored.
+        modifier : ScorerModifier, optional
+            A modifier that can be used to modify the scores returned by this scorer.
         """
         super().__init__(modifier)
         self.smiles = smiles
@@ -40,6 +49,16 @@ class TverskyFingerprintSimilarity(Scorer):
         self.beta = beta
 
     def getScores(self, mols, frags=None):
+        """ 
+        Get Tversky similarity scores for a list of molecules.
+        
+        Parameters
+        ----------
+        mols : List[str]
+            A list of SMILES strings representing molecules.
+        frags : List[str], optional
+            A list of fragments used to generate the molecules. This is not used by this scorer.
+        """
         scores = np.zeros(len(mols))
         for i, mol in enumerate(tqdm.tqdm(mols)):
             try:
@@ -60,10 +79,18 @@ class TverskyGraphSimilarity(Scorer):
     
     def __init__(self, smiles : str, alpha : float = 1., beta : str = 1., modifier=None):
         """
-        Args:
-            smiles (str)        : reference compound
-            alpha (float), opt  : weight of the features of the reference compound
-            beta (float), opt   : weight of the features of the compound to be scored
+        Initialize the TverskyGraphSimilarity scorer.
+
+        Parameters
+        ----------
+        smiles : str
+            The SMILES string of the reference molecule.
+        alpha : float, optional
+            The weight of the features of the reference molecule, by default 1.
+        beta : str, optional
+            The weight of the features of the compound to be scored, by default 1.
+        modifier : ScorerModifier, optional
+            A ScorerModifier object to modify the scores, by default None.
         """
         super().__init__(modifier)
         self.smiles = smiles
@@ -72,6 +99,21 @@ class TverskyGraphSimilarity(Scorer):
         self.beta = beta
 
     def getScores(self, mols, frags=None):
+        """ 
+        Calculate the Tversky graph similarity scores for a list of molecules.
+        
+        Parameters
+        ----------
+        mols : list of rdkit molecules
+            The molecules to be scored.
+        frags : list of rdkit molecules, optional
+            The fragments used to generate the molecules, by default None.
+        
+        Returns
+        -------
+        scores : np.array
+            The scores for the molecules.
+        """
         scores = np.zeros(len(mols))
         for i, mol in enumerate(tqdm.tqdm(mols)):
             try:
@@ -97,9 +139,16 @@ class FraggleSimilarity(Scorer):
     
     def __init__(self, smiles : str, trevsky_th : float = 0.8, modifier=None):
         """
-        Args:
-            smiles (str)            : reference compound
-            trevsky_th (float), opt : Trevsky threshold used by Fraggle
+        Initiate the Fraggle similarity scorer.
+
+        Parameters
+        ----------
+        smiles : str
+            Reference compound.
+        trevsky_th : float, optional
+            Trevsky threshold used by Fraggle, by default 0.8
+        modifier : ScoreModifier, optional
+            Score modifier to be applied to the scores, by default None
         """
         super().__init__(modifier)
         self.smiles = smiles
@@ -107,6 +156,21 @@ class FraggleSimilarity(Scorer):
         self.th = trevsky_th
 
     def getScores(self, mols, frags=None):
+        """ 
+        Calculate the Fraggle similarity scores for a list of molecules.
+        
+        Parameters
+        ----------
+        mols : list of rdkit molecules
+            List of molecules to be scored.
+        frags : list of rdkit molecules, optional
+            List of fragments used to generate molecules. Not used in this scorer, by default None
+        
+        Returns
+        -------
+        scores : np.array
+            Array of scores.
+        """
         scores = np.zeros(len(mols))
         for i, mol in enumerate(tqdm.tqdm(mols)):
             try: 

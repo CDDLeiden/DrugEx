@@ -63,20 +63,35 @@ class Property(Scorer):
 class AtomCounter(Scorer):
 
     def __init__(self, element: str, modifier=None) -> None:
+
         """
-        Args:
-            element: element to count within a molecule
+        Initialize the AtomCounter scorer.
+
+        Parameters
+        ----------
+        element : str
+            The element to count within the molecules.
+        modifier : ScoreModifier, optional
+            A `ScoreModifier` object to modify the scores, by default None.
         """
         super().__init__(modifier)
         self.element = element
 
     def getScores(self, mols, frags=None):
         """
-        Count the number of atoms of a given type.
-        Args:
-            mol: molecule
-        Returns:
-            The number of atoms of the given type.
+        Count the number of atoms of a given type in the molecules.
+
+        Parameters
+        ----------
+        mols : list of rdkit molecules
+            The molecules to score.
+        frags : list of rdkit molecules, optional
+            The fragments used to generate the molecules, by default None.
+        
+        Returns
+        -------
+        scores : np.array
+            The scores for the molecules.
         """
         # if the molecule contains H atoms, they may be implicit, so add them
         scores = np.zeros(len(mols))
@@ -107,9 +122,16 @@ class Isomer(Scorer):
 
     def __init__(self, formula: str, mean_func='geometric', modifier=None) -> None:
         """
-        Args:
-            formula: target molecular formula
-            mean_func: which function to use for averaging: 'arithmetic' or 'geometric'
+        Initialize the Isomer scorer.
+
+        Parameters
+        ----------
+        formula : str
+            The molecular formula to score against.
+        mean_func : str, optional
+            Which function to use for averaging the scores ('arithmetic' or 'geometric'), by default 'geometric'
+        modifier : ScoreModifier, optional
+            A `ScoreModifier` object to modify the scores, by default None.
         """
         super().__init__(modifier)
         self.objs, self.mods = self.scoring_functions(formula)
@@ -119,9 +141,15 @@ class Isomer(Scorer):
     def parse_molecular_formula(formula: str):
         """
         Parse a molecular formulat to get the element types and counts.
-        Args:
-            formula: molecular formula, f.i. "C8H3F3Br"
-        Returns:
+
+        Parameters
+        ----------
+        formula : str
+            The molecular formula to parse.
+        
+        Returns
+        -------
+        results : list of tuples
             A list of tuples containing element types and number of occurrences.
         """
         matches = re.findall(r'([A-Z][a-z]*)(\d*)', formula)
@@ -136,6 +164,21 @@ class Isomer(Scorer):
         return results
 
     def scoring_functions(self, formula: str):
+        """
+        Create the scoring functions for the molecular formula.
+
+        Parameters
+        ----------
+        formula : str
+            The molecular formula to score against.
+        
+        Returns
+        -------
+        objs : list of Scorer objects
+            The scoring functions for each element type.
+        mods : list of ScoreModifier objects
+            The modifiers for each scoring function.
+        """
         element_occurrences = self.parse_molecular_formula(formula)
 
         total_n_atoms = sum(element_tuple[1] for element_tuple in element_occurrences)
@@ -150,6 +193,22 @@ class Isomer(Scorer):
         return objs, mods
 
     def getScores(self, mols: list, frags=None) -> np.array:
+        """
+        Get the scores for the molecules.
+
+        Parameters
+        ----------
+        mols : list of rdkit molecules
+            The molecules to score.
+        frags : list of rdkit molecules, optional
+            The fragments used to generate the molecules, by default None.
+        
+        Returns
+        -------
+        scores : np.array
+            The scores for the molecules.
+        """
+
         # return the average of all scoring functions
         score = np.array([self.mods[i](obj(mols)) for i, obj in enumerate(self.objs)])
         scores = score.prod(axis=0) ** (1.0 / len(score)) if self.mean_func == 'geometric' else np.mean(score, axis=0)
@@ -160,12 +219,39 @@ class Isomer(Scorer):
 
 class Scaffold(Scorer):
     def __init__(self, smart, is_match, modifier=None):
+        """
+        Initialize the Scaffold scorer.
+
+        Parameters
+        ----------
+        smart : str
+            The SMARTS pattern to match.
+        is_match : bool
+            Whether the SMARTS pattern should be matched or not.
+        modifier : ScoreModifier, optional
+            A `ScoreModifier` object to modify the scores, by default None.        
+        """
         super().__init__(modifier)
         self.smart = smart
         self.frag = Chem.MolFromSmarts(smart)
         self.is_match = is_match
 
     def getScores(self, mols, frags=None):
+        """ 
+        Get the scores for the molecules.
+        
+        Parameters
+        ----------
+        mols : list of rdkit molecules
+            The molecules to score.
+        frags : list of rdkit molecules, optional
+            The fragments used to generate the molecules, by default None.
+        
+        Returns
+        -------
+        scores : np.array
+            The scores for the molecules.
+        """
         scores = np.zeros(len(mols))
         for i, mol in enumerate(tqdm.tqdm(mols)):
             try:

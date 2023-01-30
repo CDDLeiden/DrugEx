@@ -1,24 +1,30 @@
 #!/usr/bin/env python
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
 import warnings
 
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
-from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
+from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
+                                  SmilesFragDataSet)
 from drugex.data.utils import getDataPaths, getVocPaths
-from drugex.logs.utils import commit_hash, enable_file_logger, backUpFiles
-
+from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.generators import SequenceRNN, SequenceTransformer, GraphTransformer
-from drugex.training.explorers import FragSequenceExplorer, FragGraphExplorer, SequenceExplorer
-
+from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
+                                       SequenceExplorer)
+from drugex.training.generators import (GraphTransformer, SequenceRNN,
+                                        SequenceTransformer)
 from drugex.training.monitors import FileMonitor
-from drugex.training.rewards import ParetoSimilarity, ParetoCrowdingDistance, WeightedSum
+from drugex.training.rewards import (ParetoCrowdingDistance,
+                                     ParetoTanimotoDistance, WeightedSum)
 from drugex.training.scorers.modifiers import ClippedScore, SmoothHump
-from drugex.training.scorers.properties import Property, Uniqueness, LigandEfficiency, LipophilicEfficiency
-from drugex.training.scorers.similarity import TverskyFingerprintSimilarity, TverskyGraphSimilarity, FraggleSimilarity
+from drugex.training.scorers.properties import (LigandEfficiency,
+                                                LipophilicEfficiency, Property,
+                                                Uniqueness)
+from drugex.training.scorers.similarity import (FraggleSimilarity,
+                                                TverskyFingerprintSimilarity,
+                                                TverskyGraphSimilarity)
 
 warnings.filterwarnings("ignore")
     
@@ -350,7 +356,7 @@ def CreateDesirabilityFunction(base_dir,
     from qsprpred.scorers.predictor import Predictor
 
     schemes = {
-        "PR" : ParetoSimilarity(),
+        "PR" : ParetoTanimotoDistance(),
         "CD" : ParetoCrowdingDistance(),
         "WS" : WeightedSum()
     }
@@ -430,7 +436,8 @@ def CreateDesirabilityFunction(base_dir,
         objs.append(Property('SA', modifier=ClippedScore(lower_x=10, upper_x=1.0)))
         ths.append(0.5)
     if ra_score:
-        from drugex.training.scorers.ra_scorer import RetrosyntheticAccessibilityScorer
+        from drugex.training.scorers.ra_scorer import \
+            RetrosyntheticAccessibilityScorer
         objs.append(RetrosyntheticAccessibilityScorer(modifier=ClippedScore(lower_x=0, upper_x=1.0)))
         ths.append(0.0)
     if mw:
