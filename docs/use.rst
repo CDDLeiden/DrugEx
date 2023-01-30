@@ -3,14 +3,20 @@
 Usage
 =====
 
-You can use the command-line interface to preprocess data and build models. You will need to run multiple scripts to be able to obtain a final model. 
+The command-line interface can be used to preprocess data and build models. In order to obtain a final model and generate novel compounds you will need to run multiple scripts. 
 The description of the functionality of each script can be displayed with the :code:`--help` argument. For example, the help message for the :code:`drugex.dataset` script can be shown as follows:
 
 ..  code-block::
 
     python -m drugex.dataset --help
 
-A simple command-line workflow to fine-tune and optimize a graph-based model is given below (see :ref:`cli-example`). 
+A basic command-line workflow to fine-tune and optimize a graph-based model is given below (see :ref:`cli-example`). 
+In addition to this we also show a few other workflows to show some of the other functionalities.
+
+The command downloads the data and models required for running the CLI examples and saves them in the tutorial/CLI folder.
+
+..  code-block:: bash
+    python -m drugex.download -o tutorial/CLI
 
 If you want more control over the inputs and outputs or want to customize DrugEx a bit more, you can also use the Python API directly (see :ref:`api-docs`). 
 You can find a tutorial with Jupyter notebooks illustrating some common use cases in the project `source code <https://github.com/CDDLeiden/DrugEx/tree/master/tutorial>`_.
@@ -25,169 +31,137 @@ CLI Example
 Basics
 ------
 
-Finetuning a Pretrained Generator
+Fine-tuning a Pretrained Generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example, we will use the command line utilities of DrugEx to do transfer learning in order to finetune an already pretrained graph transformer on the CHEMBL 27 database. Finetuning will give us a model that can generate molecules that should more closely resemble the compounds in the data set of interest. You can find the model used here `archived on Zenodo <https://doi.org/10.5281/zenodo.7096823>`_ or `among the other data files for this tutorial <https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view>`_. You can find links to more pretrained models on the `project GitHub <https://github.com/CDDLeiden/DrugEx>`_.
+In this example, we will use DrugEx' CLI to fine-tune a pretrained graph transformer (trained on the Papyrus data set `05.5`). 
+This pretrained model has been trained on a diverse set of molecules.
+Fine-tuning will give us a model that can generate molecules that should more closely resemble the compounds in the data set of interest. 
+You can find the model used here `archived on Zenodo <https://doi.org/10.5281/zenodo.7085421>`_ or among the other data files for this tutorial 'CLI/generators/'. 
+You can find links to more pretrained models on the `project GitHub <https://github.com/CDDLeiden/DrugEx>`_.
 
-Before we begin the transfer learning, we have to generate the appropriate training data.
-Let's assume we want to bias the model towards generating compounds that are more related to known ligands of the Adenosine receptors. 
-DrugEx assumes that all input data are saved in the :code:`data` folder of the directory it is executed from. 
-Therefore, we place the compounds that will serve as a template for the finetuning inside this folder and execute DrugEx as follows:
-
-..  code-block:: bash
-
-    # input is in ./data/LIGAND_RAW_small.tsv
-    drugex dataset -i LIGAND_RAW_small.tsv -mc CANONICAL_SMILES -o arl -mt graph
-
-This will tell DrugEx to preprocess compounds saved in the :code:`CANONICAL_SMILES` column of the :code:`LIGAND_RAW_small.tsv` file 
-(You can download this and other example data set from ).
-
-The resulting files will be saved in the data folder and given a prefix (:code:`arl`). You can use this prefix to load the compiled data files in the next step, which is finetuning the pretrained generator with transfer learning on the preprocessed molecules with the :code:`train` script:
+Here, we want to bias the model towards generating compounds that are more related to known ligands of the Adenosine receptors. 
+To use the CLI all the input data should be in the :code:`data` folder of the base directory :code:`-b tutorial/CLI`. 
+For fine-tuning this input is a file with compounds (:code:`A2AR_LIGANDS.tsv`) 
+Before we begin the fine-tuning, we have to preprocess the training data, as follows:
 
 ..  code-block:: bash
 
-    # pretrained model placed in ./generators/chembl27_graph.pkg
-    drugex train -m FT -i arl -o arl -pt chembl27_graph -mt graph -e 200 -bs 32 -gpu 0,1
+    # input is in tutorial/CLI/data/A2AR_LIGANDS.tsv
+    python -m drugex.dataset -b tutorial/CLI -i A2AR_LIGANDS.tsv -mc SMILES -o arl -mt graph
 
-This tells DrugEx to use the generated file (prefixed with :code:`arl`) to finetune (:code:`-m FT`) a pretrained model with model states saved in the :code:`chembl27_graph.pkg` file.
-The training will take a maximum of 200 epochs with a batch size of 32 in parallel on GPUs with IDs 0 and 1. 
+This will tell DrugEx to preprocess compounds saved in the :code:`-mc SMILES` column of the :code:`-i A2AR_LIGANDS.tsv` file for a :code:`-mt graph` type transformer
+
+Preprocessing molecules for the graph based models includes fragmentation and encoding. This is done because the transformer takes fragmented molecules as input. 
+For the graph-based transformers these inputs also need to be encoded into a graph representation.
+
+The resulting files will be saved in the data folder and given a prefix (:code:`-o arl`). 
+You can use this prefix to load the compiled data files in the next step, which is fine-tuning the pretrained generator on the preprocessed molecules with the :code:`train` script:
+
+..  code-block:: bash
+
+    # pretrained model placed in tutorial/CLI/generators/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg
+    python -m drugex.train -m FT -b tutorial/CLI -i arl -o arl -pt pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5 -mt graph -e 1 -bs 32 -gpu 0,1
+
+This tells DrugEx to use the generated file (prefixed with :code:`-i arl`) to fine-tune (:code:`-m FT`) a pretrained model with model states saved in the :code:`-pt Papyrus05.5_graph_trans_PT.pkg` file.
+The training will take 1 epoch :code:`-e 1` (for a real application more epochs are required) with a batch size of 32 in parallel on GPUs with IDs 0 and 1. 
 The best model will be saved to :code:`./generators/arl_graph_trans_FT.pkg`.
 
-You can vary the type of model to use with the :code:`-mt` parameter. For example, if you wanted to preprocess the data for the SMILES-based transformer, you would specify :code:`-mt smiles` in both of the previous commands and add the :code:`-a trans` flag to the :code:`drugex train` command.
 
 Optimization with Reinforcement Learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example, we generate drug-like molecules that should be active on A2B (UniprotID: P29275) and inactive on A2A (UniprotID: P29274).
-The reinforcement learning (RL) framework is used to create the exploitation-exploration model tuned to generate molecules with desired properties. 
-The RL framework is composed of the agent-generator and environment-predictor parts.
+In this example, want to generate drug-like molecules that are active on A2AR and have a high Syntehtic Accessibility Score (SAScore).
+To achieve this, reinforcement learning (RL) is used to tune the generator model to generate molecules with desired properties. 
+For this task the RL framework is composed of the agent (generator) and environment (predictor and SAScorer).
+The predictor model (a Random Forest QSAR model for binary A2A bioactivity predictions) has been `created using QSPRpred <https://github.com/CDDLeiden/QSPRPred>`_
 
-Environment: QSAR models
-"""""""""""
-
-First, we create the QSAR models used in the environment-predictor with
-
-.. code-block:: bash
-
-    # input is in ./data/LIGAND_RAW_small.tsv
-    drugex environ -i A2AR_raw.tsv -m RF -r False -t P29274 P29275 -o bayes -a 5.3 -n 0.2 -l -c -s
-
-This tells DrugEx to use data from :code:`LIGAND_RAW_small.tsv` to create two Random Forest (:code:`-m RF`) QSAR models
-for binary (:code:`-r False`) A2A and A2B (:code:`-t P29274 P29275`) bioactivity predictions 
-with a threshold on pchembl value for activity of 5.3 (:code:`-a 5.3`). :code:`-n 0.2` defines a random split test set
- of 20%. Setting (:code:`-n 200`) to an integer value would give a test set of 200 random samples. Alternatively, 
-a time split can be determined by setting (:code:`-y 2015`), this will make all samples in the 'year' column >2015 the
-test set. Including (:code:`-l`) will keep all data in the Quality column with the marker :code:`"Low"`.
-If no model parameters are specified, the model will be trained on default settings. Specific parameter settings can
-be entered using a json file (:code:`-p parameters`) (see drugex/environment/test_files/parameters.json for an example)
-or optimization can be performed as grid search or bayes optimization  (:code:`-o bayes`), afterwards the optimal
-parameters found using the chosen optimization setting will be used to train and evaluate the models.
-Grid search parameters are by default read from drugex/environment/search_space.json, but can also be manually defined
-as json file and passed to :code:`-ss`.
-Setting :code:`-s`, will train the model on all data and save the model. Setting :code:`-c`, will perform model 
-evaluation using 5-fold cross-validation.
-The model will be saved to :code:`./envs/single/RF_CLS_P29274.pkg` and model evalution to :code:`./envs/single/RF_CLS_P29274.[cv/ind].tsv`.
-See (:code:`-h`) for more customization options.
-
-Reinforcement Learning
-""""""""""""""""""""""
-
-Then, we use a combination of two generators of the same architecture, the agent that is optimized during RL for exploitation and 
-the prior that is kept fixed for exploration, to create molecules at each iteration that are scored with the environment-predictor 
-that send a back to the agent with 
+During RL a combination of two generators with the same architecture is used to create molecules; the agent that is optimized during RL for exploitation and 
+the prior that is kept fixed for exploration. 
+At each iteration, generated molecules are scored based on the environment and send a back to the agent for tuning.
 
 .. code-block:: bash
 
-    # pretrained model placed in ./generators/chembl27_graph.pkg
-    drugex train -m RL -i arl -o arl -ag arl_graph_trans_FT -pr chembl27_graph -ta P29275 -ti P29274 -qed -e 200 -bs 32 -gpu 0,1
+    # pretrained model placed in tutorial/CLI/generators/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg
+    # predictor model placed in tutorial/CLI/qspr/models
+    python -m drugex.train -m RL -b tutorial/CLI -i arl -o arl -ag arl_graph_trans_FT -pr pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT -ea RF -ta pchembl_value_Median -sas -e 3 -bs 32 -gpu 0,1
 
-This tells DrugEx to create molecules from input fragments encoded in preprocessed data file (prefixed with :code:`a2a`)
-and optimize the initial agent-generator (:code:`-ag arl_graph_trans_FT`) with RL (:code:`-m RL`). 
-Molecules are scores with a desirability function that favour molecules predicted to be active on A2B (:code:`-ta P29275`), 
-inactive on A2A (:code:`-t P29274`) and full criteria of drug-likeness (:code:`-qed`).
-Exploration of chemical space is forced by the use of a fixed prior-generator (:code:`-pr chembl27_graph`). 
-The training will take a maximum of 200 epochs with a batch size of 32 in parallel on GPUs with IDs 0 and 1. 
+This tells DrugEx to create molecules from input fragments encoded in preprocessed data file (prefixed with :code:`arl`)
+and optimize the initial agent (the fine-tuned model) (:code:`-ag arl_graph_trans_FT`) with RL (:code:`-m RL`). 
+Molecules are scored with a desirability function that favour molecules predicted to be active on A2AR (:code:`-ta pchembl_value_Median`) as predicted using a RF model (:code:`-ea RF`)
+and have a high synthetic accessibility (:code:`-sas`).
+Exploration of chemical space is forced by the use of a fixed prior-generator (:code:`-pr Papyrus05.5_graph_trans_PT`). 
+The training will take a maximum of 3 epochs with a batch size of 32 in parallel on GPUs with IDs 0 and 1. 
 The best model will be saved to :code:`./generators/arl_graph_trans_RL.pkg`.
 
 Design new molecules
 ^^^^^^^^^^^^^^^^^^^^
 
-In this example, we use the optimized exploitation-exploration model to design new compounds that should be active on A2B and inactive on A2A with
+In this example, we use the optimized agent model to design new compounds that should be active on A2AR and have high synthetic accessibility.
 
 .. code-block:: bash
 
-    drugex design -i arl_test_graph.txt -g arl_graph_trans_RL
+    python -m drugex.designer -b tutorial/CLI -i arl_test_graph.txt -g arl_graph_trans_RL
 
-This tells DrugEx to generate a new molecule per input fragment in :code:`arl_test_graph.txt` with the :code:`arl_graph_trans_RL.pkg` model.
+This tells DrugEx to generate new molecules based on the input fragment in :code:`arl_test_graph.txt` with the :code:`arl_graph_trans_RL.pkg` model.
 The new compounds are saved to :code:`./new_molecules/arl_graph_trans_RL.tsv`.
 
 
+Advanced
+--------
 
-..  Advanced
-    --------
+Using different generator architectures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    Pretraining the Generator
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
+You can vary the type of model to use with the :code:`-a` and :code:`-mt` parameters. 
 
-    Optimizing the QSAR models
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Recurrent neural network
+""""""""""""""""""""""""
+The most simple model is the RNN-based generator. This model gets the 'go' token as input and from there generates SMILES strings. 
+Therefore, this model does not use input fragments for training or sampling. To preprocess the data for training an RNN-based generator the molecules 
+are standardized and encoded based on the vocabulary of the pretrained model :code:`-vf Papyrus05.5_smiles_voc.txt`, but no fragmentation is done :code:`-nof`. 
+To fine-tune an RNN-based generator on the A2AR set, the algorithm needs to be specified :code:`-a rnn`.
+Here the generator is fine-tuned on the A2AR set and then used to generate new compounds. 
 
-    Scaffold-based Reinforcement learning
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..  code-block:: bash
 
-CLI Options
-===========
+    # pretrained model placed in tutorial/CLI/generators/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT/Papyrus05.5_smiles_rnn_PT.pkg
+    # pretrained model voc files placed in tutorial/CLI/data/Papyrus05.5_smiles_voc.txt
+    python -m drugex.dataset -b tutorial/CLI -i A2AR_LIGANDS.tsv -mc SMILES -o rnn-example -nof -vf Papyrus05.5_smiles_voc.txt
+    python -m drugex.train -m FT -b tutorial/CLI -i rnn-example -pt pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT/Papyrus05.5_smiles_rnn_PT -vfs Papyrus05.5  -mt smiles -a rnn -e 3 -bs 32 -gpu 0
+    python -m drugex.designer -b tutorial/CLI -g rnn-example_smiles_rnn_FT -vfs Papyrus05.5 -gpu 0
 
-Dataset
--------
+Sequence-based transformer
+""""""""""""""""""""""""""
+For working with a SMILES-based transformer; you need to preprocess the data by specifying :code:`-mt smiles` indicating that the inputs are encoded as SMILES. 
+By default the transformer algorithm (:code:`-a trans`) is used for training.
 
-Molecule type
-^^^^^^^^^^^^^
-Depeding on the generator algorithm, molecules reprentation can be either :code:`smiles`- (default) or :code:`graph`-based. This set with :code:`-mt, --mol_type <mol_type>`.
+..  code-block:: bash
 
-Input fragments
-^^^^^^^^^^^^^^^
+    # pretrained model placed in tutorial/CLI/generators/pretrained/smiles-trans/Papyrus05.5_smiles_trans_PT/Papyrus05.5_smiles_trans_PT.pkg
+    python -m drugex.dataset -b tutorial/CLI -i A2AR_LIGANDS.tsv -mc SMILES -o ast -mt smiles
+    python -m drugex.train -m FT -i ast -pt pretrained/smiles-trans/Papyrus05.5_smiles_trans_PT/Papyrus05.5_smiles_trans_PT -mt smiles -a trans -e 3 -bs 32 -gpu 0,1
 
-DrugEx includes generator algroithms that use (v3: :code:`'trans'`, :code:`'ved'` and :code:`'attn'`) or not (v2: :code:`rnn`).
 
-The :code:`-sm, --smiles_corpus` flag should be used in the case of using :code:`rnn` to corpus file without fragmentation of the input ligands.
+Pretraining a Generator
+^^^^^^^^^^^^^^^^^^^^^^^
 
-   
-If input fragments are used, the compound fragmentation can be controlled by several parameters.
+ Pretraining :code:`-m PT` of a model from scartch works exactly the same way as fine-tuning, 
+ the only difference is that the generator will not be initialized with pretrained model weights.
 
-**Fragmentation method**: By default, fragmentation is done with :code:`'brics'` (for REF/DEF) but can also be :code:`'recap'` (for REF/DEF). This can be specified with :code:`-fm, --frag_method <method>`.
+ ..  code-block:: bash
 
-**Number of fragments**: By default, for each compound, the 4 largest leaf-fragments are considered. Another number can be specified with :code:`-nf, --n_frags <n>`.
+    python -m drugex.dataset -b tutorial/CLI -i A2AR_LIGANDS.tsv -mc SMILES -o example_pt -mt graph
+    python -m drugex.train -m PT -b tutorial/CLI -i example_pt -mt graph -e 3 -bs 32 -gpu 0,1
 
-**Number of combinations**: By default, for each compound, up to a maximum of :code:`<n_frags>` leaf-fragments are combined for each fragment-combinations. A lower number can be specified with :code:`-nc, --n_combs <n>`.
 
-It is also possible to use a selected scaffold as an input fragment during RL training and the design of new compounds. 
-In that case, the input scaffold is encoded in fragment-style while keeping the whole compound as a fragment.
-This can be specified with :code:`-nof, --no_fragmenatation`.
-
-Saving the Vocabulary
-^^^^^^^^^^^^^^^^^^^^^
-
-During the encoding of the input compounds, DrugEx creates Vocabulary tokens (in the case of SMILES representation)
-or atoms (in the case of graph representation). 
-This Vocabulary can be saved to a file to be used during training instead of a default Vocabulary with :code:`-sv, --save_voc`. 
-This is recommended if you expect your data to contain features not present in ChEMBL.
-
-Other
-^^^^^
-
-By default,
-    * the name of the column in the input file containing is :code:`'SMILES'`. Another name can be specified with :code:`-mc, --molecule_column <name>`
-    * the preprocessing is parallelized on 8 multi-core tasks. Another number of processes can be specified with :code:`-np, --n_proc <n>`
-    * no intermediate files are saved. They can be written by specifying :code:`-sif, --save_intermediate_files`
-    * the git hash is retrieved. To skip this, specify :code:`-ng, -no_git`
-
-..  Environ
-    -------
-
-    train
-    -----
-
-    designer
-    --------
+Scaffold-based Reinforcement learning
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tuning of the transformer-based generators can also be done on one scaffold or a subset of scaffolds. Here we show an example of this on the previously trained and fine-tuned A2AR generators.
+First
+.. code-block:: bash
+    # input is in tutorial/CLI/data/xanthine.tsv
+    python -m drugex.dataset -b tutorial/CLI -i xanthine.tsv -mc SMILES -o scaffold_based -mt graph -s
+    python -m drugex.train -m RL -b tutorial/CLI -i scaffold_based_graph.txt -o scaffold_based -ag arl_graph_trans_FT -pr pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT -ta pchembl_value_Median -sas -e 3 -bs 32 -gpu 0,1
+    python -m drugex.designer -b tutorial/CLI -i scaffold_based_graph.txt -g scaffold_based_graph_trans_RL
+    
