@@ -6,16 +6,17 @@ Usage
 The command-line interface can be used to preprocess data and build models. In order to obtain a final model and generate novel compounds you will need to run multiple scripts. 
 The description of the functionality of each script can be displayed with the :code:`--help` argument. For example, the help message for the :code:`drugex.dataset` script can be shown as follows:
 
-..  code-block::
+..  code-block:: bash
 
     python -m drugex.dataset --help
 
 A basic command-line workflow to fine-tune and optimize a graph-based model is given below (see :ref:`cli-example`). 
 In addition to this we also show a few other workflows to show some of the other functionalities.
 
-The command downloads the data and models required for running the CLI examples and saves them in the tutorial/CLI folder.
+The command downloads the data and models required for running the CLI examples and saves them in the tutorial/CLI folder
 
 ..  code-block:: bash
+
     python -m drugex.download -o tutorial/CLI
 
 If you want more control over the inputs and outputs or want to customize DrugEx a bit more, you can also use the Python API directly (see :ref:`api-docs`). 
@@ -146,14 +147,13 @@ By default the transformer algorithm (:code:`-a trans`) is used for training.
 Pretraining a Generator
 ^^^^^^^^^^^^^^^^^^^^^^^
 
- Pretraining :code:`-m PT` of a model from scartch works exactly the same way as fine-tuning, 
- the only difference is that the generator will not be initialized with pretrained model weights.
+Pretraining :code:`-m PT` of a model from scartch works exactly the same way as fine-tuning, 
+the only difference is that the generator will not be initialized with pretrained model weights.
 
- ..  code-block:: bash
+..  code-block:: bash
 
     python -m drugex.dataset -b tutorial/CLI -i A2AR_LIGANDS.tsv -mc SMILES -o example_pt -mt graph
     python -m drugex.train -m PT -b tutorial/CLI -i example_pt -mt graph -e 3 -bs 32 -gpu 0,1
-
 
 Scaffold-based Reinforcement learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
