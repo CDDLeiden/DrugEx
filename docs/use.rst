@@ -158,9 +158,10 @@ the only difference is that the generator will not be initialized with pretraine
 Scaffold-based Reinforcement learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Tuning of the transformer-based generators can also be done on one scaffold or a subset of scaffolds. Here we show an example of this on the previously trained and fine-tuned A2AR generators.
-First
+We will use the molecule xanthine as a scaffold. First this molecule is encoded, then reinforcement learning is done with this scaffold as input. Lastly a new molecule is generated containing this scaffold.
 
 ..  code-block:: bash
+
     # input is in tutorial/CLI/data/xanthine.tsv
     python -m drugex.dataset -b tutorial/CLI -i xanthine.tsv -mc SMILES -o scaffold_based -mt graph -s
     python -m drugex.train -m RL -b tutorial/CLI -i scaffold_based_graph.txt -o scaffold_based -ag arl_graph_trans_FT -pr pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT -ta pchembl_value_Median -sas -e 3 -bs 32 -gpu 0,1
