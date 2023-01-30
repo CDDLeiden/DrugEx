@@ -79,8 +79,8 @@ def GeneratorArgParser(txt=None):
                         help="Exploring rate")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline")
-    parser.add_argument('-s', '--scheme', type=str, default='PR',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PR' for Pareto front or 'CD' for 'PR' with crowding distance")
+    parser.add_argument('-s', '--scheme', type=str, default='PRTD',
+                        help="Reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance")
     parser.add_argument('-pa', '--patience', type=int, default=50,
                         help="Number of epochs to wait before early stop if no progress on test set score")
 
@@ -325,7 +325,7 @@ def CreateDesirabilityFunction(base_dir,
         base_dir (str)              : folder containing 'qspr' folder with saved environment-predictor models
         alg (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
-        scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PR' for Parento front with Tanimoto-dist. or 'CD' for PR with crowding dist.
+        scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance.
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
         window_targets (lst), opt   : list of target IDs for selectivity window
@@ -355,9 +355,10 @@ def CreateDesirabilityFunction(base_dir,
 
     from qsprpred.scorers.predictor import Predictor
 
+    # TODO: update cli documentation/tutorials to reflect new scheme abbreviations
     schemes = {
-        "PR" : ParetoTanimotoDistance(),
-        "CD" : ParetoCrowdingDistance(),
+        "PRTD" : ParetoTanimotoDistance(),
+        "PRCD" : ParetoCrowdingDistance(),
         "WS" : WeightedSum()
     }
     objs = []
@@ -378,7 +379,7 @@ def CreateDesirabilityFunction(base_dir,
             window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
 
     else:
-        # Pareto Front (PR) or Crowding Distance (CD) reward scheme
+        # Pareto Front reward scheme (PRTD or PRCD)
         if task == 'CLS':
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)

@@ -282,7 +282,7 @@ class SequenceTransformer(FragGenerator):
         
         # Encode the input fragments
         encoder = FragmentCorpusEncoder(
-            fragmenter=dummyMolsFromFragments,
+            fragmenter=dummyMolsFromFragments(),
             encoder=SequenceFragmentEncoder(
                 self.voc_trg
             ),
