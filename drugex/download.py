@@ -3,6 +3,7 @@
 
 import os
 import json
+import shutil
 import argparse
 
 from drugex.logs import logger
@@ -34,17 +35,17 @@ def DownloadTutorial(args):
     link_qsar_model = "https://zenodo.org/record/7537771/files/qspr.zip?download=1"
 
     # Download model files
-    pretrained_models_path = os.path.join(args.out_dir, 'models', 'pretrained')
+    pretrained_models_path = os.path.join(args.out_dir, 'generators', 'pretrained')
     download_file(link_pretrained_model1,
                   os.path.join(pretrained_models_path, 'smiles-rnn', 'PT_model1.zip'),
                   os.path.join(pretrained_models_path, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT'))
     download_file(link_pretrained_model2,
                   os.path.join(pretrained_models_path, 'graph-trans', 'PT_model2.zip'),
                   os.path.join(pretrained_models_path, 'graph-trans', 'Papyrus05.5_graph_trans_PT'))
-    qsar_models_path = os.path.join(args.out_dir, 'models', 'qsar')
+    qsar_models_path = os.path.join(args.out_dir, 'qspr')
     download_file(link_qsar_model,
                   os.path.join(qsar_models_path, 'qspr.zip'),
-                  os.path.join(qsar_models_path, 'qspr'))
+                  qsar_models_path)
 
     # Download data files
     logger.info("Downloading data files from Papyrus database.")
@@ -54,12 +55,12 @@ def DownloadTutorial(args):
     papyrus_version = '05.6'  # Papyrus database version
 
     papyrus = Papyrus(
-        data_dir=os.path.join(args.out_dir, 'datasets', '.Papyrus'),
+        data_dir=os.path.join(args.out_dir, 'data', '.Papyrus'),
         stereo=False,
         version=papyrus_version
     )
 
-    datasets_dir = os.path.join(args.out_dir, 'datasets')
+    datasets_dir = os.path.join(args.out_dir, 'data')
     os.makedirs(datasets_dir, exist_ok=True)
     dataset = papyrus.getData(
         acc_keys,
@@ -70,6 +71,13 @@ def DownloadTutorial(args):
     )
 
     print(f"Tutorial data for accession keys '{acc_keys}' was loaded. Molecules in total: {len(dataset.getDF())}")
+
+    with open(os.path.join(args.out_dir, 'data', 'xanthine.tsv'), 'w') as f:
+        f.write('SMILES\nc1[nH]c2c(n1)nc(nc2O)O')
+
+    # Copy smiles-rnn voc file tot data folder
+    shutil.copy(os.path.join(pretrained_models_path, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT', 'Papyrus05.5_smiles_rnn_PT.vocab'),
+                             os.path.join(args.out_dir, 'data', 'Papyrus05.5_smiles_voc.txt'))
 
 
 if __name__ == '__main__':
