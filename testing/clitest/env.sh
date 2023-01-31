@@ -33,8 +33,6 @@ function cleanup() {
   rm -rf ${TEST_BASE}/new_molecules
 }
 
-cleanup
-
 # default values of some common parameters
 export MOL_COL='CANONICAL_SMILES'
 export N_FRAGS=4

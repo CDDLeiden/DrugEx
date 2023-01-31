@@ -106,5 +106,6 @@ python -m drugex.designer \
 ${DESIGN_COMMON_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_graph_RL" \
--vfs "${FINETUNING_PREFIX}" 
+-vfs "${FINETUNING_PREFIX}" \
+--keep_invalid
 echo "Test: Done."

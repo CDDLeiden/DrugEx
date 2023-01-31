@@ -4,6 +4,8 @@
 
 source env.sh
 
+cleanup
+
 ./test_single.sh
 ./test_graph.sh
 ./test_gpt.sh

@@ -18,32 +18,37 @@ def DesignArgParser(txt=None):
     
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains folders 'data' and 'output'")
+    # TODO: is the debug flag necessary?
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
                         help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
+    # TODO: Is reading voc files necessary? Is the vocabulary saved to the generator file?
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
+
     parser.add_argument('-n', '--num', type=int, default=1,
                         help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
+    parser.add_argument('--keep_invalid', action='store_true',
+                        help="If on, invalid molecules are kept in the output. Else, they are dropped.")
+    parser.add_argument('--keep_duplicates', action='store_true',
+                        help="If on, duplicate molecules are kept in the output. Else, they are dropped.")
+    parser.add_argument('--keep_undesired', action='store_true',
+                        help="If on, undesirable molecules are kept in the output. Else, they are dropped.")
+
+
     parser.add_argument('-gpu', '--gpu', type=str, default='1,2,3,4',
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
                         help="Batch size")
-    parser.add_argument('-m', '--modify', action='store_true',
-                        help="If on, modifiers (defined in CreateDesirabilityFunction) are applied to predictor outputs, if not returns unmodified scores")
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")    
-    if txt:
-        args = parser.parse_args(txt)
-    else:
-        args = parser.parse_args()
 
-    
-        
-    # Load parameters generator/environment from trained model
+    args = parser.parse_args()
     designer_args = vars(args)
+    
+    # Load parameters generator/environment from trained model    
     train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
         'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds', 'use_gru' ]
@@ -54,6 +59,7 @@ def DesignArgParser(txt=None):
             designer_args[k] = v
     args = argparse.Namespace(**designer_args)
     
+    # Set target list
     args.targets = args.active_targets + args.inactive_targets + args.window_targets
 
     print(json.dumps(vars(args), sort_keys=False, indent=2))
@@ -156,16 +162,18 @@ def Design(args):
         logP=args.logP,
         logP_ths=args.logP_thresholds,
     )
-    if not args.modify:
-        for scorer in env.scorers:
-            scorer.modifier=None
     
     out = args.base_dir + '/new_molecules/' + args.generator + '.tsv'
     
     # Generate molecules and save them
-    # TODO: implement arguments for flexible filtering of molecules
+    if args.keep_invalid and not args.keep_duplicates:
+        logSettings.log.warning('Ignoring droping of duplicates because invalides are kept.')
+    if args.keep_invalid and not args.keep_undesired:
+        logSettings.log.warning('Ignoring droping of undesirables because invalides are kept.')  
+
+    print(args)
     gen_kwargs = dict(num_samples=args.num, batch_size=args.batch_size, n_proc=8,
-        drop_invalid=False, no_multifrag_smiles=True, drop_duplicates=True, drop_undesired=True, 
+        drop_invalid=not args.keep_invalid, no_multifrag_smiles=True, drop_duplicates=not args.keep_duplicates, drop_undesired=not args.keep_undesired, 
         evaluator=env, compute_desirability=True, raw_scores=True)
     
     if args.algorithm != 'rnn':
