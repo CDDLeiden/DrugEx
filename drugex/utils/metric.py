@@ -62,7 +62,6 @@ def logP_mw(fnames, is_active=False):
     """
     df = pd.DataFrame()
     for i, fname in enumerate(fnames):
-        print(fname)
         sub = pd.read_table(fname).dropna(subset=['Smiles'])
         sub['LABEL'] = i
         if 'Valid' in sub.columns:
@@ -84,7 +83,6 @@ def logP_mw(fnames, is_active=False):
                     qed.append(QED.qed(mol))
                 except:
                     sub = sub.drop(i)
-                    # print(row.Smiles)
             sub['LOGP'], sub['MWT'] = logp, mwt
             sub['QED'] = qed
         df = df.append(sub[['MWT', 'LOGP', 'LABEL', 'QED']])
@@ -146,7 +144,6 @@ def substructure(fname, sub, is_desired=False, is_accurate=True):
         mol = Chem.MolFromSmiles(smile)
         if mol.HasSubstructMatch(sub):
             num += 1
-            # print(smile)
     return num * 100 / len(df)
 
 

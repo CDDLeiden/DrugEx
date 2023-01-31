@@ -171,7 +171,6 @@ def Design(args):
     if args.keep_invalid and not args.keep_undesired:
         logSettings.log.warning('Ignoring droping of undesirables because invalides are kept.')  
 
-    print(args)
     gen_kwargs = dict(num_samples=args.num, batch_size=args.batch_size, n_proc=8,
         drop_invalid=not args.keep_invalid, no_multifrag_smiles=True, drop_duplicates=not args.keep_duplicates, drop_undesired=not args.keep_undesired, 
         evaluator=env, compute_desirability=True, raw_scores=True)
@@ -179,8 +178,6 @@ def Design(args):
     if args.algorithm != 'rnn':
         gen_kwargs['input_loader'] = loader
         gen_kwargs['keep_frags'] = True
-
-    print(gen_kwargs)
     
     df_mols = agent.generate(**gen_kwargs)
     df_mols.to_csv(out, index=False, sep='\t', float_format='%.2f')

@@ -570,7 +570,6 @@ def RLTrain(args):
     prior.loadStatesFromFile(pr_path)
 
     rl_path = args.base_dir + '/generators/' + args.output_long
-    print(args.env_alg)
     
     # Create the desirability function
     environment = CreateDesirabilityFunction(

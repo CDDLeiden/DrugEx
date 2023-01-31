@@ -286,7 +286,6 @@ class VocGraph(Vocabulary):
     def decode(self, matrix):
         frags, smiles = [], []
         for m, adj in enumerate(matrix):
-            # print('decode: ', m)
             emol = Chem.RWMol()
             esub = Chem.RWMol()
             try:
