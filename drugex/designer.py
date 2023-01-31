@@ -137,7 +137,7 @@ def Design(args):
             )
     else:
         voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
-        voc = VocSmiles.fromFile(voc_paths[0], True, max_len=100)
+        voc = VocSmiles.fromFile(voc_paths[0], False, max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
