@@ -132,13 +132,15 @@ def logP_mw(fnames, is_active=False):
 #         return df, None
 
 
-def substructure(fname, sub, is_desired=False):
+def substructure(fname, sub, is_desired=False, is_accurate=True):
     sub = Chem.MolFromSmarts(sub)
     df = pd.read_table(fname).drop_duplicates(subset='Smiles')
     if is_desired:
-        df = df[df.DESIRE == 1]
+        df = df[df.Desired == 1]
+    if is_accurate:
+        df = df[df.Accurate == 1]
     else:
-        df = df[df.VALID == 1]
+        df = df[df.Valid == 1]
     num = 0
     for smile in df.Smiles:
         mol = Chem.MolFromSmiles(smile)
@@ -150,7 +152,7 @@ def substructure(fname, sub, is_desired=False):
 
 def diversity(fake_path, real_path=None):
     fake = pd.read_table(fake_path)
-    fake = fake[fake.DESIRE == 1]
+    fake = fake[fake.Desired == 1]
     fake = fake.drop_duplicates(subset='Smiles')
     fake_fps, real_fps = [], []
     for i, row in fake.iterrows():
@@ -158,7 +160,7 @@ def diversity(fake_path, real_path=None):
         fake_fps.append(AllChem.GetMorganFingerprintAsBitVect(mol, 3, 2048))
     if real_path:
         real = pd.read_table(real_path)
-        real = real[real.DESIRE == True]
+        real = real[real.Desired == True]
         for i, row in real.iterrows():
             mol = Chem.MolFromSmiles(row.Smiles)
             real_fps.append(AllChem.GetMorganFingerprintAsBitVect(mol, 3, 2048))
@@ -176,7 +178,7 @@ def Solow_Polasky_Diversity(path, is_cor=False):
         dist = np.loadtxt(path)
     else:
         df = pd.read_table(path)
-        # df = df[df.DESIRE == 1]
+        # df = df[df.Desired == 1]
         df = df.drop_duplicates(subset='Smiles').dropna()
         if len(df) < N_SAMPLE:
             return 0

@@ -384,7 +384,7 @@ class SequenceRNN(Generator):
             # Compute desirability scores
             scores = self.evaluate(new_smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             # Filter out undesired molecules
-            new_smiles = np.array(new_smiles)[scores.DESIRE == 1].tolist()
+            new_smiles = np.array(new_smiles)[scores.Desired == 1].tolist()
 
 
         return new_smiles
