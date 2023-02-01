@@ -19,6 +19,7 @@ def DownloadArgParser():
     parser.add_argument('-p', '--progress', action='store_true',
                         help="If on, progress of the download is shown")
     parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-r', '--reload', action='store_true', default=False, help="If on, existing files are re-downloaded.")
     parser.add_argument('-ng', '--no_git', action='store_true', help="If on, git hash is not retrieved")
 
     args = parser.parse_args()
@@ -35,15 +36,23 @@ def DownloadTutorial(args):
 
     # Download model files
     pretrained_models_path = os.path.join(args.out_dir, 'models', 'pretrained')
-    download_file(link_pretrained_model1,
-                  os.path.join(pretrained_models_path, 'smiles-rnn', 'PT_model1.zip'),
+    outpath = os.path.join(pretrained_models_path, 'smiles-rnn', 'PT_model1.zip')
+    if args.reload or not os.path.exists(pretrained_models_path):
+        download_file(link_pretrained_model1,
+                  outpath,
                   os.path.join(pretrained_models_path, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT'))
-    download_file(link_pretrained_model2,
-                  os.path.join(pretrained_models_path, 'graph-trans', 'PT_model2.zip'),
+
+    outpath = os.path.join(pretrained_models_path, 'graph-trans', 'PT_model2.zip')
+    if args.reload or not os.path.exists(pretrained_models_path):
+        download_file(link_pretrained_model2,
+                  outpath,
                   os.path.join(pretrained_models_path, 'graph-trans', 'Papyrus05.5_graph_trans_PT'))
+
     qsar_models_path = os.path.join(args.out_dir, 'models', 'qsar')
-    download_file(link_qsar_model,
-                  os.path.join(qsar_models_path, 'qspr.zip'),
+    outpath = os.path.join(qsar_models_path, 'qspr.zip')
+    if args.reload or not os.path.exists(pretrained_models_path):
+        download_file(link_qsar_model,
+                  outpath,
                   os.path.join(qsar_models_path, 'qspr'))
 
     # Download data files
