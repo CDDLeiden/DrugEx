@@ -104,7 +104,7 @@ class Dataset():
             log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
         else:
             log.warning(f'No vocabulary specified. A new vocabulary will be created and saved to {self.file_base}.')
-            voc = None
+            voc = VocSmiles(not self.no_fragments, min_len=self.min_len)
         return voc
 
 
@@ -179,6 +179,7 @@ class FragmentDataset(Dataset):
         
         return pair_collectors
 
+
 class FragSequenceDataset(FragmentDataset):
     def __init__(self, args):
         super().__init__(args)        
@@ -203,7 +204,15 @@ class FragSequenceDataset(FragmentDataset):
             chunk_size=self.chunk_size
         )    
 
-        data_collectors = [SmilesFragDataSet(f'{self.file_base}_{split}_smiles.txt', rewrite=True) for split in ('test', 'train', 'unique')] if self.splitter else [SmilesFragDataSet(f'{self.file_base}_smi.txt')]
+        if self.splitter:
+            # Set up collectors for the different subsets
+            # Vocabulary is saved only once with the training set
+            data_collectors = [SmilesFragDataSet(f'{self.file_base}_train_smiles.txt', rewrite=True, voc_file=f'{self.file_base}_smiles.txt.vocab', save_voc=True)]
+            data_collectors += [ SmilesFragDataSet(f'{self.file_base}_{split}_smiles.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
+        else:
+            # Set up collector for the whole dataset and save vocabulary
+            data_collectors = [SmilesFragDataSet(f'{self.file_base}_smiles.txt', rewrite=True, save_voc=True)]
+
         encoder.apply(smiles_list, encodingCollectors=data_collectors)
 
 class FragGraphDataset(FragmentDataset):
@@ -222,9 +231,17 @@ class FragGraphDataset(FragmentDataset):
             pairs_splitter=self.splitter,
             n_proc=self.n_proc,
             chunk_size=self.chunk_size
-        )
+        )       
 
-        data_collectors = [GraphFragDataSet(f'{self.file_base}_{split}_graph.txt', rewrite=True) for split in ('test', 'train', 'unique')] if self.splitter else [GraphFragDataSet(f'{self.file_base}_graph.txt', rewrite=True) ]
+        if self.splitter:
+            # Set up collectors for the different subsets
+            # Vocabulary is saved only once with the training set
+            data_collectors = [GraphFragDataSet(f'{self.file_base}_train_graph.txt', rewrite=True, voc_file=f'{self.file_base}_graph.txt.vocab', save_voc=True)]
+            data_collectors += [ GraphFragDataSet(f'{self.file_base}_{split}_graph.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
+        else:
+            # Set up collector for the whole dataset and save vocabulary
+            data_collectors = [GraphFragDataSet(f'{self.file_base}_graph.txt', rewrite=True, save_voc=True)]
+
         encoder.apply(smiles_list, encodingCollectors=data_collectors)
 
 if __name__ == '__main__':
