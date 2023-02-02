@@ -41,7 +41,7 @@ def GeneratorArgParser(txt=None):
     parser.add_argument('-i', '--input', type=str, default=None,
                         help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=None,
-                        help="Prefix of voc files to use as vocabulary ({}_smiles/graph.txt). If None, assumes no prefix.")
+                        help="List of vocabulary files. If None, use internal defaults.")
     parser.add_argument('-o', '--output', type=str, default=None,
                         help="Prefix of output files. If None, set to be the first word of input. ")     
     parser.add_argument('-m', '--mode', type=str, default='RL',
@@ -182,7 +182,7 @@ def DataPreparationGraph(voc_files,
     data_path = base_dir + '/data/'
     mol_type = 'graph'
 
-    voc_paths = getVocPaths(data_path, voc_files, mol_type)
+    voc_paths = getVocPaths(data_path, voc_files)
     train_path, test_path = getDataPaths(data_path, input_prefix, mol_type, unique_frags)
 
     # Load train data
@@ -227,7 +227,7 @@ def DataPreparationSmiles(voc_files,
     data_path = base_dir + '/data/'
     mol_type = 'smi'
 
-    voc_paths = getVocPaths(data_path, voc_files, 'smiles')
+    voc_paths = getVocPaths(data_path, voc_files)
     train_path, test_path = getDataPaths(data_path, input_prefix, mol_type, unique_frags)
 
     voc = None
