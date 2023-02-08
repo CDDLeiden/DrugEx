@@ -44,6 +44,7 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
 -m PT \
 -a trans \
 -mt smiles
@@ -56,8 +57,9 @@ python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--pt "${PRETRAINING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
 -m FT \
 -a trans \
 -mt smiles
@@ -74,6 +76,7 @@ echo "Test: Done."
  -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
  -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
  -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
+ -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
  -m RL \
  -a trans \
  -mt smiles
@@ -90,6 +93,7 @@ ${TRAIN_RL_ARGS} \
 -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
 -m RL \
 -a trans \
 -mt smiles \

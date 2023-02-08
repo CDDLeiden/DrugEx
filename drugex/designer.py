@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-import os
+import argparse
 import json
 import math
-import argparse
-import pandas as pd
+import os
 
+import pandas as pd
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
 from drugex.data.utils import getVocPaths
-from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
-from drugex.train import SetGeneratorAlgorithm, CreateDesirabilityFunction
+from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
+from drugex.train import CreateEnvironment, SetUpGenerator, DataPreparation
+
 
 def DesignArgParser(txt=None):
     """ Define and read command line arguments """
@@ -136,16 +137,18 @@ def Design(args):
             args.num
             )
     else:
-        voc_paths = getVocPaths(data_path, args.voc_files, 'smiles')
+        voc_paths = DataPreparation(args.base_dir, args.voc_files, None, None, None).getVocPaths()
         voc = VocSmiles.fromFile(voc_paths[0], False, max_len=100)
     
     # Load generator model
     gen_path = args.base_dir + '/generators/' + args.generator + '.pkg'
     assert os.path.exists(gen_path)
-    agent = SetGeneratorAlgorithm(voc, args.mol_type, args.algorithm, args.gpu, args.use_gru)
-    agent.loadStatesFromFile(gen_path)
+    setup_generator = SetUpGenerator(args)
+    agent = setup_generator.setGeneratorAlgorithm(voc)
+    agent = setup_generator.loadStatesFromFile(agent, gen_path)
+  
     # Set up environment-predictor
-    env = CreateDesirabilityFunction(
+    env = CreateEnvironment(
         args.base_dir,
         args.env_alg,
         args.env_task,

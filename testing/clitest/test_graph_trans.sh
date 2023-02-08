@@ -48,7 +48,8 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
 -m PT \
--a graph
+-mt graph \
+-a trans
 echo "Test: Done."
 
 # finetuning
@@ -59,13 +60,14 @@ python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--pt "${PRETRAINING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
 -m FT \
--a graph
+-mt graph \
+-a trans
 echo "Test: Done."
 
-# # reinforcement learning
+# reinforcement learning
  echo $line
  echo "Test: RL for the fragment-based graph transformer..."
  echo $line
@@ -74,11 +76,12 @@ echo "Test: Done."
  ${TRAIN_VOCAB_ARGS} \
  ${TRAIN_RL_ARGS} \
  -i "${FINETUNING_PREFIX}" \
- -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
- -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+ -ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
+ -pr "${FINETUNING_PREFIX}_graph_trans_FT" \
  -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
  -m RL \
- -a graph
+ -mt graph \
+ -a trans
  echo "Test: Done."
 
 # scaffold-based RL
@@ -90,11 +93,12 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
 -i "${SCAFFOLD_PREFIX}_graph.txt" \
--ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
--pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+-ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
+-pr "${FINETUNING_PREFIX}_graph_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
 -m RL \
--a graph \
+-mt graph \
+-a trans \
 -ns "${TRAIN_BATCH}" 
 echo "Test: Done."
 
@@ -105,7 +109,7 @@ echo $line
 python -m drugex.designer \
 ${DESIGN_COMMON_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_graph_RL" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_trans_RL" \
 -vfs "${FINETUNING_PREFIX}" \
 --keep_invalid
 echo "Test: Done."
