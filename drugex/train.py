@@ -163,11 +163,13 @@ class DataPreparation():
 
     """ 
     Class for preparing data for training and testing from input files.
-    
-    Parameters
+
+    Attributes
     ----------
     base_dir : str
         Path to base directory.
+    data_dir : str
+        Path to data directory.
     voc_files : list
         List of vocabulary file names.
     input : str
@@ -178,6 +180,21 @@ class DataPreparation():
         Number of samples.
     """
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples):
+
+        """ 
+        Parameters
+        ----------
+        base_dir : str
+            Path to base directory.
+        voc_files : list
+            List of vocabulary file names.
+        input : str
+            Name of input file or prefix of input files.
+        batch_size : int
+            Batch size.
+        n_samples : int
+            Number of samples.
+        """
 
         self.base_dir = base_dir
         self.data_dir = f'{base_dir}/data'
@@ -244,13 +261,62 @@ class DataPreparation():
 
 class FragGraphDataPreparation(DataPreparation):
 
+    """ 
+    Data preprocessing for graph-based fragment generation.
+
+    Attributes
+    ----------
+    base_dir : str
+        Path to base directory.
+    data_dir : str
+        Path to data directory.
+    voc_files : list
+        List of vocabulary file names.
+    input : str
+        Name of input file or prefix of input files.
+    batch_size : int
+        Batch size.
+    n_samples : int
+        Number of samples.
+    unique_frags : bool
+        If True, only unique fragments are used for training.
+    mol_type : str
+        Type of molecule representation: 'graph'
+    """
+
     # Initialize class
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
         super().__init__(base_dir, voc_files, input, batch_size, n_samples)
         self.unique_frags = unique_frags
         self.mol_type = 'graph'
 
+        """ 
+        Parameters
+        ----------
+        base_dir : str
+            Path to base directory.
+        voc_files : list
+            List of vocabulary file names.
+        input : str
+            Name of input file or prefix of input files.
+        batch_size : int
+            Batch size.
+        n_samples : int
+            Number of samples.
+        unique_frags : bool
+            If True, only unique fragments are used for training.
+        """
+
     def __call__(self):
+
+        """
+        Get data loaders for training and testing and vocabulary.
+        
+        Returns
+        -------
+        Tuple[VocGraph, DataLoader, DataLoader]
+            Vocabulary, training data loader, and test data loader.
+        """
 
         # Get vocabulary and data paths
         voc_paths = self.getVocPaths()
@@ -278,13 +344,61 @@ class FragGraphDataPreparation(DataPreparation):
         return voc, train_loader, valid_loader
 
 class FragSmilesDataPreparation(DataPreparation):
+    """ 
+    Data preprocessing for SMILES-based fragment generation.
+
+    Attributes
+    ----------
+    base_dir : str
+        Path to base directory.
+    data_dir : str
+        Path to data directory.
+    voc_files : list
+        List of vocabulary file names.
+    input : str
+        Name of input file or prefix of input files.
+    batch_size : int
+        Batch size.
+    n_samples : int
+        Number of samples.
+    unique_frags : bool
+        If True, only unique fragments are used for training.
+    mol_type : str
+        Type of molecule representation: 'smiles'
+    """
 
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
         super().__init__(base_dir, voc_files, input, batch_size, n_samples)
+
+        """ 
+        Parameters
+        ----------
+        base_dir : str
+            Path to base directory.
+        voc_files : list
+            List of vocabulary file names.
+        input : str
+            Name of input file or prefix of input files.
+        batch_size : int
+            Batch size.
+        n_samples : int
+            Number of samples.
+        unique_frags : bool
+            If True, only unique fragments are used for training.
+        """
         self.unique_frags = unique_frags
         self.mol_type = 'smiles'
 
+
     def __call__(self):
+        """
+        Get data loaders for training and testing and vocabulary.
+        
+        Returns
+        -------
+        Tuple[VocSmiles, DataLoader, DataLoader]
+            Vocabulary, training data loader, and test data loader.
+        """
             
         # Get vocabulary and data paths
         voc_paths = self.getVocPaths()
@@ -307,41 +421,99 @@ class FragSmilesDataPreparation(DataPreparation):
         return voc, train_loader, valid_loader
     
 class SmilesDataPreparation(DataPreparation):
+    """ 
+    Data preprocessing for SMILES-based molecule generation.
+
+    Attributes
+    ----------
+    base_dir : str
+        Path to base directory.
+    data_dir : str
+        Path to data directory.
+    voc_files : list
+        List of vocabulary file names.
+    input : str
+        Name of input file or prefix of input files.
+    batch_size : int
+        Batch size.
+    n_samples : int
+        Number of samples.
+    unique_frags : bool
+        If True, only unique fragments are used for training.
+    mol_type : str
+        Type of molecule representation: 'smiles'
+    """
 
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
         super().__init__(base_dir, voc_files, input, batch_size, n_samples)
+        """ 
+        Parameters
+        ----------
+        base_dir : str
+            Path to base directory.
+        voc_files : list
+            List of vocabulary file names.
+        input : str
+            Name of input file or prefix of input files.
+        batch_size : int
+            Batch size.
+        n_samples : int
+            Number of samples.
+        unique_frags : bool
+            If True, only unique fragments are used for training.
+        """
         self.unique_frags = False
         self.mol_type = 'smiles'
 
     def __call__(self):
+        """
+        Get data loaders for training and testing and vocabulary.
+        
+        Returns
+        -------
+        Tuple[VocGraph, DataLoader, DataLoader]
+            Vocabulary, training data loader, and test data loader.
+        """
             
-            # Get vocabulary and data paths
-            voc_paths = self.getVocPaths()
-            train_path, test_path = self.getDataPaths()
-    
-            # Get training data loader
-            dataset_train = SmilesDataSet(train_path)
-            # TODO: SOFTCODE max_len ?
-            dataset_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
-            train_loader = dataset_train.asDataLoader(batch_size=self.batch_size, n_samples=self.n_samples)
- 
-            # Get test data loader
-            dataset_test = SmilesDataSet(test_path)
-            dataset_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
-            valid_loader = dataset_test.asDataLoader(batch_size=self.batch_size, n_samples=self.n_samples, n_samples_ratio=0.2)
-    
-            # Get vocabulary
-            voc = dataset_train.getVoc()
-            
-            return voc, train_loader, valid_loader
+        # Get vocabulary and data paths
+        voc_paths = self.getVocPaths()
+        train_path, test_path = self.getDataPaths()
+
+        # Get training data loader
+        dataset_train = SmilesDataSet(train_path)
+        # TODO: SOFTCODE max_len ?
+        dataset_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
+        train_loader = dataset_train.asDataLoader(batch_size=self.batch_size, n_samples=self.n_samples)
+
+        # Get test data loader
+        dataset_test = SmilesDataSet(test_path)
+        dataset_test.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
+        valid_loader = dataset_test.asDataLoader(batch_size=self.batch_size, n_samples=self.n_samples, n_samples_ratio=0.2)
+
+        # Get vocabulary
+        voc = dataset_train.getVoc()
+        
+        return voc, train_loader, valid_loader
 
 class SetUpGenerator():
 
+    """ 
+    Set up generator object for training or molecule generation
+    """
+
     def __init__(self, args):
-        # Set attributes from args
+
+        """ 
+        Set up generator object for training or molecule generation
+        
+        Parameters
+        ----------
+        args : object
+            Command line arguments
+        """
+        # Set up attributes from command line arguments
         for key, value in args.__dict__.items():
             setattr(self, key, value)
-        self.file_base = os.path.join(self.base_dir, 'data', self.output)
 
     def setGeneratorAlgorithm(self, voc):
 
@@ -374,6 +546,14 @@ class SetUpGenerator():
         return generator
     
     def prepareInputs(self):
+        """ 
+        Prepare inputs for training or molecule generation
+        
+        Returns
+        -------
+        Tuple[Vocabulary, DataLoader, DataLoader]
+            Vocabulary, training data loader, and test data loader.
+        """
 
         if self.mol_type == 'graph' and self.algorithm == 'trans':
             voc, train_loader, test_loader = FragGraphDataPreparation(self.base_dir, self.voc_files, self.input, self.batch_size, self.n_samples, self.unique_frags)()
@@ -389,6 +569,21 @@ class SetUpGenerator():
         return voc, train_loader, test_loader  
     
     def loadStatesFromFile(self, generator, generator_path):
+        """
+        Load pretrained weights from file
+
+        Parameters
+        ----------
+        generator : object
+            DrugEx Generator object
+        generator_path : str
+            Path to pretrained weights
+        
+        Returns
+        -------
+        generator : object
+            DrugEx Generator object
+        """
 
         # Load pretrained weights
         if os.path.exists(f'{generator_path}'):
@@ -404,12 +599,23 @@ class SetUpGenerator():
     
 class Pretrain(SetUpGenerator):
 
+    """ 
+    Pretrain generator
+    """
+
     # Initialize class
     def __init__(self, args):
         super().__init__(args)
+        """ 
+        Parameters
+        ----------
+        args : Namespace
+            Command line arguments
+        """
         self.unique_frags = False
 
     def __call__(self):
+        """ Pretrain generator """
 
         # Get vocabulary and data loaders
         voc, train_loader, test_loader = self.prepareInputs()
@@ -426,12 +632,22 @@ class Pretrain(SetUpGenerator):
 
 
 class Finetune(SetUpGenerator):
-    # Initialize class
+    """ 
+    Finetune generator
+    """
+
     def __init__(self, args):
         super().__init__(args)
+        """
+        Parameters
+        ----------
+        args : Namespace
+            Command line arguments
+        """
         self.unique_frags = False
 
     def __call__(self):
+        """ Finetune generator """
 
         # Get vocabulary and data loaders
         voc, train_loader, test_loader = self.prepareInputs()
@@ -449,13 +665,37 @@ class Finetune(SetUpGenerator):
 
 
 class Reinforce(SetUpGenerator):
+    """ Train generator with reinforcement learning """
 
     # Initialize class
     def __init__(self, args):
+        """ 
+        Parameters
+        ----------
+        args : Namespace
+            Command line arguments
+        """
         super().__init__(args)
         self.unique_frags = True
 
     def setExplorer(self, agent, prior, env):
+        """
+        Set explorer algorithm and parameters
+
+        Parameters
+        ----------
+        agent : object
+            DrugEx Generator object to be fitted
+        prior : object
+            DrugEx Generator object to be used as prior
+        env : object
+            DrugEx Environment object to score molecules
+
+        Returns
+        -------
+        explorer : object
+            DrugEx Explorer object
+        """
 
         kwargs = {
             'mutate': prior,
@@ -478,6 +718,7 @@ class Reinforce(SetUpGenerator):
         return explorer        
 
     def __call__(self):
+        """ Train generator with reinforcement learning """
             
         # Get vocabulary and data loaders
         voc, train_loader, test_loader = self.prepareInputs()
