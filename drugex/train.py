@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-import argparse
-import json
 import os
 import sys
+import json
+import argparse
 import warnings
 
 from drugex import VERSION
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
                                   SmilesFragDataSet)
-from drugex.data.utils import getDataPaths, getVocPaths
 from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
@@ -27,27 +26,25 @@ from drugex.training.scorers.similarity import (FraggleSimilarity,
                                                 TverskyFingerprintSimilarity,
                                                 TverskyGraphSimilarity)
 
+from qsprpred.scorers.predictor import Predictor
+
 warnings.filterwarnings("ignore")
     
-def GeneratorArgParser(txt=None):
+def GeneratorArgParser():
     """ Define and read command line arguments """
     
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
+    # I/O parameters
     parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains folders 'data' (and 'qspr')")
-    parser.add_argument('-d', '--debug', action='store_true')
-    
-    
+                        help="Base directory which contains folders 'data' (and 'qspr' if a QSPRpred model is used for scoring) and where 'generators' will be created to save output files.")
     parser.add_argument('-i', '--input', type=str, default=None,
-                        help="Full file name of input file used both as train and validation sets OR common prefix of train and validation set input files.")  
+                        help="Prefix (using separate files for training and validation) or \
+                          full name of input file(s) (used both for training and validation) containing encoded molecules or fragments-molecule pairs.")  
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=None,
-                        help="List of vocabulary files. If None, use internal defaults.")
+                        help="List of vocabulary files name (with or without the '.txt.vocab' extension). If None, set to be the first word of input and if no vocabulary file is found, a default vocabulary is used.")
     parser.add_argument('-o', '--output', type=str, default=None,
-                        help="Prefix of output files. If None, set to be the first word of input. ")     
-    parser.add_argument('-m', '--mode', type=str, default='RL',
-                        help="Mode, of the training: 'PT' for pretraining, 'FT' for fine-tuning and 'RL' for reinforcement learning") 
-    
+                        help="Prefix of output files. If None, set to be the first word of input.")
     # Input models 
     parser.add_argument('-ag', '--agent_path', type=str, default=None,
                         help="Name of model (w/o .pkg extension) or full path to agent model. Only used in FT and RL modes.")
@@ -55,42 +52,44 @@ def GeneratorArgParser(txt=None):
                         help="Name of model (w/o .pkg extension) of full path to prior model. Only used in RL mode.")
     
     # General parameters
+    parser.add_argument('-tm', '--training_mode', type=str, default='RL',
+                        help="Mode, of the training: 'PT' for pretraining, 'FT' for fine-tuning and 'RL' for reinforcement learning") 
     parser.add_argument('-mt', '--mol_type', type=str, default='graph',
                         help="Molecule encoding type: 'smiles' or 'graph'")    
     parser.add_argument('-a', '--algorithm', type=str, default='trans',
                         help="Generator algorithm: 'trans' (graph- or smiles-based transformer model) or "\
-                             "'rnn' (smiles, recurrent neural network based on DrugEx v2).")
+                             "'rnn' (smiles-based recurrent neural network).")
     parser.add_argument('-gru', '--use_gru', action='store_true',
                         help="If on, use GRU units for the RNN model. Ignore if algorithm is not 'rnn'")
     parser.add_argument('-e', '--epochs', type=int, default=1000,
-                        help="Number of epochs")
+                        help="Number of training epochs")
     parser.add_argument('-bs', '--batch_size', type=int, default=256,
                         help="Batch size")
     parser.add_argument('-gpu', '--use_gpus', type=str, default='1,2,3,4',
                         help="List of GPUs") 
+    parser.add_argument('-pa', '--patience', type=int, default=50,
+                        help="Number of epochs to wait before early stop if no progress on test set score")
     
     
     # RL parameters
-    parser.add_argument('-ns', '--n_samples', type=int, default=640, 
+    parser.add_argument('-ns', '--n_samples', type=int, default=-1, 
                         help="During RL, n_samples and 0.2*n_samples random input fragments are used for training and validation at each epoch. If -1, all input data is used at once each epoch.") 
-                         
     parser.add_argument('-eps', '--epsilon', type=float, default=0.1,
-                        help="Exploring rate")
+                        help="Exploring rate: probability of using the prior model instead of the agent model")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
-                        help="Reward baseline")
+                        help="Reward baseline used by the policy gradient algorithm")
     parser.add_argument('-s', '--scheme', type=str, default='PRTD',
-                        help="Reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance")
-    parser.add_argument('-pa', '--patience', type=int, default=50,
-                        help="Number of epochs to wait before early stop if no progress on test set score")
+                        help="Multi-objective reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance")
 
     # Affinity models
+    # TODO: modify once new serialization of qsprmodels and handling of objectives is implemented
     parser.add_argument('-et', '--env_task', type=str, default='CLS',
                         help="Environment-predictor task: 'REG' or 'CLS'")
     parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
                         help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")
-    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[], #'P29274', 'P29275', 'P30542','P0DMS8'],
+    parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is desirable")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
                         help="Target IDs for which activity is undesirable")
@@ -139,6 +138,7 @@ def GeneratorArgParser(txt=None):
     
     parser.add_argument('-ng', '--no_git', action='store_true',
                         help="If on, git hash is not retrieved")
+    parser.add_argument('-d', '--debug', action='store_true')
 
             
     args = parser.parse_args()
@@ -147,12 +147,15 @@ def GeneratorArgParser(txt=None):
     if args.output is None:
         args.output = args.input.split('_')[0]
 
+    # Setting vocabulary file names from input file
     if args.voc_files is None:
         args.voc_files = [args.input.split('_')[0]]
     
+    # Setting target IDs as union of active, inactive and window targets
     args.targets = args.active_targets + args.inactive_targets + args.window_targets
 
-    args.output_long = '_'.join([args.output, args.mol_type, args.algorithm, args.mode])
+    # Setting output file prefix 
+    args.output_long = '_'.join([args.output, args.mol_type, args.algorithm, args.training_mode])
     args.output_file_base = f'{args.base_dir}/generators/{args.output_long}'
 
     args.use_gpus = [int(x) for x in args.use_gpus.split(',')]
@@ -836,8 +839,6 @@ def CreateEnvironment(
         
     """
 
-    from qsprpred.scorers.predictor import Predictor
-
     # TODO: update cli documentation/tutorials to reflect new scheme abbreviations
     schemes = {
         "PRTD" : ParetoTanimotoDistance(),
@@ -975,11 +976,11 @@ if __name__ == "__main__":
         json.dump(vars(args), f)
 
     # Train generator
-    if args.mode == 'PT':
+    if args.training_mode == 'PT':
         Pretrain(args)()
-    elif args.mode == 'FT':
+    elif args.training_mode == 'FT':
         Finetune(args)()
-    elif args.mode == 'RL':
+    elif args.training_mode == 'RL':
         Reinforce(args)()
     else:
-        raise ValueError(f"--mode should be either 'PT', 'FT' or 'RL', you gave {args.mode}")
+        raise ValueError(f"--mode should be either 'PT', 'FT' or 'RL', you gave {args.training_mode}")
