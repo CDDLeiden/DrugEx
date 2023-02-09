@@ -31,7 +31,7 @@ def DatasetArgParser():
     parser.add_argument('-o', '--output', type=str, default='ligand',
                         help="Prefix of output files")   
     parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
-                        help="If on, intermediate files")
+                        help="If on, intermediate files are saved if --no_fragments is off: (train/test/unique) fragments-molecules pairs without encoding.")
     
     # Output data type parameters
     parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
@@ -39,17 +39,17 @@ def DatasetArgParser():
     parser.add_argument('-nof', '--no_fragments', action='store_true', 
                         help="If on, molecules are not split to fragments and a smiles corpus is created (for RNN-based models)")
     parser.add_argument('-s', '--scaffolds', action='store_true',
-                        help="In on, input smiles are treated as fragments instead of molecules")   
+                        help="In on, input smiles are treated as fragments instead of molecules. Only works if --no_fragments is off.")   
 
     # Fragmentation parameters
     parser.add_argument('-fm', '--frag_method', type=str, default='brics',
                         help="Fragmentation method: 'brics' or 'recap'") 
     parser.add_argument('-nf', '--n_frags', type=int, default=4,
-                        help="Number of largest leaf-fragments used per compound")
+                        help="Number of largest fragments used per compound")
     parser.add_argument('-nc', '--n_combs', type=int, default=None,
-                        help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
+                        help="Maximum number of fragments that are combined for each fragments-molecule pair. If None, default is {n_frags}")
     parser.add_argument('-nfs', '--no_fragment_split', action='store_true',
-                        help="If on, split fragment data sets to training, test and unique sets.")   
+                        help="If off, split fragment data sets to training, test and unique sets.")   
         
     # General parameters
     parser.add_argument('-d', '--debug', action='store_true')
