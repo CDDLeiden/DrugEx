@@ -47,7 +47,7 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
--m PT \
+-tm PT \
 -mt graph \
 -a trans
 echo "Test: Done."
@@ -62,7 +62,7 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
--m FT \
+-tm FT \
 -mt graph \
 -a trans
 echo "Test: Done."
@@ -79,7 +79,7 @@ echo "Test: Done."
  -ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
  -pr "${FINETUNING_PREFIX}_graph_trans_FT" \
  -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
- -m RL \
+ -tm RL \
  -mt graph \
  -a trans
  echo "Test: Done."
@@ -96,7 +96,7 @@ ${TRAIN_RL_ARGS} \
 -ag "${PRETRAINING_PREFIX}_graph_trans_PT" \
 -pr "${FINETUNING_PREFIX}_graph_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
--m RL \
+-tm RL \
 -mt graph \
 -a trans \
 -ns "${TRAIN_BATCH}" 

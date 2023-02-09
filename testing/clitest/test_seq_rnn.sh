@@ -24,7 +24,7 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
--m PT \
+-tm PT \
 -a rnn \
 -mt smiles
 echo "Test: Done."
@@ -38,7 +38,7 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}_${GRU_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
--m PT \
+-tm PT \
 -a rnn \
 -gru \
 -mt smiles
@@ -67,7 +67,7 @@ ${TRAIN_VOCAB_ARGS} \
 -ag "${PRETRAINING_PREFIX}_smiles_rnn_PT" \
 -o "${FINETUNING_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
--m FT \
+-tm FT \
 -a rnn \
 -mt smiles
 echo "Test: Done."
@@ -82,7 +82,7 @@ ${TRAIN_VOCAB_ARGS} \
 -ag "${PRETRAINING_PREFIX}_${GRU_PREFIX}_smiles_rnn_PT" \
 -o "${FINETUNING_PREFIX}_${GRU_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
--m FT \
+-tm FT \
 -a rnn \
 -gru \
 -mt smiles
@@ -101,7 +101,7 @@ ${TRAIN_RL_ARGS} \
 -pr "${FINETUNING_PREFIX}_smiles_rnn_FT" \
 -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
--m RL \
+-tm RL \
 -a rnn \
 -mt smiles
 echo "Test: Done."
@@ -117,7 +117,7 @@ ${TRAIN_RL_ARGS} \
 -ag "${PRETRAINING_PREFIX}_${GRU_PREFIX}_smiles_rnn_PT" \
 -pr "${FINETUNING_PREFIX}_${GRU_PREFIX}_smiles_rnn_FT" \
 -o "${FINETUNING_PREFIX}_${GRU_PREFIX}_${RL_PREFIX}" \
--m RL \
+-tm RL \
 -a rnn \
 -gru \
 -mt smiles 

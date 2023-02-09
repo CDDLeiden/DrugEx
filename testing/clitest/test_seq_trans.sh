@@ -45,7 +45,7 @@ ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
--m PT \
+-tm PT \
 -a trans \
 -mt smiles
 echo "Test: Done."
@@ -60,7 +60,7 @@ ${TRAIN_VOCAB_ARGS} \
 -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
--m FT \
+-tm FT \
 -a trans \
 -mt smiles
 echo "Test: Done."
@@ -77,7 +77,7 @@ echo "Test: Done."
  -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
  -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
  -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
- -m RL \
+ -tm RL \
  -a trans \
  -mt smiles
  echo "Test: Done."
@@ -94,7 +94,7 @@ ${TRAIN_RL_ARGS} \
 -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
 -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
--m RL \
+-tm RL \
 -a trans \
 -mt smiles \
 -ns 32
