@@ -48,3 +48,4 @@ Refactoring of CLI
 ## New Features
 
 - GRU-based RNN added to the CLI 
+- added another possible implementation of similarity ranking (`MutualSimilaritySortRanking`), this is based on the code in the original repository of [DrugEx](https://github.com/XuhanLiu/DrugEx/blob/cd384f4a8ed4982776e92293f77afd4ea78644f9/utils/nsgaii.py#L92)
