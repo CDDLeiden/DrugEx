@@ -51,7 +51,7 @@ class RankingStrategy(ABC):
     """
     Ranks the given molecules according to their scores.
 
-    The implementing classes can get a paretor from by calling `RankingStrategy.getParetoFronts()` on the input scores.
+    The implementing classes can get a pareto front by calling `RankingStrategy.getParetoFronts()` on the input scores.
 
     """
 

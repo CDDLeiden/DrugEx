@@ -5,6 +5,8 @@ Created by: Martin Sicho
 On: 26.06.22, 18:07
 """
 import numpy as np
+
+from drugex import DEFAULT_DEVICE
 from drugex.logs import logger
 from drugex.training.interfaces import RankingStrategy, RewardScheme
 from drugex.utils.fingerprints import get_fingerprint
@@ -23,8 +25,7 @@ class NSGAIIRanking(RankingStrategy):
         Parameters
         ----------
         smiles : list
-            List of SMILES sequence to be ranked
-            TODO : why here smiles are needed?
+            List of SMILES sequence to be ranked (not used in the calculation -> just a requirement of the interface because some ranking strategies need it)
         scores : np.ndarray
             matrix of scores for the multiple objectives
 
@@ -63,11 +64,20 @@ class NSGAIIRanking(RankingStrategy):
         return rank
 
 
-class SimilarityRanking(RankingStrategy):
-
+class MinMeanSimilarityRanking(RankingStrategy):
     """
     Revised crowding distance algorithm to rank the solutions in the same pareto frontier with Tanimoto-distance.
     """
+
+    def __init__(self, device=DEFAULT_DEVICE, func='mean'):
+        """
+        Args:
+            device: pytorch device
+            func: 'min' or 'mean' - how to calculate the similarity between the molecules in the same front
+        """
+
+        super().__init__(device=device)
+        self.func = np.min if func == 'min' else np.mean
 
     @staticmethod
     def calc_fps(mols, fp_type='ECFP6'):
@@ -94,9 +104,29 @@ class SimilarityRanking(RankingStrategy):
                 fps.append(None)
         return fps
 
-    def __call__(self, smiles, scores, func='min'):
+    def getFPs(self, smiles):
         """
-        Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.
+        Calculate fingerprints for a list of molecules.
+
+        Args:
+            smiles: smiles to calculate fingerprints for
+
+        Returns:
+            list of RDKit fingerprints
+        """
+
+        mols = [Chem.MolFromSmiles(smile) for smile in smiles]
+        return self.calc_fps(mols)
+
+
+    def __call__(self, smiles, scores):
+        """
+        Revised crowding distance algorithm to rank the solutions in the same frontier with Tanimoto-distance.
+        Molecules with the lowest Tanimoto-distance to the other molecules in the same front are ranked first.
+
+        Args:
+            smiles (list): List of SMILES sequence to be ranked
+            scores (np.ndarray): matrix of scores for the multiple objectives
 
         Parameters
         ----------
@@ -112,25 +142,49 @@ class SimilarityRanking(RankingStrategy):
         rank : np.array
             Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
         """
-
-        func = np.min if func == 'min' else np.mean
-        mols = [Chem.MolFromSmiles(smile) for smile in smiles]
-        fps = self.calc_fps(mols)
-
+        fps = self.getFPs(smiles)
         fronts = self.getParetoFronts(scores)
 
         rank = []
         for i, front in enumerate(fronts):
             front_fps = [fps[f] for f in front]
             if len(front) > 2 and None not in front_fps:
-                dist = np.zeros(len(front))
-                # find the min/average tanimoto distance for each fingerprint to all other fingerprints in the front
+                # find the min/average tanimoto distance for each molecule to all other molecules in the front
                 dist = np.array(
-                    [func(1 - np.array(DataStructs.BulkTanimotoSimilarity(fp, list(np.delete(front_fps, idx)))))
+                    [self.func(1 - np.array(DataStructs.BulkTanimotoSimilarity(fp, list(np.delete(front_fps, idx)))))
                      for idx, fp in enumerate(front_fps)])
-                fronts[i] = front[dist.argsort()]
+                fronts[i] = front[dist.argsort()] # sort front (molecule with the lowest min/average distance to the others is first)
             elif None in front_fps:
                 logger.warning("Invalid molecule in front. Front not ranked.")
+            rank.extend(fronts[i].tolist())
+        return rank # sorted list of all molecules in all fronts (molecules with the lowest min/average distance to the others are ranked first)
+
+class MutualSimilaritySortRanking(MinMeanSimilarityRanking):
+    """
+    Alternative implementation of the `MinMeanSimilarityRanking` ranking strategy that tries
+    to more closely emulate the crowding distance with fingerprint similarities. Adapted
+    from the original code by @XuhanLiu (https://github.com/XuhanLiu/DrugEx/blob/cd384f4a8ed4982776e92293f77afd4ea78644f9/utils/nsgaii.py#L92).
+    """
+
+    def __call__(self, smiles, scores):
+        fps = self.getFPs(smiles)
+        fronts = self.getParetoFronts(scores)
+
+        rank = []
+        for i, front in enumerate(fronts):
+            fp = [fps[f] for f in front]
+            if len(front) > 2 and None not in fp:
+                dist = np.zeros(len(front)) # array of cumulative crowded similarity distance scores for each molecule in the front -> the higher the score, the more diverse the 'crowd' around the molecule -> the better the reward in the end
+                for j in range(len(front)): # for each molecule in the front
+                    tanimoto = 1 - np.array(DataStructs.BulkTanimotoSimilarity(fp[j], fp)) # calculate tanimoto distance to all other molecules in the front
+                    order = tanimoto.argsort() # get the order from lowest to highest tanimoto distance (the molecule j itself is at index 0)
+                    dist[order[0]] += 0 # the molecule itself is scored 0 because we want a diverse set and this is the baseline lowest score
+                    dist[order[-1]] += 10 ** 4 # ensure the farthest molecule always gets the highest score
+                    for k in range(1, len(order) - 1): # for all other molecules in the front
+                        # save the sum of the differences in distances between molecule j and the other molecules in the front
+                        # in other words: measure how the other molecules 'crowd' together around molecule j
+                        dist[order[k]] += tanimoto[order[k + 1]] - tanimoto[order[k - 1]]
+                fronts[i] = front[dist.argsort()]
             rank.extend(fronts[i].tolist())
         return rank
 
@@ -140,7 +194,7 @@ class ParetoTanimotoDistance(RewardScheme):
     Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
     """
 
-    def __init__(self, ranking=SimilarityRanking()):
+    def __init__(self, ranking=MinMeanSimilarityRanking()):
         super().__init__(ranking)
         """
         Parameters
