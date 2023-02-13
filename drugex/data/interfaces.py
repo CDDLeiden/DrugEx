@@ -46,17 +46,28 @@ class DataSet(ResultCollector, ABC):
     Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.
     """
 
-    def __init__(self, path, rewrite=False):
+    def __init__(self, path, rewrite=False, save_voc=True, voc_file=None):
         """
         Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.
 
         If the associated file already exists, the data is loaded automatically upon initialization.
 
-        Args:
-            path: path to the output file.
+        Parameters
+        ----------
+        path : str
+            Path to the file to use for this `DataSet`.
+        rewrite : bool
+            If `True`, the associated file is deleted and a new one is created. If `False`, the data is loaded from the file if it exists.
+        save_voc : bool
+            If `True`, the vocabulary is saved to a separate file. If `False`, the vocabulary is not saved.
+        voc_file : str
+            Path to the file to use for the vocabulary. If `None`, the vocabulary is saved to a file with the same name as the data set file but with the `.vocab` extension.
         """
 
         self.outpath = path
+        self.save_voc = save_voc
+        self.voc_file = voc_file
+
         if not os.path.exists(os.path.dirname(self.outpath)):
             os.makedirs(os.path.dirname(self.outpath))
         self.voc = None
@@ -80,7 +91,10 @@ class DataSet(ResultCollector, ABC):
         logger.info(f"{self} initialized.")
 
     def getVocPath(self):
-        return f"{self.outpath}.vocab"
+        if self.voc_file:
+            return self.voc_file
+        else:
+            return f'{self.outpath}.vocab'
 
     def sendDataToFile(self, data, columns=None):
         header_written = os.path.isfile(self.outpath)
@@ -120,12 +134,14 @@ class DataSet(ResultCollector, ABC):
         Returns:
             `None`
         """
+
         if not self.voc:
             self.voc = voc
         else:
             self.voc += voc
 
-        self.voc.toFile(self.getVocPath())
+        if self.save_voc:
+            self.voc.toFile(self.getVocPath())   
 
     def getVoc(self):
         """

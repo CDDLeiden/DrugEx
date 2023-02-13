@@ -44,7 +44,7 @@ class DrugExEnvironment(Environment):
 
         # Get scores per objective from the scorers
         for scorer in self.scorers:
-            scores.loc[:, scorer.getKey()] = scorer.getScores(mols)
+            scores.loc[:, scorer.getKey()] = scorer(mols)
 
         # Check if the molecule is desirable
         undesire = (scores[self.getScorerKeys()] < self.thresholds)  # ^ self.objs.on

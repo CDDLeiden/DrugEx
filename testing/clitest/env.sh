@@ -26,6 +26,7 @@ function cleanup() {
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.vocab;
   rm -rf ${TEST_BASE}/data/${VOC_PREFIX}_*.txt;
+  rm -rf ${TEST_BASE}/data/${SCAFFOLD_PREFIX}_*;
   rm -rf ${TEST_BASE}/data/*.log;
   rm -rf ${TEST_BASE}/data/*.json;
   rm -rf ${TEST_BASE}/generators;
@@ -49,7 +50,7 @@ export N_TRIALS=2
 ###########
 # DATASET #
 ###########
-export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sv -sif"
+export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sif"
 export DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nf ${N_COMBINATIONS} -nf ${N_FRAGS}"
 
 ############

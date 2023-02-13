@@ -2,110 +2,111 @@
 
 set -e
 
-# pretraining data
 echo $line
-echo "Test: Generate data for pretraining the fragment-based graph transformer..."
+echo "Test: Generate data for pretraining the fragment-based sequence models..."
 echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_PRETRAINING} \
 -o ${PRETRAINING_PREFIX} \
--mt graph ${DATASET_FRAGMENT_ARGS}
+-mt smiles \
+${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
-# finetuning data
 echo $line
-echo "Test: Generate data for finetuning the fragment-based graph transformer..."
+echo "Test: Generate data for finetuning the fragment-based sequence models..."
 echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX} \
--mt graph \
+-mt smiles \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
-# scaffold-based RL data
 echo $line
-echo "Test: Generate data for scaffold-based RL of the fragment-based graph models..."
+echo "Test: Generate data for scaffold-based RL of the fragment-based sequence models..."
 echo $line
 python -m drugex.dataset \
 ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_SCAFFOLD} \
 -o ${SCAFFOLD_PREFIX} \
--mt graph \
+-mt smiles \
 -s \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
-# pretraining
 echo $line
-echo "Test: Pretrain fragment-based graph transformer..."
+echo "Test: Pretrain fragment-based sequence transformer model..."
 echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
--m PT \
--a graph
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm PT \
+-a trans \
+-mt smiles
 echo "Test: Done."
 
-# finetuning
 echo $line
-echo "Test: Fine-tune fragment-based graph transformer..."
+echo "Test: Fine-tune fragment-based sequence transformer..."
 echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--pt "${PRETRAINING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
--m FT \
--a graph
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm FT \
+-a trans \
+-mt smiles
 echo "Test: Done."
 
-# # reinforcement learning
  echo $line
- echo "Test: RL for the fragment-based graph transformer..."
+ echo "Test: RL for the fragment-based sequence transformer..."
  echo $line
  python -m drugex.train \
  ${TRAIN_COMMON_ARGS} \
  ${TRAIN_VOCAB_ARGS} \
  ${TRAIN_RL_ARGS} \
  -i "${FINETUNING_PREFIX}" \
- -ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
- -pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+ -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
+ -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
  -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
- -m RL \
- -a graph
+ -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+ -tm RL \
+ -a trans \
+ -mt smiles
  echo "Test: Done."
 
-# scaffold-based RL
 echo $line
-echo "Test: scaffold-based RL for the fragment-based graph transformer..."
+echo "Test: scaffold-based RL for the fragment-based sequence transformer..."
 echo $line
 python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
--i "${SCAFFOLD_PREFIX}_graph.txt" \
--ag "${PRETRAINING_PREFIX}_graph_graph_PT" \
--pr "${FINETUNING_PREFIX}_graph_graph_FT" \
+-i "${SCAFFOLD_PREFIX}_smi.txt" \
+-ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
+-pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
--m RL \
--a graph \
--ns "${TRAIN_BATCH}" 
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm RL \
+-a trans \
+-mt smiles \
+-ns 32
 echo "Test: Done."
 
-# generate
 echo $line
-echo "Test: Generate molecules with graph transformer ..."
+echo "Test: Generate molecules with sequence transformer ..."
 echo $line
 python -m drugex.designer \
 ${DESIGN_COMMON_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_graph_RL" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
 -vfs "${FINETUNING_PREFIX}" \
 --keep_invalid
 echo "Test: Done."

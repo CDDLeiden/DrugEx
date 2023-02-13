@@ -34,6 +34,17 @@ Major refactoring of `drugex.training`
 
 - Remove all references to NN-based RAscore (already discontinued)
 
+Refactoring of CLI
+
+- Refactoring `dataset.py` and `train.py` to object based
+- Writting a single `.txt.vocab` file per dataset preprocessing instead of separate (duplicate) files for each subset in `dataset.py`
+
+## Removed
+
+- `--save_voc` argument in `dataset.py` as redundant
+- `--pretrained_model` argment in `train.py` (merged with `--agent_path`)
+
+
 ## New Features
 
 - GRU-based RNN added to the CLI 

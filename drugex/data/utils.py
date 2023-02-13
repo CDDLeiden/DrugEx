@@ -3,22 +3,57 @@ import os
 from drugex import VERSION
 from drugex.logs import logger
 
-def getVocPaths(data_path, voc_files, mol_type):
+def getVocPaths(data_path, voc_files):
+    """ 
+    Get paths to vocabulary files. If none are found, use internal defaults.
+    
+    Parameters
+    ----------
+    data_path : str
+        Path to data directory.
+    voc_files : list
+        List of vocabulary file names.
+        
+    Returns
+    -------
+    list
+        List of paths to vocabulary files.
+    """
 
     voc_paths = []
-    for v in voc_files:
-        path = data_path + f"{v}_{mol_type}_voc.txt"
-        if not os.path.exists(path):
-            logger.warning(f'Reading {mol_type}_voc.txt instead of {path}')
-            path = data_path + f"{mol_type}_voc.txt"
+    for voc_file in voc_files:
+        path = f'{data_path}/{voc_file}'
         if os.path.exists(path):
             voc_paths.append(path)
         else:
-            logger.warning(f"No vocabulary files found. Using internal defaults for DrugEx v{VERSION}.")
+            logger.warning(f'Could not find vocabulary file {voc_file} in {data_path}.')
+            
+    if len(voc_paths) == 0 :
+        logger.warning(f'No vocabulary files found. Using internal defaults for DrugEx v{VERSION}.')
 
     return voc_paths
 
 def getDataPaths(data_path, input_prefix, mol_type, unique_frags):
+
+    """ 
+    Get paths to training and test data files.
+    
+    Parameters
+    ----------
+    data_path : str
+        Path to data directory.
+    input_prefix : str
+        Prefix of data files. If a file with the exact name exists, it is used for both training and testing.
+    mol_type : str
+        Type of molecules in data files. Either 'smiles' or 'graph'.
+    unique_frags : bool
+        Whether to use unique fragments or not.
+    
+    Returns
+    -------
+    Tuple[str, str]
+        Paths to training and test data files.
+    """
 
     # If exact data path was given as input, that data is both used for training and testing
     if os.path.exists(data_path + input_prefix):
