@@ -1,18 +1,14 @@
-from copy import deepcopy
-
 import numpy as np
 import pandas as pd
 import torch
 from tqdm.auto import tqdm
 from torch import nn
 from torch import optim
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from rdkit import Chem
 
-from drugex.logs import logger
 from drugex.training.generators.interfaces import Generator
 from drugex.training.scorers.smiles import SmilesChecker
-from drugex.training.monitors import NullMonitor
 
 
 class SequenceRNN(Generator):

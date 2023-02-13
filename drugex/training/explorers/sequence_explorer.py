@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from copy import deepcopy
 
-import random
 import torch
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 import time

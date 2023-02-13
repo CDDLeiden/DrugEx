@@ -7,9 +7,7 @@ On: 01.06.22, 11:29
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-import numpy as np
 from scipy.stats import gmean
-from typing import List, Tuple, Union, Dict, Optional
 
 import torch
 from torch import nn
@@ -18,8 +16,6 @@ from tqdm import tqdm
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
 from drugex.training.interfaces import Model
-from torch.utils.data import DataLoader
-#from drugex.training.monitors import NullMonitor
 
 class Explorer(Model, ABC):
     """

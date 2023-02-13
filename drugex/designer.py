@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 import argparse
 import json
-import math
 import os
 
-import pandas as pd
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
 from drugex.data.utils import getVocPaths

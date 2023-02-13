@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-from copy import deepcopy
 
 import torch
-from torch import nn
 from torch.optim import Adam
 from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
 from torch.utils.data import DataLoader
@@ -10,7 +8,6 @@ from tqdm.auto import tqdm
 
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import FragExplorer
-from drugex.training.monitors import NullMonitor
 
 
 class FragGraphExplorer(FragExplorer):
