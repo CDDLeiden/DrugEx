@@ -24,7 +24,7 @@ class SequenceExplorer(Explorer):
                J Cheminform (2021). https://doi.org/10.1186/s13321-019-0355-6
     """
 
-    def __init__(self, agent, env, mutate=None, crover=None, memory=None, no_multifrag_smiles=True,
+    def __init__(self, agent, env, mutate=None, crover=None, no_multifrag_smiles=True,
         batch_size=128, epsilon=0.1, beta=0.0, n_samples=128, optim=None,
         device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceExplorer, self).__init__(agent, env, mutate, crover, no_multifrag_smiles, batch_size, epsilon, beta, n_samples, device, use_gpus)
@@ -39,8 +39,6 @@ class SequenceExplorer(Explorer):
             The pre-trained network which increases the exploration of the chemical space.
         crover : drugex.training.generators.SequenceRNN
             The iteratively updated network which increases the exploitation of the chemical space.
-        memory : torch.Tensor
-            The memory of the agent network.
         no_multifrag_smiles : bool
             If True, only single-fragment SMILES are valid.
         batch_size : int
@@ -60,7 +58,6 @@ class SequenceExplorer(Explorer):
         """
         
         self.repeats_per_epoch = 10
-        self.memory = memory
         self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3) if optim is None else optim
 
     def forward(self):
@@ -80,9 +77,6 @@ class SequenceExplorer(Explorer):
             seq = self.agent.evolve(self.batchSize, epsilon=self.epsilon, crover=self.crover, mutate=self.mutate)
             seqs.append(seq)
         seqs = torch.cat(seqs, dim=0)
-        if self.memory is not None:
-            mems = [self.memory, seqs]
-            seqs = torch.cat(mems)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
         ix = utils.unique(np.array([[s] for s in smiles]))
         smiles = smiles[ix]
@@ -106,12 +100,6 @@ class SequenceExplorer(Explorer):
 
         # Calculate the reward from SMILES with the environment
         reward = self.env.getRewards(smiles, frags=None)
-        
-        # TODO: understand what is this
-        if self.memory is not None:
-            scores[:len(self.memory), 0] = 1
-            ix = scores[:, 0].argsort()[-self.batchSize * 4:]
-            seqs, scores = seqs[ix, :], scores[ix, :]
 
         # Move rewards to device and create a loader containing the sequences and the rewards
         ds = TensorDataset(seqs, torch.Tensor(reward).to(self.device))
@@ -166,14 +154,8 @@ class SequenceExplorer(Explorer):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             
-            # TODO: once we understand what is this, maybe the if-else can be removed as forward()
-            # does not have any arguments anymore (all arguments are now class attributes)
-            if epoch < patience and self.memory is not None:
-                smiles, seqs = self.forward(crover=None, memory=self.memory, epsilon=1e-1)
-                self.policy_gradient(smiles, seqs, memory=self.memory)
-            else:
-                smiles, seqs = self.forward()
-                self.policy_gradient(smiles, seqs)
+            smiles, seqs = self.forward()
+            self.policy_gradient(smiles, seqs)
 
             # Evaluate the model on the validation set
             smiles = self.agent.sample(self.nSamples)
