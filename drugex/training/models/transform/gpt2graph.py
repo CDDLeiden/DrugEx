@@ -355,6 +355,7 @@ class GraphModel(Base):
         if progress:
             pbar.close()
         smiles = smiles[:num_samples]
+        frags = frags[:num_samples]
         if keep_frags:
             return smiles, frags
         return smiles
