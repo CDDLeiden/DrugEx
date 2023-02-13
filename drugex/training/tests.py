@@ -332,7 +332,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
-        pretrained.generate(num_samples=10, evaluator=environment, drop_undesired=False)
+        pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False)
 
     def test_graph_transformer(self):
         """
@@ -395,7 +395,7 @@ class TrainingTestCase(TestCase):
         pretrained.generate([
             "c1ccncc1CCC",
             "CCO"
-        ], num_samples=1, evaluator=environment, drop_undesired=False)
+        ], num_samples=1, evaluator=environment, drop_invalid=False)
 
     def test_graph_transformer_scaffold(self):
         """
@@ -466,7 +466,7 @@ class TrainingTestCase(TestCase):
         pretrained.generate([
             "c1ccncc1CCC",
             "CCO"
-        ], num_samples=1, evaluator=environment, drop_undesired=False)
+        ], num_samples=1, evaluator=environment, drop_invalid=False)
 
     def test_sequence_transformer_scaffold(self):
         """
