@@ -133,10 +133,13 @@ class GPT2Model(SmilesFragsGeneratorBase):
         smiles, frags = [], []
         while not len(smiles) >= num_samples:
             with torch.no_grad():
-                src = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
+                # src is fragments contained in input SMILES
+                src, _ = next(iter(out_data.asDataLoader(batch_size, n_samples=batch_size)))
+                # Create complete molecules from src fragments
                 trg = net(src.to(self.device))
-                new_smiles = self.voc_trg.decode(trg, is_tk=False)
-                new_frags = self.voc_trg.decode(src, is_tk=False, is_smiles=True)
+                # Convert back to SMILES
+                new_smiles = [self.voc_trg.decode(t, is_tk=False, is_smiles=True) for t in trg]
+                new_frags = [self.voc_trg.decode(s, is_tk=False, is_smiles=True) for s in src]
                 # drop duplicates
                 if drop_duplicates:
                     new_smiles = np.array(new_smiles)
