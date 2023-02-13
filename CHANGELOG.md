@@ -43,6 +43,7 @@ Refactoring of CLI
 
 - `--save_voc` argument in `dataset.py` as redundant
 - `--pretrained_model` argment in `train.py` (merged with `--agent_path`)
+- `memory` parameter and all associated code from in `SequenceRNN`
 
 
 ## New Features
