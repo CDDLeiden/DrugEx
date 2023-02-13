@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import FragExplorer
+from drugex.training.generators.utils import pad_mask, tri_mask
 
 
 class FragSequenceExplorer(FragExplorer):
@@ -72,8 +73,8 @@ class FragSequenceExplorer(FragExplorer):
 
         for step in range(self.agent.voc_trg.max_len):  # decode up to max length
             sub = out[:, :src.size(1) + step]
-            key_mask = utils.pad_mask(sub, self.agent.pad_idx)
-            atn_mask = utils.tri_mask(sub)
+            key_mask = pad_mask(sub, self.agent.pad_idx)
+            atn_mask = tri_mask(sub)
             rand = torch.rand(1)
             if self.epsilon < rand <= 0.5 and self.crover is not None:
                 dec = self.crover.gpt2(sub.transpose(0, 1), key_mask=key_mask, atn_mask=atn_mask)

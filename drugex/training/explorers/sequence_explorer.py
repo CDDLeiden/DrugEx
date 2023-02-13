@@ -11,6 +11,7 @@ import numpy as np
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import Explorer
 from drugex.training.monitors import NullMonitor
+from drugex.training.generators.utils import unique
 
  
 class SequenceExplorer(Explorer):
@@ -77,7 +78,7 @@ class SequenceExplorer(Explorer):
             seqs.append(seq)
         seqs = torch.cat(seqs, dim=0)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
-        ix = utils.unique(np.array([[s] for s in smiles]))
+        ix = unique(np.array([[s] for s in smiles]))
         smiles = smiles[ix]
         seqs = seqs[torch.LongTensor(ix).to(self.device)]
         return smiles, seqs

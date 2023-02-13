@@ -1,8 +1,8 @@
 ''' Define the Layers '''
+import math
 import torch
 import torch.nn as nn
-import math
-
+import numpy as np
 
 def pad_mask(seq, pad_idx=0):
     return seq == pad_idx
@@ -14,6 +14,18 @@ def tri_mask(seq, diag=1):
     masks = torch.ones((len_s, len_s)).triu(diagonal=diag)
     masks = masks.bool().to(seq.device)
     return masks
+
+
+def unique(arr):
+    # Finds unique rows in arr and return their indices
+    if type(arr) == torch.Tensor:
+        arr = arr.cpu().numpy()
+    arr_ = np.ascontiguousarray(arr).view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[1])))
+    _, idxs = np.unique(arr_, return_index=True)
+    idxs = np.sort(idxs)
+    if type(arr) == torch.Tensor:
+        idxs = torch.LongTensor(idxs).to(arr.get_device())
+    return idxs
 
 
 class PositionwiseFeedForward(nn.Module):

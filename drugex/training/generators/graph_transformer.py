@@ -9,7 +9,7 @@ from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.datasets import GraphFragDataSet
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
-from drugex.training.generators.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
+from drugex.training.generators.utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
 from drugex.training.generators.interfaces import FragGenerator
 from drugex.utils import ScheduledOptim
 from torch import optim

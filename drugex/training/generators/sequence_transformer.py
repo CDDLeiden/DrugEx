@@ -12,7 +12,7 @@ from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.data.fragments import SequenceFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.datasets import SmilesFragDataSet
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
-from drugex.training.generators.transformer_utils import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection, pad_mask, tri_mask
+from drugex.training.generators.utils import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection, pad_mask, tri_mask
 from drugex.training.generators.interfaces import FragGenerator
 from drugex.utils import ScheduledOptim
 

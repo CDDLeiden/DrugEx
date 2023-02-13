@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import FragExplorer
+from drugex.training.generators.utils import tri_mask
 
 
 class FragGraphExplorer(FragExplorer):
@@ -88,7 +89,7 @@ class FragGraphExplorer(FragExplorer):
                 src[:, step, :] = 0
                 continue
             data = src[:, :step, :]
-            triu = utils.tri_mask(data[:, :, 0])
+            triu = tri_mask(data[:, :, 0])
             emb = net.emb_word(data[:, :, 3] + data[:, :, 0] * 4)
             emb += net.emb_site(data[:, :, 1] * net.n_grows + data[:, :, 2])
             dec = net.attn(emb.transpose(0, 1), attn_mask=triu)
@@ -171,7 +172,7 @@ class FragGraphExplorer(FragExplorer):
         is_end = torch.zeros(len(src)).bool().to(src.device)
         for step in range(net.n_grows + 1, net.voc_trg.max_len):
             data = src[:, :step, :]
-            triu = utils.tri_mask(data[:, :, 0])
+            triu = tri_mask(data[:, :, 0])
             emb = net.emb_word(data[:, :, 3] + data[:, :, 0] * 4)
             emb += net.emb_site(data[:, :, 1] * net.n_grows + data[:, :, 2])
             dec = net.attn(emb.transpose(0, 1), attn_mask=triu)
