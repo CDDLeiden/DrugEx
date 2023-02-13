@@ -1,6 +1,5 @@
 import tempfile
 
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -8,16 +7,12 @@ from tqdm.auto import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.data.fragments import GraphFragmentEncoder, FragmentCorpusEncoder
-from drugex.data.processing import Standardization
 from drugex.data.datasets import GraphFragDataSet
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
-from drugex.training.generators.transformer_utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
+from drugex.training.generators.utils import PositionwiseFeedForward, SublayerConnection, PositionalEncoding, tri_mask
 from drugex.training.generators.interfaces import FragGenerator
 from drugex.utils import ScheduledOptim
-from drugex.training.scorers.smiles import SmilesChecker
 from torch import optim
-
-from ..monitors import NullMonitor
 
 
 class Block(nn.Module):

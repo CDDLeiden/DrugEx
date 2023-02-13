@@ -1,11 +1,9 @@
 import tempfile
 import torch
 
-import numpy as np
 import pandas as pd
 import torch.nn as nn
 
-from rdkit import Chem
 from torch import optim
 from torch.nn.init import kaiming_normal_
 from tqdm.auto import tqdm
@@ -13,12 +11,10 @@ from tqdm.auto import tqdm
 from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.data.fragments import SequenceFragmentEncoder, FragmentCorpusEncoder
 from drugex.data.datasets import SmilesFragDataSet
-from drugex.logs import logger
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
-from drugex.training.generators.transformer_utils import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection, pad_mask, tri_mask
+from drugex.training.generators.utils import PositionalEmbedding, PositionwiseFeedForward, SublayerConnection, pad_mask, tri_mask
 from drugex.training.generators.interfaces import FragGenerator
 from drugex.utils import ScheduledOptim
-from drugex.training.scorers.smiles import SmilesChecker
 
 
 class Block(nn.Module):
