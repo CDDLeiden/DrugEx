@@ -293,7 +293,7 @@ class SequenceRNN(Generator):
 
     def generate(self, num_samples=100, batch_size=32, n_proc=1,
                 drop_duplicates=True, drop_invalid=True, 
-                evaluator=None, no_multifrag_smiles=True, drop_undesired=True, raw_scores=True, compute_desirability=True,
+                evaluator=None, no_multifrag_smiles=True, drop_undesired=False, raw_scores=True,
                 progress=True, tqdm_kwargs={}):
         
         if progress:
@@ -327,10 +327,8 @@ class SequenceRNN(Generator):
         # Post-processing
         df_smiles = pd.DataFrame({'SMILES': smiles})
 
-        if compute_desirability:
-            df_smiles['Desired'] = self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).Desired
-        if raw_scores:
-            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
+        if evaluator:
+            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
 
         return df_smiles
 
