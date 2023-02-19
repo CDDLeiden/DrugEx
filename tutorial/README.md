@@ -8,10 +8,11 @@ This tutorial is a collection of Jupyter notebooks that show how various DrugEx 
    - this is a more advanced tutorial and knowledge of some terms from the previous one is assumed
 <!-- 3. [SMILES Sequence Transformer](SMILES-Transformer.ipynb) -->
 
-Before you begin, you should install the DrugEx package and its dependencies and also the environment for this tutorial:
+## Installation
+
+Before you begin, you should install the DrugEx package and the dependencies for this tutorial. You will find everything you need in the `requirements.txt` file and can use pip to install everything:
 
 ```bash
-pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 pip install -r requirements.txt
 ```
 
@@ -19,4 +20,12 @@ Subsequently, you should also download the tutorial models and data with the dow
 
 ```bash
 drugex dowload
+```
+
+### Google Colab
+
+If you are using Google Colab, just open one of the notebooks above and you can run the following cell to install everything you need:
+
+```python
+!bash colab.sh
 ```

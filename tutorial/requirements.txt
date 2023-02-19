@@ -1,4 +1,5 @@
 jupyterlab
 mols2grid
-git+https://github.com/CDDLeiden/QSPRPred.git@1.2.0#egg=qsprpred
-git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@v0.4.0#egg=papyrus-scaffold-visualizer
+git+https://github.com/CDDLeiden/DrugEx.git@master#egg=drugex
+git+https://github.com/CDDLeiden/QSPRPred.git@master#egg=qsprpred
+git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@master#egg=papyrus-scaffold-visualizer
