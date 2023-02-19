@@ -12,8 +12,9 @@ from qsprpred.models.tasks import ModelTasks
 
 class QSPRPredScorer(Scorer):
 
-    def __init__(self, model):
+    def __init__(self, model, invalids_score=0.0):
         self.model = model
+        self.invalidsScore = invalids_score
 
     def getScores(self, mols, frags=None):
         if type(mols[0]) != str:
@@ -23,7 +24,7 @@ class QSPRPredScorer(Scorer):
             return self.model.predictMols(mols)
         else:
             # FIXME: currently we only assume that the model is a binary classifier with the positive class being the last one in the list of probabilities
-            return np.array([i[-1] if i is not None else 0 for i in  self.model.predictMols(mols, use_probas=True)])
+            return np.array([probas[-1] if not np.isnan(probas[-1]) else self.invalidsScore for probas in  self.model.predictMols(mols, use_probas=True)])
 
     def getKey(self):
         return f"QSPRpred_{self.model.name}"
