@@ -31,4 +31,9 @@ If you are using Google Colab, just click the logo above and make sure to evalua
 !bash colab.sh
 ```
 
-When this completes, you should also restart the Colab runtime to load the newly installed packages.
+When this completes, you should also restart the Colab runtime with GPU access turned on. You you should then be able to import the drugex package:
+
+```python
+import drugex
+drugex.__version__
+```
