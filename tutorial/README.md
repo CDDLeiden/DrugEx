@@ -30,3 +30,5 @@ If you are using Google Colab, just click the logo above and make sure to evalua
 !wget https://raw.githubusercontent.com/CDDLeiden/DrugEx/master/tutorial/colab.sh
 !bash colab.sh
 ```
+
+When this completes, you should also restart the Colab runtime to load the newly installed packages.
