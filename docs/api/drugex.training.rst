@@ -7,7 +7,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   drugex.training.models
+   drugex.training.explorers
+   drugex.training.generators
    drugex.training.scorers
 
 Submodules
