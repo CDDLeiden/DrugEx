@@ -6,7 +6,7 @@ On: 26.10.22, 15:16
 """
 from drugex.data.corpus.vocabulary import VocGraph
 from drugex.data.datasets import GraphFragDataSet
-from drugex.training.models import GraphModel
+from drugex.training.models import GraphTransformer
 from drugex.training.monitors import FileMonitor
 from ..settings import *
 
@@ -15,7 +15,7 @@ def main():
     # voc = VocSmiles.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab', True)
     voc = VocGraph.fromFile(f'{OUTPUT_FILE}_train.tsv.vocab')
     print('Training')
-    agent = GraphModel(voc, use_gpus=GPUS)
+    agent = GraphTransformer(voc, use_gpus=GPUS)
     monitor = FileMonitor(OUTPUT_FILE, verbose=True)
     agent.fit(data_sets[1].asDataLoader(BATCH_SIZE), data_sets[0].asDataLoader(BATCH_SIZE), epochs=N_EPOCHS, monitor=monitor)
     print('Training done.')

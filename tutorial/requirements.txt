@@ -1,0 +1,5 @@
+jupyterlab
+mols2grid
+git+https://github.com/CDDLeiden/DrugEx.git@master#egg=drugex
+git+https://github.com/CDDLeiden/QSPRPred.git@master#egg=qsprpred
+git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@main#egg=papyrus-scaffold-visualizer

@@ -5,6 +5,7 @@ Created by: Martin Sicho
 On: 02.06.22, 13:59
 """
 import os.path
+import shutil
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -172,11 +173,14 @@ class FileMonitor(DictMonitor):
 
     """
 
-    def __init__(self, path, verbose=False, clean_after_epoch=True):
+    def __init__(self, path, verbose=False, clean_after_epoch=True, reset_directory=False):
         super().__init__(verbose, clean_after_epoch)
         self.path = path
         self.directory = os.path.dirname(path)
         if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+        elif reset_directory:
+            shutil.rmtree(self.directory)
             os.makedirs(self.directory)
         self.out = open(path + '_fit.log', 'w', encoding='utf-8')
         self.outDF = path + '_fit.tsv'

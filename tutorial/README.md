@@ -1,13 +1,31 @@
 # Welcome to the DrugEx Tutorial
 
-This tutorial is a collection of Jupyter notebooks that show how various DrugEx models can be trained and optimized for different tasks. It is divided into several parts that reflect the most common workflows in DrugEx:
+This tutorial is a collection of Jupyter notebooks that show how various DrugEx models can be trained and optimized. The tutorial is divided by model type. If you are new to these types of models, we recommend you start with the recurrent neural network (RNN) in the first tutorial:
 
-1. [Data Preparation](datasets.ipynb)
-2. [Pretraining](pretraining.ipynb) -- this tutorial is optional since very rarely you will have to pretrain your own models
-3. [Finetuning](finetuning.ipynb)
-4. [Optimization with Reinforcement Learning](rl_optimization.ipynb)
-5. [Generating Molecules](generation.ipynb)
+1. [Recurrent Neural Network](Sequence-RNN.ipynb) 
+   - start with this tutorial if you also need broader introduction to generative AI for molecules)
+2. [Graph Transformer](Graph-Transformer.ipynb)
+   - this is a more advanced tutorial and knowledge of some terms from the previous one is assumed
+<!-- 3. [SMILES Sequence Transformer](SMILES-Transformer.ipynb) -->
 
-You can download example data sets from [this link](https://drive.google.com/file/d/1lYOmQBnAawnDR2Kwcy8yVARQTVzYDelw/view?usp=sharing). Just unpack the file in this folder and you should be good to go.
+## Installation
 
-The type of model you are trying to build determines what parts of the API you will need in your workflow. Therefore, make sure you have an overview of the available models and understand their specifics (details can be found in the [main readme file](../README.md) or the project [documentation](https://cddleiden.github.io/DrugEx/docs/)).
+Before you begin, you should install the DrugEx package and the dependencies for this tutorial. You will find everything you need in the `requirements.txt` file and can use pip to install everything:
+
+```bash
+pip install -r requirements.txt
+```
+
+Subsequently, you should also download the tutorial models and data with the download script accessible from command line:
+
+```bash
+drugex dowload
+```
+
+### Google Colab
+
+If you are using Google Colab, just open one of the notebooks above and you can run the following cell to install everything you need:
+
+```python
+!bash colab.sh
+```

@@ -96,8 +96,8 @@ class SmilesFragDataSet(DataSet):
             dataset = DataLoader(dataset, batch_size=batch_size, collate_fn=dataset.collate_fn)
             return dataset
 
-    def __init__(self, path, voc=None, rewrite=False):
-        super().__init__(path, rewrite=rewrite)
+    def __init__(self, path, voc=None, rewrite=False, save_voc=True, voc_file=None):
+        super().__init__(path, rewrite=rewrite, save_voc=save_voc, voc_file=voc_file)
         self.voc = voc if voc else VocSmiles(True)
 
     def __call__(self, result):
@@ -142,8 +142,8 @@ class GraphFragDataSet(DataSet):
     `DataSet` to manage the fragment-molecule pair encodings for the graph-based model (`GraphModel`).
     """
 
-    def __init__(self, path, voc=None, rewrite=False):
-        super().__init__(path, rewrite=rewrite)
+    def __init__(self, path, voc=None, rewrite=False, save_voc=True, voc_file=None):
+        super().__init__(path, rewrite=rewrite, save_voc=save_voc, voc_file=voc_file)
         self.voc = voc if voc else VocGraph()
 
     def __call__(self, result):

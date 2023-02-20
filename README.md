@@ -24,8 +24,10 @@ pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 
 #### Optional Dependencies
 
+**[QSPRPred](https://github.com/CDDLeiden/QSPRPred.git)** - Optional package to install if you want to use the command line interface of DrugEx, which requires the models to be serialized with this package. It is also used by some examples in the tutorial.
+
 **[RAscore](https://github.com/reymond-group/RAscore)** - If you want to use the Retrosynthesis Accessibility Score in the desirability function.
-- The installation of RAscore might degrade the Scikit-Learn packages. If this happens, Scikit-Learn should be re-upgraded.
+- The installation of RAscore might downgrade the scikit-Learn packages. If this happens, scikit-Learn should be re-upgraded.
 
 
 ### Use
