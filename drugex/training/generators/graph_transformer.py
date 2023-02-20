@@ -500,4 +500,5 @@ class GraphTransformer(FragGenerator):
         if not keep_frags:
             df_smiles = df_smiles.drop('Frags', axis=1)
 
+
         return df_smiles
