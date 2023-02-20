@@ -24,14 +24,14 @@ drugex dowload
 
 ### Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://githubtocolab.com/CDDLeiden/DrugEx/)
 
-If you are using Google Colab, just click the logo above and make sure to evaluate the following cell in the opened notebook:
+If you are using Google Colab, just click the logo above and select one of the shown notebooks. Then make sure you are using a runtime with GPU access and evaluate the following cell in the opened notebook:
 
 ```python
 !wget https://raw.githubusercontent.com/CDDLeiden/DrugEx/master/tutorial/colab.sh
 !bash colab.sh
 ```
 
-When this completes, you should also restart the Colab runtime with GPU access turned on. You you should then be able to import the drugex package:
+ Then you should be able to import the drugex package:
 
 ```python
 import drugex
