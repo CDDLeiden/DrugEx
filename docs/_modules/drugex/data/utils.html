@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.utils &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.data.utils &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -78,22 +78,57 @@
 <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">VERSION</span>
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 
-<div class="viewcode-block" id="getVocPaths"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.utils.getVocPaths">[docs]</a><span class="k">def</span> <span class="nf">getVocPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="n">mol_type</span><span class="p">):</span>
+<div class="viewcode-block" id="getVocPaths"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.utils.getVocPaths">[docs]</a><span class="k">def</span> <span class="nf">getVocPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Get paths to vocabulary files. If none are found, use internal defaults.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_path : str</span>
+<span class="sd">        Path to data directory.</span>
+<span class="sd">    voc_files : list</span>
+<span class="sd">        List of vocabulary file names.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of paths to vocabulary files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">voc_paths</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">voc_files</span><span class="p">:</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">mol_type</span><span class="si">}</span><span class="s2">_voc.txt&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Reading </span><span class="si">{</span><span class="n">mol_type</span><span class="si">}</span><span class="s1">_voc.txt instead of </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mol_type</span><span class="si">}</span><span class="s2">_voc.txt&quot;</span>
+    <span class="k">for</span> <span class="n">voc_file</span> <span class="ow">in</span> <span class="n">voc_files</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">voc_file</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="n">voc_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No vocabulary files found. Using internal defaults for DrugEx v</span><span class="si">{</span><span class="n">VERSION</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find vocabulary file </span><span class="si">{</span><span class="n">voc_file</span><span class="si">}</span><span class="s1"> in </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+            
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">voc_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No vocabulary files found. Using internal defaults for DrugEx v</span><span class="si">{</span><span class="n">VERSION</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">voc_paths</span></div>
 
 <div class="viewcode-block" id="getDataPaths"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.utils.getDataPaths">[docs]</a><span class="k">def</span> <span class="nf">getDataPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">input_prefix</span><span class="p">,</span> <span class="n">mol_type</span><span class="p">,</span> <span class="n">unique_frags</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Get paths to training and test data files.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_path : str</span>
+<span class="sd">        Path to data directory.</span>
+<span class="sd">    input_prefix : str</span>
+<span class="sd">        Prefix of data files. If a file with the exact name exists, it is used for both training and testing.</span>
+<span class="sd">    mol_type : str</span>
+<span class="sd">        Type of molecules in data files. Either &#39;smiles&#39; or &#39;graph&#39;.</span>
+<span class="sd">    unique_frags : bool</span>
+<span class="sd">        Whether to use unique fragments or not.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tuple[str, str]</span>
+<span class="sd">        Paths to training and test data files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># If exact data path was given as input, that data is both used for training and testing</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">input_prefix</span><span class="p">):</span>

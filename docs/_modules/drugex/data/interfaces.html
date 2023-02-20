@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.interfaces &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.data.interfaces &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -121,17 +121,28 @@
 <span class="sd">    Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.</span>
 
 <span class="sd">        If the associated file already exists, the data is loaded automatically upon initialization.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            path: path to the output file.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            Path to the file to use for this `DataSet`.</span>
+<span class="sd">        rewrite : bool</span>
+<span class="sd">            If `True`, the associated file is deleted and a new one is created. If `False`, the data is loaded from the file if it exists.</span>
+<span class="sd">        save_voc : bool</span>
+<span class="sd">            If `True`, the vocabulary is saved to a separate file. If `False`, the vocabulary is not saved.</span>
+<span class="sd">        voc_file : str</span>
+<span class="sd">            Path to the file to use for the vocabulary. If `None`, the vocabulary is saved to a file with the same name as the data set file but with the `.vocab` extension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">outpath</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_voc</span> <span class="o">=</span> <span class="n">save_voc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voc_file</span> <span class="o">=</span> <span class="n">voc_file</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">)):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="kc">None</span>
@@ -155,7 +166,10 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> initialized.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DataSet.getVocPath"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.getVocPath">[docs]</a>    <span class="k">def</span> <span class="nf">getVocPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s2">.vocab&quot;</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">voc_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">voc_file</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s1">.vocab&#39;</span></div>
 
 <div class="viewcode-block" id="DataSet.sendDataToFile"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.sendDataToFile">[docs]</a>    <span class="k">def</span> <span class="nf">sendDataToFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">header_written</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">)</span>
@@ -195,12 +209,14 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            `None`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="n">voc</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">+=</span> <span class="n">voc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">toFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getVocPath</span><span class="p">())</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_voc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">toFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getVocPath</span><span class="p">())</span>   </div>
 
 <div class="viewcode-block" id="DataSet.getVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.getVoc">[docs]</a>    <span class="k">def</span> <span class="nf">getVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

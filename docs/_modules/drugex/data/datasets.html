@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.datasets &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.data.datasets &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -171,8 +171,8 @@
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dataset</span></div>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">voc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="n">rewrite</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">voc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="n">rewrite</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="n">save_voc</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="n">voc_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="n">voc</span> <span class="k">if</span> <span class="n">voc</span> <span class="k">else</span> <span class="n">VocSmiles</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
@@ -217,8 +217,8 @@
 <span class="sd">    `DataSet` to manage the fragment-molecule pair encodings for the graph-based model (`GraphModel`).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">voc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="n">rewrite</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">voc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="n">rewrite</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="n">save_voc</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="n">voc_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="n">voc</span> <span class="k">if</span> <span class="n">voc</span> <span class="k">else</span> <span class="n">VocGraph</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>

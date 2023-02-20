@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview: module code &mdash; DrugEx 3.3.0 documentation</title>
+  <title>Overview: module code &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -83,17 +83,11 @@
 <li><a href="drugex/data/tests.html">drugex.data.tests</a></li>
 <li><a href="drugex/data/utils.html">drugex.data.utils</a></li>
 <li><a href="drugex/dataset.html">drugex.dataset</a></li>
-<li><a href="drugex/designer.html">drugex.designer</a></li>
-<li><a href="drugex/environ.html">drugex.environ</a></li>
-<li><a href="drugex/environment/data.html">drugex.environment.data</a></li>
-<li><a href="drugex/environment/interfaces.html">drugex.environment.interfaces</a></li>
-<li><a href="drugex/environment/models.html">drugex.environment.models</a></li>
-<li><a href="drugex/environment/neural_network.html">drugex.environment.neural_network</a></li>
-<li><a href="drugex/environment/tests.html">drugex.environment.tests</a></li>
 <li><a href="drugex/logs.html">drugex.logs</a></li>
 <ul><li><a href="drugex/logs/config.html">drugex.logs.config</a></li>
 <li><a href="drugex/logs/utils.html">drugex.logs.utils</a></li>
 </ul><li><a href="drugex/molecules/converters/default.html">drugex.molecules.converters.default</a></li>
+<li><a href="drugex/molecules/converters/dummy_molecules.html">drugex.molecules.converters.dummy_molecules</a></li>
 <li><a href="drugex/molecules/converters/fragmenters.html">drugex.molecules.converters.fragmenters</a></li>
 <li><a href="drugex/molecules/converters/interfaces.html">drugex.molecules.converters.interfaces</a></li>
 <li><a href="drugex/molecules/converters/standardizers.html">drugex.molecules.converters.standardizers</a></li>
@@ -105,29 +99,29 @@
 <li><a href="drugex/parallel/evaluator.html">drugex.parallel.evaluator</a></li>
 <li><a href="drugex/parallel/interfaces.html">drugex.parallel.interfaces</a></li>
 <li><a href="drugex/parallel/tests.html">drugex.parallel.tests</a></li>
-<li><a href="drugex/train.html">drugex.train</a></li>
 <li><a href="drugex/training/environment.html">drugex.training.environment</a></li>
+<li><a href="drugex/training/explorers/frag_graph_explorer.html">drugex.training.explorers.frag_graph_explorer</a></li>
+<li><a href="drugex/training/explorers/frag_sequence_explorer.html">drugex.training.explorers.frag_sequence_explorer</a></li>
+<li><a href="drugex/training/explorers/interfaces.html">drugex.training.explorers.interfaces</a></li>
+<li><a href="drugex/training/explorers/sequence_explorer.html">drugex.training.explorers.sequence_explorer</a></li>
+<li><a href="drugex/training/generators/graph_transformer.html">drugex.training.generators.graph_transformer</a></li>
+<li><a href="drugex/training/generators/interfaces.html">drugex.training.generators.interfaces</a></li>
+<li><a href="drugex/training/generators/sequence_rnn.html">drugex.training.generators.sequence_rnn</a></li>
+<li><a href="drugex/training/generators/sequence_transformer.html">drugex.training.generators.sequence_transformer</a></li>
+<li><a href="drugex/training/generators/utils.html">drugex.training.generators.utils</a></li>
 <li><a href="drugex/training/interfaces.html">drugex.training.interfaces</a></li>
-<li><a href="drugex/training/models/attention.html">drugex.training.models.attention</a></li>
-<li><a href="drugex/training/models/encoderdecoder.html">drugex.training.models.encoderdecoder</a></li>
-<li><a href="drugex/training/models/explorer.html">drugex.training.models.explorer</a></li>
-<li><a href="drugex/training/models/single_network.html">drugex.training.models.single_network</a></li>
-<li><a href="drugex/training/models/transform/attn.html">drugex.training.models.transform.attn</a></li>
-<li><a href="drugex/training/models/transform/gpt2graph.html">drugex.training.models.transform.gpt2graph</a></li>
-<li><a href="drugex/training/models/transform/gpt2smiles.html">drugex.training.models.transform.gpt2smiles</a></li>
-<li><a href="drugex/training/models/transform/layer.html">drugex.training.models.transform.layer</a></li>
-<li><a href="drugex/training/models/transform/vanilla.html">drugex.training.models.transform.vanilla</a></li>
 <li><a href="drugex/training/monitors.html">drugex.training.monitors</a></li>
 <li><a href="drugex/training/rewards.html">drugex.training.rewards</a></li>
+<li><a href="drugex/training/scorers/interfaces.html">drugex.training.scorers.interfaces</a></li>
 <li><a href="drugex/training/scorers/modifiers.html">drugex.training.scorers.modifiers</a></li>
-<li><a href="drugex/training/scorers/predictors.html">drugex.training.scorers.predictors</a></li>
 <li><a href="drugex/training/scorers/properties.html">drugex.training.scorers.properties</a></li>
 <li><a href="drugex/training/scorers/sascorer.html">drugex.training.scorers.sascorer</a></li>
+<li><a href="drugex/training/scorers/similarity.html">drugex.training.scorers.similarity</a></li>
 <li><a href="drugex/training/scorers/smiles.html">drugex.training.scorers.smiles</a></li>
 <li><a href="drugex/training/tests.html">drugex.training.tests</a></li>
+<li><a href="drugex/utils/download.html">drugex.utils.download</a></li>
 <li><a href="drugex/utils/fingerprints.html">drugex.utils.fingerprints</a></li>
 <li><a href="drugex/utils/gcmol.html">drugex.utils.gcmol</a></li>
-<li><a href="drugex/utils/metric.html">drugex.utils.metric</a></li>
 <li><a href="drugex/utils/nsgaii.html">drugex.utils.nsgaii</a></li>
 <li><a href="drugex/utils/optim.html">drugex.utils.optim</a></li>
 </ul>

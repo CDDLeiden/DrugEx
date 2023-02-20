@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.explorers package &mdash; DrugEx 3.4.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="drugex.training.generators package" href="drugex.training.generators.html" />
+    <link rel="prev" title="drugex.training package" href="drugex.training.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.4.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="drugex.training.html">drugex.training package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">drugex</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
+      <li>drugex.training.explorers package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="drugex-training-explorers-package">
+<h1>drugex.training.explorers package<a class="headerlink" href="#drugex-training-explorers-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.training.explorers.frag_graph_explorer">
+<span id="drugex-training-explorers-frag-graph-explorer-module"></span><h2>drugex.training.explorers.frag_graph_explorer module<a class="headerlink" href="#module-drugex.training.explorers.frag_graph_explorer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.explorers.frag_graph_explorer.</span></span><span class="sig-name descname"><span class="pre">FragGraphExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_graph_explorer.html#FragGraphExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.explorers.interfaces.FragExplorer" title="drugex.training.explorers.interfaces.FragExplorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">FragExplorer</span></code></a></p>
+<p><a class="reference internal" href="#drugex.training.explorers.interfaces.Explorer" title="drugex.training.explorers.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a graph-based fragment-using agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_graph_explorer.html#FragGraphExplorer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Forward pass of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>src</strong> (<em>torch.Tensor</em>) – Input tensor of shape (batch_size, 80, 5).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output tensor of shape (batch_size, 80, 5).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.getBatchOutputs">
+<span class="sig-name descname"><span class="pre">getBatchOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_graph_explorer.html#FragGraphExplorer.getBatchOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.getBatchOutputs" title="Permalink to this definition"></a></dt>
+<dd><p>Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>torch.nn.Module</em>) – Agent</p></li>
+<li><p><strong>src</strong> (<em>torch.Tensor</em>) – Fragments-molecule pairs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>frags</strong> (<em>list</em>) – List of fragments</p></li>
+<li><p><strong>smiles</strong> (<em>list</em>) – List of SMILES</p></li>
+<li><p><strong>loss</strong> (<em>torch.Tensor</em>) – Loss of the agent</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.sampleEncodedPairsToLoader">
+<span class="sig-name descname"><span class="pre">sampleEncodedPairsToLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_graph_explorer.html#FragGraphExplorer.sampleEncodedPairsToLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.sampleEncodedPairsToLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Sample new fragments-molecule pairs from a data loader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>torch.nn.Module</em>) – Agent</p></li>
+<li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for original fragments-molecule pairs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data loader for sampled fragments-molecule pairs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.utils.data.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.sample_input">
+<span class="sig-name descname"><span class="pre">sample_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_graph_explorer.html#FragGraphExplorer.sample_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.sample_input" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a batch of fragments-molecule pairs from the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for original fragments-molecule pairs</p></li>
+<li><p><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – Whether to sample from the validation set or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data loader for sampled fragments-molecule pairs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.utils.data.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.explorers.frag_sequence_explorer">
+<span id="drugex-training-explorers-frag-sequence-explorer-module"></span><h2>drugex.training.explorers.frag_sequence_explorer module<a class="headerlink" href="#module-drugex.training.explorers.frag_sequence_explorer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.explorers.frag_sequence_explorer.</span></span><span class="sig-name descname"><span class="pre">FragSequenceExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_sequence_explorer.html#FragSequenceExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.explorers.interfaces.FragExplorer" title="drugex.training.explorers.interfaces.FragExplorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">FragExplorer</span></code></a></p>
+<p><a class="reference internal" href="#drugex.training.explorers.interfaces.Explorer" title="drugex.training.explorers.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a sequence-based fragment-using agent with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_sequence_explorer.html#FragSequenceExplorer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Forward pass of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>src</strong> (<em>torch.Tensor</em>) – TODO: check the shape of the input tensor.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>TODO: check the shape of the input tensor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.getBatchOutputs">
+<span class="sig-name descname"><span class="pre">getBatchOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_sequence_explorer.html#FragSequenceExplorer.getBatchOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.getBatchOutputs" title="Permalink to this definition"></a></dt>
+<dd><p>Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>torch.nn.Module</em>) – Agent</p></li>
+<li><p><strong>src</strong> (<em>torch.Tensor</em>) – Fragments-molecule pairs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>frags</strong> (<em>list</em>) – List of fragments</p></li>
+<li><p><strong>smiles</strong> (<em>list</em>) – List of SMILES</p></li>
+<li><p><strong>loss</strong> (<em>torch.Tensor</em>) – Loss of the agent</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sampleEncodedPairsToLoader">
+<span class="sig-name descname"><span class="pre">sampleEncodedPairsToLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_sequence_explorer.html#FragSequenceExplorer.sampleEncodedPairsToLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sampleEncodedPairsToLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Sample new fragments-molecule pairs from a data loader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>torch.nn.Module</em>) – Agent</p></li>
+<li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for original fragments-molecule pairs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data loader for sampled fragments-molecule pairs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.utils.data.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sample_input">
+<span class="sig-name descname"><span class="pre">sample_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/frag_sequence_explorer.html#FragSequenceExplorer.sample_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sample_input" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a batch of fragments-molecule pairs from the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for original fragments-molecule pairs</p></li>
+<li><p><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – Whether to sample from the validation set or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data loader for sampled fragments-molecule pairs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.utils.data.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.explorers.interfaces">
+<span id="drugex-training-explorers-interfaces-module"></span><h2>drugex.training.explorers.interfaces module<a class="headerlink" href="#module-drugex.training.explorers.interfaces" title="Permalink to this heading"></a></h2>
+<p>interfaces</p>
+<p>Created by: Martin Sicho
+On: 01.06.22, 11:29</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.explorers.interfaces.</span></span><span class="sig-name descname"><span class="pre">Explorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.attachToGPUs">
+<span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.attachToGPUs" title="Permalink to this definition"></a></dt>
+<dd><p>Attach the model to GPUs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gpus</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a>) – The GPUs to use for training.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.fit">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Train and validate the model with a given training and validation loader (see <a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> and its implementations docs to learn how to generate them).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> (<em>torch.utils.data.DataLoader</em>) – The training data loader.</p></li>
+<li><p><strong>valid_loader</strong> (<em>torch.utils.data.DataLoader</em>) – The validation data loader.</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The number of epochs to train the model for.</p></li>
+<li><p><strong>monitor</strong> (<a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><em>TrainingMonitor</em></a><em>, </em><em>optional</em>) – A <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a> instance to monitor the training process.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments to pass to the training loop.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.getCriteriaValue">
+<span class="sig-name descname"><span class="pre">getCriteriaValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.getCriteriaValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.getCriteriaValue" title="Permalink to this definition"></a></dt>
+<dd><p>Get value of selection criteria</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
+<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>callable</em>) – <dl class="simple">
+<dt>The selection criteria. If str, one of the following:</dt><dd><ul>
+<li><p>desired_ratio: ratio of valid, unique and desired molecules</p></li>
+<li><p>aMeanScore: arithmetic mean score of valid and unique molecules</p></li>
+<li><p>gMeanScore: geometric mean score of valid and unique molecules</p></li>
+</ul>
+</dd>
+</dl>
+<p>If callable, it must take a pd.DataFrame as input and return a float.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The value of the selection criteria.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.getModel">
+<span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.getModel" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the current state of the agent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The current state of the agent</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>torch.nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.getNovelMoleculeMetrics">
+<span class="sig-name descname"><span class="pre">getNovelMoleculeMetrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.getNovelMoleculeMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.getNovelMoleculeMetrics" title="Permalink to this definition"></a></dt>
+<dd><p>Get metrics for novel molecules</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The metrics:</dt><dd><ul class="simple">
+<li><p>valid_ratio (float): ratio of valid molecules</p></li>
+<li><p>unique_ratio (float): ratio of valid and unique molecules</p></li>
+<li><p>desired_ratio (float): ratio of valid, unique and desired molecules</p></li>
+<li><p>aMeanScore (float): arithmetic mean score of valid and unique molecules</p></li>
+<li><p>gMeanScore (float): geometric mean score of valid and unique molecules</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">
+<span class="sig-name descname"><span class="pre">logPerformanceAndCompounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.logPerformanceAndCompounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds" title="Permalink to this definition"></a></dt>
+<dd><p>Log performance of model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of epochs.</p></li>
+<li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.policy_gradient">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd><p>Policy gradient training.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.saveBestState">
+<span class="sig-name descname"><span class="pre">saveBestState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.saveBestState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.saveBestState" title="Permalink to this definition"></a></dt>
+<dd><p>Save best state based on selection criteria</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
+<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>callable</em>) – <dl class="simple">
+<dt>The selection criteria. If str, one of the following:</dt><dd><ul>
+<li><p>desired_ratio: ratio of valid, unique and desired molecules</p></li>
+<li><p>aMeanScore: arithmetic mean score of valid and unique molecules</p></li>
+<li><p>gMeanScore: geometric mean score of valid and unique molecules</p></li>
+</ul>
+</dd>
+</dl>
+<p>If callable, it must take a pd.DataFrame as input and return a float.</p>
+</p></li>
+<li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
+<li><p><strong>it</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.explorers.interfaces.</span></span><span class="sig-name descname"><span class="pre">FragExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.explorers.interfaces.Explorer" title="drugex.training.explorers.interfaces.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a></p>
+<p>Implements the DrugEx exploration strategy for DrugEx models under
+the reinforcement learning framework for fragment-based generators</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'desired_ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the graph explorer to the training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for training data</p></li>
+<li><p><strong>valid_loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for validation data</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to train for</p></li>
+<li><p><strong>patience</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to wait for improvement before early stopping</p></li>
+<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Criteria to use for early stopping</p></li>
+<li><p><strong>min_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Minimum number of epochs to train for</p></li>
+<li><p><strong>monitor</strong> (<em>Monitor</em>) – Monitor to use for logging and saving model</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.getBatchOutputs">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getBatchOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">net</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer.getBatchOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.getBatchOutputs" title="Permalink to this definition"></a></dt>
+<dd><p>Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.policy_gradient">
+<span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd><p>Policy gradient training.</p>
+<p>Novel molecules are generated by the agent and are scored by the environment.
+The policy gradient is calculated using the REINFORCE algorithm and the agent is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for training data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.sampleEncodedPairsToLoader">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampleEncodedPairsToLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer.sampleEncodedPairsToLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.sampleEncodedPairsToLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Sample new fragments-molecule pairs from a data loader.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.sample_input">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#FragExplorer.sample_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.sample_input" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a batch of fragments-molecule pairs from the training data loader.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.FragExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.explorers.interfaces.FragExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.explorers.sequence_explorer">
+<span id="drugex-training-explorers-sequence-explorer-module"></span><h2>drugex.training.explorers.sequence_explorer module<a class="headerlink" href="#module-drugex.training.explorers.sequence_explorer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.explorers.sequence_explorer.</span></span><span class="sig-name descname"><span class="pre">SequenceExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cuda')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.explorers.interfaces.Explorer" title="drugex.training.explorers.interfaces.Explorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a></p>
+<p><a class="reference internal" href="#drugex.training.explorers.interfaces.Explorer" title="drugex.training.explorers.interfaces.Explorer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Explorer</span></code></a> to optimize a sequence-based agent (RNN) with the given <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment" title="drugex.training.interfaces.Environment"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>.</p>
+<dl class="simple">
+<dt>Reference: Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v2: De Novo Design of Drug Molecule by</dt><dd><p>Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.
+J Cheminform (2021). <a class="reference external" href="https://doi.org/10.1186/s13321-019-0355-6">https://doi.org/10.1186/s13321-019-0355-6</a></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'desired_ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the graph explorer to the training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for training data</p></li>
+<li><p><strong>valid_loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for validation data</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to train for</p></li>
+<li><p><strong>patience</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to wait for improvement before early stopping</p></li>
+<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Criteria to use for early stopping</p></li>
+<li><p><strong>min_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Minimum number of epochs to train for</p></li>
+<li><p><strong>monitor</strong> (<em>Monitor</em>) – Monitor to use for logging and saving model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Generate molecules with the given <code class="xref any docutils literal notranslate"><span class="pre">agent</span></code> network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>smiles</strong> (<em>list</em>) – The generated SMILES.</p></li>
+<li><p><strong>seqs</strong> (<em>torch.Tensor</em>) – The generated encoded sequences.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer.policy_gradient">
+<span class="sig-name descname"><span class="pre">policy_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer.policy_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.policy_gradient" title="Permalink to this definition"></a></dt>
+<dd><p>Policy gradient training.</p>
+<p>Novel molecules are scored by the environment.
+The policy gradient is calculated using the REINFORCE algorithm and the agent is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The generated SMILES.</p></li>
+<li><p><strong>seqs</strong> (<em>torch.Tensor</em>) – The generated encoded sequences.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-drugex.training.explorers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-drugex.training.explorers" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="drugex.training.html" class="btn btn-neutral float-left" title="drugex.training package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="drugex.training.generators.html" class="btn btn-neutral float-right" title="drugex.training.generators package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

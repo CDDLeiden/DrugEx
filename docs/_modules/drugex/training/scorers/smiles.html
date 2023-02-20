@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.smiles &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.scorers.smiles &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -87,30 +87,54 @@
 
 <div class="viewcode-block" id="SmilesChecker.checkSmiles"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.smiles.SmilesChecker.checkSmiles">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">frags</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">valids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method is used to check the validity of the SMILES strings and to check if they contain given fragments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list of str</span>
+<span class="sd">            List of SMILES strings to check.</span>
+<span class="sd">        frags : list of str, optional</span>
+<span class="sd">            List of SMILES strings of fragments to check for.</span>
+<span class="sd">        no_multifrag_smiles : bool, optional</span>
+<span class="sd">            If True, SMILES strings that contain more than one fragment will be marked as invalid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores : pd.DataFrame</span>
+<span class="sd">            Dataframe with the validity and accuracy of the SMILES strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        
+        <span class="c1">#valids = np.zeros(shape)</span>
         <span class="k">if</span> <span class="n">no_multifrag_smiles</span><span class="p">:</span>
             <span class="c1"># Check if SMILES is not fragmented</span>
             <span class="n">smiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">smi</span> <span class="k">if</span> <span class="n">smi</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">smi</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]</span>
+        
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">smile</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">smiles</span><span class="p">):</span>
             <span class="c1"># 1. Check if SMILES can be parsed by rdkit</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smile</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">smile</span><span class="p">:</span>
                     <span class="n">mol</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="n">valids</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
+                <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;Valid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
             <span class="k">except</span><span class="p">:</span>
-                <span class="n">valids</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;Valid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                
             <span class="k">if</span> <span class="n">frags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># 2. Check if SMILES contain given fragments</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">subs</span> <span class="o">=</span> <span class="n">frags</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
                     <span class="n">subs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">]</span>
-                    <span class="n">valids</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">])</span>
+                    <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;Accurate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">subs</span><span class="p">])</span> <span class="k">else</span> <span class="mi">0</span>
                 <span class="k">except</span><span class="p">:</span>
-                    <span class="n">valids</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;Accurate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># else : </span>
+            <span class="c1">#     #scores[&#39;Accurate&#39;] = np.nan</span>
     
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">valids</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;VALID&#39;</span><span class="p">,</span> <span class="s1">&#39;DESIRE&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">frags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">valids</span></div></div>
+        <span class="k">return</span> <span class="n">scores</span></div></div>
 </pre></div>
 
            </div>

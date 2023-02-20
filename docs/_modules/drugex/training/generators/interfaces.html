@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.generators.interfaces &mdash; DrugEx 3.4.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.4.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.generators.interfaces</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.training.generators.interfaces</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">interfaces</span>
+
+<span class="sd">Created by: Martin Sicho</span>
+<span class="sd">On: 01.06.22, 11:29</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.training.scorers.smiles</span> <span class="kn">import</span> <span class="n">SmilesChecker</span>
+<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">Model</span>   
+<span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
+
+<div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base generator class for fitting and evaluating a DrugEx generator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="Generator.sample"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Samples molcules from the generator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        smiles : List</span>
+<span class="sd">            List of SMILES strings</span>
+<span class="sd">        frags : List, optional</span>
+<span class="sd">            List of fragments used to generate the molecules</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Generator.trainNet"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.trainNet">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">trainNet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Train the generator for a single epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader : DataLoader</span>
+<span class="sd">            a `DataLoader` instance to use for training</span>
+<span class="sd">        epoch : int</span>
+<span class="sd">            the current epoch</span>
+<span class="sd">        epochs : int</span>
+<span class="sd">            the total number of epochs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Generator.validateNet"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.validateNet">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">validateNet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate the performance of the generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader : DataLoader</span>
+<span class="sd">            a `DataLoader` instance to use for validation.</span>
+<span class="sd">        evaluator : ModelEvaluator</span>
+<span class="sd">            a `ModelEvaluator` instance to use for validation</span>
+<span class="sd">        no_multifrag_smiles : bool</span>
+<span class="sd">            if `True`, only single-fragment SMILES are considered valid</span>
+<span class="sd">        n_samples : int</span>
+<span class="sd">            the number of samples to use for validation. Not used by transformers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        valid_metrics : dict</span>
+<span class="sd">            a dictionary with the validation metrics</span>
+<span class="sd">        smiles_scores : DataFrame</span>
+<span class="sd">            a `DataFrame` with the scores for each molecule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Generator.generate"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.generate">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate molecules from the generator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        df_smiles : DataFrame</span>
+<span class="sd">            a `DataFrame` with the generated molecules (and their scores)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Generator.filterNewMolecules"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.filterNewMolecules">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">filterNewMolecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="n">drup_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_undesired</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter out molecules that are already in the training set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : List</span>
+<span class="sd">            a list of previously generated molecules</span>
+<span class="sd">        new_smiles : List</span>
+<span class="sd">            a list of newly generated molecules</span>
+<span class="sd">        new_frags : List    </span>
+<span class="sd">            a list of fragments for the newly generated molecules</span>
+<span class="sd">        drup_duplicates : bool</span>
+<span class="sd">            if `True`, duplicate molecules are dropped</span>
+<span class="sd">        drop_undesired : bool</span>
+<span class="sd">            if `True`, molecules that are not desired are dropped</span>
+<span class="sd">        evaluator : ModelEvaluator</span>
+<span class="sd">            a `ModelEvaluator` instance used to evaluate the molecule desirability</span>
+<span class="sd">        no_multifrag_smiles : bool</span>
+<span class="sd">            if `True`, only single-fragment SMILES are considered valid</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_smiles : List</span>
+<span class="sd">            a list of newly generated molecules after filtering</span>
+<span class="sd">        new_frags : List</span>
+<span class="sd">            a list of fragments for the newly generated molecules after filtering        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span> </div>
+
+<div class="viewcode-block" id="Generator.fit"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_loader : DataLoader</span>
+<span class="sd">            a `DataLoader` instance to use for training</span>
+<span class="sd">        valid_loader : DataLoader</span>
+<span class="sd">            a `DataLoader` instance to use for validation</span>
+<span class="sd">        epochs : int</span>
+<span class="sd">            the number of epochs to train for</span>
+<span class="sd">        patience : int</span>
+<span class="sd">            the number of epochs to wait for improvement before early stopping</span>
+<span class="sd">        evaluator : ModelEvaluator</span>
+<span class="sd">            a `ModelEvaluator` instance to use for validation</span>
+<span class="sd">            TODO: maybe the evaluator should be hard coded to None here as during PT/FT training we don&#39;t need it</span>
+<span class="sd">        monitor : Monitor</span>
+<span class="sd">            a `Monitor` instance to use for saving the model and performance info</span>
+<span class="sd">        no_multifrag_smiles : bool</span>
+<span class="sd">            if `True`, only single-fragment SMILES are considered valid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span> <span class="k">if</span> <span class="n">monitor</span> <span class="k">else</span> <span class="n">NullMonitor</span><span class="p">()</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="n">last_save</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+         
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Fitting model&#39;</span><span class="p">):</span>
+            <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="c1"># Train model</span>
+            <span class="n">loss_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainNet</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">)</span>
+
+            <span class="c1"># Validate model</span>
+            <span class="n">valid_metrics</span><span class="p">,</span> <span class="n">smiles_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validateNet</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">valid_loader</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">train_loader</span><span class="o">.</span><span class="n">batch_size</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># Save model based on validation loss or valid ratio</span>
+            <span class="k">if</span> <span class="s1">&#39;loss_valid&#39;</span> <span class="ow">in</span> <span class="n">valid_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> <span class="n">value</span> <span class="o">=</span> <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;loss_valid&#39;</span><span class="p">]</span>
+            <span class="k">else</span> <span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+                <span class="n">monitor</span><span class="o">.</span><span class="n">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>    
+                <span class="n">best</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">last_save</span> <span class="o">=</span> <span class="n">epoch</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model was saved at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>   
+            
+            <span class="c1"># Save performance info and generate smiles</span>
+            <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss_train</span>
+            <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;best_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+            <span class="c1"># monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=(&#39;SMILES&#39;, &#39;Valid&#39;, &#39;Desire&#39;, &#39;Frags&#39;))</span>
+            <span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">smiles_scores</span><span class="o">=</span><span class="n">smiles_scores</span><span class="p">,</span> <span class="n">smiles_scores_key</span><span class="o">=</span><span class="n">smiles_scores</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="o">**</span><span class="n">valid_metrics</span><span class="p">)</span>
+
+            <span class="k">del</span> <span class="n">loss_train</span><span class="p">,</span> <span class="n">valid_metrics</span><span class="p">,</span> <span class="n">smiles_scores</span>
+            <span class="n">monitor</span><span class="o">.</span><span class="n">endStep</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span>
+                
+            <span class="c1"># Early stopping</span>
+            <span class="k">if</span> <span class="n">epoch</span> <span class="o">-</span> <span class="n">last_save</span> <span class="o">&gt;</span> <span class="n">patience</span> <span class="p">:</span> <span class="k">break</span>
+        
+        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+        <span class="n">monitor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="Generator.evaluate"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span> <span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unmodified_scores</span> <span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate molecules by using the given evaluator or checking for validity.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles: List</span>
+<span class="sd">            List of SMILES to evaluate</span>
+<span class="sd">        frags: List</span>
+<span class="sd">            List of fragments used to generate the SMILES</span>
+<span class="sd">        evaluator: Environement</span>
+<span class="sd">            An `Environement` instance used to evaluate the molecules</span>
+<span class="sd">        no_multifrag_smiles: bool</span>
+<span class="sd">            If `True`, only single-fragment SMILES are considered valid</span>
+<span class="sd">        unmodified_scores: bool</span>
+<span class="sd">            If `True`, the scores are not modified by the evaluator</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores: DataFrame</span>
+<span class="sd">            A `DataFrame` with the scores for each molecule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">evaluator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">frags</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">unmodified_scores</span><span class="p">:</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">getUnmodifiedScores</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">frags</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">scores</span></div>
+
+<div class="viewcode-block" id="Generator.getModel"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a copy of this model as a state dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model: dict</span>
+<span class="sd">            A serializable copy of this model as a state dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>   </div></div>
+
+<div class="viewcode-block" id="FragGenerator"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator">[docs]</a><span class="k">class</span> <span class="nc">FragGenerator</span><span class="p">(</span><span class="n">Generator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A generator for fragment-based molecules.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FragGenerator.init_states"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.init_states">[docs]</a>    <span class="k">def</span> <span class="nf">init_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize model parameters</span>
+<span class="sd">        </span>
+<span class="sd">        Notes:</span>
+<span class="sd">        -----</span>
+<span class="sd">        Xavier initialization for all parameters except for the embedding layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">xavier_uniform_</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gpus</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FragGenerator.attachToGPUs"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.attachToGPUs">[docs]</a>    <span class="k">def</span> <span class="nf">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpus</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attach model to GPUs</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gpus: `tuple`</span>
+<span class="sd">            A tuple of GPU ids to use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpus</span> <span class="o">=</span> <span class="n">gpus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FragGenerator.loaderFromFrags"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.loaderFromFrags">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">loaderFromFrags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode the input fragments and create a dataloader object</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        frags: `list`</span>
+<span class="sd">            A list of input fragments (in SMILES format)</span>
+<span class="sd">        batch_size: `int`</span>
+<span class="sd">            Batch size for the dataloader</span>
+<span class="sd">        n_proc: `int`</span>
+<span class="sd">            Number of processes to use for encoding the fragments</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">        loader: `torch.utils.data.DataLoader`</span>
+<span class="sd">            A dataloader object to iterate over the input fragments </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>      </div>
+
+<div class="viewcode-block" id="FragGenerator.filterNewMolecules"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.filterNewMolecules">[docs]</a>    <span class="k">def</span> <span class="nf">filterNewMolecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_undesired</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter the generated SMILES</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles: `list`</span>
+<span class="sd">            A list of previous SMILES</span>
+<span class="sd">        new_smiles: `list`</span>
+<span class="sd">            A list of additional generated SMILES</span>
+<span class="sd">        frags: `list`  </span>
+<span class="sd">            A list of additional input fragments</span>
+<span class="sd">        drop_duplicates: `bool`</span>
+<span class="sd">            If `True`, duplicate SMILES are dropped</span>
+<span class="sd">        drop_undesired: `bool`</span>
+<span class="sd">            If `True`, SMILES that do not fulfill the desired objectives</span>
+<span class="sd">        evaluator: `Evaluator`</span>
+<span class="sd">            An evaluator object to evaluate the generated SMILES</span>
+<span class="sd">        no_multifrag_smiles: `bool`</span>
+<span class="sd">            If `True`, only single-fragment SMILES are considered valid</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_smiles: `list`</span>
+<span class="sd">            A list of filtered SMILES</span>
+<span class="sd">        new_frags: `list`</span>
+<span class="sd">            A list of filtered input fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Make sure both valid molecules and include input fragments</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">new_frags</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+        <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)[</span><span class="n">scores</span><span class="o">.</span><span class="n">Accurate</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">new_frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_frags</span><span class="p">)[</span><span class="n">scores</span><span class="o">.</span><span class="n">Accurate</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        
+        <span class="c1"># Canonalize SMILES</span>
+        <span class="n">new_smiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">new_smiles</span><span class="p">]</span>    
+
+        <span class="c1"># drop duplicates</span>
+        <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+            <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span>
+            <span class="n">new_frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_frags</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">smiles</span><span class="p">))]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">new_smiles</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">smiles</span><span class="p">))]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="c1"># drop undesired molecules</span>
+        <span class="k">if</span> <span class="n">drop_undesired</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">evaluator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Evaluator must be provided to filter molecules by desirability&#39;</span><span class="p">)</span>
+            <span class="c1"># Compute desirability scores</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+            <span class="c1"># Filter out undesired molecules</span>
+            <span class="n">new_smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)[</span><span class="n">scores</span><span class="o">.</span><span class="n">Desired</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">new_frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_frags</span><span class="p">)[</span><span class="n">scores</span><span class="o">.</span><span class="n">Desired</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

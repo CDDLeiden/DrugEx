@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.utils package &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.utils package &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -30,7 +30,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,11 +47,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -62,9 +61,9 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -86,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
+          <li><a href="modules.html">drugex</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
       <li>drugex.utils package</li>
       <li class="wy-breadcrumbs-aside">
@@ -101,6 +100,63 @@
 <h1>drugex.utils package<a class="headerlink" href="#drugex-utils-package" title="Permalink to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-drugex.utils.download">
+<span id="drugex-utils-download-module"></span><h2>drugex.utils.download module<a class="headerlink" href="#module-drugex.utils.download" title="Permalink to this heading"></a></h2>
+<p>Utility functions to download files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.utils.download.check_sha256sum">
+<span class="sig-prename descclassname"><span class="pre">drugex.utils.download.</span></span><span class="sig-name descname"><span class="pre">check_sha256sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sha256</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/download.html#check_sha256sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.download.check_sha256sum" title="Permalink to this definition"></a></dt>
+<dd><p>Check the SHA256 checksum of a file corresponds to that given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path the file to check</p></li>
+<li><p><strong>sha256</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – SHA256 checksum to compare that of the downloaded file to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the file’s SHA256 checksum and the one provided match</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.utils.download.download_file">
+<span class="sig-prename descclassname"><span class="pre">drugex.utils.download.</span></span><span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byte_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sha256sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/drugex/utils/download.html#download_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.download.download_file" title="Permalink to this definition"></a></dt>
+<dd><p>Download a file and extract its content if is a ZIP or TAR.GZ file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – URL of the file to be downloaded.</p></li>
+<li><p><strong>out_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path the file should be written to</p></li>
+<li><p><strong>extract_out_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to extract the content of the ZIP/TAR.GZ file into</p></li>
+<li><p><strong>byte_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Size in bytes of the file to be downloaded; ignored if None</p></li>
+<li><p><strong>sha256sum</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – SHA256 checksum to compare that of the downloaded file to</p></li>
+<li><p><strong>progress</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – should progress be shown</p></li>
+<li><p><strong>callback</strong> (<em>Callable</em><em>[</em><em>[</em><em>]</em><em>, </em><em>Any</em><em>]</em>) – callback function to be called after each chunk of the file is downloaded</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.utils.download.sha256sum">
+<span class="sig-prename descclassname"><span class="pre">drugex.utils.download.</span></span><span class="sig-name descname"><span class="pre">sha256sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/download.html#sha256sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.download.sha256sum" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the SHA256 cheksum of a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – path of the file</p></li>
+<li><p><strong>blocksize</strong> – size of iterative chunks for calculation (default: 64 KiB)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SHA256 checksum is hexadecimal</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-drugex.utils.fingerprints">
 <span id="drugex-utils-fingerprints-module"></span><h2>drugex.utils.fingerprints module<a class="headerlink" href="#module-drugex.utils.fingerprints" title="Permalink to this heading"></a></h2>
@@ -154,74 +210,6 @@ For duplicates, the first occurrence is kept and the later occurrences are ignor
 </dd>
 </dl>
 </dd></dl>
-
-</section>
-<section id="module-drugex.utils.metric">
-<span id="drugex-utils-metric-module"></span><h2>drugex.utils.metric module<a class="headerlink" href="#module-drugex.utils.metric" title="Permalink to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.Solow_Polasky_Diversity">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">Solow_Polasky_Diversity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_cor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#Solow_Polasky_Diversity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.Solow_Polasky_Diversity" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.dimension">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fnames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ECFP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PCA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#dimension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.dimension" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.diversity">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">diversity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fake_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#diversity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.diversity" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.kl_div">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">kl_div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_logit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_logit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#kl_div"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.kl_div" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.logP_mw">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">logP_mw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fnames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#logP_mw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.logP_mw" title="Permalink to this definition"></a></dt>
-<dd><p>logP and molecular weight calculation for logP ~ MW chemical space visualization</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fnames</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – List of file paths that contains CANONICAL_SMILES (, LOGP and MWT
-if it contains the logP and molecular weight for each molecule).</p></li>
-<li><p><strong>is_active</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – selecting only active ligands (True) or all of the molecules (False)
-if it is true, the molecule with PCHEMBL_VALUE &gt;= 6.5 or SCORE &gt; 0.5 will be selected.
-(Default: False)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>df (DataFrame)： The table contains three columns;</dt><dd><p>molecular weight, logP and index of file name in the fnames</p>
-</dd>
-</dl>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.pad_mask">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">pad_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#pad_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.pad_mask" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.substructure">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">substructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_desired</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#substructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.substructure" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.tri_mask">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">tri_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#tri_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.tri_mask" title="Permalink to this definition"></a></dt>
-<dd><p>For masking out the subsequent info.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="drugex.utils.metric.unique">
-<span class="sig-prename descclassname"><span class="pre">drugex.utils.metric.</span></span><span class="sig-name descname"><span class="pre">unique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/utils/metric.html#unique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.utils.metric.unique" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </section>
 <section id="module-drugex.utils.nsgaii">

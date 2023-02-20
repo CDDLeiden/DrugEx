@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.molecules.converters.fragmenters &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.molecules.converters.fragmenters &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -97,7 +97,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_frags</span><span class="p">,</span> <span class="n">n_combs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;recap&#39;</span><span class="p">,</span> <span class="n">deep_clean</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="mi">75</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_frags</span><span class="p">,</span> <span class="n">n_combs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;recap&#39;</span><span class="p">,</span> <span class="n">deep_clean</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">allow_single</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
@@ -106,6 +106,7 @@
 <span class="sd">            method: fragmentation method to use. Possible values: (&#39;recap&#39;, &#39;brics&#39;)</span>
 <span class="sd">            deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)</span>
 <span class="sd">            max_bonds: only accept molecules with the number of bonds below or equal to this threshold</span>
+<span class="sd">            allow_single: return the fragment also for molecules that result in only one fragment</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deep_clean</span><span class="p">)</span>
@@ -113,6 +114,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nCombs</span> <span class="o">=</span> <span class="n">n_combs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span> <span class="o">=</span> <span class="n">max_bonds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allowSingle</span> <span class="o">=</span> <span class="n">allow_single</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;recap&#39;</span><span class="p">,</span> <span class="s1">&#39;brics&#39;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">ConversionException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown fragmentation method: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -134,7 +136,7 @@
             <span class="n">frags</span> <span class="o">=</span> <span class="n">BRICS</span><span class="o">.</span><span class="n">BRICSDecompose</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
             <span class="n">frags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sorted</span><span class="p">({</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[\d+\*\]&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">}))</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowSingle</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only one retrieved fragment for molecule: </span><span class="si">{</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="si">}</span><span class="s2">. Skipping...&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 

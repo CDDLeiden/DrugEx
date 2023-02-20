@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.rewards &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.rewards &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -80,111 +80,222 @@
 <span class="sd">On: 26.06.22, 18:07</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">DEFAULT_DEVICE</span>
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">RankingStrategy</span><span class="p">,</span> <span class="n">RewardScheme</span>
+<span class="kn">from</span> <span class="nn">drugex.utils.fingerprints</span> <span class="kn">import</span> <span class="n">get_fingerprint</span>
 <span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span><span class="p">,</span> <span class="n">DataStructs</span>
 
-<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">RewardScheme</span><span class="p">,</span> <span class="n">RankingStrategy</span>
-<span class="kn">from</span> <span class="nn">drugex.utils.fingerprints</span> <span class="kn">import</span> <span class="n">get_fingerprint</span>
 
 <div class="viewcode-block" id="NSGAIIRanking"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.NSGAIIRanking">[docs]</a><span class="k">class</span> <span class="nc">NSGAIIRanking</span><span class="p">(</span><span class="n">RankingStrategy</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Crowding distance algorithm to rank the solutions in the same pareto frontier.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            swarm (np.ndarray): m x n scoring matrix, where m is the number of samples</span>
-<span class="sd">                and n is the number of objectives.</span>
 
-<span class="sd">            is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,</span>
-<span class="sd">                it will be implemented by Numpy and ran on CPUs.</span>
+<span class="sd">        Paper: Deb, Kalyanmoy, et al. &quot;A fast and elitist multiobjective genetic algorithm: NSGA-II.&quot; IEEE transactions on</span>
+<span class="sd">        evolutionary computation 6.2 (2002): 182-197.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            rank (np.array): m-d vector as the index of well-ranked solutions.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES sequence to be ranked (not used in the calculation -&gt; just a requirement of the interface because some ranking strategies need it)</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            matrix of scores for the multiple objectives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rank : np.array</span>
+<span class="sd">            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
 
         <span class="n">fronts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getParetoFronts</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
 
         <span class="n">rank</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1">#sort all fronts by crowding distance</span>
+        <span class="c1"># sort all fronts by crowding distance</span>
         <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">front</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fronts</span><span class="p">):</span>
             <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                <span class="c1">#sort front small to large for value objective i</span>
+                <span class="c1"># sort front small to large for value objective i</span>
                 <span class="n">cpu_tensor</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">front</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">i</span><span class="p">]</span>
                 <span class="n">order</span> <span class="o">=</span> <span class="n">cpu_tensor</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
                 <span class="n">front</span> <span class="o">=</span> <span class="n">front</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
-                <span class="c1">#set distance value smallest and largest value objective i to large value</span>
+                <span class="c1"># set distance value smallest and largest value objective i to large value</span>
                 <span class="n">distance</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">4</span>
                 <span class="n">distance</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">4</span>
-                <span class="c1">#get all values of objective i in current front</span>
+                <span class="c1"># get all values of objective i in current front</span>
                 <span class="n">m_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">scores</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">front</span><span class="p">]</span>
-                <span class="c1">#scale for crowding distance by difference between max and min of objective i in front</span>
+                <span class="c1"># scale for crowding distance by difference between max and min of objective i in front</span>
                 <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">m_values</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">m_values</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="c1">#calculate crowding distance</span>
+                <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="c1"># calculate crowding distance</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
                     <span class="n">distance</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">front</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">scores</span><span class="p">[</span><span class="n">front</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span>
-            <span class="c1">#replace front by front sorted according to crowding distance</span>
+            <span class="c1"># replace front by front sorted according to crowding distance</span>
             <span class="n">fronts</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">front</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance</span><span class="p">)]</span>
             <span class="n">rank</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fronts</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">rank</span></div>
 
 
-<div class="viewcode-block" id="SimilarityRanking"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.SimilarityRanking">[docs]</a><span class="k">class</span> <span class="nc">SimilarityRanking</span><span class="p">(</span><span class="n">RankingStrategy</span><span class="p">):</span>
+<div class="viewcode-block" id="MinMeanSimilarityRanking"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.MinMeanSimilarityRanking">[docs]</a><span class="k">class</span> <span class="nc">MinMeanSimilarityRanking</span><span class="p">(</span><span class="n">RankingStrategy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Revised crowding distance algorithm to rank the solutions in the same pareto frontier with Tanimoto-distance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SimilarityRanking.calc_fps"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.SimilarityRanking.calc_fps">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            device: pytorch device</span>
+<span class="sd">            func: &#39;min&#39; or &#39;mean&#39; - how to calculate the similarity between the molecules in the same front</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span> <span class="k">if</span> <span class="n">func</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span>
+
+<div class="viewcode-block" id="MinMeanSimilarityRanking.calc_fps"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.MinMeanSimilarityRanking.calc_fps">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">calc_fps</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="s1">&#39;ECFP6&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate fingerprints for a list of molecules.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mols : list</span>
+<span class="sd">            List of RDKit molecules</span>
+<span class="sd">        fp_type : str</span>
+<span class="sd">            Type of fingerprint to use</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fps : list</span>
+<span class="sd">            List of RDKit fingerprints</span>
+<span class="sd">        &quot;&quot;&quot;</span>   
         <span class="n">fps</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mols</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">fps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_fingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fp_type</span><span class="p">))</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
                 <span class="n">fps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">fps</span></div>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
+<div class="viewcode-block" id="MinMeanSimilarityRanking.getFPs"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.MinMeanSimilarityRanking.getFPs">[docs]</a>    <span class="k">def</span> <span class="nf">getFPs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Revised crowding distance algorithm to rank the solutions in the same fronter with Tanimoto-distance.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            swarm (np.ndarray): m x n scoring matrix, where m is the number of samples</span>
-<span class="sd">                and n is the number of objectives.</span>
-<span class="sd">            fps (np.ndarray): m-d vector as fingerprints for all the molecules</span>
+<span class="sd">        Calculate fingerprints for a list of molecules.</span>
 
-<span class="sd">            is_gpu (bool): if True, the algorithm will be implemented by PyTorch and ran on GPUs, otherwise,</span>
-<span class="sd">                it will be implemented by Numpy and ran on CPUs.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            smiles: smiles to calculate fingerprints for</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            rank (np.array): m-d vector as the index of well-ranked solutions.</span>
+<span class="sd">            list of RDKit fingerprints</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-
         <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smile</span><span class="p">)</span> <span class="k">for</span> <span class="n">smile</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]</span>
-        <span class="n">fps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_fps</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_fps</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Revised crowding distance algorithm to rank the solutions in the same frontier with Tanimoto-distance.</span>
+<span class="sd">        Molecules with the lowest Tanimoto-distance to the other molecules in the same front are ranked first.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            smiles (list): List of SMILES sequence to be ranked</span>
+<span class="sd">            scores (np.ndarray): matrix of scores for the multiple objectives</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES sequence to be ranked</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            matrix of scores for the multiple objectives</span>
+<span class="sd">        func : str</span>
+<span class="sd">            &#39;min&#39; takes minimium tanimoto distance, &#39;avg&#39; takes average tanimoto distance in the front</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rank : np.array</span>
+<span class="sd">            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFPs</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
+        <span class="n">fronts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getParetoFronts</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+        <span class="n">rank</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">front</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fronts</span><span class="p">):</span>
+            <span class="n">front_fps</span> <span class="o">=</span> <span class="p">[</span><span class="n">fps</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">front</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="kc">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">front_fps</span><span class="p">:</span>
+                <span class="c1"># find the min/average tanimoto distance for each molecule to all other molecules in the front</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">DataStructs</span><span class="o">.</span><span class="n">BulkTanimotoSimilarity</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">front_fps</span><span class="p">,</span> <span class="n">idx</span><span class="p">)))))</span>
+                     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">fp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">front_fps</span><span class="p">)])</span>
+                <span class="n">fronts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">front</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span> <span class="c1"># sort front (molecule with the lowest min/average distance to the others is first)</span>
+            <span class="k">elif</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">front_fps</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Invalid molecule in front. Front not ranked.&quot;</span><span class="p">)</span>
+            <span class="n">rank</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fronts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">rank</span> <span class="c1"># sorted list of all molecules in all fronts (molecules with the lowest min/average distance to the others are ranked first)</span></div>
+
+<div class="viewcode-block" id="MutualSimilaritySortRanking"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.MutualSimilaritySortRanking">[docs]</a><span class="k">class</span> <span class="nc">MutualSimilaritySortRanking</span><span class="p">(</span><span class="n">MinMeanSimilarityRanking</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Alternative implementation of the `MinMeanSimilarityRanking` ranking strategy that tries</span>
+<span class="sd">    to more closely emulate the crowding distance with fingerprint similarities. Adapted</span>
+<span class="sd">    from the original code by @XuhanLiu (https://github.com/XuhanLiu/DrugEx/blob/cd384f4a8ed4982776e92293f77afd4ea78644f9/utils/nsgaii.py#L92).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFPs</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span>
         <span class="n">fronts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getParetoFronts</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
 
         <span class="n">rank</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">front</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fronts</span><span class="p">):</span>
             <span class="n">fp</span> <span class="o">=</span> <span class="p">[</span><span class="n">fps</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">front</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="kc">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fp</span><span class="p">:</span>
-                <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">)):</span>
-                    <span class="n">tanimoto</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">DataStructs</span><span class="o">.</span><span class="n">BulkTanimotoSimilarity</span><span class="p">(</span><span class="n">fp</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">fp</span><span class="p">))</span>
-                    <span class="n">order</span> <span class="o">=</span> <span class="n">tanimoto</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
-                    <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">0</span>
-                    <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">4</span>
-                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                        <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">tanimoto</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">tanimoto</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">))</span> <span class="c1"># array of cumulative crowded similarity distance scores for each molecule in the front -&gt; the higher the score, the more diverse the &#39;crowd&#39; around the molecule -&gt; the better the reward in the end</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">front</span><span class="p">)):</span> <span class="c1"># for each molecule in the front</span>
+                    <span class="n">tanimoto</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">DataStructs</span><span class="o">.</span><span class="n">BulkTanimotoSimilarity</span><span class="p">(</span><span class="n">fp</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">fp</span><span class="p">))</span> <span class="c1"># calculate tanimoto distance to all other molecules in the front</span>
+                    <span class="n">order</span> <span class="o">=</span> <span class="n">tanimoto</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span> <span class="c1"># get the order from lowest to highest tanimoto distance (the molecule j itself is at index 0)</span>
+                    <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">0</span> <span class="c1"># the molecule itself is scored 0 because we want a diverse set and this is the baseline lowest score</span>
+                    <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">4</span> <span class="c1"># ensure the farthest molecule always gets the highest score</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span> <span class="c1"># for all other molecules in the front</span>
+                        <span class="c1"># save the sum of the differences in distances between molecule j and the other molecules in the front</span>
+                        <span class="c1"># in other words: measure how the other molecules &#39;crowd&#39; together around molecule j</span>
+                        <span class="n">dist</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">tanimoto</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">tanimoto</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]]</span>
                 <span class="n">fronts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">front</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
             <span class="n">rank</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fronts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">rank</span></div>
 
 
-<div class="viewcode-block" id="ParetoSimilarity"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.ParetoSimilarity">[docs]</a><span class="k">class</span> <span class="nc">ParetoSimilarity</span><span class="p">(</span><span class="n">RewardScheme</span><span class="p">):</span>
+<div class="viewcode-block" id="ParetoTanimotoDistance"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.ParetoTanimotoDistance">[docs]</a><span class="k">class</span> <span class="nc">ParetoTanimotoDistance</span><span class="p">(</span><span class="n">RewardScheme</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ranking</span><span class="o">=</span><span class="n">SimilarityRanking</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ranking</span><span class="o">=</span><span class="n">MinMeanSimilarityRanking</span><span class="p">()):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ranking</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ranking : RankingStrategy</span>
+<span class="sd">            Ranking strategy to use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">valid</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES sequence to be ranked</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            matrix of scores for the multiple objectives</span>
+<span class="sd">        desire : int</span>
+<span class="sd">            Number of desired molecules</span>
+<span class="sd">        undesire : int</span>
+<span class="sd">            Number of undesired molecules</span>
+<span class="sd">        thresholds : np.ndarray</span>
+<span class="sd">            Thresholds for the multiple objectives</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranking</span><span class="p">:</span>
             <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">RewardException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> reward scheme requires a ranking strategy.&quot;</span><span class="p">)</span>
 
@@ -194,22 +305,79 @@
         <span class="n">rewards</span><span class="p">[</span><span class="n">ranks</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
         <span class="k">return</span> <span class="n">rewards</span></div>
 
+
 <div class="viewcode-block" id="ParetoCrowdingDistance"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.ParetoCrowdingDistance">[docs]</a><span class="k">class</span> <span class="nc">ParetoCrowdingDistance</span><span class="p">(</span><span class="n">RewardScheme</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ranking</span><span class="o">=</span><span class="n">NSGAIIRanking</span><span class="p">()):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ranking</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ranking : RankingStrategy</span>
+<span class="sd">            Ranking strategy to use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">valid</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list  </span>
+<span class="sd">            List of SMILES sequence to be ranked</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            matrix of scores for the multiple objectives</span>
+<span class="sd">        desire : int</span>
+<span class="sd">            array of desired molecules</span>
+<span class="sd">        undesire : int</span>
+<span class="sd">            array of undesired molecules</span>
+<span class="sd">        thresholds : np.ndarray</span>
+<span class="sd">            Thresholds for the multiple objectives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rewards : np.ndarray</span>
+<span class="sd">            Array of rewards for the SMILES sequences</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ranks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranking</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
         <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">rewards</span><span class="p">[</span><span class="n">ranks</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">rewards</span></div>
 
-<div class="viewcode-block" id="WeightedSum"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.WeightedSum">[docs]</a><span class="k">class</span> <span class="nc">WeightedSum</span><span class="p">(</span><span class="n">RewardScheme</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">valid</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+<div class="viewcode-block" id="WeightedSum"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.rewards.WeightedSum">[docs]</a><span class="k">class</span> <span class="nc">WeightedSum</span><span class="p">(</span><span class="n">RewardScheme</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reward scheme that uses the weighted sum ranking strategy to rank the solutions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reward scheme that uses the weighted sum ranking strategy to rank the solutions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES sequence to be ranked</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            matrix of scores for the multiple objectives</span>
+<span class="sd">        desire : int</span>
+<span class="sd">            array of desired molecules</span>
+<span class="sd">        undesire : int</span>
+<span class="sd">            array of undesired molecules</span>
+<span class="sd">        thresholds : np.ndarray</span>
+<span class="sd">            Thresholds for the multiple objectives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rewards : np.ndarray</span>
+<span class="sd">            Array of rewards for the SMILES sequences</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">weight</span> <span class="o">=</span> <span class="p">((</span><span class="n">scores</span> <span class="o">&lt;</span> <span class="n">thresholds</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">/</span> \
-                     <span class="p">((</span><span class="n">scores</span> <span class="o">&gt;=</span> <span class="n">thresholds</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
+            <span class="p">((</span><span class="n">scores</span> <span class="o">&gt;=</span> <span class="n">thresholds</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">/</span> <span class="n">weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">scores</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">T</span><span class="p">)</span></div>
 </pre></div>

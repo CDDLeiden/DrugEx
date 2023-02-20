@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.environment &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.environment &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -93,17 +93,65 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="DrugExEnvironment.getScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.environment.DrugExEnvironment.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method is used to get the scores from the scorers and to check molecule validity and desireability.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list of str</span>
+<span class="sd">            List of SMILES strings to score.</span>
+<span class="sd">        frags : list of str, optional</span>
+<span class="sd">            List of SMILES strings of fragments to check for.</span>
+<span class="sd">        no_multifrag_smiles : bool, optional</span>
+<span class="sd">            Whether to check for SMILES strings that contain more than one fragment.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        preds : pd.DataFrame</span>
+<span class="sd">            Dataframe with the scores from the scorers and the validity and desireability of the molecules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]</span>
+        
+        <span class="c1"># Check molecule validity and accuracy</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">frags</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+
+        <span class="c1"># Get scores per objective from the scorers</span>
+        <span class="k">for</span> <span class="n">scorer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">:</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()]</span> <span class="o">=</span> <span class="n">scorer</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+
+        <span class="c1"># Check if the molecule is desirable</span>
+        <span class="n">undesire</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>  <span class="c1"># ^ self.objs.on</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Desired&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">undesire</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># TODO: Maybe smiles and frags should be added to the dataframe as well?</span>
+        
+        <span class="k">return</span> <span class="n">scores</span></div>
+
+<div class="viewcode-block" id="DrugExEnvironment.getUnmodifiedScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.environment.DrugExEnvironment.getUnmodifiedScores">[docs]</a>    <span class="k">def</span> <span class="nf">getUnmodifiedScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method is used to get the scores from the scorers without any modifications.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list of str</span>
+<span class="sd">            List of SMILES strings to score.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        preds : pd.DataFrame</span>
+<span class="sd">            Dataframe with the scores from the scorers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">preds</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">scorer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">:</span>
-            <span class="n">score</span> <span class="o">=</span> <span class="n">scorer</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
             <span class="n">preds</span><span class="p">[</span><span class="n">scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()]</span> <span class="o">=</span> <span class="n">score</span>
         <span class="n">preds</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
-        <span class="n">undesire</span> <span class="o">=</span> <span class="p">(</span><span class="n">preds</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>  <span class="c1"># ^ self.objs.on</span>
-        <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;DESIRE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">undesire</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;VALID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SmilesChecker</span><span class="o">.</span><span class="n">checkSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">frags</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-        <span class="n">preds</span><span class="p">[</span><span class="n">preds</span><span class="p">[</span><span class="s1">&#39;VALID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="n">preds</span></div></div>
 </pre></div>
 

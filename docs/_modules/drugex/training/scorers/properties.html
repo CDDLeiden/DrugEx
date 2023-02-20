@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.properties &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.scorers.properties &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -91,7 +91,7 @@
 <span class="kn">from</span> <span class="nn">rdkit.Chem.Fraggle</span> <span class="kn">import</span> <span class="n">FraggleSim</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">Descriptors</span> <span class="k">as</span> <span class="n">desc</span><span class="p">,</span> <span class="n">Crippen</span><span class="p">,</span> <span class="n">AllChem</span><span class="p">,</span> <span class="n">Lipinski</span>
 
-<span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
+<span class="kn">from</span> <span class="nn">drugex.training.scorers.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.sascorer</span> <span class="kn">import</span> <span class="n">calculateScore</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.modifiers</span> <span class="kn">import</span> <span class="n">Gaussian</span>
 
@@ -138,20 +138,35 @@
 <div class="viewcode-block" id="AtomCounter"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter">[docs]</a><span class="k">class</span> <span class="nc">AtomCounter</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            element: element to count within a molecule</span>
+<span class="sd">        Initialize the AtomCounter scorer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        element : str</span>
+<span class="sd">            The element to count within the molecules.</span>
+<span class="sd">        modifier : ScoreModifier, optional</span>
+<span class="sd">            A `ScoreModifier` object to modify the scores, by default None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">element</span>
 
 <div class="viewcode-block" id="AtomCounter.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Count the number of atoms of a given type.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            mol: molecule</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            The number of atoms of the given type.</span>
+<span class="sd">        Count the number of atoms of a given type in the molecules.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mols : list of rdkit molecules</span>
+<span class="sd">            The molecules to score.</span>
+<span class="sd">        frags : list of rdkit molecules, optional</span>
+<span class="sd">            The fragments used to generate the molecules, by default None.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores : np.array</span>
+<span class="sd">            The scores for the molecules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># if the molecule contains H atoms, they may be implicit, so add them</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
@@ -182,9 +197,16 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean_func</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            formula: target molecular formula</span>
-<span class="sd">            mean_func: which function to use for averaging: &#39;arithmetic&#39; or &#39;geometric&#39;</span>
+<span class="sd">        Initialize the Isomer scorer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        formula : str</span>
+<span class="sd">            The molecular formula to score against.</span>
+<span class="sd">        mean_func : str, optional</span>
+<span class="sd">            Which function to use for averaging the scores (&#39;arithmetic&#39; or &#39;geometric&#39;), by default &#39;geometric&#39;</span>
+<span class="sd">        modifier : ScoreModifier, optional</span>
+<span class="sd">            A `ScoreModifier` object to modify the scores, by default None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">objs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mods</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring_functions</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
@@ -194,9 +216,15 @@
     <span class="k">def</span> <span class="nf">parse_molecular_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parse a molecular formulat to get the element types and counts.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            formula: molecular formula, f.i. &quot;C8H3F3Br&quot;</span>
-<span class="sd">        Returns:</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        formula : str</span>
+<span class="sd">            The molecular formula to parse.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        results : list of tuples</span>
 <span class="sd">            A list of tuples containing element types and number of occurrences.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([A-Z][a-z]*)(\d*)&#39;</span><span class="p">,</span> <span class="n">formula</span><span class="p">)</span>
@@ -211,6 +239,21 @@
         <span class="k">return</span> <span class="n">results</span></div>
 
 <div class="viewcode-block" id="Isomer.scoring_functions"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.scoring_functions">[docs]</a>    <span class="k">def</span> <span class="nf">scoring_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the scoring functions for the molecular formula.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        formula : str</span>
+<span class="sd">            The molecular formula to score against.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        objs : list of Scorer objects</span>
+<span class="sd">            The scoring functions for each element type.</span>
+<span class="sd">        mods : list of ScoreModifier objects</span>
+<span class="sd">            The modifiers for each scoring function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">element_occurrences</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_molecular_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
 
         <span class="n">total_n_atoms</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">element_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">element_tuple</span> <span class="ow">in</span> <span class="n">element_occurrences</span><span class="p">)</span>
@@ -225,6 +268,22 @@
         <span class="k">return</span> <span class="n">objs</span><span class="p">,</span> <span class="n">mods</span></div>
 
 <div class="viewcode-block" id="Isomer.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the scores for the molecules.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mols : list of rdkit molecules</span>
+<span class="sd">            The molecules to score.</span>
+<span class="sd">        frags : list of rdkit molecules, optional</span>
+<span class="sd">            The fragments used to generate the molecules, by default None.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores : np.array</span>
+<span class="sd">            The scores for the molecules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># return the average of all scoring functions</span>
         <span class="n">score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">mods</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">obj</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objs</span><span class="p">)])</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">score</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">score</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_func</span> <span class="o">==</span> <span class="s1">&#39;geometric&#39;</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -235,12 +294,39 @@
 
 <div class="viewcode-block" id="Scaffold"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold">[docs]</a><span class="k">class</span> <span class="nc">Scaffold</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smart</span><span class="p">,</span> <span class="n">is_match</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Scaffold scorer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smart : str</span>
+<span class="sd">            The SMARTS pattern to match.</span>
+<span class="sd">        is_match : bool</span>
+<span class="sd">            Whether the SMARTS pattern should be matched or not.</span>
+<span class="sd">        modifier : ScoreModifier, optional</span>
+<span class="sd">            A `ScoreModifier` object to modify the scores, by default None.        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">smart</span> <span class="o">=</span> <span class="n">smart</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frag</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="n">smart</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_match</span> <span class="o">=</span> <span class="n">is_match</span>
 
 <div class="viewcode-block" id="Scaffold.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Get the scores for the molecules.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mols : list of rdkit molecules</span>
+<span class="sd">            The molecules to score.</span>
+<span class="sd">        frags : list of rdkit molecules, optional</span>
+<span class="sd">            The fragments used to generate the molecules, by default None.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores : np.array</span>
+<span class="sd">            The scores for the molecules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mol</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">mols</span><span class="p">)):</span>
             <span class="k">try</span><span class="p">:</span>

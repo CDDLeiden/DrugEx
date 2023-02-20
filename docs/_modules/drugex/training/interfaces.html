@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.interfaces &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.interfaces &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -82,11 +82,19 @@
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">gmean</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">DEFAULT_GPUS</span><span class="p">,</span> <span class="n">DEFAULT_DEVICE</span>
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">drugex.utils</span> <span class="kn">import</span> <span class="n">gpu_non_dominated_sort</span><span class="p">,</span> <span class="n">cpu_non_dominated_sort</span>
+<span class="kn">from</span> <span class="nn">drugex.training.scorers.smiles</span> <span class="kn">import</span> <span class="n">SmilesChecker</span>
+<span class="c1">#from drugex.training.monitors import NullMonitor</span>
 
 
 <div class="viewcode-block" id="ModelEvaluator"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.ModelEvaluator">[docs]</a><span class="k">class</span> <span class="nc">ModelEvaluator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -99,100 +107,26 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Score molecules.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            mols: molecules to score</span>
-<span class="sd">            frags: given input fragments</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mols : list</span>
+<span class="sd">            List of SMILES strings of the molecules to score.</span>
+<span class="sd">        frags : list, optional</span>
+<span class="sd">            List of SMILES strings of the fragments used to generate the molecules.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            scores (DataFrame): a data frame with columns name &#39;VALID&#39; and &#39;DESIRE&#39; indicating the validity of the SMILES and the degree of desirability</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.DataFrame</span>
+<span class="sd">            A DataFrame with the scores for the molecules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="ScoreModifier"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.ScoreModifier">[docs]</a><span class="k">class</span> <span class="nc">ScoreModifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Defines a function to modify a score value.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Apply the modifier on x.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            x: float or np.array to modify</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            float or np.array (depending on the type of x) after application of the distance function.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-
-<div class="viewcode-block" id="Scorer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer">[docs]</a><span class="k">class</span> <span class="nc">Scorer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Used by the `Environment` to calculate customized scores.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">modifier</span>
-
-<div class="viewcode-block" id="Scorer.getScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer.getScores">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns scores for the input molecules.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            mols: molecules to score</span>
-<span class="sd">            frags: input fragments</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            scores (list): `list` of scores for &quot;mols&quot;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">pass</span></div>
-
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Actual call method. Modifies the scores before returning them.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            mols: molecules to score</span>
-<span class="sd">            frags: input fragments</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            scores (DataFrame): a data frame with columns name &#39;VALID&#39; and &#39;DESIRE&#39; indicating the validity of the SMILES and the degree of desirability</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getModifiedScores</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="p">))</span>
-
-<div class="viewcode-block" id="Scorer.getModifiedScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer.getModifiedScores">[docs]</a>    <span class="k">def</span> <span class="nf">getModifiedScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Modify the scores with the given `ScoreModifier`.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            scores:</span>
-
-<span class="sd">        Returns:</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifier</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifier</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">scores</span></div>
-
-<div class="viewcode-block" id="Scorer.getKey"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer.getKey">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="Scorer.setModifier"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer.setModifier">[docs]</a>    <span class="k">def</span> <span class="nf">setModifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifier</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">modifier</span></div>
-
-<div class="viewcode-block" id="Scorer.getModifier"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Scorer.getModifier">[docs]</a>    <span class="k">def</span> <span class="nf">getModifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifier</span></div></div>
 
 <div class="viewcode-block" id="RankingStrategy"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.RankingStrategy">[docs]</a><span class="k">class</span> <span class="nc">RankingStrategy</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ranks the given molecules according to their scores.</span>
 
-<span class="sd">    The implementing classes can get a paretor from by calling `RankingStrategy.getParetoFronts()` on the input scores.</span>
+<span class="sd">    The implementing classes can get a pareto front by calling `RankingStrategy.getParetoFronts()` on the input scores.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -200,8 +134,10 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Constructor allows to specify a GPU or CPU device for Pareto fronts calculation.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            device:</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        device : torch.device</span>
+<span class="sd">            The device to use for the ranking.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
@@ -210,11 +146,15 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns Pareto fronts.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            scores: matrix of scores for the multiple objectives</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            fronts (list): `list` of Pareto fronts.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            Matrix of scores for the multiple objectives</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">):</span>
@@ -228,14 +168,13 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return ranks of the molecules based on the given scores.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            smiles: SMILES of the molecules</span>
-<span class="sd">            scores: the matrix of scores (&quot;len(smiles) x len(objectives)&quot;)</span>
-
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to rank.</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            Matrix of scores for the multiple objectives</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
@@ -249,36 +188,43 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Exception to catch errors in the calculation of rewards.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ranking</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The `RankingStrategy` function to use for ranking solutions.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            ranking: a `RankingStrategy`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ranking : RankingStrategy</span>
+<span class="sd">            The ranking strategy to use for ranking solutions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ranking</span> <span class="o">=</span> <span class="n">ranking</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">valid</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the rewards for generated molecules and rank them according to teh given `RankingStrategy`.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            smiles (list): SMILES strings of the generated molecules</span>
-<span class="sd">            scores (DataFrame): the full scoring table (&quot;len(smiles) x len(thresholds)&quot;)</span>
-<span class="sd">            valid (list):  ratio of valid molecules</span>
-<span class="sd">            desire (list): ratio of desired molecules</span>
-<span class="sd">            undesire (list): ratio of undesired molecules</span>
-<span class="sd">            thresholds (list): score thresholds for the calculated scores in &quot;scores&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to rank.</span>
+<span class="sd">        scores : np.ndarray</span>
+<span class="sd">            Matrix of scores for the multiple objectives</span>
+<span class="sd">        desire : int</span>
+<span class="sd">            Number of molecules that are desirable.</span>
+<span class="sd">        undesire : int</span>
+<span class="sd">            Number of molecules that are undesirable.</span>
+<span class="sd">        thresholds : list</span>
+<span class="sd">            List of thresholds for the objectives.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            rewards (list): rewards based on</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Array of rewards for the molecules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Environment"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Environment">[docs]</a><span class="k">class</span> <span class="nc">Environment</span><span class="p">(</span><span class="n">ModelEvaluator</span><span class="p">):</span>
@@ -290,10 +236,23 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize environment with objective functions and their desirability thresholds. Molecules scoring above thresholds are desirable.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            scorers: scoring functions to calculate the objective functions for molecules</span>
-<span class="sd">            thresholds: desirability thresholds for each scoring function (passed to the reward scheme as well), should be the same length as &quot;scorers&quot;. If `None`, they will be set to 0.99.</span>
-<span class="sd">            reward_scheme: a `RewardScheme`, predefined schemes are available in `drugex.training.rewards`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scorers : list</span>
+<span class="sd">            List of objective functions to use for scoring molecules.</span>
+<span class="sd">        thresholds : list, optional</span>
+<span class="sd">            List of desirability thresholds for the objective functions. If `None`, all thresholds are set to 0.99.</span>
+<span class="sd">        reward_scheme : RewardScheme, optional</span>
+<span class="sd">            The reward scheme to use for ranking solutions. If `None`, the `DefaultRewardScheme` is used.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If the number of scorers and thresholds does not match.</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The `scorers` and `thresholds` are passed to the `RewardScheme` as well.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">scorers</span> <span class="o">=</span> <span class="n">scorers</span>
@@ -302,44 +261,95 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rewardScheme</span> <span class="o">=</span> <span class="n">reward_scheme</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Score molecules.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to score.</span>
+<span class="sd">        frags : list, optional</span>
+<span class="sd">            List of SMILES strings of the fragments used to generate the molecules.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.DataFrame</span>
+<span class="sd">            A DataFrame with the scores for the molecules.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Environment.getScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Environment.getScores">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the scores of all objectives for all of samples</span>
-<span class="sd">        Args:</span>
-<span class="sd">            smiles (list): the list of generated molecules</span>
-<span class="sd">            frags (list): the list of input fragments</span>
+<span class="sd">        Calculate the scores of all objectives per molecule and qualify generated molecules (valid, accurate, desired).</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            scores (DataFrame): The scores of all objectives for all of samples which also includes validity</span>
-<span class="sd">                and desirability for each SMILES.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to score.</span>
+<span class="sd">        frags : list, optional</span>
+<span class="sd">            List of SMILES strings of the fragments used to generate the molecules.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.DataFrame</span>
+<span class="sd">            A DataFrame with the scores and qualifications for the molecules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 
+<div class="viewcode-block" id="Environment.getUnmodifiedScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Environment.getUnmodifiedScores">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">getUnmodifiedScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the scores without applying modifiers of all objectives per molecule.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to score.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.DataFrame</span>
+<span class="sd">            A DataFrame with the scores for the molecules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Environment.getRewards"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Environment.getRewards">[docs]</a>    <span class="k">def</span> <span class="nf">getRewards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the single value as the reward for each molecule used for reinforcement learning</span>
-<span class="sd">        Args:</span>
-<span class="sd">            smiles (List):  a list of SMILES-based molecules</span>
+<span class="sd">        Calculate the single value as the reward for each molecule used for reinforcement learning.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            rewards (np.ndarray): n-d array in which the element is the reward for each molecule, and</span>
-<span class="sd">                n is the number of array which equals to the size of smiles.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            List of SMILES strings of the molecules to score.</span>
+<span class="sd">        frags : list, optional</span>
+<span class="sd">            List of SMILES strings of the fragments used to generate the molecules.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Array of rewards for the molecules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="n">frags</span><span class="p">)</span>
-        <span class="n">valid</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">VALID</span><span class="o">.</span><span class="n">values</span>
-        <span class="n">desire</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">DESIRE</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">Valid</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">desire</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">Desired</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">undesire</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="o">-</span> <span class="n">desire</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">values</span>
 
-        <span class="n">rewards</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewardScheme</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">valid</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewardScheme</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">desire</span><span class="p">,</span> <span class="n">undesire</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>
         <span class="n">rewards</span><span class="p">[</span><span class="n">valid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        
         <span class="k">return</span> <span class="n">rewards</span></div>
 
 <div class="viewcode-block" id="Environment.getScorerKeys"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Environment.getScorerKeys">[docs]</a>    <span class="k">def</span> <span class="nf">getScorerKeys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the keys of the scorers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of keys of the scorers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">]</span></div></div>
 
 <div class="viewcode-block" id="ModelProvider"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.ModelProvider">[docs]</a><span class="k">class</span> <span class="nc">ModelProvider</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -352,8 +362,10 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the current model as a `Model` instance or in serialized form.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            model (`Model` or serialized states)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Model or dict</span>
+<span class="sd">            The current model or its serialized form.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">pass</span></div></div>
@@ -365,11 +377,33 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">DEFAULT_GPUS</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the model with the given device and GPUs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        device : torch.device, optional</span>
+<span class="sd">            The device to use for the model. If `None`, the default device is used.</span>
+<span class="sd">        use_gpus : list, optional</span>
+<span class="sd">            List of GPUs to use for the model. If `None`, the default GPUs are used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gpus</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updateDevices</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">use_gpus</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.updateDevices"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Model.updateDevices">[docs]</a>    <span class="k">def</span> <span class="nf">updateDevices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">gpus</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the device and GPUs used by the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        device : torch.device</span>
+<span class="sd">            The device to use for the model.</span>
+<span class="sd">        gpus : list</span>
+<span class="sd">            List of GPUs to use for the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;cpu&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">gpus</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
@@ -386,116 +420,58 @@
 
 <span class="sd">        Subclasses should also make sure to set &quot;self.device&quot; to the currently used device and &quot;self.gpus&quot; to GPU ids of the currently used GPUs</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            gpus: a `tuple` of new GPU IDs</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            `None`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gpus : tuple</span>
+<span class="sd">            Tuple of GPU ids to use.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Model.fit"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Model.fit">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Train and validate the model with a given training and validation loader (see `DataSet` and its implementations docs to learn how to generate them).</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            train_loader: PyTorch `DataLoader` with training data.</span>
-<span class="sd">            valid_loader: PyTorch `DataLoader` with validation data.</span>
-<span class="sd">            epochs: number of epochs for training the model</span>
-<span class="sd">            monitor: a `TrainingMonitor`</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            `None`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_loader : torch.utils.data.DataLoader</span>
+<span class="sd">            The training data loader.</span>
+<span class="sd">        valid_loader : torch.utils.data.DataLoader</span>
+<span class="sd">            The validation data loader.</span>
+<span class="sd">        epochs : int, optional</span>
+<span class="sd">            The number of epochs to train the model for.</span>
+<span class="sd">        monitor : TrainingMonitor, optional</span>
+<span class="sd">            A `TrainingMonitor` instance to monitor the training process.     </span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional keyword arguments to pass to the training loop.  </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Model.loadStatesFromFile"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Model.loadStatesFromFile">[docs]</a>    <span class="k">def</span> <span class="nf">loadStatesFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load the model states from a file.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            path: path to file</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The path to the file containing the model states.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Model.loadStates"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Model.loadStates">[docs]</a>    <span class="k">def</span> <span class="nf">loadStates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the model states from a dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state_dict : dict</span>
+<span class="sd">            The dictionary containing the model states.</span>
+<span class="sd">        strict : bool, optional</span>
+<span class="sd">            Whether to raise an error if the dictionary contains keys that do not match the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span></div></div>
-
-<div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The base generator class for fitting and evaluating a DrugEx generator.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="Generator.fit"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Generator.fit">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Start training.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            train_loader: training data loader (see `DataSet`)</span>
-<span class="sd">            valid_loader: testing data loader (see `DataSet`)</span>
-<span class="sd">            epochs: maximum number of epochs for which to train</span>
-<span class="sd">            evaluator: a `ModelEvaluator`</span>
-<span class="sd">            monitor:</span>
-
-<span class="sd">        Returns:</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="Generator.evaluate"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Generator.evaluate">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="Generator.sample"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Generator.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">pass</span></div></div>
-
-<div class="viewcode-block" id="Explorer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Explorer">[docs]</a><span class="k">class</span> <span class="nc">Explorer</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">DEFAULT_GPUS</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">use_gpus</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">agent</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mutate</span> <span class="o">=</span> <span class="n">mutate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">crover</span> <span class="o">=</span> <span class="n">crover</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">batchSize</span> <span class="o">=</span> <span class="n">batch_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="n">repeat</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span> <span class="o">=</span> <span class="n">n_samples</span>
-
-<div class="viewcode-block" id="Explorer.attachToGPUs"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Explorer.attachToGPUs">[docs]</a>    <span class="k">def</span> <span class="nf">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpus</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;agent&#39;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">attachToGPUs</span><span class="p">(</span><span class="n">gpus</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mutate&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mutate</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mutate</span><span class="o">.</span><span class="n">attachToGPUs</span><span class="p">(</span><span class="n">gpus</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;crover&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="o">.</span><span class="n">attachToGPUs</span><span class="p">(</span><span class="n">gpus</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gpus</span> <span class="o">=</span> <span class="n">gpus</span></div>
-
-<div class="viewcode-block" id="Explorer.fit"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Explorer.fit">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="Explorer.getModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.Explorer.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the current state of the agent</span>
-
-<span class="sd">        Returns:</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span></div></div>
 
 <div class="viewcode-block" id="TrainingMonitor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.TrainingMonitor">[docs]</a><span class="k">class</span> <span class="nc">TrainingMonitor</span><span class="p">(</span><span class="n">ModelProvider</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -507,8 +483,10 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the state dictionary of the `Model` instance currently being trained or serialize the model any other way.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            model: a DrugEx `Model`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : Model</span>
+<span class="sd">            The model to save.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
@@ -517,14 +495,19 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save performance data.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            current_step: Current training step (batch).</span>
-<span class="sd">            current_epoch: Current epoch.</span>
-<span class="sd">            loss: current value of the training loss</span>
-<span class="sd">            *args: other arguments depending on the model type</span>
-<span class="sd">            **kwargs: other keyword arguments depending on the model type</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_step : int, optional</span>
+<span class="sd">            The current training step (i.e. batch).</span>
+<span class="sd">        current_epoch : int, optional</span>
+<span class="sd">            The current epoch.</span>
+<span class="sd">        loss : float, optional</span>
+<span class="sd">            The current loss.</span>
+<span class="sd">        *args</span>
+<span class="sd">            Additional arguments depending on the model type.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional keyword arguments depending on the model type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="TrainingMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.saveProgress">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -532,15 +515,21 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Notifies the monitor of the current progress of the training.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            current_step: Current training step (batch).</span>
-<span class="sd">            current_epoch: Current epoch.</span>
-<span class="sd">            total_steps: Total number of training steps (batches).</span>
-<span class="sd">            total_epochs: Total number of epochs.</span>
-<span class="sd">            *args: other arguments depending on the model type</span>
-<span class="sd">            **kwargs: other keyword arguments depending on the model type</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_step : int, optional</span>
+<span class="sd">            The current training step (i.e. batch).</span>
+<span class="sd">        current_epoch : int, optional</span>
+<span class="sd">            The current epoch.</span>
+<span class="sd">        total_steps : int, optional</span>
+<span class="sd">            The total number of training steps.</span>
+<span class="sd">        total_epochs : int, optional</span>
+<span class="sd">            The total number of epochs.</span>
+<span class="sd">        *args</span>
+<span class="sd">            Additional arguments depending on the model type.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional keyword arguments depending on the model type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="TrainingMonitor.endStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.endStep">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -548,11 +537,13 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Notify the monitor that a step of the training has finished.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            step: Current training step (batch).</span>
-<span class="sd">            epoch: Current epoch.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        step : int</span>
+<span class="sd">            The current training step (i.e. batch).</span>
+<span class="sd">        epoch : int</span>
+<span class="sd">            The current epoch.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="TrainingMonitor.close"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.close">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -560,7 +551,6 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Close this monitor. Training has finished.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div></div>
 </pre></div>
 

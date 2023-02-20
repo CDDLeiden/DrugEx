@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>drugex.training.explorers.sequence_explorer &mdash; DrugEx 3.4.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+          </a>
+              <div class="version">
+                v3.4.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DrugEx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.explorers.sequence_explorer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for drugex.training.explorers.sequence_explorer</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">DEFAULT_GPUS</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.training.explorers.interfaces</span> <span class="kn">import</span> <span class="n">Explorer</span>
+<span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
+<span class="kn">from</span> <span class="nn">drugex.training.generators.utils</span> <span class="kn">import</span> <span class="n">unique</span>
+
+ 
+<div class="viewcode-block" id="SequenceExplorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer">[docs]</a><span class="k">class</span> <span class="nc">SequenceExplorer</span><span class="p">(</span><span class="n">Explorer</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    `Explorer` to optimize a sequence-based agent (RNN) with the given `Environment`.</span>
+<span class="sd"> </span>
+<span class="sd">    Reference: Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v2: De Novo Design of Drug Molecule by</span>
+<span class="sd">               Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology.</span>
+<span class="sd">               J Cheminform (2021). https://doi.org/10.1186/s13321-019-0355-6</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">DEFAULT_GPUS</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SequenceExplorer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">mutate</span><span class="p">,</span> <span class="n">crover</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">use_gpus</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent: drugex.training.generators.SequenceRNN</span>
+<span class="sd">            The agent network which is optimised to generates the desired molecules.</span>
+<span class="sd">        env : drugex.training.interfaces.Environment</span>
+<span class="sd">            The environment which provides the reward and judge if the genrated molecule is valid and desired.</span>
+<span class="sd">        mutate : drugex.training.generators.SequenceRNN</span>
+<span class="sd">            The pre-trained network which increases the exploration of the chemical space.</span>
+<span class="sd">        crover : drugex.training.generators.SequenceRNN</span>
+<span class="sd">            The iteratively updated network which increases the exploitation of the chemical space.</span>
+<span class="sd">        no_multifrag_smiles : bool</span>
+<span class="sd">            If True, only single-fragment SMILES are valid.</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            The number of molecules generated in each iteration.</span>
+<span class="sd">        epsilon : float</span>
+<span class="sd">            The probability of using the `mutate` network to generate molecules.</span>
+<span class="sd">        beta : float</span>
+<span class="sd">            The baseline for the reward.</span>
+<span class="sd">        n_samples : int</span>
+<span class="sd">            The number of molecules to be generated in each epoch.</span>
+<span class="sd">        optim : torch.optim</span>
+<span class="sd">            The optimizer to update the agent network.</span>
+<span class="sd">        device : torch.device</span>
+<span class="sd">            The device to run the network.</span>
+<span class="sd">        use_gpus : tuple</span>
+<span class="sd">            The GPU ids to run the network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">repeats_per_epoch</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span> <span class="k">if</span> <span class="n">optim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">optim</span>
+
+<div class="viewcode-block" id="SequenceExplorer.forward"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate molecules with the given `agent` network.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            The generated SMILES.</span>
+<span class="sd">        seqs : torch.Tensor</span>
+<span class="sd">            The generated encoded sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="n">seqs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repeats_per_epoch</span><span class="p">):</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batchSize</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mutate</span><span class="p">)</span>
+            <span class="n">seqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seqs</span><span class="p">])</span>
+        <span class="n">ix</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">smiles</span><span class="p">]))</span>
+        <span class="n">smiles</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="n">seqs</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="n">ix</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span></div>
+   
+<div class="viewcode-block" id="SequenceExplorer.policy_gradient"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.policy_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">policy_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seqs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Policy gradient training.</span>
+<span class="sd"> </span>
+<span class="sd">        Novel molecules are scored by the environment.</span>
+<span class="sd">        The policy gradient is calculated using the REINFORCE algorithm and the agent is updated.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles : list</span>
+<span class="sd">            The generated SMILES.</span>
+<span class="sd">        seqs : torch.Tensor</span>
+<span class="sd">            The generated encoded sequences. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Calculate the reward from SMILES with the environment</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getRewards</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Move rewards to device and create a loader containing the sequences and the rewards</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+
+        <span class="c1"># Train model with policy gradient</span>
+        <span class="k">for</span> <span class="n">step_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Iterating over validation batches&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="p">(</span><span class="n">reward</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> 
+            <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="k">del</span> <span class="n">loss</span></div>
+ 
+<div class="viewcode-block" id="SequenceExplorer.fit"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="s1">&#39;desired_ratio&#39;</span><span class="p">,</span> <span class="n">min_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the graph explorer to the training data.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_loader : torch.utils.data.DataLoader</span>
+<span class="sd">            Data loader for training data</span>
+<span class="sd">        valid_loader : torch.utils.data.DataLoader</span>
+<span class="sd">            Data loader for validation data</span>
+<span class="sd">        epochs : int</span>
+<span class="sd">            Number of epochs to train for</span>
+<span class="sd">        patience : int</span>
+<span class="sd">            Number of epochs to wait for improvement before early stopping</span>
+<span class="sd">        criteria : str</span>
+<span class="sd">            Criteria to use for early stopping</span>
+<span class="sd">        min_epochs : int</span>
+<span class="sd">            Minimum number of epochs to train for</span>
+<span class="sd">        monitor : Monitor</span>
+<span class="sd">            Monitor to use for logging and saving model</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span> <span class="k">if</span> <span class="n">monitor</span> <span class="k">else</span> <span class="n">NullMonitor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Fitting SMILES RNN explorer&#39;</span><span class="p">):</span>
+            <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">epoch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">----------</span><span class="se">\n</span><span class="s1">EPOCH </span><span class="si">%d</span><span class="se">\n</span><span class="s1">----------&#39;</span> <span class="o">%</span> <span class="n">epoch</span><span class="p">)</span>
+            
+            <span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">policy_gradient</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+
+            <span class="c1"># Evaluate the model on the validation set</span>
+            <span class="n">smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span><span class="p">)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
+            <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">smiles</span>           
+
+            <span class="c1"># Save evaluate criteria and save best model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveBestState</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># Log performance and genearated compounds</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logPerformanceAndCompounds</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+ 
+            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="n">patience</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">epoch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Every nth epoch reset the agent and the crover networks to the best state</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Resetting agent and crover to best state at epoch </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span><span class="p">)</span>
+
+            <span class="c1"># Early stopping</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&gt;=</span> <span class="n">min_epochs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span> <span class="o">&gt;</span> <span class="n">patience</span><span class="p">)</span> <span class="p">:</span> <span class="k">break</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;End time reinforcement learning: </span><span class="si">%s</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%m-%y %H:%M:%S&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

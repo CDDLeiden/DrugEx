@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.molecules.converters package &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.molecules.converters package &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -48,11 +48,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="drugex.environment.html">drugex.environment package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a></li>
@@ -63,9 +62,9 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.designer">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.environ">drugex.environ module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -87,7 +86,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
+          <li><a href="modules.html">drugex</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
           <li><a href="drugex.molecules.html">drugex.molecules package</a> &raquo;</li>
       <li>drugex.molecules.converters package</li>
@@ -134,6 +133,45 @@ On: 21.04.22, 12:20</p>
 </dd></dl>
 
 </section>
+<section id="module-drugex.molecules.converters.dummy_molecules">
+<span id="drugex-molecules-converters-dummy-molecules-module"></span><h2>drugex.molecules.converters.dummy_molecules module<a class="headerlink" href="#module-drugex.molecules.converters.dummy_molecules" title="Permalink to this heading"></a></h2>
+<p>dummy molecules</p>
+<p>Created by: Sohvi Luukkonen
+On: 27.09.22, 13:40</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.dummy_molecules.</span></span><span class="sig-name descname"><span class="pre">dummyMolsFromFragments</span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/dummy_molecules.html#dummyMolsFromFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
+<p>A converter to create dummy molecules from fragments.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.addCCToFragments">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">addCCToFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/dummy_molecules.html#dummyMolsFromFragments.addCCToFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.addCCToFragments" title="Permalink to this definition"></a></dt>
+<dd><p>Add CC to a single fragment to build a dummy molecule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frag</strong> – fragment to be converted to a dummy molecule</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.bridgeFragments">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bridgeFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/dummy_molecules.html#dummyMolsFromFragments.bridgeFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.bridgeFragments" title="Permalink to this definition"></a></dt>
+<dd><p>Bridge multiple fragments together into one dummy molecule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frags</strong> – fragments to be bridged together</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">str</span></code></a> of a SMILES representation of the bridged fragments</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-drugex.molecules.converters.fragmenters">
 <span id="drugex-molecules-converters-fragmenters-module"></span><h2>drugex.molecules.converters.fragmenters module<a class="headerlink" href="#module-drugex.molecules.converters.fragmenters" title="Permalink to this heading"></a></h2>
 <p>fragmenters</p>
@@ -141,7 +179,7 @@ On: 21.04.22, 12:20</p>
 On: 06.05.22, 12:19</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.fragmenters.</span></span><span class="sig-name descname"><span class="pre">Fragmenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_combs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'recap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep_clean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bonds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.fragmenters.</span></span><span class="sig-name descname"><span class="pre">Fragmenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_combs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'recap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep_clean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bonds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_single</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="drugex.molecules.converters.standardizers.CleanSMILES"><code class="xref py py-class docutils literal notranslate"><span class="pre">CleanSMILES</span></code></a></p>
 <p>Reference implementation of the original fragmenter used in DrugEx v3.</p>
 <dl class="py method">

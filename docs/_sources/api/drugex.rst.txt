@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    drugex.data
-   drugex.environment
    drugex.logs
    drugex.molecules
    drugex.parallel
@@ -42,10 +41,10 @@ drugex.designer module
    :undoc-members:
    :show-inheritance:
 
-drugex.environ module
----------------------
+drugex.download module
+----------------------
 
-.. automodule:: drugex.environ
+.. automodule:: drugex.download
    :members:
    :undoc-members:
    :show-inheritance:

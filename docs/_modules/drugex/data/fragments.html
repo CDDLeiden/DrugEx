@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.fragments &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.data.fragments &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -321,7 +321,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            fragmenter: a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. The reference implementation is `Fragmenter`.</span>
+<span class="sd">            fragmenter (MolConverter): a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. See the reference implementation in `Fragmenter`.</span>
 <span class="sd">            encoder:  a `FragmentPairEncoder` that handles how molecules and fragments are encoded in the final result</span>
 <span class="sd">            pairs_splitter: a `ChunkSplitter` that divides the generated molecule-fragment pairs from the &quot;fragmenter&quot; to splits (i.e. test and train)</span>
 <span class="sd">            n_proc: number of processes to use for parallel operations</span>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.tests &mdash; DrugEx 3.3.0 documentation</title>
+  <title>drugex.training.tests &mdash; DrugEx 3.4.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.3.0
+                v3.4.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
 </ul>
 
         </div>
@@ -84,22 +84,29 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.corpus</span> <span class="kn">import</span> <span class="n">SequenceCorpus</span>
-<span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">VocGraph</span>
-<span class="kn">from</span> <span class="nn">drugex.data.fragments</span> <span class="kn">import</span> <span class="n">GraphFragmentEncoder</span><span class="p">,</span> <span class="n">FragmentPairsSplitter</span><span class="p">,</span> <span class="n">SequenceFragmentEncoder</span><span class="p">,</span> <span class="n">FragmentCorpusEncoder</span>
-<span class="kn">from</span> <span class="nn">drugex.data.processing</span> <span class="kn">import</span> <span class="n">CorpusEncoder</span><span class="p">,</span> <span class="n">Standardization</span><span class="p">,</span> <span class="n">RandomTrainTestSplitter</span>
-<span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="n">SmilesDataSet</span><span class="p">,</span> <span class="n">SmilesFragDataSet</span><span class="p">,</span> <span class="n">GraphFragDataSet</span>
+<span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">VocSmiles</span>
+<span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="p">(</span><span class="n">GraphFragDataSet</span><span class="p">,</span> <span class="n">SmilesDataSet</span><span class="p">,</span>
+                                  <span class="n">SmilesFragDataSet</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">drugex.data.fragments</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FragmentCorpusEncoder</span><span class="p">,</span>
+                                   <span class="n">FragmentPairsSplitter</span><span class="p">,</span> <span class="n">GraphFragmentEncoder</span><span class="p">,</span>
+                                   <span class="n">SequenceFragmentEncoder</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">drugex.data.processing</span> <span class="kn">import</span> <span class="p">(</span><span class="n">CorpusEncoder</span><span class="p">,</span> <span class="n">RandomTrainTestSplitter</span><span class="p">,</span>
+                                    <span class="n">Standardization</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.dummy_molecules</span> <span class="kn">import</span> <span class="n">dummyMolsFromFragments</span>
 <span class="kn">from</span> <span class="nn">drugex.molecules.converters.fragmenters</span> <span class="kn">import</span> <span class="n">Fragmenter</span>
 <span class="kn">from</span> <span class="nn">drugex.training.environment</span> <span class="kn">import</span> <span class="n">DrugExEnvironment</span>
+<span class="kn">from</span> <span class="nn">drugex.training.explorers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FragGraphExplorer</span><span class="p">,</span> <span class="n">FragSequenceExplorer</span><span class="p">,</span>
+                                       <span class="n">SequenceExplorer</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">drugex.training.generators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">GraphTransformer</span><span class="p">,</span> <span class="n">SequenceRNN</span><span class="p">,</span>
+                                        <span class="n">SequenceTransformer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">TrainingMonitor</span>
-<span class="kn">from</span> <span class="nn">drugex.training.models</span> <span class="kn">import</span> <span class="n">GPT2Model</span><span class="p">,</span> <span class="n">EncDec</span><span class="p">,</span> <span class="n">Seq2Seq</span><span class="p">,</span> <span class="n">RNN</span><span class="p">,</span> <span class="n">GraphModel</span>
-<span class="kn">from</span> <span class="nn">drugex.training.models.explorer</span> <span class="kn">import</span> <span class="n">GraphExplorer</span><span class="p">,</span> <span class="n">SmilesExplorerNoFrag</span><span class="p">,</span> <span class="n">SmilesExplorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">FileMonitor</span>
-<span class="kn">from</span> <span class="nn">drugex.training.rewards</span> <span class="kn">import</span> <span class="n">ParetoSimilarity</span>
+<span class="kn">from</span> <span class="nn">drugex.training.rewards</span> <span class="kn">import</span> <span class="n">ParetoTanimotoDistance</span>
+<span class="kn">from</span> <span class="nn">drugex.training.scorers.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.modifiers</span> <span class="kn">import</span> <span class="n">ClippedScore</span>
-<span class="kn">from</span> <span class="nn">drugex.training.scorers.predictors</span> <span class="kn">import</span> <span class="n">Predictor</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.properties</span> <span class="kn">import</span> <span class="n">Property</span>
 
 
@@ -160,6 +167,26 @@
         <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="p">])</span></div></div>
 
 
+<div class="viewcode-block" id="MockScorer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.MockScorer">[docs]</a><span class="k">class</span> <span class="nc">MockScorer</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MockScorer.getScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.MockScorer.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="MockScorer.getKey"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.MockScorer.getKey">[docs]</a>    <span class="k">def</span> <span class="nf">getKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;MockScorer&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="getPredictor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.getPredictor">[docs]</a><span class="k">def</span> <span class="nf">getPredictor</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">qsprpred.scorers.predictor</span> <span class="kn">import</span> <span class="n">Predictor</span> <span class="k">as</span> <span class="n">QSPRPredpredictor</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">QSPRPredpredictor</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;test_data&quot;</span><span class="p">),</span> <span class="s1">&#39;RF&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;P29274&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;CLS&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;P29274&#39;</span><span class="p">,</span>
+            <span class="n">modifier</span><span class="o">=</span><span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">MockScorer</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
 <div class="viewcode-block" id="TrainingTestCase"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase">[docs]</a><span class="k">class</span> <span class="nc">TrainingTestCase</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
 
     <span class="c1"># input file information</span>
@@ -175,19 +202,12 @@
     <span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">8</span>
 
     <span class="c1"># environment objectives (TODO: we should test more options and combinations here)</span>
-    <span class="n">activity_threshold</span> <span class="o">=</span> <span class="mf">6.5</span>
-    <span class="n">pad</span> <span class="o">=</span> <span class="mf">3.5</span>
     <span class="n">scorers</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">Property</span><span class="p">(</span>
             <span class="s2">&quot;MW&quot;</span><span class="p">,</span>
             <span class="n">modifier</span><span class="o">=</span><span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
         <span class="p">),</span>
-        <span class="n">Predictor</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;test_data/RF_REG_P29274_0006.pkg&quot;</span><span class="p">),</span>
-            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;REG&quot;</span><span class="p">,</span>
-            <span class="n">modifier</span><span class="o">=</span><span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="n">activity_threshold</span> <span class="o">-</span> <span class="n">pad</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="n">activity_threshold</span><span class="p">)</span>
-        <span class="p">),</span>
-
+        <span class="n">getPredictor</span><span class="p">()</span>
     <span class="p">]</span>
     <span class="n">thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">]</span>
 
@@ -197,21 +217,33 @@
 <div class="viewcode-block" id="TrainingTestCase.getTestEnvironment"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.getTestEnvironment">[docs]</a>    <span class="k">def</span> <span class="nf">getTestEnvironment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the testing environment</span>
-<span class="sd">        Returns:</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scheme: RewardScheme</span>
+<span class="sd">            The reward scheme to use. If None, the default ParetoTanimotoDistance is used.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DrugExEnvironment</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">scheme</span> <span class="o">=</span> <span class="n">ParetoSimilarity</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span> <span class="k">else</span> <span class="n">scheme</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">ParetoTanimotoDistance</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span> <span class="k">else</span> <span class="n">scheme</span>
         <span class="k">return</span> <span class="n">DrugExEnvironment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">reward_scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TrainingTestCase.getSmiles"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.getSmiles">[docs]</a>    <span class="k">def</span> <span class="nf">getSmiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read and standardize SMILES from a file.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            _file: input .tsv file with smiles</span>
-
-<span class="sd">        Returns:</span>
-
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        _file: str</span>
+<span class="sd">            The file to read from (must be a .tsv file with a column named &quot;CANONICAL_SMILES&quot;)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            The list of SMILES</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">standardize</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">_file</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)[</span><span class="s1">&#39;CANONICAL_SMILES&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MAX_SMILES</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SEED</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span></div>
@@ -220,11 +252,15 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Standardize the input SMILES</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            smiles: smiles as `list`</span>
-
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        smiles: list</span>
+<span class="sd">            The list of SMILES to standardize</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            The list of standardized SMILES</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Standardization</span><span class="p">(</span><span class="n">n_proc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_PROC</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span></div>
 
@@ -232,8 +268,10 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create inputs for the fragment-based SMILES models.</span>
 
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            The tuple of (pretraining training dataloader, pretraining test dataloader, finetuning training dataloader, finetuning test dataloader, vocabulary)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">pre_smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSmiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_file</span><span class="p">)</span>
@@ -284,13 +322,32 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a random temporary file and return its path.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            path: pth to the file created</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The path to the temporary file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span></div>
 
 <div class="viewcode-block" id="TrainingTestCase.fitTestModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.fitTestModel">[docs]</a>    <span class="k">def</span> <span class="nf">fitTestModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit a model and return the best model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model: Model</span>
+<span class="sd">            The model to fit</span>
+<span class="sd">        train_loader: DataLoader</span>
+<span class="sd">            The training data loader</span>
+<span class="sd">        test_loader: DataLoader</span>
+<span class="sd">            The test data loader</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            The tuple of (fitted model, monitor)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
         <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">)</span>
         <span class="n">pr_model</span> <span class="o">=</span> <span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">()</span>
@@ -299,12 +356,9 @@
         <span class="n">model</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">pr_model</span><span class="p">)</span> <span class="c1"># initialize from the best state</span>
         <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">monitor</span></div>
 
-<div class="viewcode-block" id="TrainingTestCase.test_rnn_nofrags"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_rnn_nofrags">[docs]</a>    <span class="k">def</span> <span class="nf">test_rnn_nofrags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingTestCase.test_sequence_rnn"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_rnn">[docs]</a>    <span class="k">def</span> <span class="nf">test_sequence_rnn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Test single network RNN.</span>
-
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Test sequence RNN.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">pre_smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSmiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_file</span><span class="p">)</span>
@@ -332,7 +386,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">pr_loader_train</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">pr_loader_test</span><span class="p">)</span>
 
-        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">RNN</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">is_lstm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">SequenceRNN</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">is_lstm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">pretrained</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">)</span>
 
         <span class="c1"># fine-tuning</span>
@@ -341,24 +395,23 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">ft_loader_train</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">ft_loader_test</span><span class="p">)</span>
 
-        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">RNN</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">is_lstm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">SequenceRNN</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">is_lstm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">finetuned</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">pretrained</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="n">finetuned</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">)</span>
 
         <span class="c1"># RL</span>
         <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestEnvironment</span><span class="p">()</span>
-        <span class="n">explorer</span> <span class="o">=</span> <span class="n">SmilesExplorerNoFrag</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="n">pretrained</span><span class="p">)</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">SequenceExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="n">pretrained</span><span class="p">)</span>
         <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
         <span class="n">explorer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span> <span class="o">==</span> <span class="n">OrderedDict</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span>
 
-<div class="viewcode-block" id="TrainingTestCase.test_graph_frags"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_graph_frags">[docs]</a>    <span class="k">def</span> <span class="nf">test_graph_frags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pretrained</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainingTestCase.test_graph_transformer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_graph_transformer">[docs]</a>    <span class="k">def</span> <span class="nf">test_graph_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Test fragment-based graph model.</span>
-
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Test fragment-based graph transformer model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">pre_smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSmiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_file</span><span class="p">)</span>
@@ -392,14 +445,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">pr_loader_train</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">pr_loader_test</span><span class="p">)</span>
 
-        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">GraphModel</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
+        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">GraphTransformer</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
         <span class="n">pretrained</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">)</span>
-
-        <span class="c1"># test molecule generation</span>
-        <span class="n">pretrained</span><span class="o">.</span><span class="n">sample_smiles</span><span class="p">([</span>
-            <span class="s2">&quot;c1ccncc1CCC&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;CCO&quot;</span>
-        <span class="p">],</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># fine-tuning</span>
         <span class="n">ft_loader_train</span> <span class="o">=</span> <span class="n">ft_data_set_train</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">)</span>
@@ -407,88 +454,141 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">ft_loader_train</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">ft_loader_test</span><span class="p">)</span>
 
-        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">GraphModel</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
+        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">GraphTransformer</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
         <span class="n">finetuned</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">pretrained</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="n">finetuned</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">)</span>
 
         <span class="c1"># reinforcement learning</span>
         <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestEnvironment</span><span class="p">()</span>
-        <span class="n">explorer</span> <span class="o">=</span> <span class="n">GraphExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">)</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">FragGraphExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">)</span>
         <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
         <span class="n">explorer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span>
+
+        <span class="c1"># test molecule generation</span>
+        <span class="n">pretrained</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span>
+            <span class="s2">&quot;c1ccncc1CCC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CCO&quot;</span>
+        <span class="p">],</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainingTestCase.test_graph_transformer_scaffold"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_graph_transformer_scaffold">[docs]</a>    <span class="k">def</span> <span class="nf">test_graph_transformer_scaffold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test RL with fragment-based graph transformer model with scaffold input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">frags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;c1ccncc1&#39;</span><span class="p">,</span> <span class="s1">&#39;c1cncnc1.CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCl&#39;</span><span class="p">]</span>
+
+        <span class="c1"># create dummy molecules and encode molecule-fragments pairs</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+            <span class="n">fragmenter</span><span class="o">=</span><span class="n">dummyMolsFromFragments</span><span class="p">(),</span>
+            <span class="n">encoder</span><span class="o">=</span><span class="n">GraphFragmentEncoder</span><span class="p">(</span>
+                <span class="n">VocGraph</span><span class="p">(</span><span class="n">n_frags</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">pairs_splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">n_proc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_PROC</span>
+        <span class="p">)</span>
+
+        <span class="c1"># get training data</span>
+        <span class="n">data_set</span> <span class="o">=</span> <span class="n">GraphFragDataSet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">())</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">frags</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="p">[</span><span class="n">data_set</span><span class="p">])</span>
+
+        <span class="c1"># get vocabulary -&gt; for graph models it is always the default one</span>
+        <span class="n">vocabulary</span> <span class="o">=</span> <span class="n">VocGraph</span><span class="p">()</span>
+
+        <span class="c1"># set pretrained and finetuned models</span>
+        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">GraphTransformer</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
+        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">GraphTransformer</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
+
+        <span class="c1"># train and test data loaders</span>
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">test_loader</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">test_loader</span><span class="p">)</span>
+
+        <span class="c1"># reinforcement learning</span>
+        <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestEnvironment</span><span class="p">()</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">FragGraphExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">)</span>
+        <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
+        <span class="n">explorer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="TrainingTestCase.test_smiles_frags_gpt"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_smiles_frags_gpt">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_frags_gpt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainingTestCase.test_sequence_transformer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_transformer">[docs]</a>    <span class="k">def</span> <span class="nf">test_sequence_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test fragment-based sequence transformer model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">vocabulary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setUpSmilesFragData</span><span class="p">()</span>
 
         <span class="c1"># pretraining</span>
         <span class="n">vocab_gpt</span> <span class="o">=</span> <span class="n">VocSmiles</span><span class="p">(</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
-        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">GPT2Model</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
+        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">SequenceTransformer</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
         <span class="n">pretrained</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">pr_loader_train</span><span class="p">,</span> <span class="n">pr_loader_test</span><span class="p">)</span>
 
         <span class="c1"># fine-tuning</span>
-        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">GPT2Model</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
+        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">SequenceTransformer</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
         <span class="n">finetuned</span><span class="o">.</span><span class="n">loadStates</span><span class="p">(</span><span class="n">pretrained</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="n">finetuned</span><span class="p">,</span> <span class="n">monitor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitTestModel</span><span class="p">(</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">)</span>
 
         <span class="c1"># RL</span>
         <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestEnvironment</span><span class="p">()</span>
-        <span class="n">explorer</span> <span class="o">=</span> <span class="n">SmilesExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">)</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">FragSequenceExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">)</span>
         <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
         <span class="n">explorer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ft_loader_train</span><span class="p">,</span> <span class="n">ft_loader_test</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span>
+
+        <span class="n">pretrained</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span>
+            <span class="s2">&quot;c1ccncc1CCC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CCO&quot;</span>
+        <span class="p">],</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainingTestCase.test_sequence_transformer_scaffold"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_transformer_scaffold">[docs]</a>    <span class="k">def</span> <span class="nf">test_sequence_transformer_scaffold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test RL with fragment-based sequence transformer model with scaffold input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">frags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;c1ccncc1&#39;</span><span class="p">,</span> <span class="s1">&#39;CCl&#39;</span><span class="p">,</span> <span class="s1">&#39;c1cncnc1.CCO&#39;</span><span class="p">]</span>
+
+        <span class="c1"># create dummy molecules and encode molecule-fragments pairs</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">FragmentCorpusEncoder</span><span class="p">(</span>
+            <span class="n">fragmenter</span><span class="o">=</span><span class="n">dummyMolsFromFragments</span><span class="p">(),</span>
+            <span class="n">encoder</span><span class="o">=</span><span class="n">SequenceFragmentEncoder</span><span class="p">(</span>
+                <span class="n">VocSmiles</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">update_voc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">throw</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">),</span>
+            <span class="n">pairs_splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">n_proc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_PROC</span>
+        <span class="p">)</span>
+
+
+        <span class="c1"># get training data</span>
+        <span class="n">data_set</span> <span class="o">=</span> <span class="n">SmilesFragDataSet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomFile</span><span class="p">())</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">frags</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="p">[</span><span class="n">data_set</span><span class="p">])</span>
+
+        <span class="c1"># get vocabulary</span>
+        <span class="n">vocabulary</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">getVoc</span><span class="p">()</span>
+        <span class="n">data_set</span><span class="o">.</span><span class="n">setVoc</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)</span>
+        <span class="n">vocab_gpt</span> <span class="o">=</span> <span class="n">VocSmiles</span><span class="p">(</span><span class="n">vocabulary</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+
+        <span class="c1"># set pretrained and finetuned models</span>
+        <span class="n">pretrained</span> <span class="o">=</span> <span class="n">SequenceTransformer</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
+        <span class="n">finetuned</span> <span class="o">=</span> <span class="n">SequenceTransformer</span><span class="p">(</span><span class="n">vocab_gpt</span><span class="p">)</span>
+
+        <span class="c1"># train and test data loaders</span>
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">test_loader</span> <span class="o">=</span> <span class="n">data_set</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">test_loader</span><span class="p">)</span>
+
+        <span class="c1"># reinforcement learning</span>
+        <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestEnvironment</span><span class="p">()</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">FragSequenceExplorer</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="n">environment</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="n">finetuned</span><span class="p">)</span>
+        <span class="n">monitor</span> <span class="o">=</span> <span class="n">TestModelMonitor</span><span class="p">()</span>
+        <span class="n">explorer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_EPOCHS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">getModel</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">allMethodsExecuted</span><span class="p">())</span></div></div>
-
-    <span class="c1"># the models below are not tested anymore because they will be deprecated in the future</span>
-
-    <span class="c1"># def test_smiles_frags_vec(self):</span>
-    <span class="c1">#     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()</span>
-    <span class="c1">#</span>
-    <span class="c1">#     # pretraining</span>
-    <span class="c1">#     pretrained = EncDec(vocabulary, vocabulary)</span>
-    <span class="c1">#     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)</span>
-    <span class="c1">#</span>
-    <span class="c1">#     # fine-tuning</span>
-    <span class="c1">#     finetuned = EncDec(vocabulary, vocabulary)</span>
-    <span class="c1">#     finetuned.loadStates(pretrained.getModel())</span>
-    <span class="c1">#     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)</span>
-
-        <span class="c1"># RL</span>
-        <span class="c1"># FIXME: RL for this model is currently not working</span>
-        <span class="c1"># environment = self.getTestEnvironment()</span>
-        <span class="c1"># explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)</span>
-        <span class="c1"># monitor = TestModelMonitor()</span>
-        <span class="c1"># explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)</span>
-        <span class="c1"># self.assertTrue(monitor.getModel())</span>
-        <span class="c1"># self.assertTrue(monitor.allMethodsExecuted())</span>
-
-    <span class="c1"># def test_smiles_frags_attn(self):</span>
-    <span class="c1">#     pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()</span>
-    <span class="c1">#</span>
-    <span class="c1">#     # pretraining</span>
-    <span class="c1">#     pretrained = Seq2Seq(vocabulary, vocabulary)</span>
-    <span class="c1">#     pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)</span>
-    <span class="c1">#</span>
-    <span class="c1">#     # fine-tuning</span>
-    <span class="c1">#     finetuned = Seq2Seq(vocabulary, vocabulary)</span>
-    <span class="c1">#     finetuned.loadStates(pretrained.getModel())</span>
-    <span class="c1">#     finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)</span>
-    <span class="c1">#     self.assertTrue(finetuned)</span>
-    <span class="c1">#     self.assertTrue(monitor.getModel())</span>
-
-        <span class="c1"># RL</span>
-        <span class="c1"># FIXME: RL for this model currently not working</span>
-        <span class="c1"># environment = self.getTestEnvironment()</span>
-        <span class="c1"># explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)</span>
-        <span class="c1"># monitor = TestModelMonitor()</span>
-        <span class="c1"># explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)</span>
-        <span class="c1"># self.assertTrue(monitor.getModel())</span>
-        <span class="c1"># self.assertTrue(monitor.allMethodsExecuted())</span>
-
-
-
-
 </pre></div>
 
            </div>
