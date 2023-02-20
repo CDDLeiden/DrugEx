@@ -27,5 +27,6 @@ drugex dowload
 If you are using Google Colab, just open one of the notebooks above and you can run the following cell to install everything you need:
 
 ```python
+!wget https://raw.githubusercontent.com/CDDLeiden/DrugEx/master/tutorial/colab.sh
 !bash colab.sh
 ```
