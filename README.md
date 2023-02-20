@@ -30,7 +30,7 @@ pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 
 ## Use
 
-After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version of both is available [here](https://cddleiden.github.io/DrugEx/docs/). For a quick start, you can also check out our [Jupyter notebook tutorial](./tutorial), which documents the use of the Python API to build different types of models, or take look at the [CLI examples](https://cddleiden.github.io/DrugEx/docs/use.html#cli-example).qThe tutorial as well as the documentation are still work in progress, and we will be happy for any contributions where it is still lacking.
+After installation, you will have access to various command line features, but you can also use the Python API directly. Documentation for the current version of both is available [here](https://cddleiden.github.io/DrugEx/docs/). For a quick start, you can also check out our [Jupyter notebook tutorial](./tutorial), which documents the use of the Python API to build different types of models, or take look at the [CLI examples](https://cddleiden.github.io/DrugEx/docs/use.html#cli-example). The tutorials as well as the documentation are still work in progress, and we will be happy for any contributions where it is still lacking.
 
 This repository contains almost all models implemented throughout DrugEx history. We also make the following pretrained models available to be used with this package. You can retrieve them from the following table (not all models are available at this moment, but we will keep adding them):
 
