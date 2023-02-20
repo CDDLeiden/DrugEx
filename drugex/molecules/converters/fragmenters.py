@@ -22,7 +22,7 @@ class Fragmenter(CleanSMILES):
 
     """
 
-    def __init__(self, n_frags, n_combs, method='recap', deep_clean=True, max_bonds=75):
+    def __init__(self, n_frags, n_combs, method='recap', deep_clean=True, max_bonds=75, allow_single=False):
         """
 
         Args:
@@ -31,6 +31,7 @@ class Fragmenter(CleanSMILES):
             method: fragmentation method to use. Possible values: ('recap', 'brics')
             deep_clean: deep clean the SMILES before fragmentation (see `CleanSMILES`)
             max_bonds: only accept molecules with the number of bonds below or equal to this threshold
+            allow_single: return the fragment also for molecules that result in only one fragment
         """
 
         super().__init__(deep_clean)
@@ -38,6 +39,7 @@ class Fragmenter(CleanSMILES):
         self.nCombs = n_combs
         self.method = method
         self.maxBonds = max_bonds
+        self.allowSingle = allow_single
         if self.method not in ('recap', 'brics'):
             raise ConversionException(f"Unknown fragmentation method: {self.method}")
 
@@ -59,7 +61,7 @@ class Fragmenter(CleanSMILES):
             frags = BRICS.BRICSDecompose(mol)
             frags = np.array(sorted({re.sub(r'\[\d+\*\]', '*', f) for f in frags}))
 
-        if len(frags) == 1:
+        if len(frags) == 1 and not self.allowSingle:
             logger.warning(f"Only one retrieved fragment for molecule: {Chem.MolToSmiles(mol)}. Skipping...")
             return None
 

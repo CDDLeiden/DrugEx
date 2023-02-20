@@ -26,13 +26,13 @@ function cleanup() {
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.txt;
   rm -rf ${TEST_BASE}/data/${PRETRAINING_PREFIX}_*.vocab;
   rm -rf ${TEST_BASE}/data/${VOC_PREFIX}_*.txt;
+  rm -rf ${TEST_BASE}/data/${SCAFFOLD_PREFIX}_*;
   rm -rf ${TEST_BASE}/data/*.log;
   rm -rf ${TEST_BASE}/data/*.json;
   rm -rf ${TEST_BASE}/generators;
   rm -rf ${TEST_BASE}/logs;
+  rm -rf ${TEST_BASE}/new_molecules
 }
-
-cleanup
 
 # default values of some common parameters
 export MOL_COL='CANONICAL_SMILES'
@@ -50,10 +50,8 @@ export N_TRIALS=2
 ###########
 # DATASET #
 ###########
-
-export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sv -sif"
+export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sif"
 export DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nf ${N_COMBINATIONS} -nf ${N_FRAGS}"
-
 
 ############
 # TRAINING #
@@ -69,3 +67,7 @@ export ENVIRON_ALG="RF"
 export ENVIRON_THRESHOLD=6.5
 export TRAIN_RL_ARGS="-ng -ta ${TARGET_ID} -et ${ENVIRON_MODE} -ea ${ENVIRON_ALG} -at ${ENVIRON_THRESHOLD}"
 
+############
+# GENERATE #
+############
+export DESIGN_COMMON_ARGS="-b ${TEST_BASE} -d -gpu ${TRAIN_GPUS} -n 10 -bs ${TRAIN_BATCH}"

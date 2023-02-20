@@ -111,15 +111,3 @@ def calculateScore(m):
         sascore = 1.0
 
     return sascore
-
-
-def processMols(mols):
-    print('smiles\tName\tsa_score')
-    for i, m in enumerate(mols):
-        if m is None:
-            continue
-
-        s = calculateScore(m)
-
-        smiles = Chem.MolToSmiles(m)
-        print(smiles + "\t" + m.GetProp('_Name') + "\t%3f" % s)

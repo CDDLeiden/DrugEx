@@ -44,7 +44,8 @@ ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${PRETRAINING_PREFIX}" \
 -o "${PRETRAINING_PREFIX}" \
--m PT \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm PT \
 -a trans \
 -mt smiles
 echo "Test: Done."
@@ -56,9 +57,10 @@ python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 -i "${FINETUNING_PREFIX}" \
--pt "${PRETRAINING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -o "${FINETUNING_PREFIX}" \
--m FT \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm FT \
 -a trans \
 -mt smiles
 echo "Test: Done."
@@ -73,8 +75,9 @@ echo "Test: Done."
  -i "${FINETUNING_PREFIX}" \
  -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
  -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
- -o "${FINETUNING_PREFIX}_RL" \
- -m RL \
+ -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
+ -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+ -tm RL \
  -a trans \
  -mt smiles
  echo "Test: Done."
@@ -89,8 +92,21 @@ ${TRAIN_RL_ARGS} \
 -i "${SCAFFOLD_PREFIX}_smi.txt" \
 -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
--o "${SCAFFOLD_PREFIX}_RL" \
--m RL \
+-o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm RL \
 -a trans \
--mt smiles
+-mt smiles \
+-ns 32
+echo "Test: Done."
+
+echo $line
+echo "Test: Generate molecules with sequence transformer ..."
+echo $line
+python -m drugex.designer \
+${DESIGN_COMMON_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
+-vfs "${FINETUNING_PREFIX}" \
+--keep_invalid
 echo "Test: Done."
