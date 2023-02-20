@@ -7,6 +7,7 @@ On: 01.06.22, 11:29
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
+import numpy as np
 from scipy.stats import gmean
 
 import torch
@@ -288,7 +289,7 @@ class FragExplorer(Explorer):
 
             # Filter out molecules with multiple fragments by setting reward to 0
             if self.no_multifrag_smiles:
-                reward = [r if s.count('.') == 0 else [0] for s,r in zip(smiles, reward)]
+                reward = np.array([r if s.count('.') == 0 else [0] for s,r in zip(smiles, reward)])
             reward = torch.Tensor(reward).to(self.device)
             
             # Train model with policy gradient

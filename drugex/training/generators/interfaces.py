@@ -198,8 +198,8 @@ class Generator(Model, ABC):
             List of SMILES to evaluate
         frags: List
             List of fragments used to generate the SMILES
-        evaluator: ModelEvaluator
-            A `ModelEvaluator` instance used to evaluate the molecules
+        evaluator: Environement
+            An `Environement` instance used to evaluate the molecules
         no_multifrag_smiles: bool
             If `True`, only single-fragment SMILES are considered valid
         unmodified_scores: bool

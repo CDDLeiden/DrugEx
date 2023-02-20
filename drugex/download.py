@@ -32,28 +32,29 @@ def DownloadTutorial(args):
     # Link to DrugEx v3 pretrained model (graph-based; Papyrus 05.5)
     link_pretrained_model2 = "https://zenodo.org/record/7085421/files/DrugEx_PT_Papyrus05.5.zip?download=1"
     # Link to QSAR example model
-    link_qsar_model = "https://zenodo.org/record/7537771/files/qspr.zip?download=1"
+    link_qsar_model = "https://zenodo.org/record/7650233/files/qspr.zip?download=1"
 
     # Download model files
-    pretrained_models_path = os.path.join(args.out_dir, 'models', 'pretrained')
-    outpath = os.path.join(pretrained_models_path, 'smiles-rnn', 'PT_model1.zip')
-    if args.reload or not os.path.exists(pretrained_models_path):
+    pretrained_models_path_rnn = os.path.join(args.out_dir, 'models', 'pretrained', 'smiles-rnn')
+    outpath = os.path.join(pretrained_models_path_rnn, 'PT_model1.zip')
+    if args.reload or not os.path.exists(pretrained_models_path_rnn):
         download_file(link_pretrained_model1,
                   outpath,
-                  os.path.join(pretrained_models_path, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT'))
+                  os.path.join(pretrained_models_path_rnn, 'Papyrus05.5_smiles_rnn_PT'))
 
-    outpath = os.path.join(pretrained_models_path, 'graph-trans', 'PT_model2.zip')
-    if args.reload or not os.path.exists(pretrained_models_path):
+    pretrained_models_path_graph = os.path.join(args.out_dir, 'models', 'pretrained', 'graph-trans')
+    outpath = os.path.join(pretrained_models_path_graph, 'PT_model2.zip')
+    if args.reload or not os.path.exists(pretrained_models_path_graph):
         download_file(link_pretrained_model2,
                   outpath,
-                  os.path.join(pretrained_models_path, 'graph-trans', 'Papyrus05.5_graph_trans_PT'))
+                  os.path.join(pretrained_models_path_graph, 'Papyrus05.5_graph_trans_PT'))
 
-    qsar_models_path = os.path.join(args.out_dir, 'models', 'qsar')
-    outpath = os.path.join(qsar_models_path, 'qspr.zip')
-    if args.reload or not os.path.exists(pretrained_models_path):
+    pretrained_models_path_qsar = os.path.join(args.out_dir, 'models', 'qsar')
+    outpath = os.path.join(pretrained_models_path_qsar, 'qspr.zip')
+    if args.reload or not os.path.exists(pretrained_models_path_qsar):
         download_file(link_qsar_model,
                   outpath,
-                  os.path.join(qsar_models_path, 'qspr'))
+                  pretrained_models_path_qsar)
 
     # Download data files
     logger.info("Downloading data files from Papyrus database.")

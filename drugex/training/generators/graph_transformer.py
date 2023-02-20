@@ -1,4 +1,5 @@
 import tempfile
+from typing import List
 
 import pandas as pd
 import torch
@@ -437,20 +438,42 @@ class GraphTransformer(FragGenerator):
         
         return loader
 
-    def generate(self, input_frags = None, input_loader = None, num_samples=100, batch_size=32, n_proc=1,
+    def generate(self, input_frags : List[str] = None, input_dataset : GraphFragDataSet = None, num_samples=100, batch_size=32, n_proc=1,
                 keep_frags=True, drop_duplicates=True, drop_invalid=True, 
-                evaluator=None, no_multifrag_smiles=True, drop_undesired=True, raw_scores=True, compute_desirability=True,
-                progress=True, tqdm_kwargs={}):
+                evaluator=None, no_multifrag_smiles=True, drop_undesired=False, raw_scores=True,
+                progress=True, tqdm_kwargs=dict()):
+        """
+        Generate SMILES from either a list of input fragments (`input_frags`) or a dataset object directly (`input_dataset`). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).
 
-        if input_loader and input_frags:
-            raise ValueError('Only one of input_loader and input_frags can be provided')
-        elif not input_loader and not input_frags:
+        Args:
+            input_frags (list): a `list` of input fragments to incorporate in the (as molecules in SMILES format)
+            input_dataset (GraphFragDataSet): a `GraphFragDataSet` object to use to provide the input fragments
+            num_samples: the number of SMILES to generate, default is 100
+            batch_size: the batch size to use for generation, default is 32
+            n_proc: the number of processes to use for encoding the fragments if `input_frags` is provided, default is 1
+            keep_frags: if `True`, the fragments are kept in the generated SMILES, default is `True`
+            drop_duplicates: if `True`, duplicate SMILES are dropped, default is `True`
+            drop_invalid: if `True`, invalid SMILES are dropped, default is `True`
+            evaluator (Environment): an `Environment` object to score the generated SMILES against, if `None`, no scoring is performed, is required if `drop_undesired` is `True`, default is `None`
+            no_multifrag_smiles: if `True`, only single-fragment SMILES are considered valid, default is `True`
+            drop_undesired: if `True`, SMILES that do not contain the desired fragments are dropped, default is `False`
+            raw_scores: if `True`, raw scores (without modifiers) are calculated if `evaluator` is specified, these values are also used for filtering if `drop_undesired` is `True`, default for `raw_scores` is `True`
+            progress: if `True`, a progress bar is shown, default is `True`
+            tqdm_kwargs: keyword arguments to pass to the `tqdm` progress bar, default is an empty `dict`
+
+        Returns:
+
+        """
+
+        if input_dataset and input_frags:
+            raise ValueError('Only one of input_dataset and input_frags can be provided')
+        elif not input_dataset and not input_frags:
             raise ValueError('Either input_loader or input_frags must be provided')
         elif input_frags:
             # Create a dataloader object from the input fragments
             loader = self.loaderFromFrags(input_frags, batch_size=batch_size, n_proc=n_proc)
         else:
-            loader = input_loader
+            loader = input_dataset.asDataLoader(batch_size)
 
         # Duplicate of self.sample to allow dropping molecules and progress bar on the fly
         # without additional overhead caused by calling nn.DataParallel a few times
@@ -491,12 +514,11 @@ class GraphTransformer(FragGenerator):
         # Post-processing
         df_smiles = pd.DataFrame({'SMILES': smiles, 'Frags': frags})
 
-        if compute_desirability:
-            if evaluator is None:
-                raise ValueError('Evaluator must be provided to compute desirability')
-            df_smiles['Desired'] = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles).Desired
-        if raw_scores:
-            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=True)], axis=1)
+        if evaluator:
+            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
+            if drop_undesired: # TODO: Sohvi - I think this is redundant as undesired molecules are dropped in `self.filterNewMolecules`
+                df_smiles = df_smiles[df_smiles['Desired']]
+
         if not keep_frags:
             df_smiles = df_smiles.drop('Frags', axis=1)
 
