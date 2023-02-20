@@ -102,7 +102,7 @@ References
 
 <a name="liu_drugex2"></a> [2] [Liu X, Ye K, van Vlijmen HWT, Emmerich MTM, IJzerman AP, van Westen GJP. DrugEx v2: De Novo Design of Drug Molecule by Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology. Journal of cheminformatics 2021:13(1):85.](https://doi.org/10.1186/s13321-021-00561-9) 
 
-<a name="liu_drugex3"></a> [3] [Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v3: scaffold-constrained drug design with graph transformer-based reinforcement learning. J Cheminform 15, 24 (2023).]https://doi.org/10.1186/s13321-023-00694-z)
+<a name="liu_drugex3"></a> [3] [Liu, X., Ye, K., van Vlijmen, H.W.T. et al. DrugEx v3: scaffold-constrained drug design with graph transformer-based reinforcement learning. J Cheminform 15, 24 (2023).](https://doi.org/10.1186/s13321-023-00694-z)
 
 
 
