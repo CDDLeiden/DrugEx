@@ -22,10 +22,18 @@ Subsequently, you should also download the tutorial models and data with the dow
 drugex dowload
 ```
 
-### Google Colab
+### Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://githubtocolab.com/CDDLeiden/DrugEx/)
 
-If you are using Google Colab, just open one of the notebooks above and you can run the following cell to install everything you need:
+If you are using Google Colab, just click the logo above and select one of the shown notebooks. Then make sure you are using a runtime with GPU access and evaluate the following cell in the opened notebook:
 
 ```python
+!wget https://raw.githubusercontent.com/CDDLeiden/DrugEx/master/tutorial/colab.sh
 !bash colab.sh
+```
+
+ Then you should be able to import the drugex package:
+
+```python
+import drugex
+drugex.__version__
 ```
