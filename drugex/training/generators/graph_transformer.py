@@ -443,7 +443,7 @@ class GraphTransformer(FragGenerator):
                 evaluator=None, no_multifrag_smiles=True, drop_undesired=False, raw_scores=True,
                 progress=True, tqdm_kwargs=dict()):
         """
-        Generate SMILES from either a list of input fragments (`input_frags`) or a dataloader object directly (`input_loader`). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).
+        Generate SMILES from either a list of input fragments (`input_frags`) or a dataset object directly (`input_dataset`). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).
 
         Args:
             input_frags (list): a `list` of input fragments to incorporate in the (as molecules in SMILES format)
@@ -466,7 +466,7 @@ class GraphTransformer(FragGenerator):
         """
 
         if input_dataset and input_frags:
-            raise ValueError('Only one of input_loader and input_frags can be provided')
+            raise ValueError('Only one of input_dataset and input_frags can be provided')
         elif not input_dataset and not input_frags:
             raise ValueError('Either input_loader or input_frags must be provided')
         elif input_frags:
@@ -516,7 +516,7 @@ class GraphTransformer(FragGenerator):
 
         if evaluator:
             df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
-            if drop_undesired:
+            if drop_undesired: # TODO: Sohvi - I think this is redundant as undesired molecules are dropped in `self.filterNewMolecules`
                 df_smiles = df_smiles[df_smiles['Desired']]
 
         if not keep_frags:
