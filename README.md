@@ -38,7 +38,7 @@ This repository contains almost all models implemented throughout DrugEx history
 |--------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | 	     ChEMBL 27          | 	     [Zenodo](https://doi.org/10.5281/zenodo.7096837)                     | 	       NA                                                                             | 	         [Zenodo](https://doi.org/10.5281/zenodo.7096823)                                                |
 | 	        ChEMBL 31       | 	               [Zenodo](https://doi.org/10.5281/zenodo.7378916)           | 	                                                      NA                              | 	                                                        [Zenodo](https://doi.org/10.5281/zenodo.7085629) |
-| 	       [Papyrus 05.5](https://doi.org/10.26434/chemrxiv-2021-1rxhk) | 	          [Zenodo](https://doi.org/10.5281/zenodo.7378923)                                      | 	                             NA                                                       | 	       [Zenodo](https://doi.org/10.5281/zenodo.7085421)                                                                        |
+| 	       [Papyrus 05.5](https://doi.org/10.1186/s13321-022-00672-x) | 	          [Zenodo](https://doi.org/10.5281/zenodo.7378923)                                      | 	                             NA                                                       | 	       [Zenodo](https://doi.org/10.5281/zenodo.7085421)                                                                        |
 
 History
 =======
