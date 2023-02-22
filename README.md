@@ -38,17 +38,17 @@ This repository contains almost all models implemented throughout DrugEx history
   <thead>
     <tr>
       <th rowspan="3">Model</th>
-      <th colspan="2"><a href="https://doi.org/10.1186/s13321-021-00561-9">RNN</a></th>
-      <th colspan="2"><a href="https://doi.org/10.26434/chemrxiv-2021-px6kz">SMILES-Based Transformer</a></th>
-      <th colspan="2"><a href="https://doi.org/10.26434/chemrxiv-2021-px6kz">Graph-Based Transformer</a></th>
+      <th colspan="2">RNN</th>
+      <th colspan="2"><a href="https://doi.org/10.1186/s13321-023-00694-z">SMILES-Based Transformer</a></th>
+      <th colspan="2"><a href="https://doi.org/10.1186/s13321-023-00694-z">Graph-Based Transformer</a></th>
     </tr>
     <tr>
       <th colspan="2">type</th>
       <th colspan="4">fragmentation</th>
     </tr>
     <tr>
-      <th>GRU</th>
-      <th>LSTM</th>
+      <th><a href="https://doi.org/10.1186/s13321-019-0355-6">GRU</a></th>
+      <th><a href="https://doi.org/10.1186/s13321-021-00561-9">LSTM</a></th>
       <th>BRICS</th>
       <th>RECAP</th>
       <th>BRICS</th>
