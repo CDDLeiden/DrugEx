@@ -34,17 +34,66 @@ After installation, you will have access to various command line features, but y
 
 This repository contains almost all models implemented throughout DrugEx history. We also make the following pretrained models available to be used with this package. You can retrieve them from the following table (not all models are available at this moment, but we will keep adding them):
 
-| Model / Training Set 	   | [DrugEx (v2)](https://doi.org/10.1186/s13321-021-00561-9)	 | [DrugEx (v3), SMILES-Based Transformer](https://doi.org/10.26434/chemrxiv-2021-px6kz)	 | [DrugEx (v3), Graph-Based Transformer](https://doi.org/10.26434/chemrxiv-2021-px6kz)	     |
-|--------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| 	     ChEMBL 27          | 	     [Zenodo](https://doi.org/10.5281/zenodo.7096837)                     | 	       NA                                                                             | 	         [Zenodo](https://doi.org/10.5281/zenodo.7096823)                                                |
-| 	        ChEMBL 31       | 	               [Zenodo](https://doi.org/10.5281/zenodo.7378916)           | 	                                                      NA                              | 	                                                        [Zenodo](https://doi.org/10.5281/zenodo.7085629) |
-| 	       [Papyrus 05.5](https://doi.org/10.1186/s13321-022-00672-x) | 	          [Zenodo](https://doi.org/10.5281/zenodo.7378923)                                      | 	                             NA                                                       | 	       [Zenodo](https://doi.org/10.5281/zenodo.7085421)                                                                        |
+<table style="text-align: center;">
+  <thead>
+    <tr>
+      <th rowspan="3">Model</th>
+      <th colspan="2"><a href="https://doi.org/10.1186/s13321-021-00561-9">RNN</a></th>
+      <th colspan="2"><a href="https://doi.org/10.26434/chemrxiv-2021-px6kz">SMILES-Based Transformer</a></th>
+      <th colspan="2"><a href="https://doi.org/10.26434/chemrxiv-2021-px6kz">Graph-Based Transformer</a></th>
+    </tr>
+    <tr>
+      <th colspan="2">type</th>
+      <th colspan="4">fragmentation</th>
+    </tr>
+    <tr>
+      <th>GRU</th>
+      <th>LSTM</th>
+      <th>BRICS</th>
+      <th>RECAP</th>
+      <th>BRICS</th>
+      <th>RECAP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ChEMBL 27</td>
+      <td>-</td>
+      <td><a href="https://doi.org/10.5281/zenodo.7096837">Zenodo</a></td>
+      <td>-</td>
+      <td>-</td>
+      <td><a href="https://doi.org/10.5281/zenodo.7096823">Zenodo</a></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>ChEMBL 31</td>
+      <td><a href="https://doi.org/10.5281/zenodo.7550739">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7378916">Zenodo</a></td>
+      <td>-</td>
+      <td>-</td>
+      <td><a href="https://doi.org/10.5281/zenodo.7085629">Zenodo</a></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><a href="https://doi.org/10.1186/s13321-022-00672-x">Papyrus</a> <a href="https://doi.org/10.5281/zenodo.7019874">05.5</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7550792">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7378923">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7635064">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7622774">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7085421">Zenodo</a></td>
+      <td><a href="https://doi.org/10.5281/zenodo.7622738">Zenodo</a></td>
+    </tr>
+  </tbody>
+</table>
 
 History
 =======
 
 The first version of DrugEx [<a href="liu_drugex1">1</a>] consisted of a recurrent neural network (RNN) single-task agent of gated recurrent units (GRU) which were updated to long short-term memory (LSTM) units in the second version [<a href="liu_drugex2">2</a>], also introducing MOO-based RL and an updated exploitation-exploration strategy. In its third version, [<a href="liu_drugex3">3</a>] generators based on a variant of the transformer and a novel graph-based encoding allowing for the sampling of molecules with specific substructures were introduced.  This package builds on these works to have a user-friendly but also easily customisable toolkit for DNDD with a development of an API and a command line interface, and the addition of new features. Furthermore, the development and traning of QSAR models, used to score molecules during reinforcement learning has been moved to a separate [QSPRpred](https://github.com/CDDLeiden/QSPRPred)-package.
 <!-- [<a href="sicho_drugex">4</a>]>.
+
+
+
 
 
 <!-- Introduction
