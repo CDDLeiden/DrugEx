@@ -47,7 +47,7 @@ class TestModelMonitor(TrainingMonitor):
             'close' : False,
         }
         self.submonitors = [
-            FileMonitor(tempfile.NamedTemporaryFile().name, verbose=True)
+            FileMonitor(tempfile.NamedTemporaryFile().name, save_smiles=True)
         ] if not submonitors else submonitors
 
     def passToSubmonitors(self, method, *args, **kwargs):

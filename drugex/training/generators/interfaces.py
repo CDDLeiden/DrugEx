@@ -10,6 +10,7 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 import numpy as np
+import pandas as pd
 from tqdm.auto import tqdm
 
 from typing import List
@@ -93,38 +94,61 @@ class Generator(Model, ABC):
         """
         pass
 
-    @abstractmethod
-    def filterNewMolecules(self, smiles, new_smiles, new_frags=None, 
-        drup_duplicates=True, drop_undesired=True, 
-        evaluator=None, no_multifrag_smiles=True):
+    def filterNewMolecules(self, df_old, df_new, with_frags = True, drop_duplicates=True, drop_undesired=True, evaluator=None, no_multifrag_smiles=True):
         """
-        Filter out molecules that are already in the training set.
-
-        Parameters
-        ----------
-        smiles : List
-            a list of previously generated molecules
-        new_smiles : List
-            a list of newly generated molecules
-        new_frags : List    
-            a list of fragments for the newly generated molecules
-        drup_duplicates : bool
-            if `True`, duplicate molecules are dropped
-        drop_undesired : bool
-            if `True`, molecules that are not desired are dropped
-        evaluator : ModelEvaluator
-            a `ModelEvaluator` instance used to evaluate the molecule desirability
-        no_multifrag_smiles : bool
-            if `True`, only single-fragment SMILES are considered valid
+        Filter the generated SMILES
         
-        Returns
+        Parameters:
+        ----------
+        smiles: `list`
+            A list of previous SMILES
+        new_smiles: `list`
+            A list of additional generated SMILES
+        frags: `list`  
+            A list of additional input fragments
+        drop_duplicates: `bool`
+            If `True`, duplicate SMILES are dropped
+        drop_undesired: `bool`
+            If `True`, SMILES that do not fulfill the desired objectives
+        evaluator: `Evaluator`
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles: `bool`
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns:
         -------
-        new_smiles : List
-            a list of newly generated molecules after filtering
-        new_frags : List
-            a list of fragments for the newly generated molecules after filtering        
+        new_smiles: `list`
+            A list of filtered SMILES
+        new_frags: `list`
+            A list of filtered input fragments
         """
-        pass 
+        
+        # Make sure both valid molecules and include input fragments
+        scores = SmilesChecker.checkSmiles(df_new.Smiles.tolist(), frags=df_new.Frags.tolist() if with_frags else None,
+                                           no_multifrag_smiles=no_multifrag_smiles)
+        df_new = pd.concat([df_new, scores], axis=1)
+        df_new = df_new[df_new.Accurate == 1]
+        
+        # Canonalize SMILES
+        df_new['Smiles'] = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in df_new.Smiles]    
+
+        # drop duplicates
+        if drop_duplicates:
+            df_new = df_new.drop_duplicates(subset=['Smiles'])
+            df_new = df_new[df_new.Smiles.isin(df_old.Smiles) == False]
+
+        # drop undesired molecules
+        if drop_undesired:
+            if evaluator is None:
+                raise ValueError('Evaluator must be provided to filter molecules by desirability')
+            # Compute desirability scores
+            scores = self.evaluate(df_new.Smiles.tolist(), frags=df_new.Smiles.tolist(),
+                                   evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            df_new['Desired'] = scores['Desired']
+            # Filter out undesired molecules
+            df_new = df_new[df_new.Desired == 1]
+        
+        return df_new
 
     def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
         """
@@ -173,9 +197,11 @@ class Generator(Model, ABC):
             
             # Save performance info and generate smiles
             valid_metrics['loss_train'] = loss_train
-            valid_metrics['best_value'] = best
-            # monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Desire', 'Frags'))
-            monitor.savePerformanceInfo(None, epoch, None, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores.keys(), **valid_metrics)
+            valid_metrics['best_epoch'] = last_save
+            valid_metrics['Epoch'] = epoch
+            valid_metrics = {k: valid_metrics[k] for k in ['Epoch', 'loss_train', 'loss_valid', 
+                                                           'valid_ratio', 'accurate_ratio', 'best_epoch']}
+            monitor.savePerformanceInfo(valid_metrics, df_smiles = smiles_scores)
 
             del loss_train, valid_metrics, smiles_scores
             monitor.endStep(None, epoch)
@@ -283,58 +309,3 @@ class FragGenerator(Generator):
             A dataloader object to iterate over the input fragments 
         """
         pass      
-
-    def filterNewMolecules(self, smiles, new_smiles, new_frags, drop_duplicates=True, drop_undesired=True, evaluator=None, no_multifrag_smiles=True):
-        """
-        Filter the generated SMILES
-        
-        Parameters:
-        ----------
-        smiles: `list`
-            A list of previous SMILES
-        new_smiles: `list`
-            A list of additional generated SMILES
-        frags: `list`  
-            A list of additional input fragments
-        drop_duplicates: `bool`
-            If `True`, duplicate SMILES are dropped
-        drop_undesired: `bool`
-            If `True`, SMILES that do not fulfill the desired objectives
-        evaluator: `Evaluator`
-            An evaluator object to evaluate the generated SMILES
-        no_multifrag_smiles: `bool`
-            If `True`, only single-fragment SMILES are considered valid
-        
-        Returns:
-        -------
-        new_smiles: `list`
-            A list of filtered SMILES
-        new_frags: `list`
-            A list of filtered input fragments
-        """
-        
-        # Make sure both valid molecules and include input fragments
-        scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags, no_multifrag_smiles=no_multifrag_smiles)
-        new_smiles = np.array(new_smiles)[scores.Accurate == 1].tolist()
-        new_frags = np.array(new_frags)[scores.Accurate == 1].tolist()
-        
-        # Canonalize SMILES
-        new_smiles = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in new_smiles]    
-
-        # drop duplicates
-        if drop_duplicates:
-            new_smiles = np.array(new_smiles)
-            new_frags = np.array(new_frags)[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-            new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-
-        # drop undesired molecules
-        if drop_undesired:
-            if evaluator is None:
-                raise ValueError('Evaluator must be provided to filter molecules by desirability')
-            # Compute desirability scores
-            scores = self.evaluate(new_smiles, new_frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-            # Filter out undesired molecules
-            new_smiles = np.array(new_smiles)[scores.Desired == 1].tolist()
-            new_frags = np.array(new_frags)[scores.Desired == 1].tolist()
-
-        return new_smiles, new_frags

@@ -221,11 +221,10 @@ class Explorer(Model, ABC):
             The scores for each molecule.
         """
         
-        smiles_scores = list(scores.itertuples(index=False, name=None))
-        smiles_scores_key = scores.columns.tolist()
         metrics = self.getNovelMoleculeMetrics(scores)
-        self.monitor.savePerformanceInfo(None, epoch, None, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores_key, **metrics)
-        self.monitor.saveProgress(None, epoch, None, epochs)
+        metrics['Epoch'] = epoch
+        scores['Epoch'] = epoch
+        self.monitor.savePerformanceInfo(metrics, df_smiles=scores)
         self.monitor.endStep(None, epoch)
 
     @abstractmethod
@@ -299,8 +298,7 @@ class FragExplorer(Explorer):
             loss.backward()
             self.optim.step()
 
-            self.monitor.saveProgress(step_idx, None, total_steps, None)
-            self.monitor.savePerformanceInfo(step_idx, None, loss.item())
+            self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
             del loss
 
     @abstractmethod
@@ -362,7 +360,6 @@ class FragExplorer(Explorer):
                     train_loader = self.sample_input(train_loader_original)
                     valid_loader = self.sample_input(valid_loader_original, is_test=True)
 
-                
                 # Sample encoded molecules from the network
                 loader = self.sampleEncodedPairsToLoader(net, train_loader)
                 

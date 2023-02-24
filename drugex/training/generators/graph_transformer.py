@@ -328,8 +328,7 @@ class GraphTransformer(FragGenerator):
             loss.backward()
             self.optim.step()
             current_step += 1
-            self.monitor.saveProgress(current_step, epoch, total_steps, epochs)
-            self.monitor.savePerformanceInfo(current_step, epoch, loss.item())
+            self.monitor.saveProgress(current_step, epoch, total_steps, epochs, loss=loss.item())
 
         return loss.item()
                 
@@ -483,44 +482,34 @@ class GraphTransformer(FragGenerator):
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
 
-        smiles, frags = [], []
-        while not len(smiles) >= num_samples:
+        df_all = pd.DataFrame(columns=['Smiles', 'Frags'])
+        while not len(df_all) >= num_samples:
             with torch.no_grad():
                 src = next(iter(loader))
                 trg = net(src.to(self.device))
                 new_frags, new_smiles = self.voc_trg.decode(trg)
+                df_new = pd.DataFrame({'Smiles': new_smiles, 'Frags': new_frags})
 
                 # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
                 # valid molecules are canonicalized and optionally extra filtering is applied
                 # else invalid molecules are kept and no filtering is applied
                 if drop_invalid:
-                    new_smiles, new_frags = self.filterNewMolecules(smiles, new_smiles, new_frags, drop_duplicates=drop_duplicates, 
-                                                              drop_undesired=drop_undesired, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+                    df_new = self.filterNewMolecules(df_all, df_new, drop_duplicates=drop_duplicates, drop_undesired=drop_undesired, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
 
-                # Update list of smiles and frags
-                smiles += new_smiles
-                frags += new_frags
+                # Update the dataframe with the new molecules
+                df_all = pd.concat([df_all, df_new], axis=0, ignore_index=True)
                 
                 # Update progress bar
                 if progress:
-                    pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+                    pbar.update(len(df_new) if pbar.n + len(df_new) <= num_samples else num_samples - pbar.n)
         
         if progress:
             pbar.close()
-        
-        smiles = smiles[:num_samples]
-        frags = frags[:num_samples]
 
         # Post-processing
-        df_smiles = pd.DataFrame({'SMILES': smiles, 'Frags': frags})
-
+        df = df_all.head(num_samples)
         if evaluator:
-            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
-            if drop_undesired: # TODO: Sohvi - I think this is redundant as undesired molecules are dropped in `self.filterNewMolecules`
-                df_smiles = df_smiles[df_smiles['Desired']]
-
+            df = pd.concat([df, self.evaluate(df.Smiles.tolist(), frags=df.Smiles.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
         if not keep_frags:
-            df_smiles = df_smiles.drop('Frags', axis=1)
-
-
-        return df_smiles
+            df = df.drop('Frags', axis=1)
+        return df

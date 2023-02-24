@@ -115,8 +115,7 @@ class SequenceExplorer(Explorer):
             loss.backward()
             self.optim.step()
             
-            self.monitor.saveProgress(step_idx, None, total_steps, None)
-            self.monitor.savePerformanceInfo(step_idx, None, loss.item())
+            self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
             del loss
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
