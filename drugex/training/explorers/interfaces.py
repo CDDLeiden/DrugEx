@@ -127,7 +127,7 @@ class Explorer(Model, ABC):
             accurate = valid
 
         # Unique compounds
-        unique = accurate.drop_duplicates(subset='Smiles')
+        unique = accurate.drop_duplicates(subset='SMILES')
         dct['unique_ratio'] = len(unique) / ntot
         
         # Desired compounds
@@ -175,9 +175,18 @@ class Explorer(Model, ABC):
             The scores for each molecule.
         """
         
+        # Add epoch and best epoch to metrics, and order columns
         metrics['Epoch'] = epoch
+        metrics = {k : metrics[k] for k in ['Epoch'] + [k for k in metrics.keys() if k != 'Epoch']}
         metrics['best_epoch'] = self.last_save
+        
+        # Add epoch to scores, and order columns
         scores['Epoch'] = epoch
+        if 'Accurate' in scores.columns:
+            scores = scores[['Epoch', 'SMILES', 'Frags', 'Valid', 'Accurate', 'Desired'] + self.env.getScorerKeys()]
+        else:
+            scores = scores[['Epoch', 'SMILES', 'Valid', 'Desired'] + self.env.getScorerKeys()]
+
         self.monitor.savePerformanceInfo(metrics, df_smiles=scores)
         self.monitor.endStep(None, epoch)
 
@@ -323,7 +332,7 @@ class FragExplorer(Explorer):
                 # Evaluate model on validation set
                 smiles, frags = self.agent.sample(valid_loader)
                 scores = self.agent.evaluate(smiles, frags, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-                scores['Smiles'], scores['Frags'] = smiles, frags    
+                scores['SMILES'], scores['Frags'] = smiles, frags    
 
                 # Compute metrics
                 metrics = self.getNovelMoleculeMetrics(scores)         

@@ -220,7 +220,7 @@ class SequenceTransformer(FragGenerator):
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-        scores['Smiles'] = smiles
+        scores['SMILES'] = smiles
         scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.Valid.mean() 
         valid_metrics['accurate_ratio'] = scores.Accurate.mean()
@@ -312,14 +312,14 @@ class SequenceTransformer(FragGenerator):
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
 
-        df_all = pd.DataFrame(columns=['Smiles', 'Frags'])
+        df_all = pd.DataFrame(columns=['SMILES', 'Frags'])
         while not len(df_all) >= num_samples:
             with torch.no_grad():
                 src, _ = next(iter(loader))
                 trg = net(src.to(self.device))
                 new_smiles = [self.voc_trg.decode(s, is_tk=False) for s in trg]
                 new_frags = [self.voc_trg.decode(s, is_tk=False) for s in src]
-                df_new = pd.DataFrame({'Smiles': new_smiles, 'Frags': new_frags})
+                df_new = pd.DataFrame({'SMILES': new_smiles, 'Frags': new_frags})
 
                 # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
                 # valid molecules are canonicalized and optionally extra filtering is applied
@@ -341,10 +341,10 @@ class SequenceTransformer(FragGenerator):
         df = df_all.head(num_samples)
         
         if evaluator:
-            df_smiles = pd.concat([df, self.evaluate(df.Smiles.tolist(), frags=df.Smiles.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)        
+            df_smiles = pd.concat([df, self.evaluate(df.SMILES.tolist(), frags=df.Frags.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)        
             
         if not keep_frags:
             df_smiles = df_smiles.drop('Frags', axis=1)
 
-        return df_smiles
+        return df_smiles.round(3)
 

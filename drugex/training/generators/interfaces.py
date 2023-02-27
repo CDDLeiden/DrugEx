@@ -123,32 +123,67 @@ class Generator(Model, ABC):
             A list of filtered input fragments
         """
         
-        # Make sure both valid molecules and include input fragments
-        scores = SmilesChecker.checkSmiles(df_new.Smiles.tolist(), frags=df_new.Frags.tolist() if with_frags else None,
+        # Make sure both valid molecules and include input fragments if needed
+        scores = SmilesChecker.checkSmiles(df_new.SMILES.tolist(), frags=df_new.Frags.tolist() if with_frags else None,
                                            no_multifrag_smiles=no_multifrag_smiles)
         df_new = pd.concat([df_new, scores], axis=1)
-        df_new = df_new[df_new.Accurate == 1]
+        
+        if with_frags:
+            df_new = df_new[df_new.Accurate == 1]
+        else:
+            df_new = df_new[df_new.Valid == 1]
         
         # Canonalize SMILES
-        df_new['Smiles'] = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in df_new.Smiles]    
+        df_new['SMILES'] = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in df_new.SMILES]    
 
         # drop duplicates
         if drop_duplicates:
-            df_new = df_new.drop_duplicates(subset=['Smiles'])
-            df_new = df_new[df_new.Smiles.isin(df_old.Smiles) == False]
+            df_new = df_new.drop_duplicates(subset=['SMILES'])
+            df_new = df_new[df_new.SMILES.isin(df_old.SMILES) == False]
 
         # drop undesired molecules
         if drop_undesired:
             if evaluator is None:
                 raise ValueError('Evaluator must be provided to filter molecules by desirability')
             # Compute desirability scores
-            scores = self.evaluate(df_new.Smiles.tolist(), frags=df_new.Smiles.tolist(),
+            scores = self.evaluate(df_new.SMILES.tolist(), frags=df_new.SMILES.tolist(),
                                    evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             df_new['Desired'] = scores['Desired']
             # Filter out undesired molecules
             df_new = df_new[df_new.Desired == 1]
         
         return df_new
+    
+    def logPerformanceAndCompounds(self, epoch, metrics, scores):
+        """ 
+        Log performance and compounds
+        
+        Parameters:
+        ----------
+        epoch: `int`
+            The current epoch
+        metrics: `dict`
+            A dictionary with the performance metrics
+        scores: `DataFrame`
+            A `DataFrame` with generated molecules and their scores
+        """
+
+        # Add epoch to metrics and order columns
+        metrics['Epoch'] = epoch
+        metrics = {k: metrics[k] for k in ['Epoch', 'loss_train', 'loss_valid', 'valid_ratio', 'accurate_ratio', 'best_epoch'] if k in metrics.keys()}
+
+        # Add epoch to scores and order columns
+        scores['Epoch'] = epoch
+        if 'Frags' in scores.columns:
+            firts_cols = ['Epoch', 'SMILES', 'Frags', 'Valid', 'Accurate']
+        else:
+            firts_cols = ['Epoch', 'SMILES', 'Valid']
+        scores = pd.concat([scores[firts_cols], scores.drop(firts_cols, axis=1)], axis=1)
+
+        # Save performance info and generate smiles
+        self.monitor.savePerformanceInfo(metrics, df_smiles = scores)
+        self.monitor.endStep(None, epoch)
+
 
     def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
         """
@@ -188,25 +223,19 @@ class Generator(Model, ABC):
             # Save model based on validation loss or valid ratio
             if 'loss_valid' in valid_metrics.keys(): value = valid_metrics['loss_valid']
             else : value = 1 - valid_metrics['valid_ratio']
+            valid_metrics['loss_train'] = loss_train
 
             if value < best:
                 monitor.saveModel(self)    
                 best = value
                 last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")   
-            
-            # Save performance info and generate smiles
-            valid_metrics['loss_train'] = loss_train
+                logger.info(f"Model was saved at epoch {epoch}")               
             valid_metrics['best_epoch'] = last_save
-            valid_metrics['Epoch'] = epoch
-            smiles_scores['Epoch'] = epoch
-            valid_metrics = {k: valid_metrics[k] for k in ['Epoch', 'loss_train', 'loss_valid', 
-                                                           'valid_ratio', 'accurate_ratio', 'best_epoch']
-                                                           if k in valid_metrics.keys()}
-            monitor.savePerformanceInfo(valid_metrics, df_smiles = smiles_scores)
+
+            # Log performance and generated compounds
+            self.logPerformanceAndCompounds(epoch, valid_metrics, smiles_scores)
 
             del loss_train, valid_metrics, smiles_scores
-            monitor.endStep(None, epoch)
                 
             # Early stopping
             if epoch - last_save > patience : break

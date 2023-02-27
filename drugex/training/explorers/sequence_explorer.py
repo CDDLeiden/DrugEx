@@ -159,7 +159,7 @@ class SequenceExplorer(Explorer):
             # Evaluate the model on the validation set
             smiles = self.agent.sample(self.nSamples)
             scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-            scores['Smiles'] =  smiles           
+            scores['SMILES'] =  smiles           
 
             # Compute metrics
             metrics = self.getNovelMoleculeMetrics(scores)         

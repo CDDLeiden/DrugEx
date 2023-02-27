@@ -367,7 +367,7 @@ class GraphTransformer(FragGenerator):
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-        scores['Smiles'] = smiles
+        scores['SMILES'] = smiles
         scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.Valid.mean() 
         valid_metrics['accurate_ratio'] = scores.Accurate.mean()
@@ -482,13 +482,13 @@ class GraphTransformer(FragGenerator):
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
 
-        df_all = pd.DataFrame(columns=['Smiles', 'Frags'])
+        df_all = pd.DataFrame(columns=['SMILES', 'Frags'])
         while not len(df_all) >= num_samples:
             with torch.no_grad():
                 src = next(iter(loader))
                 trg = net(src.to(self.device))
                 new_frags, new_smiles = self.voc_trg.decode(trg)
-                df_new = pd.DataFrame({'Smiles': new_smiles, 'Frags': new_frags})
+                df_new = pd.DataFrame({'SMILES': new_smiles, 'Frags': new_frags})
 
                 # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
                 # valid molecules are canonicalized and optionally extra filtering is applied
@@ -509,7 +509,7 @@ class GraphTransformer(FragGenerator):
         # Post-processing
         df = df_all.head(num_samples)
         if evaluator:
-            df = pd.concat([df, self.evaluate(df.Smiles.tolist(), frags=df.Smiles.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
+            df = pd.concat([df, self.evaluate(df.SMILES.tolist(), frags=df.SMILES.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
         if not keep_frags:
             df = df.drop('Frags', axis=1)
-        return df
+        return df.round(3)
