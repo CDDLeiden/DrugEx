@@ -236,6 +236,11 @@ class FragExplorer(Explorer):
         ----------
         loader : torch.utils.data.DataLoader
             Data loader for training data
+
+        Returns
+        -------
+        float
+            The average loss of the agent
         """
 
         net = nn.DataParallel(self.agent, device_ids=self.gpus)
@@ -262,7 +267,8 @@ class FragExplorer(Explorer):
             self.optim.step()
 
             self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
-            del loss
+            
+        return loss.item()
 
     @abstractmethod
     def sampleEncodedPairsToLoader(self, net, loader):
@@ -327,7 +333,7 @@ class FragExplorer(Explorer):
                 loader = self.sampleEncodedPairsToLoader(net, train_loader)
                 
                 # Train the agent with policy gradient
-                self.policy_gradient(loader)
+                train_loss = self.policy_gradient(loader)
 
                 # Evaluate model on validation set
                 smiles, frags = self.agent.sample(valid_loader)
@@ -335,7 +341,8 @@ class FragExplorer(Explorer):
                 scores['SMILES'], scores['Frags'] = smiles, frags    
 
                 # Compute metrics
-                metrics = self.getNovelMoleculeMetrics(scores)         
+                metrics = self.getNovelMoleculeMetrics(scores)    
+                metrics['loss_train'] = train_loss     
 
                 # Save evaluate criteria and save best model
                 if metrics[criteria] > self.best_value:

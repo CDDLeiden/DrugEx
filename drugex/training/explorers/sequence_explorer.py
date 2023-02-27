@@ -96,6 +96,11 @@ class SequenceExplorer(Explorer):
             The generated SMILES.
         seqs : torch.Tensor
             The generated encoded sequences. 
+
+        Returns
+        -------
+        loss : float
+            The loss of the policy gradient.
         """
 
         # Calculate the reward from SMILES with the environment
@@ -116,7 +121,8 @@ class SequenceExplorer(Explorer):
             self.optim.step()
             
             self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
-            del loss
+        
+        return loss.item()
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
         
@@ -139,10 +145,6 @@ class SequenceExplorer(Explorer):
             Minimum number of epochs to train for
         monitor : Monitor
             Monitor to use for logging and saving model
-            
-        Returns
-        -------
-        None
         """
         
         self.monitor = monitor if monitor else NullMonitor()
@@ -154,7 +156,7 @@ class SequenceExplorer(Explorer):
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             
             smiles, seqs = self.forward()
-            self.policy_gradient(smiles, seqs)
+            train_loss = self.policy_gradient(smiles, seqs)
 
             # Evaluate the model on the validation set
             smiles = self.agent.sample(self.nSamples)
@@ -162,7 +164,8 @@ class SequenceExplorer(Explorer):
             scores['SMILES'] =  smiles           
 
             # Compute metrics
-            metrics = self.getNovelMoleculeMetrics(scores)         
+            metrics = self.getNovelMoleculeMetrics(scores)       
+            metrics['loss_train'] = train_loss  
 
             # Save evaluate criteria and save best model
             if metrics[criteria] > self.best_value:
