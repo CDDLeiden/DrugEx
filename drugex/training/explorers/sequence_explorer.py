@@ -134,7 +134,7 @@ class SequenceExplorer(Explorer):
         patience : int
             Number of epochs to wait for improvement before early stopping
         criteria : str
-            Criteria to use for early stopping
+            Criteria to use for early stopping: 'desired_ratio', 'avg_amean' or 'avg_gmean'
         min_epochs : int
             Minimum number of epochs to train for
         monitor : Monitor
@@ -161,11 +161,15 @@ class SequenceExplorer(Explorer):
             scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
             scores['Smiles'] =  smiles           
 
-            # Save evaluate criteria and save best model
-            self.saveBestState(scores, criteria, epoch, None)
+            # Compute metrics
+            metrics = self.getNovelMoleculeMetrics(scores)         
 
-            # Log performance and genearated compounds
-            self.logPerformanceAndCompounds(epoch, epochs, scores)
+            # Save evaluate criteria and save best model
+            if metrics[criteria] > self.best_value:
+                self.saveBestState(metrics[criteria], epoch, None)
+
+            # Log performance and generated compounds
+            self.logPerformanceAndCompounds(epoch, metrics, scores)
  
             if epoch % patience == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state

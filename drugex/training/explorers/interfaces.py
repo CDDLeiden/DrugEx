@@ -17,6 +17,7 @@ from tqdm import tqdm
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
 from drugex.training.interfaces import Model
+from drugex.training.monitors import NullMonitor
 
 class Explorer(Model, ABC):
     """
@@ -99,7 +100,7 @@ class Explorer(Model, ABC):
         ----------
         scores : pd.DataFrame
             The scores for each molecule.
-        
+
         Returns
         -------
         dict
@@ -107,8 +108,8 @@ class Explorer(Model, ABC):
                 - valid_ratio (float): ratio of valid molecules
                 - unique_ratio (float): ratio of valid and unique molecules
                 - desired_ratio (float): ratio of valid, unique and desired molecules
-                - aMeanScore (float): arithmetic mean score of valid and unique molecules
-                - gMeanScore (float): geometric mean score of valid and unique molecules
+                - avg_amean (float): average arithmetic mean score of valid and unique molecules
+                - avg_gmean (float): average geometric mean score of valid and unique molecules
         """
         
         dct = {}
@@ -133,80 +134,33 @@ class Explorer(Model, ABC):
         dct['desired_ratio'] = unique.Desired.sum() / ntot
         
         # Average artithmetic and geometric mean score 
-        dct['aMeanScore'] = unique[self.env.getScorerKeys()].values.mean()
-        dct['gMeanScore'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
+        dct['avg_amean'] = unique[self.env.getScorerKeys()].values.mean()
+        dct['avg_gmean'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
         
         return dct
-
-    def getCriteriaValue(self, scores, criteria):
-
-        """
-        Get value of selection criteria
-
-        Parameters
-        ----------
-        scores : pd.DataFrame
-            The scores for each molecule.
-        criteria : str or callable
-            The selection criteria. If str, one of the following:
-                - desired_ratio: ratio of valid, unique and desired molecules
-                - aMeanScore: arithmetic mean score of valid and unique molecules
-                - gMeanScore: geometric mean score of valid and unique molecules
-            If callable, it must take a pd.DataFrame as input and return a float.
-
-        Returns
-        -------
-        float
-            The value of the selection criteria.
-        """
-        
-        # Get accurate or valid molecules and drop duplicates
-        try:
-            # If accurate column is present, use it to filter wanted molecules
-            unique = scores[(scores.Accurate == 1)].drop_duplicates(subset='Smiles')
-        except:
-            # Otherwise, use valid column
-            unique = scores[(scores.Valid == 1)].drop_duplicates(subset='Smiles')
-        
-        # Get value of selection criteria
-        try:
-            if criteria == 'desired_ratio': return unique.Desired.sum() / len(scores)
-            elif criteria == 'amean_score': return unique[self.env.getScorerKeys()].values.mean()
-            elif criteria == 'gmean_score': return unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
-            else: return criteria(scores)
-        except:
-            raise ValueError(f"Invalid criteria: {criteria}. Valid criteria are: 'desired_ratio', 'amean_score', gmean_score' or custom function with signature (scores: pd.DataFrame) -> float")
-
-    def saveBestState(self, scores, criteria, epoch, it):
+    
+    def saveBestState(self, value, epoch, it):
 
         """
         Save best state based on selection criteria
 
         Parameters
         ----------
-        scores : pd.DataFrame
-            The scores for each molecule.
-        criteria : str or callable
-            The selection criteria. If str, one of the following:
-                - desired_ratio: ratio of valid, unique and desired molecules
-                - aMeanScore: arithmetic mean score of valid and unique molecules
-                - gMeanScore: geometric mean score of valid and unique molecules
-            If callable, it must take a pd.DataFrame as input and return a float.
+        value : float
+            The value of the selection criteria.
         epoch : int
             The current epoch.
         it : int
         """
         
-        value = self.getCriteriaValue(scores, criteria)
-        if value > self.best_value:
-            self.monitor.saveModel(self.agent)
-            self.bestState = deepcopy(self.agent.state_dict())
-            self.best_value = value
-            self.last_save = epoch
-            self.last_iter = it
-            logger.info(f"Model saved at epoch {epoch}")
+        self.monitor.saveModel(self.agent)
+        self.bestState = deepcopy(self.agent.state_dict())
+        self.best_value = value
+        self.last_save = epoch
+        self.last_iter = it
+        logger.info(f"Model saved at epoch {epoch}")
 
-    def logPerformanceAndCompounds(self, epoch, epochs, scores):
+    def logPerformanceAndCompounds(self, epoch, metrics, scores):
 
         """
         Log performance of model
@@ -215,14 +169,14 @@ class Explorer(Model, ABC):
         ----------
         epoch : int
             The current epoch.
-        epochs : int
-            The total number of epochs.
+        metrics : dict
+            The metrics.
         scores : pd.DataFrame
             The scores for each molecule.
         """
         
-        metrics = self.getNovelMoleculeMetrics(scores)
         metrics['Epoch'] = epoch
+        metrics['best_epoch'] = self.last_save
         scores['Epoch'] = epoch
         self.monitor.savePerformanceInfo(metrics, df_smiles=scores)
         self.monitor.endStep(None, epoch)
@@ -366,21 +320,26 @@ class FragExplorer(Explorer):
                 # Train the agent with policy gradient
                 self.policy_gradient(loader)
 
-                # Evaluate model
+                # Evaluate model on validation set
                 smiles, frags = self.agent.sample(valid_loader)
                 scores = self.agent.evaluate(smiles, frags, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-                scores['Smiles'], scores['Frags'] = smiles, frags             
+                scores['Smiles'], scores['Frags'] = smiles, frags    
+
+                # Compute metrics
+                metrics = self.getNovelMoleculeMetrics(scores)         
 
                 # Save evaluate criteria and save best model
-                self.saveBestState(scores, criteria, epoch, it)
+                if metrics[criteria] > self.best_value:
+                    self.saveBestState(metrics[criteria], epoch, it)
 
-                # Log performance and genearated compounds
-                self.logPerformanceAndCompounds(epoch, epochs, scores)
+                # Log performance and generated compounds
+                self.logPerformanceAndCompounds(epoch, metrics, scores)
         
                 # Early stopping
                 if (epoch >= min_epochs) and  (epoch - self.last_save > patience) : break
 
             if self.crover is not None:
+                logger.warning('Behavior of using crover with a Transformer is not tested yet. Use at your own risk.')
                 self.agent.load_state_dict(self.bestState)
                 self.crover.load_state_dict(self.bestState)
             if it - self.last_iter > 1: break

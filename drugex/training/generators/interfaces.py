@@ -199,8 +199,10 @@ class Generator(Model, ABC):
             valid_metrics['loss_train'] = loss_train
             valid_metrics['best_epoch'] = last_save
             valid_metrics['Epoch'] = epoch
+            smiles_scores['Epoch'] = epoch
             valid_metrics = {k: valid_metrics[k] for k in ['Epoch', 'loss_train', 'loss_valid', 
-                                                           'valid_ratio', 'accurate_ratio', 'best_epoch']}
+                                                           'valid_ratio', 'accurate_ratio', 'best_epoch']
+                                                           if k in valid_metrics.keys()}
             monitor.savePerformanceInfo(valid_metrics, df_smiles = smiles_scores)
 
             del loss_train, valid_metrics, smiles_scores
