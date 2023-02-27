@@ -78,7 +78,7 @@ class FileMonitor(TrainingMonitor):
         """ 
         Save the model state.
         """
-        super().saveModel(model)
+        self.bestState = model.getModel()
         torch.save(self.bestState, self.path + '.pkg')
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
