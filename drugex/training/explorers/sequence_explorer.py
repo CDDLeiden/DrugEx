@@ -48,7 +48,7 @@ class SequenceExplorer(Explorer):
         beta : float
             The baseline for the reward.
         n_samples : int
-            The number of molecules to be generated in each epoch.
+            The batch size for the policy gradient update.
         optim : torch.optim
             The optimizer to update the agent network.
         device : torch.device
@@ -107,7 +107,7 @@ class SequenceExplorer(Explorer):
         total_steps = len(loader)
 
         # Train model with policy gradient
-        for step_idx, (seq, reward) in enumerate(tqdm(loader, desc='Iterating over validation batches', leave=False)):
+        for step_idx, (seq, reward) in enumerate(tqdm(loader, desc='Calculating policy gradient...', leave=False)):
             self.optim.zero_grad()
             loss = self.agent.likelihood(seq)
             loss = loss * (reward - self.beta) 
