@@ -516,8 +516,6 @@ class GraphTransformer(FragGenerator):
 
         if evaluator:
             df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
-            if drop_undesired: # TODO: Sohvi - I think this is redundant as undesired molecules are dropped in `self.filterNewMolecules`
-                df_smiles = df_smiles[df_smiles['Desired']]
 
         if not keep_frags:
             df_smiles = df_smiles.drop('Frags', axis=1)
