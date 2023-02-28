@@ -12,13 +12,26 @@ from qsprpred.models.tasks import ModelTasks
 
 class QSPRPredScorer(Scorer):
 
-    def __init__(self, model, invalids_score=0.0):
+    def __init__(self, model, invalids_score=0.0, modifier=None):
+        super(QSPRPredScorer, self).__init__(modifier)
         self.model = model
         self.invalidsScore = invalids_score
 
     def getScores(self, mols, frags=None):
         if type(mols[0]) != str:
-            mols = [Chem.MolToSmiles(mol) if mol else "INVALID" for mol in mols]
+            invalids = 0
+            for idx, mol in enumerate(mols):
+                try:
+                    mol = Chem.SanitizeMol(mol)
+                    mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
+                except:
+                    mol = "INVALID"
+                if mol == "INVALID":
+                    invalids += 1
+                mols[idx] = mol
+
+            if invalids == len(mols):
+                return np.array([self.invalidsScore] * len(mols))
 
         if self.model.task == ModelTasks.REGRESSION:
             return self.model.predictMols(mols)

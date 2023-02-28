@@ -103,10 +103,11 @@ echo "Test: Done."
 echo $line
 echo "Test: Generate molecules with sequence transformer ..."
 echo $line
-python -m drugex.designer \
+python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
+${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
--vfs "${FINETUNING_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
 --keep_invalid
 echo "Test: Done."
