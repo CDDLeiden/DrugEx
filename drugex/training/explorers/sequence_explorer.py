@@ -56,7 +56,9 @@ class SequenceExplorer(Explorer):
         use_gpus : tuple
             The GPU ids to run the network.
         """
-        
+
+        if self.nSamples <= 0:
+            self.nSamples = 128
         self.repeats_per_epoch = 10
         self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3) if optim is None else optim
 
