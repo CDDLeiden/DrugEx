@@ -46,6 +46,9 @@ class DrugExEnvironment(Environment):
         for scorer in self.scorers:
             scores.loc[:, scorer.getKey()] = scorer(mols)
 
+        # Set all scores to 0.0 for invalid molecules
+        scores.loc[scores['Valid'] == 0, self.getScorerKeys()] = 0.0
+
         # Check if the molecule is desirable
         undesire = (scores[self.getScorerKeys()] < self.thresholds)  # ^ self.objs.on
         scores['Desired'] = (undesire.sum(axis=1) == 0).astype(int)
