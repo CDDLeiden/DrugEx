@@ -12,6 +12,7 @@ import torch
 from rdkit import Chem
 
 from drugex.data.corpus.interfaces import SequenceVocabulary, Vocabulary
+from drugex.logs import logger
 from drugex.molecules.converters.standardizers import CleanSMILES
 
 
@@ -305,7 +306,8 @@ class VocGraph(Vocabulary):
                 Chem.SanitizeMol(emol)
                 Chem.SanitizeMol(esub)
             except Exception as e:
-                raise e
+                logger.error(f'Error while decoding: {adj}')
+                logger.error(e)
             frags.append(Chem.MolToSmiles(esub))
             smiles.append(Chem.MolToSmiles(emol))
         return frags, smiles
