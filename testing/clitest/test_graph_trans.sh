@@ -106,8 +106,9 @@ echo "Test: Done."
 echo $line
 echo "Test: Generate molecules with graph transformer ..."
 echo $line
-python -m drugex.designer \
+python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
+${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_graph_trans_RL" \
 -vfs "${FINETUNING_PREFIX}" \

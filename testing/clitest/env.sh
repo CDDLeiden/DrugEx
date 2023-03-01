@@ -7,7 +7,6 @@ export line=$(printf -vl "%${COLUMNS:-`tput cols 2>&-||echo 80`}s\n" && echo ${l
 export TEST_BASE="."
 export TEST_DATA_PRETRAINING='ZINC_raw_small.tsv'
 export TEST_DATA_FINETUNING='A2AR_raw_small.tsv'
-export TEST_DATA_ENVIRONMENT='A2AR_raw_small_env.tsv'
 export TEST_DATA_SCAFFOLD='pyrazines.tsv'
 
 # prefixes for output files
@@ -44,14 +43,13 @@ export TRAIN_BATCH=32
 export TRAIN_GPUS=0
 export N_CPUS=2
 export OPTIMIZATION='bayes'
-export SEARCH_SPACE='data/search_space/search_space_test'
 export N_TRIALS=2
 
 ###########
 # DATASET #
 ###########
 export DATASET_COMMON_ARGS="-b ${TEST_BASE} -d -mc ${MOL_COL} -sif"
-export DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nf ${N_COMBINATIONS} -nf ${N_FRAGS}"
+export DATASET_FRAGMENT_ARGS="-fm ${FRAG_METHOD} -nc ${N_COMBINATIONS} -nf ${N_FRAGS}"
 
 ############
 # TRAINING #
@@ -60,12 +58,9 @@ export TRAIN_COMMON_ARGS="-b ${TEST_BASE} -d -e ${TRAIN_EPOCHS} -bs ${TRAIN_BATC
 export TRAIN_VOCAB_ARGS="-vfs ${PRETRAINING_PREFIX} ${FINETUNING_PREFIX}"
 #export TRAIN_VOCAB_ARGS="" # uncomment to test with the default vocabularies
 
-export RL_PREFIX="RL"
-export TARGET_ID="P29274"
-export ENVIRON_MODE="CLS"
-export ENVIRON_ALG="RF"
-export ENVIRON_THRESHOLD=6.5
-export TRAIN_RL_ARGS="-ng -ta ${TARGET_ID} -et ${ENVIRON_MODE} -ea ${ENVIRON_ALG} -at ${ENVIRON_THRESHOLD}"
+export ENV_MODEL_NAME="A2AR_RandomForestClassifier"
+export ENV_MODEL_PATH="qsar/qspr/models/${ENV_MODEL_NAME}/${ENV_MODEL_NAME}_meta.json"
+export TRAIN_RL_ARGS="-ng -p ${ENV_MODEL_PATH} -ta ${ENV_MODEL_NAME}"
 
 ############
 # GENERATE #

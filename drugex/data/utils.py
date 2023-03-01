@@ -3,7 +3,7 @@ import os
 from drugex import VERSION
 from drugex.logs import logger
 
-def getVocPaths(data_path, voc_files):
+def getVocPaths(data_path, voc_files, mol_type):
     """ 
     Get paths to vocabulary files. If none are found, use internal defaults.
     
@@ -25,6 +25,8 @@ def getVocPaths(data_path, voc_files):
         path = f'{data_path}/{voc_file}'
         if os.path.exists(path):
             voc_paths.append(path)
+        elif os.path.exists(path + f'_{mol_type}.txt.vocab'):
+            voc_paths.append(path + f'_{mol_type}.txt.vocab')
         else:
             logger.warning(f'Could not find vocabulary file {voc_file} in {data_path}.')
             

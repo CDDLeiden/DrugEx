@@ -117,6 +117,7 @@ ${TRAIN_RL_ARGS} \
 -ag "${PRETRAINING_PREFIX}_${GRU_PREFIX}_smiles_rnn_PT" \
 -pr "${FINETUNING_PREFIX}_${GRU_PREFIX}_smiles_rnn_FT" \
 -o "${FINETUNING_PREFIX}_${GRU_PREFIX}_${RL_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
 -tm RL \
 -a rnn \
 -gru \
@@ -127,10 +128,11 @@ echo "Test: Done."
 echo $line
 echo "Test: Generate molecules with sequence RNN ..."
 echo $line
-python -m drugex.designer \
+python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
+${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_rnn_RL" \
--vfs "${FINETUNING_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \
 --keep_invalid
 echo "Test: Done."

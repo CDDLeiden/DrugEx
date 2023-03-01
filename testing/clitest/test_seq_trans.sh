@@ -65,23 +65,6 @@ ${TRAIN_VOCAB_ARGS} \
 -mt smiles
 echo "Test: Done."
 
- echo $line
- echo "Test: RL for the fragment-based sequence transformer..."
- echo $line
- python -m drugex.train \
- ${TRAIN_COMMON_ARGS} \
- ${TRAIN_VOCAB_ARGS} \
- ${TRAIN_RL_ARGS} \
- -i "${FINETUNING_PREFIX}" \
- -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
- -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
- -o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
- -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
- -tm RL \
- -a trans \
- -mt smiles
- echo "Test: Done."
-
 echo $line
 echo "Test: scaffold-based RL for the fragment-based sequence transformer..."
 echo $line
@@ -89,7 +72,7 @@ python -m drugex.train \
 ${TRAIN_COMMON_ARGS} \
 ${TRAIN_VOCAB_ARGS} \
 ${TRAIN_RL_ARGS} \
--i "${SCAFFOLD_PREFIX}_smi.txt" \
+-i "${SCAFFOLD_PREFIX}_smiles.txt" \
 -ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
 -pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
 -o "${SCAFFOLD_PREFIX}_${RL_PREFIX}" \
@@ -101,12 +84,31 @@ ${TRAIN_RL_ARGS} \
 echo "Test: Done."
 
 echo $line
+echo "Test: RL for the fragment-based sequence transformer..."
+echo $line
+python -m drugex.train \
+${TRAIN_COMMON_ARGS} \
+${TRAIN_VOCAB_ARGS} \
+${TRAIN_RL_ARGS} \
+-i "${FINETUNING_PREFIX}" \
+-ag "${PRETRAINING_PREFIX}_smiles_trans_PT" \
+-pr "${FINETUNING_PREFIX}_smiles_trans_FT" \
+-o "${FINETUNING_PREFIX}_${RL_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
+-tm RL \
+-a trans \
+-mt smiles \
+-ns 32
+echo "Test: Done."
+
+echo $line
 echo "Test: Generate molecules with sequence transformer ..."
 echo $line
-python -m drugex.designer \
+python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
+${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
--vfs "${FINETUNING_PREFIX}" \
+-vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \
 --keep_invalid
 echo "Test: Done."
