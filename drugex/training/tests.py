@@ -4,6 +4,8 @@ tests
 Created by: Martin Sicho
 On: 31.05.22, 10:20
 """
+import json
+import logging
 import os.path
 import tempfile
 from collections import OrderedDict
@@ -61,19 +63,24 @@ class TestModelMonitor(TrainingMonitor):
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
-        print(current_step, current_epoch, total_steps, total_epochs)
-        print(args)
-        print(kwargs)
+        print(json.dumps({
+            'current_step' : current_step,
+            'current_epoch' : current_epoch,
+            'total_steps' : total_steps,
+            'total_epochs' : total_epochs,
+        }, indent=4))
+        if args:
+            print("Args:", args)
+        if kwargs:
+            print("Kwargs:", json.dumps(kwargs, indent=4))
         self.execution['progress'] = True
         self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
-    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         print("Test Performance Monitor:")
-        print(current_step, current_epoch, loss)
-        print(args)
-        print(kwargs)
+        print(json.dumps(performance_dict, indent=4))
         self.execution['performance'] = True
-        self.passToSubmonitors('savePerformanceInfo', current_step, current_epoch, loss, *args, **kwargs)
+        self.passToSubmonitors('savePerformanceInfo', performance_dict, df_smiles)
 
     def endStep(self, step, epoch):
         print(f"Finished step {step} of epoch {epoch}.")
