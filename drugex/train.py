@@ -87,7 +87,7 @@ def GeneratorArgParser():
     parser.add_argument('-p', '--predictor', type=str, nargs='*', default=['RF'],
                         help="The path to the serialized metadata of a QSPRPred model (ie. 'RF_meta.json'). If different environments are required give environment of targets in order active, inactive, window.")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
-                        help="Activity threshold")
+                        help="Activity threshold used by the modifier in case of a regressor activity predictor")
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[],
                         help="Names of models that predict activity.")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
