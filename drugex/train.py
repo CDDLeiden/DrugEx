@@ -80,7 +80,7 @@ def GeneratorArgParser():
                         help="Exploring rate: probability of using the prior model instead of the agent model.")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
                         help="Reward baseline used by the policy gradient algorithm.")
-    parser.add_argument('-s', '--scheme', type=str, default='PRTD',
+    parser.add_argument('-s', '--scheme', type=str, default='PRCD',
                         help="Multi-objective reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance.")
 
     # Affinity models
