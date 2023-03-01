@@ -206,9 +206,9 @@ class DataPreparation():
         self.input = input
         self.batch_size = batch_size
         self.n_samples = n_samples
-        self.mt = mt
+        self.mol_type = mt
 
-    def getVocPaths(self):
+    def getVocPaths(self, custom_type=None):
         """ 
         Get paths to vocabulary files. If none are found, use internal defaults.
 
@@ -218,14 +218,15 @@ class DataPreparation():
             List of paths to vocabulary files.
         """
 
+        mol_type = self.mol_type if not custom_type else custom_type
         voc_paths = []
         for voc_file in self.voc_files:
             if os.path.exists(f'{self.data_dir}/{voc_file}'):
                 # Vocabulary from full path name
                 voc_paths.append(f'{self.data_dir}/{voc_file}')
-            elif os.path.exists(f'{self.data_dir}/{voc_file}_{self.mt}.txt.vocab'):
+            elif os.path.exists(f'{self.data_dir}/{voc_file}_{mol_type}.txt.vocab'):
                 # Vocabulary from file name without extension
-                voc_paths.append(f'{self.data_dir}/{voc_file}_{self.mt}.txt.vocab')
+                voc_paths.append(f'{self.data_dir}/{voc_file}_{mol_type}.txt.vocab')
             else:
                 log.warning(f'Could not find vocabulary file {voc_file} or {voc_file}.txt.vocab in {self.data_dir}.')
                 
@@ -293,7 +294,6 @@ class FragGraphDataPreparation(DataPreparation):
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
         super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'graph')
         self.unique_frags = unique_frags
-        self.mol_type = 'graph'
 
         """ 
         Parameters
@@ -392,7 +392,6 @@ class FragSmilesDataPreparation(DataPreparation):
             If True, only unique fragments are used for training.
         """
         self.unique_frags = unique_frags
-        self.mol_type = 'smiles'
 
 
     def __call__(self):
@@ -450,7 +449,7 @@ class SmilesDataPreparation(DataPreparation):
     """
 
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
-        super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'corpus')
+        super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'smiles')
         """ 
         Parameters
         ----------
@@ -468,7 +467,6 @@ class SmilesDataPreparation(DataPreparation):
             If True, only unique fragments are used for training.
         """
         self.unique_frags = False
-        self.mol_type = 'smiles'
 
     def __call__(self):
         """
@@ -481,7 +479,7 @@ class SmilesDataPreparation(DataPreparation):
         """
             
         # Get vocabulary and data paths
-        voc_paths = self.getVocPaths()
+        voc_paths = self.getVocPaths(custom_type="corpus")
         train_path, test_path = self.getDataPaths()
 
         # Get training data loader
