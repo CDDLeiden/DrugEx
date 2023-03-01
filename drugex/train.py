@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
-import sys
 import json
 import argparse
 import warnings
+
+from qsprpred.models.interfaces import QSPRModel
+from qsprpred.models.tasks import ModelTasks
 
 from drugex import VERSION
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
@@ -26,7 +28,7 @@ from drugex.training.scorers.similarity import (FraggleSimilarity,
                                                 TverskyFingerprintSimilarity,
                                                 TverskyGraphSimilarity)
 
-from qsprpred.scorers.predictor import Predictor
+from drugex.training.scorers.qsprpred import QSPRPredScorer
 
 warnings.filterwarnings("ignore")
     
@@ -68,39 +70,36 @@ def GeneratorArgParser():
     parser.add_argument('-gpu', '--use_gpus', type=str, default='1,2,3,4',
                         help="List of GPUs") 
     parser.add_argument('-pa', '--patience', type=int, default=50,
-                        help="Number of epochs to wait before early stop if no progress on test set score")
+                        help="Number of epochs to wait before early stop if no progress on test set score.")
     
     
     # RL parameters
     parser.add_argument('-ns', '--n_samples', type=int, default=-1, 
                         help="During RL, n_samples and 0.2*n_samples random input fragments are used for training and validation at each epoch. If -1, all input data is used at once each epoch.") 
     parser.add_argument('-eps', '--epsilon', type=float, default=0.1,
-                        help="Exploring rate: probability of using the prior model instead of the agent model")
+                        help="Exploring rate: probability of using the prior model instead of the agent model.")
     parser.add_argument('-bet', '--beta', type=float, default=0.0,
-                        help="Reward baseline used by the policy gradient algorithm")
-    parser.add_argument('-s', '--scheme', type=str, default='PRTD',
-                        help="Multi-objective reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance")
+                        help="Reward baseline used by the policy gradient algorithm.")
+    parser.add_argument('-s', '--scheme', type=str, default='PRCD',
+                        help="Multi-objective reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance.")
 
     # Affinity models
-    # TODO: modify once new serialization of qsprmodels and handling of objectives is implemented
-    parser.add_argument('-et', '--env_task', type=str, default='CLS',
-                        help="Environment-predictor task: 'REG' or 'CLS'")
-    parser.add_argument('-ea', '--env_alg', type=str, nargs='*', default=['RF'],
-                        help="Environment-predictor algorith: 'RF', 'XGB', 'DNN', 'SVM', 'PLS', 'NB', 'KNN', 'MT_DNN', if multiple different environments are required give environment of targets in order active, inactive, window")
+    parser.add_argument('-p', '--predictor', type=str, nargs='*', default=['RF'],
+                        help="The path to the serialized metadata of a QSPRPred model (ie. 'RF_meta.json'). If different environments are required give environment of targets in order active, inactive, window.")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
-                        help="Activity threshold")
+                        help="Activity threshold used by the modifier in case of a regressor activity predictor")
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which activity is desirable")
+                        help="Names of models that predict activity.")
     parser.add_argument('-ti', '--inactive_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which activity is undesirable")
+                        help="Names of models that predict inactivity.")
     parser.add_argument('-tw', '--window_targets', type=str, nargs='*', default=[],
-                        help="Target IDs for which selectivity window is calculated")
+                        help="Names of models for which selectivity window is calculated.")
     parser.add_argument('-le', '--ligand_efficiency', action='store_true', 
-                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")
+                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets.")
     parser.add_argument('-le_ths', '--le_thresholds', type=float, nargs=2, default=[0.0, 0.5],
                         help='Thresholds used calculate ligand efficiency clipped scores in the desirability function.')
     parser.add_argument('-lipe', '--lipophilic_efficiency', action='store_true',
-                        help="If on, use the ligand efficiency instead of the simple affinity as objective for active targets")           
+                        help="If on, use the ligand lipophilic efficiency instead of the simple affinity as objective for active targets.")
     parser.add_argument('-lipe_ths', '--lipe_thresholds', type=float, nargs=2, default=[4.0, 6.0],
                         help='Thresholds used calculate lipophilic efficiency clipped scores in the desirability function.')
     
@@ -182,7 +181,7 @@ class DataPreparation():
     n_samples : int
         Number of samples.
     """
-    def __init__(self, base_dir, voc_files, input, batch_size, n_samples):
+    def __init__(self, base_dir, voc_files, input, batch_size, n_samples, mt):
 
         """ 
         Parameters
@@ -197,6 +196,8 @@ class DataPreparation():
             Batch size.
         n_samples : int
             Number of samples.
+        mt : str
+            Molecule type.
         """
 
         self.base_dir = base_dir
@@ -205,8 +206,9 @@ class DataPreparation():
         self.input = input
         self.batch_size = batch_size
         self.n_samples = n_samples
+        self.mol_type = mt
 
-    def getVocPaths(self):
+    def getVocPaths(self, custom_type=None):
         """ 
         Get paths to vocabulary files. If none are found, use internal defaults.
 
@@ -216,14 +218,15 @@ class DataPreparation():
             List of paths to vocabulary files.
         """
 
+        mol_type = self.mol_type if not custom_type else custom_type
         voc_paths = []
         for voc_file in self.voc_files:
             if os.path.exists(f'{self.data_dir}/{voc_file}'):
                 # Vocabulary from full path name
                 voc_paths.append(f'{self.data_dir}/{voc_file}')
-            elif os.path.exists(f'{self.data_dir}/{voc_file}.txt.vocab'):
+            elif os.path.exists(f'{self.data_dir}/{voc_file}_{mol_type}.txt.vocab'):
                 # Vocabulary from file name without extension
-                voc_paths.append(f'{self.data_dir}/{voc_file}.txt.vocab')
+                voc_paths.append(f'{self.data_dir}/{voc_file}_{mol_type}.txt.vocab')
             else:
                 log.warning(f'Could not find vocabulary file {voc_file} or {voc_file}.txt.vocab in {self.data_dir}.')
                 
@@ -289,9 +292,8 @@ class FragGraphDataPreparation(DataPreparation):
 
     # Initialize class
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
-        super().__init__(base_dir, voc_files, input, batch_size, n_samples)
+        super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'graph')
         self.unique_frags = unique_frags
-        self.mol_type = 'graph'
 
         """ 
         Parameters
@@ -371,7 +373,7 @@ class FragSmilesDataPreparation(DataPreparation):
     """
 
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
-        super().__init__(base_dir, voc_files, input, batch_size, n_samples)
+        super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'smiles')
 
         """ 
         Parameters
@@ -390,7 +392,6 @@ class FragSmilesDataPreparation(DataPreparation):
             If True, only unique fragments are used for training.
         """
         self.unique_frags = unique_frags
-        self.mol_type = 'smiles'
 
 
     def __call__(self):
@@ -448,7 +449,7 @@ class SmilesDataPreparation(DataPreparation):
     """
 
     def __init__(self, base_dir, voc_files, input, batch_size, n_samples, unique_frags=False):
-        super().__init__(base_dir, voc_files, input, batch_size, n_samples)
+        super().__init__(base_dir, voc_files, input, batch_size, n_samples, 'smiles')
         """ 
         Parameters
         ----------
@@ -466,7 +467,6 @@ class SmilesDataPreparation(DataPreparation):
             If True, only unique fragments are used for training.
         """
         self.unique_frags = False
-        self.mol_type = 'smiles'
 
     def __call__(self):
         """
@@ -479,13 +479,14 @@ class SmilesDataPreparation(DataPreparation):
         """
             
         # Get vocabulary and data paths
-        voc_paths = self.getVocPaths()
+        voc_paths = self.getVocPaths(custom_type="corpus")
         train_path, test_path = self.getDataPaths()
 
         # Get training data loader
         dataset_train = SmilesDataSet(train_path)
         # TODO: SOFTCODE max_len ?
-        dataset_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
+        if voc_paths:
+            dataset_train.readVocs(voc_paths, VocSmiles, max_len=100, encode_frags=False)
         train_loader = dataset_train.asDataLoader(batch_size=self.batch_size, n_samples=self.n_samples)
 
         # Get test data loader
@@ -737,8 +738,7 @@ class Reinforce(SetUpGenerator):
         # Set environment
         environment = CreateEnvironment(
             self.base_dir,
-            self.env_alg,
-            self.env_task,
+            self.predictor,
             self.scheme,
             active_targets=self.active_targets,
             inactive_targets=self.inactive_targets,
@@ -773,12 +773,49 @@ class Reinforce(SetUpGenerator):
         # Fit
         log.info('Training generator with reinforcement learning...')
         evolver.fit(train_loader, test_loader, epochs=self.epochs, monitor=monitor, patience=self.patience)
+
+def getModifiers(task, scheme, activity_threshold):
+    """
+    Gets the modifiers for a given task, scheme and activity threshold combination.
+
+    Arguments:
+        task (str): The task to get the modifiers for.
+        scheme (str): The scheme to get the modifiers for.
+        activity_threshold (float): The activity threshold to use for the modifiers when relevant.
+
+    Returns:
+        list: The active modifiers for the given task.
+    """
+    pad = 3.5
+    pad_window = 1.5
+    if scheme == 'WS':
+        # Weighted Sum (WS) reward scheme
+        if task == ModelTasks.CLASSIFICATION:
+            active = ClippedScore(lower_x=0.2, upper_x=0.5)
+            inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
+        else:
+            active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
+            inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+
+    else:
+        # Pareto Front reward scheme (PRTD or PRCD)
+        if task == ModelTasks.CLASSIFICATION:
+            active = ClippedScore(lower_x=0.2, upper_x=0.5)
+            inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
+            window = ClippedScore(lower_x=0, upper_x=1)
+        else:
+            active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
+            inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
+            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
+
+    return active, inactive, window
     
 
 def CreateEnvironment(
         base_dir, 
-        alg, 
-        task,
+        predictor,
         scheme, 
         active_targets=[], 
         inactive_targets=[], 
@@ -802,20 +839,21 @@ def CreateEnvironment(
         le_ths=[0,1],
         lipe = False,
         lipe_ths=[4,6],
+        logger=None
         ):
-    
+
     """
     Sets up the objectives of the desirability function.
     
     Arguments:
         base_dir (str)              : folder containing 'qspr' folder with saved environment-predictor models
-        alg (list)                  : environment-predictor algoritm
+        predictor (list)                  : environment-predictor algoritm
         task (str)                  : environment-predictor task: 'REG' or 'CLS'
         scheme (str)                : optimization scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance.
         active_targets (lst), opt   : list of active target IDs
         inactive_targets (lst), opt : list of inactive target IDs
         window_targets (lst), opt   : list of target IDs for selectivity window
-        activity_threshold (float), opt : activety threshold in case of 'CLS'
+        activity_threshold (float), opt : activity threshold in case of 'CLS'
         qed (bool), opt             : if True, 'quantitative estimate of drug-likeness' included in the desirability function
         unique (bool), opt          : if Trye, molecule uniqueness in an epoch included in the desirability function
         ra_score (bool), opt        : if True, 'Retrosythesis Accessibility score' included in the desirability function
@@ -833,11 +871,13 @@ def CreateEnvironment(
         le_ths (list), opt          : ligand efficiency thresholds
         lipe (bool), opt            : if True, lipophilic efficiency used instead of activity for active targets in the desirability function
         lipe_ths (list), opt        : lipophilic efficiency thresholds
+        log (str), opt              : log instance
     
     Returns:
         DrugExEnvironment (torch model) : environment-predictor model
         
     """
+    logger = logger or log
 
     # TODO: update cli documentation/tutorials to reflect new scheme abbreviations
     schemes = {
@@ -848,68 +888,43 @@ def CreateEnvironment(
     objs = []
     ths = []
     targets = active_targets + inactive_targets + window_targets
+    predictors = [QSPRModel.fromFile(os.path.join(base_dir, x)) for x in predictor]
+    predictors = {x.name: x for x in predictors}
+    assert len(predictors) == len(targets) and all([x in targets for x in predictors]), f'Predictors do not match targets: {predictors} != {targets}'
+    for target in targets:
+        model = predictors[target]
+        task = model.task
+        if task == ModelTasks.CLASSIFICATION and model.nClasses > 2:
+            raise NotImplementedError('Classification models with more than 2 classes are not supported. Invalid model: {}'.format(target))
 
-    pad = 3.5
-    pad_window = 1.5
-    if scheme == 'WS':
-        # Weighted Sum (WS) reward scheme
-        if task == 'CLS':
-            active = ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
-            window = ClippedScore(lower_x=0, upper_x=1)
-        else:
-            active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold + pad)
-            inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold - pad)
-            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
-
-    else:
-        # Pareto Front reward scheme (PRTD or PRCD)
-        if task == 'CLS':
-            active = ClippedScore(lower_x=0.2, upper_x=0.5)
-            inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
-            window = ClippedScore(lower_x=0, upper_x=1)
-        else:
-            active = ClippedScore(lower_x=activity_threshold - pad, upper_x=activity_threshold)
-            inactive = ClippedScore(lower_x=activity_threshold + pad, upper_x=activity_threshold)
-            window = ClippedScore(lower_x=0 - pad_window, upper_x=0 + pad_window)
-      
-    
-    
-    for i, t in enumerate(targets):
-        
-        if len(alg) > 1:  algorithm = alg[i] # Different algorithms for different targets
-        else: algorithm = alg[0] # Same algorithm for all targets
-
-        if algorithm.startswith('MT_'): sys.exit('TO DO: using multitask model')
-        
-        if t in active_targets:
-            
+        active, inactive, window = getModifiers(task, scheme, activity_threshold)
+        scorer = QSPRPredScorer(model)
+        if target in active_targets:
+            scorer.setModifier(active)
             if le or lipe:
-                if task == 'CLS': 
-                    log.error('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
+                if task == ModelTasks.CLASSIFICATION:
+                    raise NotImplementedError('Ligand efficiency and lipophilic efficiency are only available for regression tasks')
                 if le:
-                    objs.append(LigandEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
+                    objs.append(LigandEfficiency(qsar_scorer=scorer,
                                 modifier=ClippedScore(lower_x=le_ths[0], upper_x=le_ths[1])))
                     ths.append(0.5)
                 if lipe:
-                    objs.append(LipophilicEfficiency(qsar_scorer=Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier), 
-                                modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))  
-                    ths.append(0.5)            
+                    objs.append(LipophilicEfficiency(qsar_scorer=scorer,
+                                modifier=ClippedScore(lower_x=lipe_ths[0], upper_x=lipe_ths[1])))
+                    ths.append(0.5)
             else:
-                predictor_modifier = active 
-                objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+                objs.append(scorer)
                 ths.append(0.5 if scheme == 'WS' else 0.99)
-        
-        elif t in inactive_targets:
-            predictor_modifier = inactive 
-            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+        elif target in inactive_targets:
+            scorer.setModifier(inactive)
+            objs.append(scorer)
             ths.append(0.5 if scheme == 'WS' else 0.99)
-        
-        elif t in window_targets:
-            predictor_modifier = window
-            objs.append(Predictor.fromFile(base_dir, algorithm, target=t, type=task, th=[activity_threshold], scale= algorithm!='RF', name=t, modifier=predictor_modifier))
+        elif target in window_targets:
+            scorer.setModifier(window)
+            objs.append(scorer)
             ths.append(0.5)
-
+        else:
+            raise ValueError('Target {} not found in active, inactive or window targets'.format(target))
 
     if qed:
         objs.append(Property('QED', modifier=ClippedScore(lower_x=0, upper_x=1.0)))
@@ -943,7 +958,7 @@ def CreateEnvironment(
             objs.append(TverskyFingerprintSimilarity(sim_smiles, sim_type, sim_tw[0], sim_tw[1]))
         ths.append(sim_th)
 
-    log.info('DrugExEnvironment created using {} objectives: {}'.format(len(objs), [o.name for o in objs]))
+    logger.info('DrugExEnvironment created using {} objectives: {}'.format(len(objs), [o.getKey() for o in objs]))
 
     return DrugExEnvironment(objs, ths, schemes[scheme])
     

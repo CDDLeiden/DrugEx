@@ -29,7 +29,7 @@ from drugex.training.generators import (GraphTransformer, SequenceRNN,
                                         SequenceTransformer)
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.monitors import FileMonitor
-from drugex.training.rewards import ParetoTanimotoDistance
+from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
@@ -104,10 +104,10 @@ class MockScorer(Scorer):
 
 def getPredictor():
     try:
-        from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
-        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='CLS', scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=0.2, upper_x=0.8)
-        )
+        from qsprpred.models.models import QSPRModel
+        from drugex.training.scorers.qsprpred import QSPRPredScorer
+        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        ret = QSPRPredScorer(model)
     except ImportError:
         ret = MockScorer()
     return ret
@@ -153,7 +153,7 @@ class TrainingTestCase(TestCase):
         DrugExEnvironment
         """
 
-        scheme = ParetoTanimotoDistance() if not scheme else scheme
+        scheme = ParetoCrowdingDistance() if not scheme else scheme
         return DrugExEnvironment(self.scorers, thresholds=self.thresholds, reward_scheme=scheme)
 
     def getSmiles(self, _file):

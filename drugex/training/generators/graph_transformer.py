@@ -1,7 +1,4 @@
 import tempfile
-from typing import List
-
-import pandas as pd
 import torch
 import torch.nn as nn
 from tqdm.auto import tqdm
@@ -437,79 +434,7 @@ class GraphTransformer(FragGenerator):
         
         return loader
 
-    def generate(self, input_frags : List[str] = None, input_dataset : GraphFragDataSet = None, num_samples=100, batch_size=32, n_proc=1,
-                keep_frags=True, drop_duplicates=True, drop_invalid=True, 
-                evaluator=None, no_multifrag_smiles=True, drop_undesired=False, raw_scores=True,
-                progress=True, tqdm_kwargs=dict()):
-        """
-        Generate SMILES from either a list of input fragments (`input_frags`) or a dataset object directly (`input_dataset`). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).
-
-        Args:
-            input_frags (list): a `list` of input fragments to incorporate in the (as molecules in SMILES format)
-            input_dataset (GraphFragDataSet): a `GraphFragDataSet` object to use to provide the input fragments
-            num_samples: the number of SMILES to generate, default is 100
-            batch_size: the batch size to use for generation, default is 32
-            n_proc: the number of processes to use for encoding the fragments if `input_frags` is provided, default is 1
-            keep_frags: if `True`, the fragments are kept in the generated SMILES, default is `True`
-            drop_duplicates: if `True`, duplicate SMILES are dropped, default is `True`
-            drop_invalid: if `True`, invalid SMILES are dropped, default is `True`
-            evaluator (Environment): an `Environment` object to score the generated SMILES against, if `None`, no scoring is performed, is required if `drop_undesired` is `True`, default is `None`
-            no_multifrag_smiles: if `True`, only single-fragment SMILES are considered valid, default is `True`
-            drop_undesired: if `True`, SMILES that do not contain the desired fragments are dropped, default is `False`
-            raw_scores: if `True`, raw scores (without modifiers) are calculated if `evaluator` is specified, these values are also used for filtering if `drop_undesired` is `True`, default for `raw_scores` is `True`
-            progress: if `True`, a progress bar is shown, default is `True`
-            tqdm_kwargs: keyword arguments to pass to the `tqdm` progress bar, default is an empty `dict`
-
-        Returns:
-
-        """
-
-        if input_dataset and input_frags:
-            raise ValueError('Only one of input_dataset and input_frags can be provided')
-        elif not input_dataset and not input_frags:
-            raise ValueError('Either input_loader or input_frags must be provided')
-        elif input_frags:
-            # Create a dataloader object from the input fragments
-            loader = self.loaderFromFrags(input_frags, batch_size=batch_size, n_proc=n_proc)
-        else:
-            loader = input_dataset.asDataLoader(batch_size)
-
-        # Duplicate of self.sample to allow dropping molecules and progress bar on the fly
-        # without additional overhead caused by calling nn.DataParallel a few times
-        net = nn.DataParallel(self, device_ids=self.gpus)
-
-        if progress:
-            tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
-            pbar = tqdm(**tqdm_kwargs)
-
-        df_all = pd.DataFrame(columns=['SMILES', 'Frags'])
-        while not len(df_all) >= num_samples:
-            with torch.no_grad():
-                src = next(iter(loader))
-                trg = net(src.to(self.device))
-                new_frags, new_smiles = self.voc_trg.decode(trg)
-                df_new = pd.DataFrame({'SMILES': new_smiles, 'Frags': new_frags})
-
-                # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
-                # valid molecules are canonicalized and optionally extra filtering is applied
-                # else invalid molecules are kept and no filtering is applied
-                if drop_invalid:
-                    df_new = self.filterNewMolecules(df_all, df_new, drop_duplicates=drop_duplicates, drop_undesired=drop_undesired, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-
-                # Update the dataframe with the new molecules
-                df_all = pd.concat([df_all, df_new], axis=0, ignore_index=True)
-                
-                # Update progress bar
-                if progress:
-                    pbar.update(len(df_new) if pbar.n + len(df_new) <= num_samples else num_samples - pbar.n)
-        
-        if progress:
-            pbar.close()
-
-        # Post-processing
-        df = df_all.head(num_samples)
-        if evaluator:
-            df = pd.concat([df, self.evaluate(df.SMILES.tolist(), frags=df.SMILES.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)
-        if not keep_frags:
-            df = df.drop('Frags', axis=1)
-        return df.round(3)
+    def decodeLoaders(self, src, trg):
+        return self.voc_trg.decode(trg)
+    def iterLoader(self, loader):
+        return loader

@@ -246,7 +246,7 @@ class FragExplorer(Explorer):
         net = nn.DataParallel(self.agent, device_ids=self.gpus)
         total_steps = len(loader)
         
-        for step_idx, src in enumerate(tqdm(loader, desc='Iterating over validation batches', leave=False)):
+        for step_idx, src in enumerate(tqdm(loader, desc='Calculating policy gradient...', leave=False)):
 
             # Decode fragments and smiles, and get loss
             frags, smiles, loss = self.getBatchOutputs(net, src)
