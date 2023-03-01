@@ -19,7 +19,7 @@ class NullMonitor(TrainingMonitor):
     def saveModel(self, model):
         pass
 
-    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         pass
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
@@ -95,6 +95,8 @@ class FileMonitor(TrainingMonitor):
             The total number of steps.
         total_epochs : int 
             The total number of epochs.
+        loss : float
+            The current training loss.
         """
         
         txt = f"Epoch {current_epoch if current_epoch is not None else '--'}/"
@@ -106,19 +108,19 @@ class FileMonitor(TrainingMonitor):
             self.outLog.write(f"Current training loss: {loss:.4f} \n")
         self.outLog.flush()
 
-    def savePerformanceInfo(self, perfomance_dict, df_smiles=None):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         """ 
         Save the performance data for the current epoch.
         
         Parameters
         ----------
-        perfomance_dict : dict
+        performance_dict : dict
             A dictionary with the performance data.
         df_smiles : pd.DataFrame
             A DataFrame with the SMILES of the molecules generated in the current epoch.
         """
 
-        df = pd.DataFrame(perfomance_dict, index=[0])
+        df = pd.DataFrame(performance_dict, index=[0])
         self.saveEpochData(df)
 
         # Save smiles and their indivudual scores if requested
