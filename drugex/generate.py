@@ -22,7 +22,7 @@ def DesignArgParser(txt=None):
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
-                        help="For v3, name of file containing fragments for generation without _graph.txt / _smi.txt extension") 
+                        help="For v3, name of file containing fragments for generation without _graph.txt / _smiles.txt extension")
     # TODO: Is reading voc files necessary? Is the vocabulary saved to the generator file?
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
@@ -142,8 +142,8 @@ def DesignerFragsDataPreparation(
         input_path = data_path + input_file
         assert os.path.exists(input_path)
     except:
-        input_path = data_path + '_'.join([input_file, 'test', mol_type if mol_type == 'graph' else 'smi']) + '.txt'
-        assert os.path.exists(input_path)
+        input_path = data_path + '_'.join([input_file, 'test', mol_type if mol_type == 'graph' else 'smiles']) + '.txt'
+        assert os.path.exists(input_path), f'Input file {input_path} does not exist'
     logSettings.log.info(f'Loading input fragments from {input_path}')
 
     if mol_type == 'graph' :
