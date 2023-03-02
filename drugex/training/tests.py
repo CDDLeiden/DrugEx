@@ -13,6 +13,8 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from rdkit import Chem
+
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
@@ -118,6 +120,22 @@ def getPredictor():
     except ImportError:
         ret = MockScorer()
     return ret
+
+class TestScorer(TestCase):
+
+    def test_getScores(self):
+        scorer = getPredictor()
+        mols = ["CCO", "CC"]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+
+        mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+
+        # TODO: check with empty and invalid molecules as well
 
 class TrainingTestCase(TestCase):
 

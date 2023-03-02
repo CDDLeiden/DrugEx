@@ -7,6 +7,7 @@ On: 17.02.23, 13:44
 import numpy as np
 from rdkit import Chem
 
+from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer
 from qsprpred.models.tasks import ModelTasks
 
@@ -22,9 +23,10 @@ class QSPRPredScorer(Scorer):
             invalids = 0
             for idx, mol in enumerate(mols):
                 try:
-                    mol = Chem.SanitizeMol(mol)
+                    Chem.SanitizeMol(mol)
                     mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
-                except:
+                except Exception as exp:
+                    logger.error(f"Error processing molecule: {Chem.MolToSmiles(mol)} {exp}")
                     mol = "INVALID"
                 if mol == "INVALID":
                     invalids += 1
