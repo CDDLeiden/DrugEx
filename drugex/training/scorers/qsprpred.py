@@ -19,27 +19,30 @@ class QSPRPredScorer(Scorer):
         self.invalidsScore = invalids_score
 
     def getScores(self, mols, frags=None):
+        parsed_mols = []
         if type(mols[0]) != str:
             invalids = 0
-            for idx, mol in enumerate(mols):
+            for mol in mols:
                 try:
                     Chem.SanitizeMol(mol)
                     mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
                 except Exception as exp:
-                    logger.error(f"Error processing molecule: {Chem.MolToSmiles(mol)} {exp}")
+                    logger.debug(f"Error processing molecule: {Chem.MolToSmiles(mol) if mol else mol} -> \n\t {exp}")
                     mol = "INVALID"
                 if mol == "INVALID":
                     invalids += 1
-                mols[idx] = mol
+                parsed_mols.append(mol)
 
-            if invalids == len(mols):
-                return np.array([self.invalidsScore] * len(mols))
+            if invalids == len(parsed_mols):
+                return np.array([self.invalidsScore] * len(parsed_mols))
+        else:
+            parsed_mols = mols
 
         if self.model.task == ModelTasks.REGRESSION:
-            return self.model.predictMols(mols)
+            return self.model.predictMols(parsed_mols)
         else:
             # FIXME: currently we only assume that the model is a binary classifier with the positive class being the last one in the list of probabilities
-            return np.array([probas[-1] if not np.isnan(probas[-1]) else self.invalidsScore for probas in  self.model.predictMols(mols, use_probas=True)])
+            return np.array([probas[-1] if not np.isnan(probas[-1]) else self.invalidsScore for probas in  self.model.predictMols(parsed_mols, use_probas=True)])
 
     def getKey(self):
         return f"QSPRpred_{self.model.name}"
