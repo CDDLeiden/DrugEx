@@ -173,9 +173,9 @@ class FragmentDataset(Dataset):
 
         pair_collectors = dict()
         if self.save_intermediate_files:
-            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(f'{self.file_base}_train.txt', sep='\t', index=False)
-            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(f'{self.file_base}_test.txt', sep='\t', index=False)
-            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(f'{self.file_base}_unique.txt', sep='\t', index=False)
+            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_train.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_test.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_unique.txt', sep='\t', index=False)
         
         return pair_collectors
 

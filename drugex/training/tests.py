@@ -4,6 +4,8 @@ tests
 Created by: Martin Sicho
 On: 31.05.22, 10:20
 """
+import json
+import logging
 import os.path
 import tempfile
 from collections import OrderedDict
@@ -29,7 +31,7 @@ from drugex.training.generators import (GraphTransformer, SequenceRNN,
                                         SequenceTransformer)
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.monitors import FileMonitor
-from drugex.training.rewards import ParetoTanimotoDistance
+from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
@@ -47,7 +49,7 @@ class TestModelMonitor(TrainingMonitor):
             'close' : False,
         }
         self.submonitors = [
-            FileMonitor(tempfile.NamedTemporaryFile().name, verbose=True)
+            FileMonitor(tempfile.NamedTemporaryFile().name, save_smiles=True)
         ] if not submonitors else submonitors
 
     def passToSubmonitors(self, method, *args, **kwargs):
@@ -61,19 +63,24 @@ class TestModelMonitor(TrainingMonitor):
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
-        print(current_step, current_epoch, total_steps, total_epochs)
-        print(args)
-        print(kwargs)
+        print(json.dumps({
+            'current_step' : current_step,
+            'current_epoch' : current_epoch,
+            'total_steps' : total_steps,
+            'total_epochs' : total_epochs,
+        }, indent=4))
+        if args:
+            print("Args:", args)
+        if kwargs:
+            print("Kwargs:", json.dumps(kwargs, indent=4))
         self.execution['progress'] = True
         self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
-    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         print("Test Performance Monitor:")
-        print(current_step, current_epoch, loss)
-        print(args)
-        print(kwargs)
+        print(json.dumps(performance_dict, indent=4))
         self.execution['performance'] = True
-        self.passToSubmonitors('savePerformanceInfo', current_step, current_epoch, loss, *args, **kwargs)
+        self.passToSubmonitors('savePerformanceInfo', performance_dict, df_smiles)
 
     def endStep(self, step, epoch):
         print(f"Finished step {step} of epoch {epoch}.")
@@ -104,10 +111,10 @@ class MockScorer(Scorer):
 
 def getPredictor():
     try:
-        from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
-        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='CLS', scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=0.2, upper_x=0.8)
-        )
+        from qsprpred.models.models import QSPRModel
+        from drugex.training.scorers.qsprpred import QSPRPredScorer
+        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        ret = QSPRPredScorer(model)
     except ImportError:
         ret = MockScorer()
     return ret
@@ -153,7 +160,7 @@ class TrainingTestCase(TestCase):
         DrugExEnvironment
         """
 
-        scheme = ParetoTanimotoDistance() if not scheme else scheme
+        scheme = ParetoCrowdingDistance() if not scheme else scheme
         return DrugExEnvironment(self.scorers, thresholds=self.thresholds, reward_scheme=scheme)
 
     def getSmiles(self, _file):
