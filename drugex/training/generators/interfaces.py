@@ -143,16 +143,19 @@ class Generator(Model, ABC):
             df_new = df_new.drop_duplicates(subset=['SMILES'])
             df_new = df_new[df_new.SMILES.isin(df_old.SMILES) == False]
 
-        # drop undesired molecules
-        if drop_undesired:
-            if evaluator is None:
-                raise ValueError('Evaluator must be provided to filter molecules by desirability')
+        # score molecules
+        if evaluator:
             # Compute desirability scores
             scores = self.evaluate(df_new.SMILES.tolist(), frags=df_new.SMILES.tolist(),
                                    evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
             df_new['Desired'] = scores['Desired']
-            # Filter out undesired molecules
-            df_new = df_new[df_new.Desired == 1]
+
+            # Drop undesired molecules
+            if drop_undesired:
+                df_new = df_new[df_new.Desired == 1]
+
+        elif drop_undesired:
+            raise ValueError('Evaluator must be provided to filter molecules by desirability')
         
         return df_new
     

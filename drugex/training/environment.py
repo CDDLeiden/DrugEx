@@ -50,7 +50,7 @@ class DrugExEnvironment(Environment):
         scores.loc[scores['Valid'] == 0, self.getScorerKeys()] = 0.0
 
         # Check if the molecule is desirable
-        undesire = (scores[self.getScorerKeys()] < self.thresholds)  # ^ self.objs.on
+        undesire = (scores[self.getScorerKeys()] < self.thresholds)
         scores['Desired'] = (undesire.sum(axis=1) == 0).astype(int)
 
         # TODO: Maybe smiles and frags should be added to the dataframe as well?
