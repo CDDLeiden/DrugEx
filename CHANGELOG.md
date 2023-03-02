@@ -8,6 +8,7 @@ From v3.4.0 to v3.4.1
   - During RL, the rations of valid (`valid_ratio`), accurate (`accurate_ratio`, only for transformers), unique (`unique_ratio`) and desired (`desired_ratio`) molecules and the average arithmetic (`avg_amean`) and geometric (`avg_gmean`) of the modified scores are saved in `_fit.tsv`
 - In `DrugExEnvironment.getScores()` set all modified scores to 0 for invalid molecules (fixes bug resulting from refactoring in `v3.4.0`)
 - Fixed the CLI so that it supports new QSPRPred models.
+- Fixed the tutorial for scaffold-based generation.
 
 ## Changes
 
