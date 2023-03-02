@@ -181,8 +181,7 @@ class SequenceTransformer(FragGenerator):
             loss.backward()
             self.optim.step()
             current_step += 1
-            self.monitor.saveProgress(current_step, epoch, total_steps, epochs)
-            self.monitor.savePerformanceInfo(current_step, epoch, loss.item())
+            self.monitor.saveProgress(current_step, epoch, total_steps, epochs, loss.item())
 
         return loss.item()
 
@@ -220,7 +219,7 @@ class SequenceTransformer(FragGenerator):
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-        scores['Smiles'] = smiles
+        scores['SMILES'] = smiles
         scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.Valid.mean() 
         valid_metrics['accurate_ratio'] = scores.Accurate.mean()
@@ -288,7 +287,6 @@ class SequenceTransformer(FragGenerator):
         loader = out_data.asDataLoader(batch_size, n_samples=batch_size)
         
         return loader
-
     def decodeLoaders(self, src, trg):
         new_smiles = [self.voc_trg.decode(s, is_tk=False) for s in trg]
         new_frags = [self.voc_trg.decode(s, is_tk=False) for s in src]

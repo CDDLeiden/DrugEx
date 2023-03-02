@@ -98,6 +98,11 @@ class SequenceExplorer(Explorer):
             The generated SMILES.
         seqs : torch.Tensor
             The generated encoded sequences. 
+
+        Returns
+        -------
+        loss : float
+            The loss of the policy gradient.
         """
 
         # Calculate the reward from SMILES with the environment
@@ -117,9 +122,9 @@ class SequenceExplorer(Explorer):
             loss.backward()
             self.optim.step()
             
-            self.monitor.saveProgress(step_idx, None, total_steps, None)
-            self.monitor.savePerformanceInfo(step_idx, None, loss.item())
-            del loss
+            self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
+        
+        return loss.item()
  
     def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
         
@@ -137,15 +142,11 @@ class SequenceExplorer(Explorer):
         patience : int
             Number of epochs to wait for improvement before early stopping
         criteria : str
-            Criteria to use for early stopping
+            Criteria to use for early stopping: 'desired_ratio', 'avg_amean' or 'avg_gmean'
         min_epochs : int
             Minimum number of epochs to train for
         monitor : Monitor
             Monitor to use for logging and saving model
-            
-        Returns
-        -------
-        None
         """
         
         self.monitor = monitor if monitor else NullMonitor()
@@ -157,18 +158,23 @@ class SequenceExplorer(Explorer):
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
             
             smiles, seqs = self.forward()
-            self.policy_gradient(smiles, seqs)
+            train_loss = self.policy_gradient(smiles, seqs)
 
             # Evaluate the model on the validation set
             smiles = self.agent.sample(self.nSamples)
             scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-            scores['Smiles'] =  smiles           
+            scores['SMILES'] =  smiles           
+
+            # Compute metrics
+            metrics = self.getNovelMoleculeMetrics(scores)       
+            metrics['loss_train'] = train_loss  
 
             # Save evaluate criteria and save best model
-            self.saveBestState(scores, criteria, epoch, None)
+            if metrics[criteria] > self.best_value:
+                self.saveBestState(metrics[criteria], epoch, None)
 
-            # Log performance and genearated compounds
-            self.logPerformanceAndCompounds(epoch, epochs, scores)
+            # Log performance and generated compounds
+            self.logPerformanceAndCompounds(epoch, metrics, scores)
  
             if epoch % patience == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state

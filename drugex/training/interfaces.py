@@ -416,22 +416,16 @@ class TrainingMonitor(ModelProvider, ABC):
         pass
 
     @abstractmethod
-    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         """
-        Save performance data.
+        Save the performance data for the current epoch.
 
         Parameters
         ----------
-        current_step : int, optional
-            The current training step (i.e. batch).
-        current_epoch : int, optional
-            The current epoch.
-        loss : float, optional
-            The current loss.
-        *args
-            Additional arguments depending on the model type.
-        **kwargs
-            Additional keyword arguments depending on the model type.
+        performance_dict : dict
+            A dictionary with the performance data.
+        df_smiles : pd.DataFrame
+            A DataFrame with the SMILES of the molecules generated in the current epoch.
         """
         pass
 

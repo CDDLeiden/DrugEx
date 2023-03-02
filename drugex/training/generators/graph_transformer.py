@@ -325,8 +325,7 @@ class GraphTransformer(FragGenerator):
             loss.backward()
             self.optim.step()
             current_step += 1
-            self.monitor.saveProgress(current_step, epoch, total_steps, epochs)
-            self.monitor.savePerformanceInfo(current_step, epoch, loss.item())
+            self.monitor.saveProgress(current_step, epoch, total_steps, epochs, loss=loss.item())
 
         return loss.item()
                 
@@ -365,7 +364,7 @@ class GraphTransformer(FragGenerator):
         pbar = tqdm(loader, desc='Iterating over validation batches', leave=False)
         smiles, frags = self.sample(pbar)
         scores = self.evaluate(smiles, frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-        scores['Smiles'] = smiles
+        scores['SMILES'] = smiles
         scores['Frags'] = frags
         valid_metrics['valid_ratio'] = scores.Valid.mean() 
         valid_metrics['accurate_ratio'] = scores.Accurate.mean()
@@ -437,6 +436,5 @@ class GraphTransformer(FragGenerator):
 
     def decodeLoaders(self, src, trg):
         return self.voc_trg.decode(trg)
-
     def iterLoader(self, loader):
         return loader

@@ -628,7 +628,7 @@ class Pretrain(SetUpGenerator):
         agent = self.setGeneratorAlgorithm(voc)
 
         # Set monitoring
-        monitor = FileMonitor(self.output_file_base, verbose=True)
+        monitor = FileMonitor(self.output_file_base, save_smiles=True)
 
         # Fit 
         log.info('Pretraining generator...')
@@ -661,7 +661,7 @@ class Finetune(SetUpGenerator):
         agent = self.loadStatesFromFile(agent, self.agent_path)
         
         # Set monitoring
-        monitor = FileMonitor(self.output_file_base, verbose=True)
+        monitor = FileMonitor(self.output_file_base, save_smiles=True)
 
         # Fit 
         log.info('Finetuning generator...')
@@ -768,7 +768,7 @@ class Reinforce(SetUpGenerator):
         evolver = self.setExplorer(agent, prior, environment)
 
         # Set monitoring
-        monitor = FileMonitor(self.output_file_base, verbose=True)
+        monitor = FileMonitor(self.output_file_base, save_smiles=True)
 
         # Fit
         log.info('Training generator with reinforcement learning...')

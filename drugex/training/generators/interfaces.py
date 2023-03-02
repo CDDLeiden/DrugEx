@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import numpy as np
+import pandas as pd
 from tqdm.auto import tqdm
 
 from typing import List
@@ -95,38 +96,99 @@ class Generator(Model, ABC):
         """
         pass
 
-    @abstractmethod
-    def filterNewMolecules(self, smiles, new_smiles, new_frags=None, 
-        drup_duplicates=True, drop_undesired=True, 
-        evaluator=None, no_multifrag_smiles=True):
+    def filterNewMolecules(self, df_old, df_new, with_frags = True, drop_duplicates=True, drop_undesired=True, evaluator=None, no_multifrag_smiles=True):
         """
-        Filter out molecules that are already in the training set.
-
-        Parameters
-        ----------
-        smiles : List
-            a list of previously generated molecules
-        new_smiles : List
-            a list of newly generated molecules
-        new_frags : List    
-            a list of fragments for the newly generated molecules
-        drup_duplicates : bool
-            if `True`, duplicate molecules are dropped
-        drop_undesired : bool
-            if `True`, molecules that are not desired are dropped
-        evaluator : ModelEvaluator
-            a `ModelEvaluator` instance used to evaluate the molecule desirability
-        no_multifrag_smiles : bool
-            if `True`, only single-fragment SMILES are considered valid
+        Filter the generated SMILES
         
-        Returns
+        Parameters:
+        ----------
+        smiles: `list`
+            A list of previous SMILES
+        new_smiles: `list`
+            A list of additional generated SMILES
+        frags: `list`  
+            A list of additional input fragments
+        drop_duplicates: `bool`
+            If `True`, duplicate SMILES are dropped
+        drop_undesired: `bool`
+            If `True`, SMILES that do not fulfill the desired objectives
+        evaluator: `Evaluator`
+            An evaluator object to evaluate the generated SMILES
+        no_multifrag_smiles: `bool`
+            If `True`, only single-fragment SMILES are considered valid
+        
+        Returns:
         -------
-        new_smiles : List
-            a list of newly generated molecules after filtering
-        new_frags : List
-            a list of fragments for the newly generated molecules after filtering        
+        new_smiles: `list`
+            A list of filtered SMILES
+        new_frags: `list`
+            A list of filtered input fragments
         """
-        pass 
+        
+        # Make sure both valid molecules and include input fragments if needed
+        scores = SmilesChecker.checkSmiles(df_new.SMILES.tolist(), frags=df_new.Frags.tolist() if with_frags else None,
+                                           no_multifrag_smiles=no_multifrag_smiles)
+        df_new = pd.concat([df_new, scores], axis=1)
+        
+        if with_frags:
+            df_new = df_new[df_new.Accurate == 1]
+        else:
+            df_new = df_new[df_new.Valid == 1]
+        
+        # Canonalize SMILES
+        df_new['SMILES'] = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in df_new.SMILES]    
+
+        # drop duplicates
+        if drop_duplicates:
+            df_new = df_new.drop_duplicates(subset=['SMILES'])
+            df_new = df_new[df_new.SMILES.isin(df_old.SMILES) == False]
+
+        # score molecules
+        if evaluator:
+            # Compute desirability scores
+            scores = self.evaluate(df_new.SMILES.tolist(), frags=df_new.SMILES.tolist(),
+                                   evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
+            df_new['Desired'] = scores['Desired']
+
+            # Drop undesired molecules
+            if drop_undesired:
+                df_new = df_new[df_new.Desired == 1]
+
+        elif drop_undesired:
+            raise ValueError('Evaluator must be provided to filter molecules by desirability')
+        
+        return df_new
+    
+    def logPerformanceAndCompounds(self, epoch, metrics, scores):
+        """ 
+        Log performance and compounds
+        
+        Parameters:
+        ----------
+        epoch: `int`
+            The current epoch
+        metrics: `dict`
+            A dictionary with the performance metrics
+        scores: `DataFrame`
+            A `DataFrame` with generated molecules and their scores
+        """
+
+        # Add epoch to metrics and order columns
+        metrics['Epoch'] = epoch
+        metrics = {k: metrics[k] for k in ['Epoch', 'loss_train', 'loss_valid', 'valid_ratio', 'accurate_ratio', 'best_epoch'] if k in metrics.keys()}
+
+        # Add epoch to scores and order columns
+        scores['Epoch'] = epoch
+        if 'Frags' in scores.columns:
+            firts_cols = ['Epoch', 'SMILES', 'Frags', 'Valid', 'Accurate']
+        else:
+            firts_cols = ['Epoch', 'SMILES', 'Valid']
+        scores = pd.concat([scores[firts_cols], scores.drop(firts_cols, axis=1)], axis=1)
+
+        # Save performance info and generate smiles
+        self.monitor.savePerformanceInfo(metrics, df_smiles = scores)
+        self.monitor.endStep(None, epoch)
+
 
     def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
         """
@@ -166,21 +228,19 @@ class Generator(Model, ABC):
             # Save model based on validation loss or valid ratio
             if 'loss_valid' in valid_metrics.keys(): value = valid_metrics['loss_valid']
             else : value = 1 - valid_metrics['valid_ratio']
+            valid_metrics['loss_train'] = loss_train
 
             if value < best:
                 monitor.saveModel(self)    
                 best = value
                 last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")   
-            
-            # Save performance info and generate smiles
-            valid_metrics['loss_train'] = loss_train
-            valid_metrics['best_value'] = best
-            # monitor.savePerformanceInfo(None, epoch, None, loss_valid=loss_valid, valid_ratio=valid, desire_ratio=frags_desire, best_loss=best, smiles_scores=smiles_scores, smiles_scores_key=('SMILES', 'Valid', 'Desire', 'Frags'))
-            monitor.savePerformanceInfo(None, epoch, None, smiles_scores=smiles_scores, smiles_scores_key=smiles_scores.keys(), **valid_metrics)
+                logger.info(f"Model was saved at epoch {epoch}")               
+            valid_metrics['best_epoch'] = last_save
+
+            # Log performance and generated compounds
+            self.logPerformanceAndCompounds(epoch, valid_metrics, smiles_scores)
 
             del loss_train, valid_metrics, smiles_scores
-            monitor.endStep(None, epoch)
                 
             # Early stopping
             if epoch - last_save > patience : break
@@ -284,62 +344,7 @@ class FragGenerator(Generator):
         loader: `torch.utils.data.DataLoader`
             A dataloader object to iterate over the input fragments 
         """
-        pass      
-
-    def filterNewMolecules(self, smiles, new_smiles, new_frags, drop_duplicates=True, drop_undesired=True, evaluator=None, no_multifrag_smiles=True):
-        """
-        Filter the generated SMILES
-        
-        Parameters:
-        ----------
-        smiles: `list`
-            A list of previous SMILES
-        new_smiles: `list`
-            A list of additional generated SMILES
-        frags: `list`  
-            A list of additional input fragments
-        drop_duplicates: `bool`
-            If `True`, duplicate SMILES are dropped
-        drop_undesired: `bool`
-            If `True`, SMILES that do not fulfill the desired objectives
-        evaluator: `Evaluator`
-            An evaluator object to evaluate the generated SMILES
-        no_multifrag_smiles: `bool`
-            If `True`, only single-fragment SMILES are considered valid
-        
-        Returns:
-        -------
-        new_smiles: `list`
-            A list of filtered SMILES
-        new_frags: `list`
-            A list of filtered input fragments
-        """
-        
-        # Make sure both valid molecules and include input fragments
-        scores = SmilesChecker.checkSmiles(new_smiles, frags=new_frags, no_multifrag_smiles=no_multifrag_smiles)
-        new_smiles = np.array(new_smiles)[scores.Accurate == 1].tolist()
-        new_frags = np.array(new_frags)[scores.Accurate == 1].tolist()
-        
-        # Canonalize SMILES
-        new_smiles = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in new_smiles]    
-
-        # drop duplicates
-        if drop_duplicates:
-            new_smiles = np.array(new_smiles)
-            new_frags = np.array(new_frags)[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-            new_smiles = new_smiles[np.logical_not(np.isin(new_smiles, smiles))].tolist()
-
-        # drop undesired molecules
-        if drop_undesired:
-            if evaluator is None:
-                raise ValueError('Evaluator must be provided to filter molecules by desirability')
-            # Compute desirability scores
-            scores = self.evaluate(new_smiles, new_frags, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles)
-            # Filter out undesired molecules
-            new_smiles = np.array(new_smiles)[scores.Desired == 1].tolist()
-            new_frags = np.array(new_frags)[scores.Desired == 1].tolist()
-
-        return new_smiles, new_frags
+        pass
 
     @abstractmethod
     def decodeLoaders(self, src, trg):
@@ -395,21 +400,21 @@ class FragGenerator(Generator):
             tqdm_kwargs.update({'total': num_samples, 'desc': 'Generating molecules'})
             pbar = tqdm(**tqdm_kwargs)
 
-        smiles, frags = [], []
-        while not len(smiles) >= num_samples:
+        df_all = pd.DataFrame(columns=['SMILES', 'Frags'])
+        while not len(df_all) >= num_samples:
             with torch.no_grad():
                 for src in self.iterLoader(loader):
                     trg = net(src.to(self.device))
                     new_frags, new_smiles = self.decodeLoaders(src, trg)
+                    df_new = pd.DataFrame({'SMILES': new_smiles, 'Frags': new_frags})
 
                     # If drop_invalid is True, invalid (and inaccurate) SMILES are dropped
                     # valid molecules are canonicalized and optionally extra filtering is applied
                     # else invalid molecules are kept and no filtering is applied
                     if drop_invalid:
-                        new_smiles, new_frags = self.filterNewMolecules(
-                            smiles,
-                            new_smiles,
-                            new_frags,
+                        df_new = self.filterNewMolecules(
+                            df_all,
+                            df_new,
                             drop_duplicates=drop_duplicates,
                             drop_undesired=drop_undesired,
                             evaluator=evaluator,
@@ -417,31 +422,33 @@ class FragGenerator(Generator):
                         )
 
                     # Update list of smiles and frags
-                    smiles += new_smiles
-                    frags += new_frags
+                    df_all = pd.concat([df_all, df_new], axis=0, ignore_index=True)
 
                     # Update progress bar
                     if progress:
-                        pbar.update(len(new_smiles) if pbar.n + len(new_smiles) <= num_samples else num_samples - pbar.n)
+                        pbar.update(len(df_new) if pbar.n + len(df_new) <= num_samples else num_samples - pbar.n)
 
-                    if len(smiles) >= num_samples:
+                    if len(df_all) >= num_samples:
                         break
 
         if progress:
             pbar.close()
 
-        smiles = smiles[:num_samples]
-        frags = frags[:num_samples]
-
-        # Post-processing
-        df_smiles = pd.DataFrame({'SMILES': smiles, 'Frags': frags})
+        df = df_all.head(num_samples)
 
         if evaluator:
-            df_smiles = pd.concat([df_smiles, self.evaluate(smiles, frags, evaluator=evaluator,
-                                                            no_multifrag_smiles=no_multifrag_smiles,
-                                                            unmodified_scores=raw_scores)], axis=1)
+            df = pd.concat([
+                df,
+                self.evaluate(
+                    df.SMILES.tolist(),
+                    frags=df.Frags.tolist(),
+                    evaluator=evaluator,
+                    no_multifrag_smiles=no_multifrag_smiles,
+                    unmodified_scores=raw_scores
+                )
+            ], axis=1)
 
         if not keep_frags:
-            df_smiles = df_smiles.drop('Frags', axis=1)
+            df.drop('Frags', axis=1, inplace=True)
 
-        return df_smiles
+        return df.round(3)
