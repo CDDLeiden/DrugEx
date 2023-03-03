@@ -1,6 +1,5 @@
 jupyterlab
 mols2grid
-scikit-learn>=1.1.3
 git+https://github.com/CDDLeiden/DrugEx.git@master#egg=drugex
 git+https://github.com/CDDLeiden/QSPRPred.git@main#egg=qsprpred
 git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@main#egg=papyrus-scaffold-visualizer

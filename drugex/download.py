@@ -32,7 +32,7 @@ def DownloadTutorial(args):
     # Link to DrugEx v3 pretrained model (graph-based; Papyrus 05.5)
     link_pretrained_model2 = "https://zenodo.org/record/7085421/files/DrugEx_PT_Papyrus05.5.zip?download=1"
     # Link to QSAR example model
-    link_qsar_model = "https://zenodo.org/record/7650233/files/qspr.zip?download=1"
+    link_qsar_model = "https://zenodo.org/record/7694931/files/qspr.zip?download=1"
 
     # Download model files
     pretrained_models_path_rnn = os.path.join(args.out_dir, 'models', 'pretrained', 'smiles-rnn')
