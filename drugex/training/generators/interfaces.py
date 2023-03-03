@@ -445,7 +445,7 @@ class FragGenerator(Generator):
                     evaluator=evaluator,
                     no_multifrag_smiles=no_multifrag_smiles,
                     unmodified_scores=raw_scores
-                )
+                )[evaluator.getScorerKeys()]
             ], axis=1)
 
         if not keep_frags:
