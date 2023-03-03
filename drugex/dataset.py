@@ -207,8 +207,10 @@ class FragSequenceDataset(FragmentDataset):
         if self.splitter:
             # Set up collectors for the different subsets
             # Vocabulary is saved only once with the training set
-            data_collectors = [SmilesFragDataSet(f'{self.file_base}_train_smiles.txt', rewrite=True, voc_file=f'{self.file_base}_smiles.txt.vocab', save_voc=True)]
-            data_collectors += [ SmilesFragDataSet(f'{self.file_base}_{split}_smiles.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
+            data_collectors = [SmilesFragDataSet(f'{self.file_base}_test_smiles.txt', rewrite=True, save_voc=False)]
+            data_collectors += [SmilesFragDataSet(f'{self.file_base}_train_smiles.txt', rewrite=True, voc_file=f'{self.file_base}_smiles.txt.vocab', save_voc=True)]
+            if self.splitter.makeUnique:
+                data_collectors += [SmilesFragDataSet(f'{self.file_base}_unique_smiles.txt', rewrite=True, save_voc=False)]
         else:
             # Set up collector for the whole dataset and save vocabulary
             data_collectors = [SmilesFragDataSet(f'{self.file_base}_smiles.txt', rewrite=True, save_voc=True)]
@@ -236,8 +238,10 @@ class FragGraphDataset(FragmentDataset):
         if self.splitter:
             # Set up collectors for the different subsets
             # Vocabulary is saved only once with the training set
-            data_collectors = [GraphFragDataSet(f'{self.file_base}_train_graph.txt', rewrite=True, voc_file=f'{self.file_base}_graph.txt.vocab', save_voc=True)]
-            data_collectors += [ GraphFragDataSet(f'{self.file_base}_{split}_graph.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
+            data_collectors = [GraphFragDataSet(f'{self.file_base}_test_graph.txt', rewrite=True, save_voc=False)]
+            data_collectors += [GraphFragDataSet(f'{self.file_base}_train_graph.txt', rewrite=True, voc_file=f'{self.file_base}_graph.txt.vocab', save_voc=True)]
+            if self.splitter.makeUnique:
+                data_collectors += [GraphFragDataSet(f'{self.file_base}_unique_graph.txt', rewrite=True, save_voc=False)]
         else:
             # Set up collector for the whole dataset and save vocabulary
             data_collectors = [GraphFragDataSet(f'{self.file_base}_graph.txt', rewrite=True, save_voc=True)]
