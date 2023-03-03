@@ -323,5 +323,5 @@ class SequenceRNN(Generator):
         # Post-processing
         df = df_all.head(num_samples)
         if evaluator:
-            df = pd.concat([df, self.evaluate(df.SMILES.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)], axis=1)    
+            df = pd.concat([df, self.evaluate(df.SMILES.tolist(), evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, unmodified_scores=raw_scores)[evaluator.getScorerKeys()]], axis=1)    
         return df.drop('Frags', axis=1).round(decimals=3)
