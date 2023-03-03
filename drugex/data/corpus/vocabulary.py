@@ -12,13 +12,14 @@ import torch
 from rdkit import Chem
 
 from drugex.data.corpus.interfaces import SequenceVocabulary, Vocabulary
+from drugex.logs import logger
 from drugex.molecules.converters.standardizers import CleanSMILES
 
 
 class VocSmiles(SequenceVocabulary):
     """The class for handling encoding/decoding from SMILES to an array of indices for the main SMILES-based models (`GPT2Model` and `RNN`)"""
 
-    defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH2-]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
+    defaultWords = ('#','%','(',')','-','0','1','2','3','4','5','6','7','8','9','=','B','C','F','I','L','N','O','P','R','S','[Ag-3]','[As+]','[As]','[B-]','[BH-]','[BH2-]','[BH3-]','[B]','[C+]','[C-]','[CH-]','[CH2]','[CH]','[I+]','[IH2]','[N+]','[N-]','[NH+]','[NH-]','[NH2+]','[N]','[O+]','[O-]','[OH+]','[O]','[P+]','[PH]','[S+]','[S-]','[SH+]','[SH2]','[SH]','[Se+]','[SeH]','[Se]','[SiH2]','[SiH]','[Si]','[Te]','[b-]','[c+]','[c-]','[cH-]','[n+]','[n-]','[nH+]','[nH]','[o+]','[s+]','[se+]','[se]','[te+]',"[te]",'b','c','n','o','p','s'
     )
 
     def __init__(self, encode_frags, words=defaultWords, max_len=100, min_len=10):
@@ -120,7 +121,6 @@ class VocNonGPT(VocSmiles):
         seq_len = self.trg_len if is_smiles else self.src_len
         output = torch.zeros(len(input), seq_len).long()
         for i, seq in enumerate(input):
-            # print(i, len(seq))
             for j, char in enumerate(seq):
                 output[i, j] = self.tk2ix[char] if is_smiles else self.tk2ix['|' + char]
         return output
@@ -287,7 +287,6 @@ class VocGraph(Vocabulary):
     def decode(self, matrix):
         frags, smiles = [], []
         for m, adj in enumerate(matrix):
-            # print('decode: ', m)
             emol = Chem.RWMol()
             esub = Chem.RWMol()
             try:
@@ -307,8 +306,8 @@ class VocGraph(Vocabulary):
                 Chem.SanitizeMol(emol)
                 Chem.SanitizeMol(esub)
             except Exception as e:
-                print(adj)
-                # raise e
+                logger.error(f'Error while decoding: {adj}')
+                logger.error(e)
             frags.append(Chem.MolToSmiles(esub))
             smiles.append(Chem.MolToSmiles(emol))
         return frags, smiles

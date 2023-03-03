@@ -14,4 +14,4 @@ if not logger:
     logger.setLevel(logging.INFO)
 
 def setLogger(log):
-    setattr(sys.modules[__name__], 'logger', log)
+    setattr(sys.modules[__name__], 'logger_drugex', log)

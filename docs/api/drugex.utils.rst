@@ -4,6 +4,14 @@ drugex.utils package
 Submodules
 ----------
 
+drugex.utils.download module
+----------------------------
+
+.. automodule:: drugex.utils.download
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 drugex.utils.fingerprints module
 --------------------------------
 
@@ -16,14 +24,6 @@ drugex.utils.gcmol module
 -------------------------
 
 .. automodule:: drugex.utils.gcmol
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-drugex.utils.metric module
---------------------------
-
-.. automodule:: drugex.utils.metric
    :members:
    :undoc-members:
    :show-inheritance:

@@ -12,6 +12,14 @@ drugex.molecules.converters.default module
    :undoc-members:
    :show-inheritance:
 
+drugex.molecules.converters.dummy\_molecules module
+---------------------------------------------------
+
+.. automodule:: drugex.molecules.converters.dummy_molecules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 drugex.molecules.converters.fragmenters module
 ----------------------------------------------
 

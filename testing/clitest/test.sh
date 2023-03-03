@@ -1,12 +1,13 @@
 #!/bin/bash
 
-## Test some common command line options automatically.
+## Test some common command line options for all models.
 
 source env.sh
 
-./test_single.sh
-./test_graph.sh
-./test_gpt.sh
-echo "Cleaning up..."
 cleanup
-echo "Done."
+
+./test_seq_rnn.sh
+./test_graph_trans.sh
+./test_seq_trans.sh
+
+cleanup

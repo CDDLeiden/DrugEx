@@ -4,6 +4,8 @@ tests
 Created by: Martin Sicho
 On: 31.05.22, 10:20
 """
+import json
+import logging
 import os.path
 import tempfile
 from collections import OrderedDict
@@ -11,20 +13,28 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from rdkit import Chem
 
 from drugex.data.corpus.corpus import SequenceCorpus
-from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
-from drugex.data.fragments import GraphFragmentEncoder, FragmentPairsSplitter, SequenceFragmentEncoder, FragmentCorpusEncoder
-from drugex.data.processing import CorpusEncoder, Standardization, RandomTrainTestSplitter
-from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
-from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
+from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
+                                  SmilesFragDataSet)
+from drugex.data.fragments import (FragmentCorpusEncoder,
+                                   FragmentPairsSplitter, GraphFragmentEncoder,
+                                   SequenceFragmentEncoder)
+from drugex.data.processing import (CorpusEncoder, RandomTrainTestSplitter,
+                                    Standardization)
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
+from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.interfaces import TrainingMonitor, Scorer
-from drugex.training.models import GPT2Model, RNN, GraphModel
-from drugex.training.models.explorer import GraphExplorer, SmilesExplorerNoFrag, SmilesExplorer
+from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
+                                       SequenceExplorer)
+from drugex.training.generators import (GraphTransformer, SequenceRNN,
+                                        SequenceTransformer)
+from drugex.training.interfaces import TrainingMonitor
 from drugex.training.monitors import FileMonitor
-from drugex.training.rewards import ParetoSimilarity
+from drugex.training.rewards import ParetoCrowdingDistance
+from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
 
@@ -41,7 +51,7 @@ class TestModelMonitor(TrainingMonitor):
             'close' : False,
         }
         self.submonitors = [
-            FileMonitor(tempfile.NamedTemporaryFile().name, verbose=True)
+            FileMonitor(tempfile.NamedTemporaryFile().name, save_smiles=True)
         ] if not submonitors else submonitors
 
     def passToSubmonitors(self, method, *args, **kwargs):
@@ -55,19 +65,24 @@ class TestModelMonitor(TrainingMonitor):
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
-        print(current_step, current_epoch, total_steps, total_epochs)
-        print(args)
-        print(kwargs)
+        print(json.dumps({
+            'current_step' : current_step,
+            'current_epoch' : current_epoch,
+            'total_steps' : total_steps,
+            'total_epochs' : total_epochs,
+        }, indent=4))
+        if args:
+            print("Args:", args)
+        if kwargs:
+            print("Kwargs:", json.dumps(kwargs, indent=4))
         self.execution['progress'] = True
         self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
-    def savePerformanceInfo(self, current_step=None, current_epoch=None, loss=None, *args, **kwargs):
+    def savePerformanceInfo(self, performance_dict, df_smiles=None):
         print("Test Performance Monitor:")
-        print(current_step, current_epoch, loss)
-        print(args)
-        print(kwargs)
+        print(json.dumps(performance_dict, indent=4))
         self.execution['performance'] = True
-        self.passToSubmonitors('savePerformanceInfo', current_step, current_epoch, loss, *args, **kwargs)
+        self.passToSubmonitors('savePerformanceInfo', performance_dict, df_smiles)
 
     def endStep(self, step, epoch):
         print(f"Finished step {step} of epoch {epoch}.")
@@ -98,13 +113,29 @@ class MockScorer(Scorer):
 
 def getPredictor():
     try:
-        from qsprpred.scorers.predictor import Predictor as QSPRPredpredictor
-        ret = QSPRPredpredictor.fromFile(os.path.join(os.path.dirname(__file__), "test_data"), 'RF', target='P29274', type='CLS', scale=False, name='P29274',
-            modifier=ClippedScore(lower_x=0.2, upper_x=0.8)
-        )
+        from qsprpred.models.models import QSPRModel
+        from drugex.training.scorers.qsprpred import QSPRPredScorer
+        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        ret = QSPRPredScorer(model)
     except ImportError:
         ret = MockScorer()
     return ret
+
+class TestScorer(TestCase):
+
+    def test_getScores(self):
+        scorer = getPredictor()
+        mols = ["CCO", "CC"]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+
+        mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+
+        # TODO: check with empty and invalid molecules as well
 
 class TrainingTestCase(TestCase):
 
@@ -114,7 +145,7 @@ class TrainingTestCase(TestCase):
     finetuning_file = os.path.join(test_data_dir, 'A2AR_raw_small.txt')
 
     # global calculation settings
-    N_PROC = 1
+    N_PROC = 2
     N_EPOCHS = 2
     SEED = 42
     MAX_SMILES = 16
@@ -136,21 +167,33 @@ class TrainingTestCase(TestCase):
     def getTestEnvironment(self, scheme=None):
         """
         Get the testing environment
-        Returns:
 
+        Parameters
+        ----------
+        scheme: RewardScheme
+            The reward scheme to use. If None, the default ParetoTanimotoDistance is used.
+        
+        Returns
+        -------
+        DrugExEnvironment
         """
 
-        scheme = ParetoSimilarity() if not scheme else scheme
+        scheme = ParetoCrowdingDistance() if not scheme else scheme
         return DrugExEnvironment(self.scorers, thresholds=self.thresholds, reward_scheme=scheme)
 
     def getSmiles(self, _file):
         """
         Read and standardize SMILES from a file.
-        Args:
-            _file: input .tsv file with smiles
-
-        Returns:
-
+        
+        Parameters
+        ----------
+        _file: str
+            The file to read from (must be a .tsv file with a column named "CANONICAL_SMILES")
+        
+        Returns
+        -------
+        list
+            The list of SMILES
         """
 
         return self.standardize(pd.read_csv(_file, header=0, sep='\t')['CANONICAL_SMILES'].sample(self.MAX_SMILES, random_state=self.SEED).tolist())
@@ -159,11 +202,15 @@ class TrainingTestCase(TestCase):
         """
         Standardize the input SMILES
 
-        Args:
-            smiles: smiles as `list`
-
-        Returns:
-
+        Parameters
+        ----------
+        smiles: list
+            The list of SMILES to standardize
+        
+        Returns
+        -------
+        list
+            The list of standardized SMILES
         """
         return Standardization(n_proc=self.N_PROC).apply(smiles)
 
@@ -171,8 +218,10 @@ class TrainingTestCase(TestCase):
         """
         Create inputs for the fragment-based SMILES models.
 
-        Returns:
-
+        Returns
+        -------
+        tuple
+            The tuple of (pretraining training dataloader, pretraining test dataloader, finetuning training dataloader, finetuning test dataloader, vocabulary)
         """
 
         pre_smiles = self.getSmiles(self.pretraining_file)
@@ -223,13 +272,32 @@ class TrainingTestCase(TestCase):
         """
         Generate a random temporary file and return its path.
 
-        Returns:
-            path: pth to the file created
+        Returns
+        -------
+        str
+            The path to the temporary file
         """
-
         return tempfile.NamedTemporaryFile().name
 
     def fitTestModel(self, model, train_loader, test_loader):
+        """
+        Fit a model and return the best model.
+
+        Parameters
+        ----------
+        model: Model
+            The model to fit
+        train_loader: DataLoader
+            The training data loader
+        test_loader: DataLoader
+            The test data loader
+
+        Returns
+        -------
+        tuple
+            The tuple of (fitted model, monitor)
+        """
+
         monitor = TestModelMonitor()
         model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
         pr_model = monitor.getModel()
@@ -238,12 +306,9 @@ class TrainingTestCase(TestCase):
         model.loadStates(pr_model) # initialize from the best state
         return model, monitor
 
-    def test_rnn_nofrags(self):
+    def test_sequence_rnn(self):
         """
-        Test single network RNN.
-
-        Returns:
-
+        Test sequence RNN.
         """
 
         pre_smiles = self.getSmiles(self.pretraining_file)
@@ -271,7 +336,7 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = RNN(vocabulary, is_lstm=True)
+        pretrained = SequenceRNN(vocabulary, is_lstm=True)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
@@ -280,24 +345,23 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = RNN(vocabulary, is_lstm=True)
+        finetuned = SequenceRNN(vocabulary, is_lstm=True)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorerNoFrag(pretrained, env=environment, mutate=finetuned, crover=pretrained)
+        explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_graph_frags(self):
+        pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False)
+
+    def test_graph_transformer(self):
         """
-        Test fragment-based graph model.
-
-        Returns:
-
+        Test fragment-based graph transformer model.
         """
 
         pre_smiles = self.getSmiles(self.pretraining_file)
@@ -331,14 +395,8 @@ class TrainingTestCase(TestCase):
         self.assertTrue(pr_loader_train)
         self.assertTrue(pr_loader_test)
 
-        pretrained = GraphModel(vocabulary)
+        pretrained = GraphTransformer(vocabulary)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
-
-        # test molecule generation
-        pretrained.sample_smiles([
-            "c1ccncc1CCC",
-            "CCO"
-        ], num_samples=1)
 
         # fine-tuning
         ft_loader_train = ft_data_set_train.asDataLoader(self.BATCH_SIZE)
@@ -346,21 +404,27 @@ class TrainingTestCase(TestCase):
         self.assertTrue(ft_loader_train)
         self.assertTrue(ft_loader_test)
 
-        finetuned = GraphModel(vocabulary)
+        finetuned = GraphTransformer(vocabulary)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_graph_frags_scaffold(self):
+        # test molecule generation
+        pretrained.generate([
+            "c1ccncc1CCC",
+            "CCO"
+        ], num_samples=1, evaluator=environment, drop_invalid=False)
+
+    def test_graph_transformer_scaffold(self):
         """
-        Test RL with fragment-based graph model with scaffold input.
+        Test RL with fragment-based graph transformer model with scaffold input.
         """
 
         frags = ['c1ccncc1', 'c1cncnc1.CCO', 'CCl']
@@ -383,8 +447,8 @@ class TrainingTestCase(TestCase):
         vocabulary = VocGraph()
 
         # set pretrained and finetuned models
-        pretrained = GraphModel(vocabulary)
-        finetuned = GraphModel(vocabulary)
+        pretrained = GraphTransformer(vocabulary)
+        finetuned = GraphTransformer(vocabulary)
 
         # train and test data loaders
         train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
@@ -394,36 +458,44 @@ class TrainingTestCase(TestCase):
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = GraphExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_smiles_frags_gpt(self):
+    def test_sequence_transformer(self):
+        """
+        Test fragment-based sequence transformer model.
+        """
         pr_loader_train, pr_loader_test, ft_loader_train, ft_loader_test, vocabulary = self.setUpSmilesFragData()
 
         # pretraining
         vocab_gpt = VocSmiles(vocabulary.words)
-        pretrained = GPT2Model(vocab_gpt)
+        pretrained = SequenceTransformer(vocab_gpt)
         pretrained, monitor = self.fitTestModel(pretrained, pr_loader_train, pr_loader_test)
 
         # fine-tuning
-        finetuned = GPT2Model(vocab_gpt)
+        finetuned = SequenceTransformer(vocab_gpt)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
+        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())
         self.assertTrue(monitor.allMethodsExecuted())
 
-    def test_smiles_frags_gpt_scaffold(self):
+        pretrained.generate([
+            "c1ccncc1CCC",
+            "CCO"
+        ], num_samples=1, evaluator=environment, drop_invalid=False)
+
+    def test_sequence_transformer_scaffold(self):
         """
-        Test RL with fragment-based smiles transformer model with scaffold input.
+        Test RL with fragment-based sequence transformer model with scaffold input.
         """
 
         frags = ['c1ccncc1', 'CCl', 'c1cncnc1.CCO']
@@ -451,8 +523,8 @@ class TrainingTestCase(TestCase):
         vocab_gpt = VocSmiles(vocabulary.words)
 
         # set pretrained and finetuned models
-        pretrained = GPT2Model(vocab_gpt)
-        finetuned = GPT2Model(vocab_gpt)
+        pretrained = SequenceTransformer(vocab_gpt)
+        finetuned = SequenceTransformer(vocab_gpt)
 
         # train and test data loaders
         train_loader = data_set.asDataLoader(self.BATCH_SIZE, n_samples=10)
@@ -462,7 +534,7 @@ class TrainingTestCase(TestCase):
 
         # reinforcement learning
         environment = self.getTestEnvironment()
-        explorer = SmilesExplorer(pretrained, environment, mutate=finetuned)
+        explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(monitor.getModel())

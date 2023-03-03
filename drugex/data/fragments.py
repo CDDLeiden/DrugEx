@@ -246,7 +246,7 @@ class FragmentCorpusEncoder(ParallelProcessor):
         """
 
         Args:
-            fragmenter: a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. The reference implementation is `Fragmenter`.
+            fragmenter (MolConverter): a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. See the reference implementation in `Fragmenter`.
             encoder:  a `FragmentPairEncoder` that handles how molecules and fragments are encoded in the final result
             pairs_splitter: a `ChunkSplitter` that divides the generated molecule-fragment pairs from the "fragmenter" to splits (i.e. test and train)
             n_proc: number of processes to use for parallel operations

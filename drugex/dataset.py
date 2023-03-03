@@ -14,6 +14,58 @@ from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
+    
+def DatasetArgParser():
+    
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    # I/O parameters
+    parser.add_argument('-b', '--base_dir', type=str, default='.',
+                        help="Base directory which contains a folder 'data' with input files")
+    parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
+                        help="Input file containing raw data. tsv or sdf.gz format")  
+    parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
+                        help="Name of the column in CSV files that contains molecules.") 
+    parser.add_argument('-vf', '--voc_file', type=str, default=None,
+                        help="Name of voc file molecules should adhere to (i.e. prior_smiles_voc), if molecule contains tokens not in voc it is discarded (only works is --mol_type is 'smiles')")
+    parser.add_argument('-o', '--output', type=str, default='ligand',
+                        help="Prefix of output files")   
+    parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
+                        help="If on, intermediate files are saved if --no_fragments is off: (train/test/unique) fragments-molecules pairs without encoding.")
+    
+    # Output data type parameters
+    parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
+                        help="Type of molecular representation: 'graph' or 'smiles'")     
+    parser.add_argument('-nof', '--no_fragments', action='store_true', 
+                        help="If on, molecules are not split to fragments and a smiles corpus is created (for RNN-based models)")
+    parser.add_argument('-s', '--scaffolds', action='store_true',
+                        help="In on, input smiles are treated as fragments instead of molecules. Only works if --no_fragments is off.")   
+
+    # Fragmentation parameters
+    parser.add_argument('-fm', '--frag_method', type=str, default='brics',
+                        help="Fragmentation method: 'brics' or 'recap'") 
+    parser.add_argument('-nf', '--n_frags', type=int, default=4,
+                        help="Number of largest fragments used per compound")
+    parser.add_argument('-nc', '--n_combs', type=int, default=None,
+                        help="Maximum number of fragments that are combined for each fragments-molecule pair. If None, default is {n_frags}")
+    parser.add_argument('-nfs', '--no_fragment_split', action='store_true',
+                        help="If off, split fragment data sets to training, test and unique sets.")   
+        
+    # General parameters
+    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-np', '--n_proc', type=int, default=8,
+                        help="Number of parallel processes to use for multi-core tasks.")
+    parser.add_argument('-cs', '--chunk_size', type=int, default=512,
+                        help="Number of iitems to be given to each process for multi-core tasks. If not specified, this number is set to 512.")
+    parser.add_argument('-ng', '--no_git', action='store_true',
+                        help="If on, git hash is not retrieved")
+    
+    args = parser.parse_args()
+        
+    if args.n_combs is None:
+        args.n_combs = args.n_frags
+        
+    return args
 
 def load_molecules(base_dir, input_file):
     """
@@ -28,94 +80,49 @@ def load_molecules(base_dir, input_file):
     print('Loading molecules...')
     df = pd.read_csv(base_dir + '/data/' + input_file, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
     return df[args.molecule_column].tolist()
-    
-def DatasetArgParser(txt=None):
-    
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
-    parser.add_argument('-b', '--base_dir', type=str, default='.',
-                        help="Base directory which contains a folder 'data' with input files")
-    parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
-                        help="Input file containing raw data. tsv or sdf.gz format")   
-    parser.add_argument('-o', '--output', type=str, default='ligand',
-                        help="Prefix of output files")   
-    parser.add_argument('-nof', '--no_fragments', action='store_true', 
-                        help="If on, molecules are not split to fragments and a smiles corpus is created (for v2)")
-    
-    # parser.add_argument('-m', '--mode', type=str, default='fragmentation',
-    #                     help="'corpus' for encoding smiles without fragmentation (for v2), 'fragmetation' for fragmenting molecules and encoding the molecule-fragment pairs (for v3) or 'scaffold' creating dummy molecules from set input scaffolds and the molecule-fragment pairs")   
-    
-    parser.add_argument('-s', '--scaffolds', action='store_true',
-                        help="In on, input smiles are treated as fragments instead of molecules")   
-    parser.add_argument('-mt', '--mol_type', type=str, default='smiles',
-                        help="Type of molecular representation: 'graph' or 'smiles'")     
-    
-    # parser.add_argument('-sm', '--smiles_corpus', action='store_true',
-    #                     help="If on, molecules are not split to fragments and a smiles corpus is created (for v2)")
-    # parser.add_argument('-nof', '--no_fragmentation', action='store_true',
-    #                     help="If on, molecules are directly encoded without fragmentation (for v3 scaffold-based molecule generation)")
-    
-    parser.add_argument('-fm', '--frag_method', type=str, default='brics',
-                        help="Fragmentation method: 'brics' or 'recap'") 
-    parser.add_argument('-nf', '--n_frags', type=int, default=4,
-                        help="Number of largest leaf-fragments used per compound")
-    parser.add_argument('-nc', '--n_combs', type=int, default=None,
-                        help="Maximum number of leaf-fragments that are combined for each fragment-combinations. If None, default is {n_frags}")
-    parser.add_argument('-np', '--n_proc', type=int, default=8,
-                        help="Number of parallel processes to use for multi-core tasks.")
-    parser.add_argument('-cs', '--chunk_size', type=int, default=512,
-                        help="Number of iitems to be given to each process for multi-core tasks. If not specified, this number is set to 512.")
-    parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
-                        help="Name of the column in CSV files that contains molecules.")
-    parser.add_argument('-sv', '--save_voc', action='store_true',
-                        help="If on, save voc file (should only be done for the pretraining set). Currently only works is --mol_type is 'smiles'.")   
-    parser.add_argument('-vf', '--voc_file', type=str, default=None,
-                        help="Name of voc file molecules should adhere to (i.e. prior_smiles_voc), if molecule contains tokens not in voc it is discarded (only works is --mol_type is 'smiles')")
-    parser.add_argument('-sif', '--save_intermediate_files', action='store_true',
-                        help="If on, intermediate files")
-    parser.add_argument('-nfs', '--no_fragment_split', action='store_true',
-                        help="If on, split fragment data sets to training, test and unique sets.")
-    parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved")
-    
-    args = parser.parse_args()
-        
-    if args.n_combs is None:
-        args.n_combs = args.n_frags
-        
-    return args
 
-def save_vocabulary(vocs, file_base, mol_type, output):
-    """
-    Combines and saves vocabularies obtained during encoding into one single file.
+class Dataset():
+    def __init__(self, args):
+        # Set aatributes from args
+        for key, value in args.__dict__.items():
+            setattr(self, key, value)
+        self.file_base = os.path.join(self.base_dir, 'data', self.output)
 
-    Args:
-        vocs: `Vocabulary` instances that are to be combined and saved
-        file_base: the base directory of the outputs
-        mol_type: molecule input type ('smiles' or 'graph')
-        output: output prefix
+    def setVocabulary(self):
+        """ 
+        Set up vocabulary for sequence-based datasets.    
+        Returns
+        -------
+        voc : VocSmiles or None
+            Vocabulary object
+        update_voc : bool
+            If True, update vocabulary
+        """
+        if self.voc_file:
+            voc_path = os.path.join(self.base_dir, 'data', self.voc_file)
+            voc = VocSmiles.fromFile(voc_path, not self.no_fragments, min_len=self.min_len)
+            log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
+        else:
+            log.warning(f'No vocabulary specified. A new vocabulary will be created and saved to {self.file_base}.')
+            voc = VocSmiles(not self.no_fragments, min_len=self.min_len)
+        return voc
 
-    Returns:
-        `None`
-    """
 
-    voc = sum(vocs[1:], start=vocs[0])
-    path = os.path.join(file_base, f'{output}_{mol_type}_voc.txt')
-    log.info(f'Saving vocabulary file to: {file_base}')
-    voc.toFile(path)
+class SequenceDataset(Dataset):
 
-def v2Dataset(smiles, args):
+    def __init__(self, args):
+        super().__init__(args)
+        self.min_len = 10
+        self.splitter = RandomTrainTestSplitter(0.1, 1e4)
 
-    """ Prepare data for SMILES-based RNN generator (v2) """
+    def __call__(self, smiles_list):
 
-    file_base = os.path.join(args.base_dir, 'data')
+        """ Prepare data for SMILES-based RNN generator """
 
-    # create sequence corpus and vocabulary (used only in v2 models)
-    if args.voc_file:
-        voc_path = args.base_dir + '/data/' + args.voc_file
-        voc = VocSmiles.fromFile(voc_path, False)
-        log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
+        # Set up vocabulary
+        voc = self.setVocabulary()
+
+        # Encode molecules
         encoder = CorpusEncoder(
             SequenceCorpus,
             {
@@ -124,135 +131,128 @@ def v2Dataset(smiles, args):
                 'throw': True
 
             },
-            n_proc=args.n_proc,
-            chunk_size=args.chunk_size
-        )
-    else:
-        log.warning(f'No vocabulary specified. DrugEx default will be used. Note: Molecules with unknown tokens will be discarded.')
-        encoder = CorpusEncoder(
-            SequenceCorpus,
-            {
-                'vocabulary': VocSmiles(False),
-                'update_voc': False,
-                'throw': True
-            },
-            n_proc=args.n_proc,
-            chunk_size=args.chunk_size
-        )
-    data_collector = SmilesDataSet(os.path.join(file_base, f'{args.output}_corpus.txt'), rewrite=True)
-    encoder.apply(smiles, collector=data_collector)
+            n_proc=self.n_proc,
+            chunk_size=self.chunk_size
+        )   
 
-    df_data_collector = pd.DataFrame(data_collector.getData(), columns=data_collector.getColumns())
-    splitter = RandomTrainTestSplitter(0.1, 1e4)
-    train, test = splitter(df_data_collector)
-    for df, name in zip([train, test], ['train', 'test']):
-        df.to_csv(os.path.join(file_base, f'{args.output}_{name}_smi.txt'), header=True, index=False, sep='\t')
+        data_collector = SmilesDataSet(f'{self.file_base}_corpus.txt', rewrite=True)
+        encoder.apply(smiles_list, collector=data_collector)
+        df_data_collector = pd.DataFrame(data_collector.getData(), columns=data_collector.getColumns())
 
-    if args.save_voc or not args.voc_file:
-        save_vocabulary([data_collector.getVoc()], file_base, args.mol_type, args.output)
+        # Split data into training and test sets
+        train, test = self.splitter(df_data_collector)
 
-def v3Dataset(smiles, args):
+        # Save data
+        for df, name in zip([train, test], ['train', 'test']):
+            df.to_csv(f'{self.file_base}_{name}_smiles.txt', header=True, index=False, sep='\t')
 
-    """ Prepare data for SMILES- or graph-based transformer generators (v3) """
 
-    file_base = os.path.join(args.base_dir, 'data')
-    file_prefix = os.path.join(file_base, f'{args.output}')
+class FragmentDataset(Dataset):
+    
+    def __init__(self, args):
+        super().__init__(args)    
 
-    if args.scaffolds:
-        fragmenter = dummyMolsFromFragments()
-        splitter = None
-        min_len = 2
-    else:
-        fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
+        # Set up fragmenter
+        self.fragmenter = dummyMolsFromFragments() if self.scaffolds else Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
+
+        # Set up subset splitter
+        if self.scaffolds or self.no_fragment_split:
+            self.splitter = None
+        else:
+            pair_collectors = self.setPairCollectors()
+            self.splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) 
+
+    def setPairCollectors(self):
+        """ 
+        Set up pair collectors for fragment-based datasets.    
+        Returns
+        -------
+        pair_collectors : dict
+            Dictionary containing pair collectors
+        """
+
         pair_collectors = dict()
-        if args.save_intermediate_files:
-            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_train.txt', sep='\t', index=False)
-            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_test.txt', sep='\t', index=False)
-            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'Smiles']).to_csv(file_prefix + '_unique.txt', sep='\t', index=False)
-        splitter = FragmentPairsSplitter(0.1, 1e4, make_unique=True, **pair_collectors) if not args.no_fragment_split else None
-        min_len = 10
+        if self.save_intermediate_files:
+            pair_collectors['train_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_train.txt', sep='\t', index=False)
+            pair_collectors['test_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_test.txt', sep='\t', index=False)
+            pair_collectors['unique_collector'] = lambda x : pd.DataFrame(x, columns=['Frags', 'SMILES']).to_csv(f'{self.file_base}_unique.txt', sep='\t', index=False)
+        
+        return pair_collectors
 
 
-    if args.mol_type == 'graph':
+class FragSequenceDataset(FragmentDataset):
+    def __init__(self, args):
+        super().__init__(args)        
+        # Set up minimum molecule length
+        self.min_len = 2 if self.scaffolds else 10
+
+    def __call__(self, smiles_list):
+            
+        """ Prepare data for SMILES-based transformer generator """
+        
+        voc = self.setVocabulary()
         
         encoder = FragmentCorpusEncoder(
-            fragmenter=fragmenter,
-            encoder=GraphFragmentEncoder(
-                VocGraph(n_frags=args.n_frags)
+            fragmenter=self.fragmenter,
+            encoder=SequenceFragmentEncoder(
+                voc,
+                update_voc=False,
+                throw=True
             ),
-            pairs_splitter=splitter,
-            n_proc=args.n_proc,
-            chunk_size=args.chunk_size
-        )
+            pairs_splitter=self.splitter,
+            n_proc=self.n_proc,
+            chunk_size=self.chunk_size
+        )    
 
-        data_collectors = [GraphFragDataSet(file_prefix + f'_{split}_graph.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [GraphFragDataSet(file_prefix + f'_graph.txt', rewrite=True) ]
-        encoder.apply(smiles, encodingCollectors=data_collectors)
-        if args.save_voc:
-            save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
-    
-    elif args.mol_type == 'smiles':
-        if args.voc_file:
-            voc_path = args.base_dir + '/data/' + args.voc_file
-            voc = VocSmiles.fromFile(voc_path, True, min_len=min_len)
-            log.info(f'Successfully loaded vocabulary file: {voc_path}. Note: Molecules with unknown tokens will be discarded.')
-            encoder = FragmentCorpusEncoder(
-                fragmenter=fragmenter,
-                encoder=SequenceFragmentEncoder(
-                    voc,
-                    update_voc = False, 
-                    throw= True),
-                pairs_splitter=splitter,
-                n_proc=args.n_proc,
-                chunk_size=args.chunk_size
-            )
+        if self.splitter:
+            # Set up collectors for the different subsets
+            # Vocabulary is saved only once with the training set
+            data_collectors = [SmilesFragDataSet(f'{self.file_base}_train_smiles.txt', rewrite=True, voc_file=f'{self.file_base}_smiles.txt.vocab', save_voc=True)]
+            data_collectors += [ SmilesFragDataSet(f'{self.file_base}_{split}_smiles.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
         else:
-            log.info(f'No vocabulary specified, the default vocabulary will be used. Note: Molecules with unknown tokens will be discarded.')
-            encoder = FragmentCorpusEncoder(
-                fragmenter=fragmenter,
-                encoder=SequenceFragmentEncoder(
-                    VocSmiles(True, min_len=min_len),
-                    update_voc=False,
-                    throw=True
-                ),
-                pairs_splitter=splitter,
-                n_proc=args.n_proc,
-                chunk_size=args.chunk_size
-            )
+            # Set up collector for the whole dataset and save vocabulary
+            data_collectors = [SmilesFragDataSet(f'{self.file_base}_smiles.txt', rewrite=True, save_voc=True)]
 
-        data_collectors = [SmilesFragDataSet(file_prefix + f'_{split}_smi.txt', rewrite=True) for split in ('test', 'train', 'unique')] if splitter else [SmilesFragDataSet(file_prefix + f'_smi.txt')]
-        encoder.apply(smiles, encodingCollectors=data_collectors)
-        if args.save_voc:
-            save_vocabulary([x.getVoc() for x in data_collectors], file_base, args.mol_type, args.output)
-    else:
-        raise ValueError("--mol_type should either 'smiles' or 'graph', you gave '{}' ".format(args.mol_type))
+        encoder.apply(smiles_list, encodingCollectors=data_collectors)
 
-def Dataset(args):
-                        
-    # load molecules
-    tm_start = time.perf_counter()
-    print('Dataset started. Loading molecules...')
-    smiles = load_molecules(args.base_dir, args.input)
+class FragGraphDataset(FragmentDataset):
+    def __init__(self, args):
+        super().__init__(args)
 
-    print("Standardizing molecules...")
-    standardizer = Standardization(n_proc=args.n_proc, chunk_size=args.chunk_size)
-    smiles = standardizer.apply(smiles)
-    
-    if args.no_fragments:
-        v2Dataset(smiles, args)
-    else:
-        v3Dataset(smiles, args)
+    def __call__(self, smiles_list):
+        
+        """ Prepare data for graph-based transformer generator """
+                
+        encoder = FragmentCorpusEncoder(
+            fragmenter=self.fragmenter,
+            encoder=GraphFragmentEncoder(
+                VocGraph(n_frags=self.n_frags)
+            ),
+            pairs_splitter=self.splitter,
+            n_proc=self.n_proc,
+            chunk_size=self.chunk_size
+        )       
 
-    tm_finish = time.perf_counter()
+        if self.splitter:
+            # Set up collectors for the different subsets
+            # Vocabulary is saved only once with the training set
+            data_collectors = [GraphFragDataSet(f'{self.file_base}_train_graph.txt', rewrite=True, voc_file=f'{self.file_base}_graph.txt.vocab', save_voc=True)]
+            data_collectors += [ GraphFragDataSet(f'{self.file_base}_{split}_graph.txt', rewrite=True, save_voc=False) for split in ('test', 'unique')]
+        else:
+            # Set up collector for the whole dataset and save vocabulary
+            data_collectors = [GraphFragDataSet(f'{self.file_base}_graph.txt', rewrite=True, save_voc=True)]
 
-    print(f"Dataset finished. Execution time: {tm_finish - tm_start:0.4f} seconds")
-     
+        encoder.apply(smiles_list, encodingCollectors=data_collectors)
 
 if __name__ == '__main__':
 
+    # Parse commandline arguments
     args = DatasetArgParser()
 
+    # Backup files
     backup_msg = backUpFiles(args.base_dir, 'data', (args.output,))
     
+    # Set up logging
     logSettings = enable_file_logger(
         os.path.join(args.base_dir, 'data'),
         'dataset.log',
@@ -265,8 +265,34 @@ if __name__ == '__main__':
     log.info(backup_msg)
 
     # Create json log file with used commandline arguments 
-    print(json.dumps(vars(args), sort_keys=False, indent=2))
     with open(os.path.join(args.base_dir, 'data', 'dataset.json'), 'w') as f:
         json.dump(vars(args), f)
 
-    Dataset(args)
+    # Load molecules
+    tm_start = time.perf_counter()
+    print('Dataset started. Loading molecules...')
+    smiles = load_molecules(args.base_dir, args.input)
+
+    # Standardize molecules
+    print("Standardizing molecules...")
+    standardizer = Standardization(n_proc=args.n_proc, chunk_size=args.chunk_size)
+    smiles = standardizer.apply(smiles)
+
+    # Select dataset type
+    if args.no_fragments:
+        # SMILES + no fragments --> SequenceRNN
+        dataset = SequenceDataset(args)
+    elif args.mol_type == 'smiles':
+        # SMILES + fragments --> SequenceTransformer
+        dataset = FragSequenceDataset(args)
+    elif args.mol_type == 'graph':
+        # Graphs + fragments --> GraphTransformer
+        dataset = FragGraphDataset(args)
+    else:
+        raise ValueError(f"Unknown molecule type: {args.mol_type}")
+    
+    # Create dataset
+    dataset(smiles)
+
+    tm_finish = time.perf_counter()
+    print(f"Dataset finished. Execution time: {tm_finish - tm_start:0.4f} seconds")

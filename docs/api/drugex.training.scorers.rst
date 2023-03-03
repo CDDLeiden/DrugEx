@@ -4,6 +4,14 @@ drugex.training.scorers package
 Submodules
 ----------
 
+drugex.training.scorers.interfaces module
+-----------------------------------------
+
+.. automodule:: drugex.training.scorers.interfaces
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 drugex.training.scorers.modifiers module
 ----------------------------------------
 
@@ -12,18 +20,18 @@ drugex.training.scorers.modifiers module
    :undoc-members:
    :show-inheritance:
 
-drugex.training.scorers.predictors module
------------------------------------------
-
-.. automodule:: drugex.training.scorers.predictors
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 drugex.training.scorers.properties module
 -----------------------------------------
 
 .. automodule:: drugex.training.scorers.properties
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+drugex.training.scorers.qsprpred module
+---------------------------------------
+
+.. automodule:: drugex.training.scorers.qsprpred
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,6 +48,14 @@ drugex.training.scorers.sascorer module
 ---------------------------------------
 
 .. automodule:: drugex.training.scorers.sascorer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+drugex.training.scorers.similarity module
+-----------------------------------------
+
+.. automodule:: drugex.training.scorers.similarity
    :members:
    :undoc-members:
    :show-inheritance:

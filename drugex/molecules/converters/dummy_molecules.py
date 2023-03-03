@@ -8,8 +8,10 @@ On: 27.09.22, 13:40
 from rdkit import Chem
 
 from drugex.logs import logger
+from drugex.molecules.converters.interfaces import MolConverter
 
-class dummyMolsFromFragments():
+
+class dummyMolsFromFragments(MolConverter):
     """
     A converter to create dummy molecules from fragments.
     """
