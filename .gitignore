@@ -5,6 +5,7 @@
 /build/
 /base_test/
 /tutorial/data
+/tutorial/CLI/examples
 /tutorial/download.json
 /testing/clitest/data/*.txt
 /testing/clitest/data/*.vocab
