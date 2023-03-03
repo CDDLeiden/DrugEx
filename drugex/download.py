@@ -16,7 +16,7 @@ def DownloadArgParser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-o', '--out_dir', type=str, default='data',
-                        help="Base directory in which to download the tutorial files, should contain the 'tutorial' folder")
+                        help="Base directory in which to download the tutorial files.")
     parser.add_argument('-p', '--progress', action='store_true',
                         help="If on, progress of the download is shown")
     parser.add_argument('-d', '--debug', action='store_true')
@@ -85,8 +85,8 @@ def DownloadTutorial(args):
     with open(os.path.join(args.out_dir, 'data', 'xanthine.tsv'), 'w') as f:
         f.write('SMILES\nc1[nH]c2c(n1)nc(nc2O)O')
 
-    # Copy smiles-rnn voc file to data folder
-    shutil.copy(os.path.join(pretrained_models_path_rnn, 'smiles-rnn', 'Papyrus05.5_smiles_rnn_PT', 'Papyrus05.5_smiles_rnn_PT.vocab'),
+    # Copy smiles-rnn voc file to data folder as well
+    shutil.copy(os.path.join(pretrained_models_path_rnn, 'Papyrus05.5_smiles_rnn_PT', 'Papyrus05.5_smiles_rnn_PT.vocab'),
                              os.path.join(args.out_dir, 'data', 'Papyrus05.5_smiles_voc.txt'))
 
 
