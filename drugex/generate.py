@@ -37,7 +37,7 @@ def DesignArgParser(txt=None):
                         help="If on, undesirable molecules are kept in the output. Else, they are dropped.")
 
     # Affinity models
-    parser.add_argument('-p', '--predictor', type=str, nargs='*', default=['RF'],
+    parser.add_argument('-p', '--predictor', type=str, nargs='*', default=[],
                         help="The path to the serialized metadata of a QSPRPred model (ie. 'RF_meta.json'). If different environments are required give environment of targets in order active, inactive, window.")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold")

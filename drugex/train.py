@@ -84,8 +84,8 @@ def GeneratorArgParser():
                         help="Multi-objective reward calculation scheme: 'WS' for weighted sum, 'PRTD' for Pareto ranking with Tanimoto distance or 'PRCD' for Pareto ranking with crowding distance.")
 
     # Affinity models
-    parser.add_argument('-p', '--predictor', type=str, nargs='*', default=['RF'],
-                        help="The path to the serialized metadata of a QSPRPred model (ie. 'RF_meta.json'). If different environments are required give environment of targets in order active, inactive, window.")
+    parser.add_argument('-p', '--predictor', type=str, nargs='*', default=[],
+                        help="The path to the serialized metadata of a QSPRPred model (ie. 'RF_meta.json'), this path is relative to the directory specified with '-b, --base_dir'. If different environments are required give environment of targets in order active, inactive, window.")
     parser.add_argument('-at', '--activity_threshold', type=float, default=6.5,
                         help="Activity threshold used by the modifier in case of a regressor activity predictor")
     parser.add_argument('-ta', '--active_targets', type=str, nargs='*', default=[],
@@ -764,6 +764,9 @@ class Reinforce(SetUpGenerator):
             lipe_ths=self.lipe_thresholds,
         )
 
+        if not environment:
+            raise ValueError('No environment specified. Please, make sure you specified at least one objective function.')
+
         # Set evolver
         evolver = self.setExplorer(agent, prior, environment)
 
@@ -960,7 +963,7 @@ def CreateEnvironment(
 
     logger.info('DrugExEnvironment created using {} objectives: {}'.format(len(objs), [o.getKey() for o in objs]))
 
-    return DrugExEnvironment(objs, ths, schemes[scheme])
+    return DrugExEnvironment(objs, ths, schemes[scheme]) if objs else None
     
 if __name__ == "__main__":
     
