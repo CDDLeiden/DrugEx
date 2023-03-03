@@ -24,10 +24,10 @@ class QSPRPredScorer(Scorer):
             invalids = 0
             for mol in mols:
                 try:
-                    Chem.SanitizeMol(mol)
                     mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
+                    Chem.SanitizeMol(mol)
                 except Exception as exp:
-                    logger.debug(f"Error processing molecule: {Chem.MolToSmiles(mol) if mol else mol} -> \n\t {exp}")
+                    logger.debug(f"Error processing molecule: {mol} -> \n\t {exp}")
                     mol = "INVALID"
                 if mol == "INVALID":
                     invalids += 1
