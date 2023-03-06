@@ -19,7 +19,7 @@ pip install -r requirements.txt
 Subsequently, you should also download the tutorial models and data with the download script accessible from command line:
 
 ```bash
-drugex dowload
+drugex download
 ```
 
 ### Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://githubtocolab.com/CDDLeiden/DrugEx/)
