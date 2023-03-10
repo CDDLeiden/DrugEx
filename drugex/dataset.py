@@ -5,14 +5,16 @@ import argparse
 
 import pandas as pd
 
+from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
+
+from drugex.molecules.converters.fragmenters import Fragmenter, FragmenterWithSelectedFragment
+from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
+
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.processing import Standardization, CorpusEncoder, RandomTrainTestSplitter
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
-from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
 from drugex.data.fragments import FragmentPairsSplitter, SequenceFragmentEncoder, \
     GraphFragmentEncoder, FragmentCorpusEncoder
-from drugex.molecules.converters.fragmenters import Fragmenter
-from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
     
 def DatasetArgParser():
@@ -38,6 +40,10 @@ def DatasetArgParser():
                         help="Type of molecular representation: 'graph' or 'smiles'")     
     parser.add_argument('-nof', '--no_fragments', action='store_true', 
                         help="If on, molecules are not split to fragments and a smiles corpus is created (for RNN-based models)")
+    parser.add_argument('-sf', '--selected_fragment', type=str, default=None,
+                        help="If specified, only fragments-molecules with the selected fragment in the input fragments are used. Only works if --no_fragments is off.")
+    parser.add_argument('-sfe', '--selected_fragment_exclusive', action='store_true',
+                        help="If on, only fragments-molecules with the exclusively the selected fragment in the input fragments are used. Only works if --no_fragments is off.")                        
     parser.add_argument('-s', '--scaffolds', action='store_true',
                         help="In on, input smiles are treated as fragments instead of molecules. Only works if --no_fragments is off.")   
 
@@ -153,7 +159,12 @@ class FragmentDataset(Dataset):
         super().__init__(args)    
 
         # Set up fragmenter
-        self.fragmenter = dummyMolsFromFragments() if self.scaffolds else Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
+        if args.scaffolds:
+            self.fragmenter = dummyMolsFromFragments()
+        elif args.selected_fragment:
+            self.selected_fragment = FragmenterWithSelectedFragment(args.selected_fragment, args.n_frags, args.n_combs, args.frag_method, max_bonds=75, exclusive=args.selected_fragment_exclusive)
+        else:
+            self.fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
 
         # Set up subset splitter
         if self.scaffolds or self.no_fragment_split:
