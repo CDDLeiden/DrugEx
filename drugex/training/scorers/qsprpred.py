@@ -42,7 +42,7 @@ class QSPRPredScorer(Scorer):
         if self.model.task == ModelTasks.REGRESSION:
             return self.model.predictMols(parsed_mols, **self.kwargs)
         else:
-            # TODO: currently we only assume that the model is a binary classifier
+            # FIXME: currently we only assume that the model is a binary classifier
             # with the positive class being the last one in the list of probabilities
             return np.array(
                 [probas[-1]
