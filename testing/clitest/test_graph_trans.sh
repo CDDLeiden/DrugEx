@@ -38,6 +38,19 @@ ${DATASET_COMMON_ARGS} \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
+echo $line
+echo "Test: Generate data with specific fragment for finetuning the fragment-based graph models..."
+echo $line
+python -m drugex.dataset \
+${DATASET_COMMON_ARGS} \
+-i ${TEST_DATA_FINETUNING} \
+-o ${FINETUNING_PREFIX}_pyrazine \
+-mt graph \
+-sf c1cnccn1 \
+${DATASET_FRAGMENT_ARGS}
+echo "Test: Done."
+
+
 # pretraining
 echo $line
 echo "Test: Pretrain fragment-based graph transformer..."

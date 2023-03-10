@@ -25,6 +25,19 @@ ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 
 echo $line
+echo "Test: Generate data with specific fragment for finetuning the fragment-based sequence models..."
+echo $line
+python -m drugex.dataset \
+${DATASET_COMMON_ARGS} \
+-i ${TEST_DATA_FINETUNING} \
+-o ${FINETUNING_PREFIX}_pyrazine \
+-mt smiles \
+-sf c1cnccn1 \
+${DATASET_FRAGMENT_ARGS}
+echo "Test: Done."
+
+
+echo $line
 echo "Test: Generate data for scaffold-based RL of the fragment-based sequence models..."
 echo $line
 python -m drugex.dataset \
@@ -35,6 +48,7 @@ ${DATASET_COMMON_ARGS} \
 -s \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
+
 
 echo $line
 echo "Test: Pretrain fragment-based sequence transformer model..."
