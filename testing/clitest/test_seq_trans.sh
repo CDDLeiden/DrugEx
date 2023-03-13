@@ -32,7 +32,7 @@ ${DATASET_COMMON_ARGS} \
 -i ${TEST_DATA_FINETUNING} \
 -o ${FINETUNING_PREFIX}_pyrazine \
 -mt smiles \
--sf c1cnccn1 \
+-sf CCO \
 ${DATASET_FRAGMENT_ARGS}
 echo "Test: Done."
 

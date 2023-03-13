@@ -162,7 +162,7 @@ class FragmentDataset(Dataset):
         if args.scaffolds:
             self.fragmenter = dummyMolsFromFragments()
         elif args.selected_fragment:
-            self.selected_fragment = FragmenterWithSelectedFragment(args.selected_fragment, args.n_frags, args.n_combs, args.frag_method, max_bonds=75, exclusive=args.selected_fragment_exclusive)
+            self.fragmenter = FragmenterWithSelectedFragment(args.selected_fragment, args.n_frags, args.n_combs, args.frag_method, max_bonds=75, exclusive=args.selected_fragment_exclusive)
         else:
             self.fragmenter = Fragmenter(args.n_frags, args.n_combs, args.frag_method, max_bonds=75)
 
