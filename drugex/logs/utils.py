@@ -30,24 +30,27 @@ def commit_hash(GIT_PATH):
     return repo_hash
 
 def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_hash=None, init_data=None, disable_existing_loggers=True):
-
-    # # Get run id
-    # runid = config.get_runid(log_folder=log_folder,
-    #                         old=keep_old_runid,
-    #                         id=picked_runid)
-    # path = os.path.join(log_folder, f'{runid}/{filename}')
     
     path = os.path.join(log_folder, filename)
     config.config_logger(path, debug, disable_existing_loggers=disable_existing_loggers)
 
     # get logger and init configuration
     log = logging.getLogger(filename) if not log_name else logging.getLogger(log_name)
-    log.setLevel(logging.INFO)
+    log.setLevel(logging.INFO if not debug else logging.DEBUG)
     setLogger(log)
     settings = LogFileConfig(path, log, debug)
 
     # Begin log file
     config.init_logfile(log, git_hash, json.dumps(init_data, sort_keys=False, indent=2))
+    
+    if not debug:
+        # Disable 'qsprpred' logger if it exists
+        # This is a hack to prevent the 'qsprpred' logger from writing to the log file
+        # but this should be already disabled by the 'disable_existing_loggers' flag
+        # and other loggers dont seem to cause this problem
+        loggers = logging.Logger.manager.loggerDict.keys()
+        if 'qsprpred' in loggers
+            logging.getLogger('qsprpred').disable = True
 
     return settings
 
