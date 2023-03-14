@@ -72,7 +72,7 @@ Now that we have our data sets prepared, we can finetune the pretrained generato
 
 ..  code-block:: bash
 
-    python -m drugex.train -tm FT -b ${BASE_DIR} -i arl -o arl -ag ${BASE_DIR}/examples/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -mt graph -e 2 -bs 32 -gpu 0
+    python -m drugex.train -tm FT -b ${BASE_DIR} -i arl -o arl -ag ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -mt graph -e 2 -bs 32 -gpu 0
 
 This tells DrugEx to use the generated file (prefixed with :code:`-i arl`) to fine-tune (:code:`-m FT`) a pretrained model with model states saved in the :code:`-pt Papyrus05.5_graph_trans_PT.pkg` file.
 The training will only be 2 epochs, :code:`-e 2`, with a batch size of 32, :code:`-bs 32` and it will be done on GPU 0, :code:`-gpu 0`. You can also specify multiple GPUs with the :code:`-gpu` argument (i.e :code:`-gpu 0,1`). The best model will be saved to :code:`${BASE_DIR}/generators/arl_graph_trans_FT.pkg`. However, you will find more output files with the :code:`.log` and :code:`.tsv` extensions in :code:`${BASE_DIR}`. These files contain the training and validation losses and the molecules generated at each epoch.
@@ -92,7 +92,7 @@ At each iteration, generated molecules are scored based on the environment and s
 
 .. code-block:: bash
 
-    python -m drugex.train -tm RL -b tutorial/CLI/examples -i arl -o arl -ag arl_graph_trans_FT -pr tutorial/CLI/examples/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
+    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl -o arl -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
 
 This tells DrugEx to create molecules from input fragments encoded in preprocessed data file (prefixed with :code:`arl`)
 and optimize the initial agent (the fine-tuned model) (:code:`-ag arl_graph_trans_FT`) with RL (:code:`-m RL`). In this case we are using two desirability functions to score molecules:
