@@ -1,9 +1,9 @@
 # Change Log
-From v3.4.1 to v3.4.2
+From v3.4.2 to v3.4.3
 
 ## Fixes
 
-- The `QSPRPredScorer` now functions properly when presented with rdkit molecules instead of SMILES strings. It also does not modify the input list anymore.
+- Fixes bug in desirability calculation during generation
 
 ## Changes
 

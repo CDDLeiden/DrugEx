@@ -131,17 +131,17 @@ class Generator(Model, ABC):
         df_new = pd.concat([df_new, scores], axis=1)
         
         if with_frags:
-            df_new = df_new[df_new.Accurate == 1]
+            df_new = df_new[df_new.Accurate == 1].reset_index(drop=True)
         else:
-            df_new = df_new[df_new.Valid == 1]
+            df_new = df_new[df_new.Valid == 1].reset_index(drop=True)
         
         # Canonalize SMILES
         df_new['SMILES'] = [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in df_new.SMILES]    
 
         # drop duplicates
         if drop_duplicates:
-            df_new = df_new.drop_duplicates(subset=['SMILES'])
-            df_new = df_new[df_new.SMILES.isin(df_old.SMILES) == False]
+            df_new = df_new.drop_duplicates(subset=['SMILES']).reset_index(drop=True)
+            df_new = df_new[df_new.SMILES.isin(df_old.SMILES) == False].reset_index(drop=True)
 
         # score molecules
         if evaluator:
@@ -152,7 +152,7 @@ class Generator(Model, ABC):
 
             # Drop undesired molecules
             if drop_undesired:
-                df_new = df_new[df_new.Desired == 1]
+                df_new = df_new[df_new.Desired == 1].reset_index(drop=True)
 
         elif drop_undesired:
             raise ValueError('Evaluator must be provided to filter molecules by desirability')
