@@ -24,15 +24,17 @@ class QSPRPredScorer(Scorer):
         if not isinstance(mols[0], str):
             invalids = 0
             for mol in mols:
+                parsed_mol = None
                 try:
-                    Chem.SanitizeMol(mol)
-                    mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
+                    parsed_mol = Chem.MolToSmiles(mol) if mol and mol.GetNumAtoms() > 1 else "INVALID"
+                    if parsed_mol and parsed_mol != "INVALID":
+                        Chem.SanitizeMol(Chem.MolFromSmiles(parsed_mol))
                 except Exception as exp:
-                    logger.debug(f"Error processing molecule: {Chem.MolToSmiles(mol) if mol else mol} -> \n\t {exp}")
-                    mol = "INVALID"
-                if mol == "INVALID":
+                    logger.debug(f"Error processing molecule: {parsed_mol} -> \n\t {exp}")
+                    parsed_mol = "INVALID"
+                if parsed_mol == "INVALID":
                     invalids += 1
-                parsed_mols.append(mol)
+                parsed_mols.append(parsed_mol)
 
             if invalids == len(parsed_mols):
                 return np.array([self.invalidsScore] * len(parsed_mols))
