@@ -166,8 +166,25 @@ the only difference is that the generator will not be initialized with pretraine
 
 Scaffold-based Reinforcement learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Tuning of the transformer-based generators can also be done on one scaffold or a subset of scaffolds. Here we show an example of this on the previously trained and fine-tuned A2AR generators.
-We will use the molecule xanthine as a scaffold. First this molecule is encoded, then reinforcement learning is done with this scaffold as input. Lastly a new molecule is generated containing this scaffold.
+Tuning of the transformer-based generators can also be done on one scaffold or a subset of scaffolds. There are two ways to do it, either by using a subset of fragments-molecule pairs containing the selected scaffold or using the directly the scaffold as input. If your training data contains molecules with the selected scaffold we recommend former methods as its more stable with policy gradient-based reinforcement learning.
+
+Here we show examples of these approaches on the previously trained and fine-tuned A2AR generators. We will use the molecule xanthine as a scaffold, in both examples.
+
+With subset of molecules containing the scaffold
+""""""""""""""""""""""""""""""""""""""""""""""""
+First the molecules from the given dataset are fragmented and encoding while only selecting fragments-molecule pairs (:code:`-s <scaffold>`) containing the xanthine in the input fragements, then we proceed with RL with this subset of molecules.
+
+.. code-block:: bash
+
+    python -m drugex.dataset -b ${BASE_DIR} -i A2AR_LIGANDS.tsv -mc SMILES -o arl_xanthine -mt graph -sf c1[nH]c2c(n1)nc(nc2O)O 
+    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl_xanthine -o arl_xanthine -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
+    python -m drugex.generate -b ${BASE_DIR} -i arl_xanthine -g arl_xanthine_graph_trans_RL -gpu 0 -n 5
+
+If you want the fragments-molecule pairs consist of ones with exclusively the selected scaffold as the input fragment add the argument :code:`-sfe` 
+
+With input scaffold
+"""""""""""""""""""
+First this molecule is encoded, then reinforcement learning is done with this scaffold as input. Lastly a new molecule is generated containing this scaffold.
 
 ..  code-block:: bash
 
