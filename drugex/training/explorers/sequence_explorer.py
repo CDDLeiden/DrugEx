@@ -1,19 +1,18 @@
 #!/usr/bin/env python
+import time
 from copy import deepcopy
 
-import torch
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
-import time
-from torch.utils.data import DataLoader, TensorDataset
-from tqdm.auto import tqdm
 import numpy as np
-
+import torch
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS, utils
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import Explorer
-from drugex.training.monitors import NullMonitor
 from drugex.training.generators.utils import unique
+from drugex.training.monitors import NullMonitor
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm.auto import tqdm
 
- 
+
 class SequenceExplorer(Explorer):
 
     """ 
@@ -179,7 +178,8 @@ class SequenceExplorer(Explorer):
             if epoch % patience == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state
                 self.agent.load_state_dict(self.bestState)
-                self.crover.load_state_dict(self.bestState)
+                if self.crover is not None:
+                    self.crover.load_state_dict(self.bestState)
                 logger.info('Resetting agent and crover to best state at epoch %d' % self.last_save)
 
             # Early stopping
