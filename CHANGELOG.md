@@ -15,4 +15,4 @@ None.
 
 ## New Features
 
-None.
+- New fragmenter `FragmenterWithSelectedFragment` which produces only fragments-molecule pair in which the input fragments contain the specific fragment given by the user

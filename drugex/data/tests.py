@@ -8,6 +8,7 @@ On: 18.05.22, 11:49
 import pandas as pd
 import tempfile
 from unittest import TestCase
+from rdkit import Chem
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles, VocGraph
@@ -15,7 +16,7 @@ from drugex.data.fragments import FragmentPairsEncodedSupplier, SequenceFragment
     FragmentPairsSplitter, FragmentPairsSupplier, FragmentCorpusEncoder
 from drugex.data.processing import Standardization, CorpusEncoder
 from drugex.data.datasets import SmilesDataSet, SmilesFragDataSet, GraphFragDataSet
-from drugex.molecules.converters.fragmenters import Fragmenter
+from drugex.molecules.converters.fragmenters import Fragmenter, FragmenterWithSelectedFragment
 from drugex.molecules.converters.standardizers import DefaultStandardizer
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.parallel.evaluator import ParallelSupplierEvaluator
@@ -119,6 +120,37 @@ class ProcessingTests(TestCase):
                 self.assertTrue(mol in expected)
 
         standardizer.apply(originals, collect)
+
+    def test_fragmentation_with_selected_fragment(self):
+
+        frag = 'c1cnccn1'
+        mols = list(set(self.getTestMols()))
+        mols.append('C1=NC(=CN=C1COCC)CCCCC2CCCC2') # molecule containing the fragment
+
+        # Without exclusivity
+        pairs = []
+        fragmenter=FragmenterWithSelectedFragment(frag, 4, 4, method='brics')
+        for mol in mols:
+            p = fragmenter(mol)
+            if p is not None: pairs.extend(p)
+        self.assertTrue(len(pairs[0]) == 2)
+
+        frags = [x[0] for x in pairs]
+        for f in frags:
+            self.assertTrue(Chem.MolFromSmiles(f).HasSubstructMatch(Chem.MolFromSmiles(frag)))
+        
+        # With exclusivity
+        pairs = []
+        fragmenter=FragmenterWithSelectedFragment(frag, 4, 4, method='brics', exclusive=True)
+        for mol in mols:
+            p = fragmenter(mol)
+            if p is not None: pairs.extend(p)
+        self.assertTrue(len(pairs[0]) == 2)
+
+        frags = [x[0] for x in pairs]
+        for f in frags:
+            self.assertTrue(Chem.CanonSmiles(f) == Chem.CanonSmiles(frag))
+
 
     def test_smiles_encoder(self):
         mols = self.getTestMols()
