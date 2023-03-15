@@ -1,19 +1,18 @@
 #!/usr/bin/env python
+import time
 from copy import deepcopy
 
-import torch
-from drugex import utils, DEFAULT_DEVICE, DEFAULT_GPUS
-import time
-from torch.utils.data import DataLoader, TensorDataset
-from tqdm.auto import tqdm
 import numpy as np
-
+import torch
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS, utils
 from drugex.logs import logger
 from drugex.training.explorers.interfaces import Explorer
-from drugex.training.monitors import NullMonitor
 from drugex.training.generators.utils import unique
+from drugex.training.monitors import NullMonitor
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm.auto import tqdm
 
- 
+
 class SequenceExplorer(Explorer):
 
     """ 
@@ -126,7 +125,7 @@ class SequenceExplorer(Explorer):
         
         return loss.item()
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, reload_interval = 50, criteria='desired_ratio', min_epochs=100):
         
         """
         Fit the graph explorer to the training data.
@@ -141,6 +140,8 @@ class SequenceExplorer(Explorer):
             Number of epochs to train for
         patience : int
             Number of epochs to wait for improvement before early stopping
+        reload_interval : int
+            Every nth epoch reset the agent (and the crover) network to the best state
         criteria : str
             Criteria to use for early stopping: 'desired_ratio', 'avg_amean' or 'avg_gmean'
         min_epochs : int
@@ -176,10 +177,11 @@ class SequenceExplorer(Explorer):
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, metrics, scores)
  
-            if epoch % patience == 0 and epoch != 0:
+            if epoch % reload_interval == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state
                 self.agent.load_state_dict(self.bestState)
-                self.crover.load_state_dict(self.bestState)
+                if self.crover is not None:
+                    self.crover.load_state_dict(self.bestState)
                 logger.info('Resetting agent and crover to best state at epoch %d' % self.last_save)
 
             # Early stopping
