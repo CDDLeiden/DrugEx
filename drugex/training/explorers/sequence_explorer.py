@@ -125,7 +125,7 @@ class SequenceExplorer(Explorer):
         
         return loss.item()
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, criteria='desired_ratio', min_epochs=100):
+    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, reload_epoch = 50, criteria='desired_ratio', min_epochs=100):
         
         """
         Fit the graph explorer to the training data.
@@ -140,6 +140,8 @@ class SequenceExplorer(Explorer):
             Number of epochs to train for
         patience : int
             Number of epochs to wait for improvement before early stopping
+        reload_epoch : int
+            Every nth epoch reset the agent (and the crover) network to the best state
         criteria : str
             Criteria to use for early stopping: 'desired_ratio', 'avg_amean' or 'avg_gmean'
         min_epochs : int
@@ -175,7 +177,7 @@ class SequenceExplorer(Explorer):
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, metrics, scores)
  
-            if epoch % patience == 0 and epoch != 0:
+            if epoch % reload_epoch == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state
                 self.agent.load_state_dict(self.bestState)
                 if self.crover is not None:
