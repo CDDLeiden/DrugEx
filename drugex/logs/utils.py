@@ -4,18 +4,16 @@ utils
 Created by: Martin Sicho
 On: 17.05.22, 9:55
 """
+import datetime
+import json
+import logging
 import os
 import re
-
-import json
 import shutil
-import logging
-import datetime
 import warnings
 
 import git
-
-from drugex.logs import config, setLogger, logger
+from drugex.logs import config, logger, setLogger
 from drugex.logs.config import LogFileConfig
 
 BACKUP_DIR_FOLDER_PREFIX = 'backup'
@@ -49,7 +47,7 @@ def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_has
         # but this should be already disabled by the 'disable_existing_loggers' flag
         # and other loggers dont seem to cause this problem
         loggers = logging.Logger.manager.loggerDict.keys()
-        if 'qsprpred' in loggers
+        if 'qsprpred' in loggers:
             logging.getLogger('qsprpred').disable = True
 
     return settings
