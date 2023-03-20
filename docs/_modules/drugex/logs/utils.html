@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.logs.utils &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.logs.utils &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -80,18 +79,16 @@
 <span class="sd">Created by: Martin Sicho</span>
 <span class="sd">On: 17.05.22, 9:55</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
-
-<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">git</span>
-
-<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">setLogger</span><span class="p">,</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">setLogger</span>
 <span class="kn">from</span> <span class="nn">drugex.logs.config</span> <span class="kn">import</span> <span class="n">LogFileConfig</span>
 
 <span class="n">BACKUP_DIR_FOLDER_PREFIX</span> <span class="o">=</span> <span class="s1">&#39;backup&#39;</span>
@@ -106,24 +103,27 @@
     <span class="k">return</span> <span class="n">repo_hash</span></div>
 
 <div class="viewcode-block" id="enable_file_logger"><a class="viewcode-back" href="../../../api/drugex.logs.html#drugex.logs.utils.enable_file_logger">[docs]</a><span class="k">def</span> <span class="nf">enable_file_logger</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">git_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disable_existing_loggers</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-
-    <span class="c1"># # Get run id</span>
-    <span class="c1"># runid = config.get_runid(log_folder=log_folder,</span>
-    <span class="c1">#                         old=keep_old_runid,</span>
-    <span class="c1">#                         id=picked_runid)</span>
-    <span class="c1"># path = os.path.join(log_folder, f&#39;{runid}/{filename}&#39;)</span>
     
     <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">config_logger</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">disable_existing_loggers</span><span class="o">=</span><span class="n">disable_existing_loggers</span><span class="p">)</span>
 
     <span class="c1"># get logger and init configuration</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">log_name</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">log_name</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">debug</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
     <span class="n">setLogger</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
     <span class="n">settings</span> <span class="o">=</span> <span class="n">LogFileConfig</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
 
     <span class="c1"># Begin log file</span>
     <span class="n">config</span><span class="o">.</span><span class="n">init_logfile</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">git_hash</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">init_data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="c1"># Disable &#39;qsprpred&#39; logger if it exists</span>
+        <span class="c1"># This is a hack to prevent the &#39;qsprpred&#39; logger from writing to the log file</span>
+        <span class="c1"># but this should be already disabled by the &#39;disable_existing_loggers&#39; flag</span>
+        <span class="c1"># and other loggers dont seem to cause this problem</span>
+        <span class="n">loggers</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">loggerDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;qsprpred&#39;</span> <span class="ow">in</span> <span class="n">loggers</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;qsprpred&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">disable</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">return</span> <span class="n">settings</span></div>
 

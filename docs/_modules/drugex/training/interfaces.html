@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.interfaces &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.interfaces &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -491,22 +490,16 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="TrainingMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.savePerformanceInfo">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">performance_dict</span><span class="p">,</span> <span class="n">df_smiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save performance data.</span>
+<span class="sd">        Save the performance data for the current epoch.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        current_step : int, optional</span>
-<span class="sd">            The current training step (i.e. batch).</span>
-<span class="sd">        current_epoch : int, optional</span>
-<span class="sd">            The current epoch.</span>
-<span class="sd">        loss : float, optional</span>
-<span class="sd">            The current loss.</span>
-<span class="sd">        *args</span>
-<span class="sd">            Additional arguments depending on the model type.</span>
-<span class="sd">        **kwargs</span>
-<span class="sd">            Additional keyword arguments depending on the model type.</span>
+<span class="sd">        performance_dict : dict</span>
+<span class="sd">            A dictionary with the performance data.</span>
+<span class="sd">        df_smiles : pd.DataFrame</span>
+<span class="sd">            A DataFrame with the SMILES of the molecules generated in the current epoch.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 

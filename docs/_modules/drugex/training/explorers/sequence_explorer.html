@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.explorers.sequence_explorer &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.explorers.sequence_explorer &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -74,21 +73,20 @@
              
   <h1>Source code for drugex.training.explorers.sequence_explorer</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">DEFAULT_GPUS</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
-<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">DEFAULT_GPUS</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">drugex.training.explorers.interfaces</span> <span class="kn">import</span> <span class="n">Explorer</span>
-<span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
 <span class="kn">from</span> <span class="nn">drugex.training.generators.utils</span> <span class="kn">import</span> <span class="n">unique</span>
+<span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
- 
+
 <div class="viewcode-block" id="SequenceExplorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer">[docs]</a><span class="k">class</span> <span class="nc">SequenceExplorer</span><span class="p">(</span><span class="n">Explorer</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot; </span>
@@ -123,7 +121,7 @@
 <span class="sd">        beta : float</span>
 <span class="sd">            The baseline for the reward.</span>
 <span class="sd">        n_samples : int</span>
-<span class="sd">            The number of molecules to be generated in each epoch.</span>
+<span class="sd">            The batch size for the policy gradient update.</span>
 <span class="sd">        optim : torch.optim</span>
 <span class="sd">            The optimizer to update the agent network.</span>
 <span class="sd">        device : torch.device</span>
@@ -131,7 +129,9 @@
 <span class="sd">        use_gpus : tuple</span>
 <span class="sd">            The GPU ids to run the network.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span> <span class="o">=</span> <span class="mi">128</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">repeats_per_epoch</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span> <span class="k">if</span> <span class="n">optim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">optim</span>
 
@@ -171,6 +171,11 @@
 <span class="sd">            The generated SMILES.</span>
 <span class="sd">        seqs : torch.Tensor</span>
 <span class="sd">            The generated encoded sequences. </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        loss : float</span>
+<span class="sd">            The loss of the policy gradient.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Calculate the reward from SMILES with the environment</span>
@@ -182,7 +187,7 @@
         <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
 
         <span class="c1"># Train model with policy gradient</span>
-        <span class="k">for</span> <span class="n">step_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Iterating over validation batches&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">step_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating policy gradient...&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="p">(</span><span class="n">reward</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> 
@@ -190,11 +195,11 @@
             <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
             
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
-            <span class="k">del</span> <span class="n">loss</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        
+        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
  
-<div class="viewcode-block" id="SequenceExplorer.fit"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="s1">&#39;desired_ratio&#39;</span><span class="p">,</span> <span class="n">min_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<div class="viewcode-block" id="SequenceExplorer.fit"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">reload_interval</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="s1">&#39;desired_ratio&#39;</span><span class="p">,</span> <span class="n">min_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the graph explorer to the training data.</span>
@@ -209,16 +214,14 @@
 <span class="sd">            Number of epochs to train for</span>
 <span class="sd">        patience : int</span>
 <span class="sd">            Number of epochs to wait for improvement before early stopping</span>
+<span class="sd">        reload_interval : int</span>
+<span class="sd">            Every nth epoch reset the agent (and the crover) network to the best state</span>
 <span class="sd">        criteria : str</span>
-<span class="sd">            Criteria to use for early stopping</span>
+<span class="sd">            Criteria to use for early stopping: &#39;desired_ratio&#39;, &#39;avg_amean&#39; or &#39;avg_gmean&#39;</span>
 <span class="sd">        min_epochs : int</span>
 <span class="sd">            Minimum number of epochs to train for</span>
 <span class="sd">        monitor : Monitor</span>
 <span class="sd">            Monitor to use for logging and saving model</span>
-<span class="sd">            </span>
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span> <span class="k">if</span> <span class="n">monitor</span> <span class="k">else</span> <span class="n">NullMonitor</span><span class="p">()</span>
@@ -230,23 +233,29 @@
             <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">epoch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">----------</span><span class="se">\n</span><span class="s1">EPOCH </span><span class="si">%d</span><span class="se">\n</span><span class="s1">----------&#39;</span> <span class="o">%</span> <span class="n">epoch</span><span class="p">)</span>
             
             <span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy_gradient</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+            <span class="n">train_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_gradient</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
 
             <span class="c1"># Evaluate the model on the validation set</span>
             <span class="n">smiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nSamples</span><span class="p">)</span>
             <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
-            <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">smiles</span>           
+            <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">smiles</span>           
+
+            <span class="c1"># Compute metrics</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNovelMoleculeMetrics</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>       
+            <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_loss</span>  
 
             <span class="c1"># Save evaluate criteria and save best model</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">saveBestState</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">metrics</span><span class="p">[</span><span class="n">criteria</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_value</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">saveBestState</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="n">criteria</span><span class="p">],</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-            <span class="c1"># Log performance and genearated compounds</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logPerformanceAndCompounds</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+            <span class="c1"># Log performance and generated compounds</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logPerformanceAndCompounds</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
  
-            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="n">patience</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">epoch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="n">reload_interval</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">epoch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="c1"># Every nth epoch reset the agent and the crover networks to the best state</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crover</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Resetting agent and crover to best state at epoch </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span><span class="p">)</span>
 
             <span class="c1"># Early stopping</span>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers package &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.scorers package &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -63,8 +62,8 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -86,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">drugex</a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
           <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
       <li>drugex.training.scorers package</li>
@@ -540,8 +539,42 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 </dd></dl>
 
 </section>
-<section id="drugex-training-scorers-qsprpred-module">
-<h2>drugex.training.scorers.qsprpred module<a class="headerlink" href="#drugex-training-scorers-qsprpred-module" title="Permalink to this heading"></a></h2>
+<section id="module-drugex.training.scorers.qsprpred">
+<span id="drugex-training-scorers-qsprpred-module"></span><h2>drugex.training.scorers.qsprpred module<a class="headerlink" href="#module-drugex.training.scorers.qsprpred" title="Permalink to this heading"></a></h2>
+<p>qsprpred</p>
+<p>Created by: Martin Sicho
+On: 17.02.23, 13:44</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.scorers.qsprpred.QSPRPredScorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.scorers.qsprpred.</span></span><span class="sig-name descname"><span class="pre">QSPRPredScorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalids_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/qsprpred.html#QSPRPredScorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.qsprpred.QSPRPredScorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.scorers.interfaces.Scorer" title="drugex.training.scorers.interfaces.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.qsprpred.QSPRPredScorer.getKey">
+<span class="sig-name descname"><span class="pre">getKey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/qsprpred.html#QSPRPredScorer.getKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.qsprpred.QSPRPredScorer.getKey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.scorers.qsprpred.QSPRPredScorer.getScores">
+<span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/qsprpred.html#QSPRPredScorer.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.qsprpred.QSPRPredScorer.getScores" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the raw scores for the input molecules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="drugex-training-scorers-ra-scorer-module">
 <h2>drugex.training.scorers.ra_scorer module<a class="headerlink" href="#drugex-training-scorers-ra-scorer-module" title="Permalink to this heading"></a></h2>

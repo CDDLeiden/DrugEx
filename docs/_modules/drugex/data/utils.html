@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.utils &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.data.utils &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -78,7 +77,7 @@
 <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">VERSION</span>
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 
-<div class="viewcode-block" id="getVocPaths"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.utils.getVocPaths">[docs]</a><span class="k">def</span> <span class="nf">getVocPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">):</span>
+<div class="viewcode-block" id="getVocPaths"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.utils.getVocPaths">[docs]</a><span class="k">def</span> <span class="nf">getVocPaths</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="n">mol_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Get paths to vocabulary files. If none are found, use internal defaults.</span>
 <span class="sd">    </span>
@@ -100,6 +99,8 @@
         <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">voc_file</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="n">voc_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">mol_type</span><span class="si">}</span><span class="s1">.txt.vocab&#39;</span><span class="p">):</span>
+            <span class="n">voc_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">mol_type</span><span class="si">}</span><span class="s1">.txt.vocab&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find vocabulary file </span><span class="si">{</span><span class="n">voc_file</span><span class="si">}</span><span class="s1"> in </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
             

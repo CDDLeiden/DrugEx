@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.environment &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.environment &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -121,8 +120,11 @@
         <span class="k">for</span> <span class="n">scorer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">:</span>
             <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()]</span> <span class="o">=</span> <span class="n">scorer</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
 
+        <span class="c1"># Set all scores to 0.0 for invalid molecules</span>
+        <span class="n">scores</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Valid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
         <span class="c1"># Check if the molecule is desirable</span>
-        <span class="n">undesire</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>  <span class="c1"># ^ self.objs.on</span>
+        <span class="n">undesire</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">)</span>
         <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Desired&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">undesire</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
         <span class="c1"># TODO: Maybe smiles and frags should be added to the dataframe as well?</span>

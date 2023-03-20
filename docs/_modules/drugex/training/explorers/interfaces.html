@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.explorers.interfaces &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.explorers.interfaces &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -92,6 +91,7 @@
 <span class="kn">from</span> <span class="nn">drugex</span> <span class="kn">import</span> <span class="n">DEFAULT_GPUS</span><span class="p">,</span> <span class="n">DEFAULT_DEVICE</span>
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
 
 <div class="viewcode-block" id="Explorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer">[docs]</a><span class="k">class</span> <span class="nc">Explorer</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -174,7 +174,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        scores : pd.DataFrame</span>
 <span class="sd">            The scores for each molecule.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
@@ -182,8 +182,8 @@
 <span class="sd">                - valid_ratio (float): ratio of valid molecules</span>
 <span class="sd">                - unique_ratio (float): ratio of valid and unique molecules</span>
 <span class="sd">                - desired_ratio (float): ratio of valid, unique and desired molecules</span>
-<span class="sd">                - aMeanScore (float): arithmetic mean score of valid and unique molecules</span>
-<span class="sd">                - gMeanScore (float): geometric mean score of valid and unique molecules</span>
+<span class="sd">                - avg_amean (float): average arithmetic mean score of valid and unique molecules</span>
+<span class="sd">                - avg_gmean (float): average geometric mean score of valid and unique molecules</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="n">dct</span> <span class="o">=</span> <span class="p">{}</span>
@@ -201,87 +201,40 @@
             <span class="n">accurate</span> <span class="o">=</span> <span class="n">valid</span>
 
         <span class="c1"># Unique compounds</span>
-        <span class="n">unique</span> <span class="o">=</span> <span class="n">accurate</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;Smiles&#39;</span><span class="p">)</span>
+        <span class="n">unique</span> <span class="o">=</span> <span class="n">accurate</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
         <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;unique_ratio&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span> <span class="o">/</span> <span class="n">ntot</span>
         
         <span class="c1"># Desired compounds</span>
         <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;desired_ratio&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique</span><span class="o">.</span><span class="n">Desired</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">ntot</span>
         
         <span class="c1"># Average artithmetic and geometric mean score </span>
-        <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;aMeanScore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;gMeanScore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">gmean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;avg_amean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;avg_gmean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">gmean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         
         <span class="k">return</span> <span class="n">dct</span></div>
-
-<div class="viewcode-block" id="Explorer.getCriteriaValue"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.getCriteriaValue">[docs]</a>    <span class="k">def</span> <span class="nf">getCriteriaValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">):</span>
-
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get value of selection criteria</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        scores : pd.DataFrame</span>
-<span class="sd">            The scores for each molecule.</span>
-<span class="sd">        criteria : str or callable</span>
-<span class="sd">            The selection criteria. If str, one of the following:</span>
-<span class="sd">                - desired_ratio: ratio of valid, unique and desired molecules</span>
-<span class="sd">                - aMeanScore: arithmetic mean score of valid and unique molecules</span>
-<span class="sd">                - gMeanScore: geometric mean score of valid and unique molecules</span>
-<span class="sd">            If callable, it must take a pd.DataFrame as input and return a float.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        float</span>
-<span class="sd">            The value of the selection criteria.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># Get accurate or valid molecules and drop duplicates</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># If accurate column is present, use it to filter wanted molecules</span>
-            <span class="n">unique</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[(</span><span class="n">scores</span><span class="o">.</span><span class="n">Accurate</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;Smiles&#39;</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="c1"># Otherwise, use valid column</span>
-            <span class="n">unique</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[(</span><span class="n">scores</span><span class="o">.</span><span class="n">Valid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;Smiles&#39;</span><span class="p">)</span>
-        
-        <span class="c1"># Get value of selection criteria</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">criteria</span> <span class="o">==</span> <span class="s1">&#39;desired_ratio&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="n">unique</span><span class="o">.</span><span class="n">Desired</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">criteria</span> <span class="o">==</span> <span class="s1">&#39;amean_score&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">criteria</span> <span class="o">==</span> <span class="s1">&#39;gmean_score&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="n">unique</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">gmean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">criteria</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid criteria: </span><span class="si">{</span><span class="n">criteria</span><span class="si">}</span><span class="s2">. Valid criteria are: &#39;desired_ratio&#39;, &#39;amean_score&#39;, gmean_score&#39; or custom function with signature (scores: pd.DataFrame) -&gt; float&quot;</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Explorer.saveBestState"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.saveBestState">[docs]</a>    <span class="k">def</span> <span class="nf">saveBestState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="Explorer.saveBestState"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.saveBestState">[docs]</a>    <span class="k">def</span> <span class="nf">saveBestState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save best state based on selection criteria</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        scores : pd.DataFrame</span>
-<span class="sd">            The scores for each molecule.</span>
-<span class="sd">        criteria : str or callable</span>
-<span class="sd">            The selection criteria. If str, one of the following:</span>
-<span class="sd">                - desired_ratio: ratio of valid, unique and desired molecules</span>
-<span class="sd">                - aMeanScore: arithmetic mean score of valid and unique molecules</span>
-<span class="sd">                - gMeanScore: geometric mean score of valid and unique molecules</span>
-<span class="sd">            If callable, it must take a pd.DataFrame as input and return a float.</span>
+<span class="sd">        value : float</span>
+<span class="sd">            The value of the selection criteria.</span>
 <span class="sd">        epoch : int</span>
 <span class="sd">            The current epoch.</span>
 <span class="sd">        it : int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCriteriaValue</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_value</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">best_value</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span> <span class="o">=</span> <span class="n">epoch</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">last_iter</span> <span class="o">=</span> <span class="n">it</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model saved at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span> <span class="o">=</span> <span class="n">epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_iter</span> <span class="o">=</span> <span class="n">it</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model saved at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Explorer.logPerformanceAndCompounds"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">[docs]</a>    <span class="k">def</span> <span class="nf">logPerformanceAndCompounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
+<div class="viewcode-block" id="Explorer.logPerformanceAndCompounds"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">[docs]</a>    <span class="k">def</span> <span class="nf">logPerformanceAndCompounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Log performance of model</span>
@@ -290,17 +243,25 @@
 <span class="sd">        ----------</span>
 <span class="sd">        epoch : int</span>
 <span class="sd">            The current epoch.</span>
-<span class="sd">        epochs : int</span>
-<span class="sd">            The total number of epochs.</span>
+<span class="sd">        metrics : dict</span>
+<span class="sd">            The metrics.</span>
 <span class="sd">        scores : pd.DataFrame</span>
 <span class="sd">            The scores for each molecule.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="n">smiles_scores</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
-        <span class="n">smiles_scores_key</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-        <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNovelMoleculeMetrics</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">smiles_scores</span><span class="o">=</span><span class="n">smiles_scores</span><span class="p">,</span> <span class="n">smiles_scores_key</span><span class="o">=</span><span class="n">smiles_scores_key</span><span class="p">,</span> <span class="o">**</span><span class="n">metrics</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="p">)</span>
+        <span class="c1"># Add epoch and best epoch to metrics, and order columns</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">epoch</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;Epoch&#39;</span><span class="p">]}</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span>
+        
+        <span class="c1"># Add epoch to scores, and order columns</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">epoch</span>
+        <span class="k">if</span> <span class="s1">&#39;Accurate&#39;</span> <span class="ow">in</span> <span class="n">scores</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">,</span> <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;Frags&#39;</span><span class="p">,</span> <span class="s1">&#39;Valid&#39;</span><span class="p">,</span> <span class="s1">&#39;Accurate&#39;</span><span class="p">,</span> <span class="s1">&#39;Desired&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[[</span><span class="s1">&#39;Epoch&#39;</span><span class="p">,</span> <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;Valid&#39;</span><span class="p">,</span> <span class="s1">&#39;Desired&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">getScorerKeys</span><span class="p">()]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">df_smiles</span><span class="o">=</span><span class="n">scores</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">endStep</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Explorer.fit"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.fit">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -349,12 +310,17 @@
 <span class="sd">        ----------</span>
 <span class="sd">        loader : torch.utils.data.DataLoader</span>
 <span class="sd">            Data loader for training data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The average loss of the agent</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gpus</span><span class="p">)</span>
         <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
         
-        <span class="k">for</span> <span class="n">step_idx</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Iterating over validation batches&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">step_idx</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating policy gradient...&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
 
             <span class="c1"># Decode fragments and smiles, and get loss</span>
             <span class="n">frags</span><span class="p">,</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBatchOutputs</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
@@ -374,9 +340,9 @@
             <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
-            <span class="k">del</span> <span class="n">loss</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">step_idx</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            
+        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="FragExplorer.sampleEncodedPairsToLoader"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.sampleEncodedPairsToLoader">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sampleEncodedPairsToLoader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
@@ -437,28 +403,33 @@
                     <span class="n">train_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_input</span><span class="p">(</span><span class="n">train_loader_original</span><span class="p">)</span>
                     <span class="n">valid_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_input</span><span class="p">(</span><span class="n">valid_loader_original</span><span class="p">,</span> <span class="n">is_test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-                
                 <span class="c1"># Sample encoded molecules from the network</span>
                 <span class="n">loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampleEncodedPairsToLoader</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">)</span>
                 
                 <span class="c1"># Train the agent with policy gradient</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">policy_gradient</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+                <span class="n">train_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_gradient</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
 
-                <span class="c1"># Evaluate model</span>
+                <span class="c1"># Evaluate model on validation set</span>
                 <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">valid_loader</span><span class="p">)</span>
                 <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
-                <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Frags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span>             
+                <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Frags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span>    
+
+                <span class="c1"># Compute metrics</span>
+                <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNovelMoleculeMetrics</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>    
+                <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;loss_train&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_loss</span>     
 
                 <span class="c1"># Save evaluate criteria and save best model</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">saveBestState</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">metrics</span><span class="p">[</span><span class="n">criteria</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_value</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">saveBestState</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="n">criteria</span><span class="p">],</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
 
-                <span class="c1"># Log performance and genearated compounds</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logPerformanceAndCompounds</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+                <span class="c1"># Log performance and generated compounds</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logPerformanceAndCompounds</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
         
                 <span class="c1"># Early stopping</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&gt;=</span> <span class="n">min_epochs</span><span class="p">)</span> <span class="ow">and</span>  <span class="p">(</span><span class="n">epoch</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_save</span> <span class="o">&gt;</span> <span class="n">patience</span><span class="p">)</span> <span class="p">:</span> <span class="k">break</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crover</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Behavior of using crover with a Transformer is not tested yet. Use at your own risk.&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">crover</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">it</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_iter</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">break</span>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.explorers package &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.explorers package &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -63,8 +62,8 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -86,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">drugex</a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
           <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
       <li>drugex.training.explorers package</li>
@@ -330,35 +329,6 @@ On: 01.06.22, 11:29</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.getCriteriaValue">
-<span class="sig-name descname"><span class="pre">getCriteriaValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.getCriteriaValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.getCriteriaValue" title="Permalink to this definition"></a></dt>
-<dd><p>Get value of selection criteria</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
-<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>callable</em>) – <dl class="simple">
-<dt>The selection criteria. If str, one of the following:</dt><dd><ul>
-<li><p>desired_ratio: ratio of valid, unique and desired molecules</p></li>
-<li><p>aMeanScore: arithmetic mean score of valid and unique molecules</p></li>
-<li><p>gMeanScore: geometric mean score of valid and unique molecules</p></li>
-</ul>
-</dd>
-</dl>
-<p>If callable, it must take a pd.DataFrame as input and return a float.</p>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The value of the selection criteria.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.getModel">
 <span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.getModel" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the current state of the agent</p>
@@ -386,8 +356,8 @@ On: 01.06.22, 11:29</p>
 <li><p>valid_ratio (float): ratio of valid molecules</p></li>
 <li><p>unique_ratio (float): ratio of valid and unique molecules</p></li>
 <li><p>desired_ratio (float): ratio of valid, unique and desired molecules</p></li>
-<li><p>aMeanScore (float): arithmetic mean score of valid and unique molecules</p></li>
-<li><p>gMeanScore (float): geometric mean score of valid and unique molecules</p></li>
+<li><p>avg_amean (float): average arithmetic mean score of valid and unique molecules</p></li>
+<li><p>avg_gmean (float): average geometric mean score of valid and unique molecules</p></li>
 </ul>
 </dd>
 </dl>
@@ -401,13 +371,13 @@ On: 01.06.22, 11:29</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">
-<span class="sig-name descname"><span class="pre">logPerformanceAndCompounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.logPerformanceAndCompounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">logPerformanceAndCompounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.logPerformanceAndCompounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds" title="Permalink to this definition"></a></dt>
 <dd><p>Log performance of model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
-<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of epochs.</p></li>
+<li><p><strong>metrics</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – The metrics.</p></li>
 <li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
 </ul>
 </dd>
@@ -422,22 +392,12 @@ On: 01.06.22, 11:29</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.explorers.interfaces.Explorer.saveBestState">
-<span class="sig-name descname"><span class="pre">saveBestState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.saveBestState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.saveBestState" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">saveBestState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/interfaces.html#Explorer.saveBestState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.interfaces.Explorer.saveBestState" title="Permalink to this definition"></a></dt>
 <dd><p>Save best state based on selection criteria</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>scores</strong> (<em>pd.DataFrame</em>) – The scores for each molecule.</p></li>
-<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em> or </em><em>callable</em>) – <dl class="simple">
-<dt>The selection criteria. If str, one of the following:</dt><dd><ul>
-<li><p>desired_ratio: ratio of valid, unique and desired molecules</p></li>
-<li><p>aMeanScore: arithmetic mean score of valid and unique molecules</p></li>
-<li><p>gMeanScore: geometric mean score of valid and unique molecules</p></li>
-</ul>
-</dd>
-</dl>
-<p>If callable, it must take a pd.DataFrame as input and return a float.</p>
-</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The value of the selection criteria.</p></li>
 <li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
 <li><p><strong>it</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – </p></li>
 </ul>
@@ -493,6 +453,12 @@ The policy gradient is calculated using the REINFORCE algorithm and the agent is
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for training data</p>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The average loss of the agent</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -530,7 +496,7 @@ J Cheminform (2021). <a class="reference external" href="https://doi.org/10.1186
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.explorers.sequence_explorer.SequenceExplorer.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'desired_ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reload_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'desired_ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/explorers/sequence_explorer.html#SequenceExplorer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.explorers.sequence_explorer.SequenceExplorer.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Fit the graph explorer to the training data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -539,13 +505,11 @@ J Cheminform (2021). <a class="reference external" href="https://doi.org/10.1186
 <li><p><strong>valid_loader</strong> (<em>torch.utils.data.DataLoader</em>) – Data loader for validation data</p></li>
 <li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to train for</p></li>
 <li><p><strong>patience</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of epochs to wait for improvement before early stopping</p></li>
-<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Criteria to use for early stopping</p></li>
+<li><p><strong>reload_interval</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Every nth epoch reset the agent (and the crover) network to the best state</p></li>
+<li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Criteria to use for early stopping: ‘desired_ratio’, ‘avg_amean’ or ‘avg_gmean’</p></li>
 <li><p><strong>min_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Minimum number of epochs to train for</p></li>
 <li><p><strong>monitor</strong> (<em>Monitor</em>) – Monitor to use for logging and saving model</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -577,6 +541,12 @@ The policy gradient is calculated using the REINFORCE algorithm and the agent is
 <li><p><strong>smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The generated SMILES.</p></li>
 <li><p><strong>seqs</strong> (<em>torch.Tensor</em>) – The generated encoded sequences.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> – The loss of the policy gradient.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
 </dd>
 </dl>
 </dd></dl>

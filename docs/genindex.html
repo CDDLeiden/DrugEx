@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; DrugEx 3.4.0 documentation</title>
+  <title>Index &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -87,6 +86,7 @@
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -197,10 +197,6 @@
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Chained">Chained (class in drugex.training.scorers.modifiers)</a>
 </li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.changeEpoch">changeEpoch() (drugex.training.monitors.DictMonitor method)</a>
-</li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.changeStep">changeStep() (drugex.training.monitors.DictMonitor method)</a>
-</li>
       <li><a href="api/drugex.utils.html#drugex.utils.download.check_sha256sum">check_sha256sum() (in module drugex.utils.download)</a>
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.smiles.SmilesChecker.checkSmiles">checkSmiles() (drugex.training.scorers.smiles.SmilesChecker static method)</a>
@@ -251,6 +247,8 @@
 </li>
       <li><a href="api/drugex.utils.html#drugex.utils.nsgaii.cpu_non_dominated_sort">cpu_non_dominated_sort() (in module drugex.utils.nsgaii)</a>
 </li>
+      <li><a href="api/drugex.html#drugex.train.CreateEnvironment">CreateEnvironment() (in module drugex.train)</a>
+</li>
       <li><a href="api/drugex.data.html#drugex.data.datasets.SmilesFragDataSet.createLoaders">createLoaders() (drugex.data.datasets.SmilesFragDataSet method)</a>
 
       <ul>
@@ -263,6 +261,8 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/drugex.html#drugex.train.DataPreparation">DataPreparation (class in drugex.train)</a>
+</li>
       <li><a href="api/drugex.data.html#drugex.data.interfaces.DataSet">DataSet (class in drugex.data.interfaces)</a>
 </li>
       <li><a href="api/drugex.html#drugex.dataset.Dataset">Dataset (class in drugex.dataset)</a>
@@ -293,6 +293,14 @@
         <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.decode">(drugex.data.corpus.vocabulary.VocSmiles method)</a>
 </li>
       </ul></li>
+      <li><a href="api/drugex.training.generators.html#drugex.training.generators.graph_transformer.GraphTransformer.decodeLoaders">decodeLoaders() (drugex.training.generators.graph_transformer.GraphTransformer method)</a>
+
+      <ul>
+        <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.decodeLoaders">(drugex.training.generators.interfaces.FragGenerator method)</a>
+</li>
+        <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.decodeLoaders">(drugex.training.generators.sequence_transformer.SequenceTransformer method)</a>
+</li>
+      </ul></li>
       <li><a href="api/drugex.molecules.converters.html#drugex.molecules.converters.standardizers.DefaultStandardizer">DefaultStandardizer (class in drugex.molecules.converters.standardizers)</a>
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocGraph.defaultWords">defaultWords (drugex.data.corpus.vocabulary.VocGraph attribute)</a>
@@ -301,11 +309,13 @@
         <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.defaultWords">(drugex.data.corpus.vocabulary.VocSmiles attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor">DictMonitor (class in drugex.training.monitors)</a>
-</li>
       <li><a href="api/drugex.utils.html#drugex.utils.nsgaii.dominate">dominate() (in module drugex.utils.nsgaii)</a>
 </li>
       <li><a href="api/drugex.utils.html#drugex.utils.download.download_file">download_file() (in module drugex.utils.download)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.download.DownloadArgParser">DownloadArgParser() (in module drugex.download)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.download.DownloadTutorial">DownloadTutorial() (in module drugex.download)</a>
 </li>
       <li><a href="api/drugex.molecules.html#drugex.molecules.mol.DrExMol">DrExMol (class in drugex.molecules.mol)</a>
 </li>
@@ -414,6 +424,13 @@
 
       <ul>
         <li><a href="api/drugex.html#module-drugex.dataset">module</a>
+</li>
+      </ul></li>
+      <li>
+    drugex.download
+
+      <ul>
+        <li><a href="api/drugex.html#module-drugex.download">module</a>
 </li>
       </ul></li>
       <li>
@@ -549,6 +566,13 @@
 
       <ul>
         <li><a href="api/drugex.parallel.html#module-drugex.parallel.tests">module</a>
+</li>
+      </ul></li>
+      <li>
+    drugex.train
+
+      <ul>
+        <li><a href="api/drugex.html#module-drugex.train">module</a>
 </li>
       </ul></li>
       <li>
@@ -692,6 +716,13 @@
 </li>
       </ul></li>
       <li>
+    drugex.training.scorers.qsprpred
+
+      <ul>
+        <li><a href="api/drugex.training.scorers.html#module-drugex.training.scorers.qsprpred">module</a>
+</li>
+      </ul></li>
+      <li>
     drugex.training.scorers.sascorer
 
       <ul>
@@ -806,8 +837,6 @@
       <li><a href="api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.endStep">endStep() (drugex.training.interfaces.TrainingMonitor method)</a>
 
       <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.endStep">(drugex.training.monitors.DictMonitor method)</a>
-</li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.endStep">(drugex.training.monitors.FileMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.NullMonitor.endStep">(drugex.training.monitors.NullMonitor method)</a>
@@ -835,14 +864,12 @@
 </li>
       <li><a href="api/drugex.logs.html#drugex.logs.config.LevelFilter.filter">filter() (drugex.logs.config.LevelFilter method)</a>
 </li>
-      <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.filterNewMolecules">filterNewMolecules() (drugex.training.generators.interfaces.FragGenerator method)</a>
-
-      <ul>
-        <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.filterNewMolecules">(drugex.training.generators.interfaces.Generator method)</a>
+      <li><a href="api/drugex.molecules.converters.html#drugex.molecules.converters.fragmenters.Fragmenter.filterFragments">filterFragments() (drugex.molecules.converters.fragmenters.Fragmenter method)</a>
 </li>
-        <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_rnn.SequenceRNN.filterNewMolecules">(drugex.training.generators.sequence_rnn.SequenceRNN method)</a>
+      <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.filterNewMolecules">filterNewMolecules() (drugex.training.generators.interfaces.Generator method)</a>
 </li>
-      </ul></li>
+      <li><a href="api/drugex.html#drugex.train.Finetune">Finetune (class in drugex.train)</a>
+</li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TrainingTestCase.finetuning_file">finetuning_file (drugex.training.tests.TrainingTestCase attribute)</a>
 </li>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.fit">fit() (drugex.training.explorers.interfaces.Explorer method)</a>
@@ -899,6 +926,8 @@
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.similarity.FraggleSimilarity">FraggleSimilarity (class in drugex.training.scorers.similarity)</a>
 </li>
+      <li><a href="api/drugex.html#drugex.train.FragGraphDataPreparation">FragGraphDataPreparation (class in drugex.train)</a>
+</li>
       <li><a href="api/drugex.html#drugex.dataset.FragGraphDataset">FragGraphDataset (class in drugex.dataset)</a>
 </li>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.frag_graph_explorer.FragGraphExplorer">FragGraphExplorer (class in drugex.training.explorers.frag_graph_explorer)</a>
@@ -910,6 +939,8 @@
       <li><a href="api/drugex.html#drugex.dataset.FragmentDataset">FragmentDataset (class in drugex.dataset)</a>
 </li>
       <li><a href="api/drugex.molecules.converters.html#drugex.molecules.converters.fragmenters.Fragmenter">Fragmenter (class in drugex.molecules.converters.fragmenters)</a>
+</li>
+      <li><a href="api/drugex.molecules.converters.html#drugex.molecules.converters.fragmenters.FragmenterWithSelectedFragment">FragmenterWithSelectedFragment (class in drugex.molecules.converters.fragmenters)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder">FragmentPairEncoder (class in drugex.data.interfaces)</a>
 </li>
@@ -928,6 +959,8 @@
       <li><a href="api/drugex.html#drugex.dataset.FragSequenceDataset">FragSequenceDataset (class in drugex.dataset)</a>
 </li>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer">FragSequenceExplorer (class in drugex.training.explorers.frag_sequence_explorer)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.FragSmilesDataPreparation">FragSmilesDataPreparation (class in drugex.train)</a>
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocGraph.fromDataFrame">fromDataFrame() (drugex.data.corpus.vocabulary.VocGraph static method)</a>
 </li>
@@ -951,14 +984,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.modifiers.Gaussian">Gaussian (class in drugex.training.scorers.modifiers)</a>
 </li>
-      <li><a href="api/drugex.training.generators.html#drugex.training.generators.graph_transformer.GraphTransformer.generate">generate() (drugex.training.generators.graph_transformer.GraphTransformer method)</a>
+      <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.generate">generate() (drugex.training.generators.interfaces.FragGenerator method)</a>
 
       <ul>
         <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.generate">(drugex.training.generators.interfaces.Generator method)</a>
 </li>
         <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_rnn.SequenceRNN.generate">(drugex.training.generators.sequence_rnn.SequenceRNN method)</a>
-</li>
-        <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.generate">(drugex.training.generators.sequence_transformer.SequenceTransformer method)</a>
 </li>
       </ul></li>
       <li><a href="api/drugex.logs.html#drugex.logs.utils.generate_backup_runID">generate_backup_runID() (in module drugex.logs.utils)</a>
@@ -966,6 +997,8 @@
       <li><a href="api/drugex.logs.html#drugex.logs.utils.generateBackupDir">generateBackupDir() (in module drugex.logs.utils)</a>
 </li>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator">Generator (class in drugex.training.generators.interfaces)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.GeneratorArgParser">GeneratorArgParser() (in module drugex.train)</a>
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocGraph.get_atom_tk">get_atom_tk() (drugex.data.corpus.vocabulary.VocGraph method)</a>
 </li>
@@ -999,16 +1032,14 @@
         <li><a href="api/drugex.data.html#drugex.data.datasets.SmilesFragDataSet.getColumns">(drugex.data.datasets.SmilesFragDataSet method)</a>
 </li>
       </ul></li>
-      <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.getCriteriaValue">getCriteriaValue() (drugex.training.explorers.interfaces.Explorer method)</a>
-</li>
       <li><a href="api/drugex.data.html#drugex.data.interfaces.DataSet.getData">getData() (drugex.data.interfaces.DataSet method)</a>
 </li>
-      <li><a href="api/drugex.data.html#drugex.data.utils.getDataPaths">getDataPaths() (in module drugex.data.utils)</a>
+      <li><a href="api/drugex.html#drugex.train.DataPreparation.getDataPaths">getDataPaths() (drugex.train.DataPreparation method)</a>
+
+      <ul>
+        <li><a href="api/drugex.data.html#drugex.data.utils.getDataPaths">(in module drugex.data.utils)</a>
 </li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.getDict">getDict() (drugex.training.monitors.DictMonitor method)</a>
-</li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.getEpochSummary">getEpochSummary() (drugex.training.monitors.DictMonitor method)</a>
-</li>
+      </ul></li>
       <li><a href="api/drugex.training.html#drugex.training.rewards.MinMeanSimilarityRanking.getFPs">getFPs() (drugex.training.rewards.MinMeanSimilarityRanking method)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.getFragmentPairs">getFragmentPairs() (drugex.data.fragments.FragmentCorpusEncoder method)</a>
@@ -1031,6 +1062,8 @@
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.getKey">(drugex.training.scorers.properties.Scaffold method)</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness.getKey">(drugex.training.scorers.properties.Uniqueness method)</a>
+</li>
+        <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.qsprpred.QSPRPredScorer.getKey">(drugex.training.scorers.qsprpred.QSPRPredScorer method)</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.similarity.FraggleSimilarity.getKey">(drugex.training.scorers.similarity.FraggleSimilarity method)</a>
 </li>
@@ -1062,20 +1095,20 @@
 </li>
         <li><a href="api/drugex.training.html#drugex.training.interfaces.ModelProvider.getModel">(drugex.training.interfaces.ModelProvider method)</a>
 </li>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.getModel">(drugex.training.monitors.DictMonitor method)</a>
+        <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.getModel">(drugex.training.monitors.FileMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.NullMonitor.getModel">(drugex.training.monitors.NullMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.tests.TestModelMonitor.getModel">(drugex.training.tests.TestModelMonitor method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.interfaces.Scorer.getModifiedScores">getModifiedScores() (drugex.training.scorers.interfaces.Scorer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.interfaces.Scorer.getModifier">getModifier() (drugex.training.scorers.interfaces.Scorer method)</a>
 </li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.getMoleculeSummary">getMoleculeSummary() (drugex.training.monitors.DictMonitor method)</a>
+      <li><a href="api/drugex.html#drugex.train.getModifiers">getModifiers() (in module drugex.train)</a>
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.tests.CorpusTest.getMols">getMols() (drugex.data.corpus.tests.CorpusTest static method)</a>
 </li>
@@ -1117,6 +1150,8 @@
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.getScores">(drugex.training.scorers.properties.Scaffold method)</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness.getScores">(drugex.training.scorers.properties.Uniqueness method)</a>
+</li>
+        <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.qsprpred.QSPRPredScorer.getScores">(drugex.training.scorers.qsprpred.QSPRPredScorer method)</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.similarity.FraggleSimilarity.getScores">(drugex.training.scorers.similarity.FraggleSimilarity method)</a>
 </li>
@@ -1169,8 +1204,12 @@
       </ul></li>
       <li><a href="api/drugex.data.html#drugex.data.interfaces.DataSet.getVocPath">getVocPath() (drugex.data.interfaces.DataSet method)</a>
 </li>
-      <li><a href="api/drugex.data.html#drugex.data.utils.getVocPaths">getVocPaths() (in module drugex.data.utils)</a>
+      <li><a href="api/drugex.html#drugex.train.DataPreparation.getVocPaths">getVocPaths() (drugex.train.DataPreparation method)</a>
+
+      <ul>
+        <li><a href="api/drugex.data.html#drugex.data.utils.getVocPaths">(in module drugex.data.utils)</a>
 </li>
+      </ul></li>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.GPT2Layer">GPT2Layer (class in drugex.training.generators.sequence_transformer)</a>
 </li>
       <li><a href="api/drugex.utils.html#drugex.utils.nsgaii.gpu_non_dominated_sort">gpu_non_dominated_sort() (in module drugex.utils.nsgaii)</a>
@@ -1201,16 +1240,24 @@
         <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.init_states">(drugex.training.generators.interfaces.FragGenerator method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.molecules.html#drugex.molecules.mol.InitializationException">InitializationException</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator.initSupplier">initSupplier() (drugex.parallel.evaluator.ParallelSupplierEvaluator method)</a>
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer">Isomer (class in drugex.training.scorers.properties)</a>
 </li>
       <li><a href="api/drugex.molecules.html#drugex.molecules.interfaces.ItemException">ItemException</a>
 </li>
+      <li><a href="api/drugex.training.generators.html#drugex.training.generators.graph_transformer.GraphTransformer.iterLoader">iterLoader() (drugex.training.generators.graph_transformer.GraphTransformer method)</a>
+
+      <ul>
+        <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.iterLoader">(drugex.training.generators.interfaces.FragGenerator method)</a>
+</li>
+        <li><a href="api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.iterLoader">(drugex.training.generators.sequence_transformer.SequenceTransformer method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1235,10 +1282,10 @@
 </li>
       <li><a href="api/drugex.parallel.html#drugex.parallel.collectors.ListExtend">ListExtend (class in drugex.parallel.collectors)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.molecules.html#drugex.molecules.suppliers.ListSupplier">ListSupplier (class in drugex.molecules.suppliers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.html#drugex.dataset.load_molecules">load_molecules() (in module drugex.dataset)</a>
 </li>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.graph_transformer.GraphTransformer.loaderFromFrags">loaderFromFrags() (drugex.training.generators.graph_transformer.GraphTransformer method)</a>
@@ -1251,12 +1298,20 @@
       </ul></li>
       <li><a href="api/drugex.training.html#drugex.training.interfaces.Model.loadStates">loadStates() (drugex.training.interfaces.Model method)</a>
 </li>
-      <li><a href="api/drugex.training.html#drugex.training.interfaces.Model.loadStatesFromFile">loadStatesFromFile() (drugex.training.interfaces.Model method)</a>
+      <li><a href="api/drugex.html#drugex.train.SetUpGenerator.loadStatesFromFile">loadStatesFromFile() (drugex.train.SetUpGenerator method)</a>
+
+      <ul>
+        <li><a href="api/drugex.training.html#drugex.training.interfaces.Model.loadStatesFromFile">(drugex.training.interfaces.Model method)</a>
 </li>
+      </ul></li>
       <li><a href="api/drugex.logs.html#drugex.logs.config.LogFileConfig">LogFileConfig (class in drugex.logs.config)</a>
 </li>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">logPerformanceAndCompounds() (drugex.training.explorers.interfaces.Explorer method)</a>
+
+      <ul>
+        <li><a href="api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.logPerformanceAndCompounds">(drugex.training.generators.interfaces.Generator method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1311,6 +1366,8 @@
 </li>
         <li><a href="api/drugex.html#module-drugex.dataset">drugex.dataset</a>
 </li>
+        <li><a href="api/drugex.html#module-drugex.download">drugex.download</a>
+</li>
         <li><a href="api/drugex.logs.html#module-drugex.logs">drugex.logs</a>
 </li>
         <li><a href="api/drugex.logs.html#module-drugex.logs.config">drugex.logs.config</a>
@@ -1348,6 +1405,8 @@
         <li><a href="api/drugex.parallel.html#module-drugex.parallel.interfaces">drugex.parallel.interfaces</a>
 </li>
         <li><a href="api/drugex.parallel.html#module-drugex.parallel.tests">drugex.parallel.tests</a>
+</li>
+        <li><a href="api/drugex.html#module-drugex.train">drugex.train</a>
 </li>
         <li><a href="api/drugex.training.html#module-drugex.training">drugex.training</a>
 </li>
@@ -1388,6 +1447,8 @@
         <li><a href="api/drugex.training.scorers.html#module-drugex.training.scorers.modifiers">drugex.training.scorers.modifiers</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#module-drugex.training.scorers.properties">drugex.training.scorers.properties</a>
+</li>
+        <li><a href="api/drugex.training.scorers.html#module-drugex.training.scorers.qsprpred">drugex.training.scorers.qsprpred</a>
 </li>
         <li><a href="api/drugex.training.scorers.html#module-drugex.training.scorers.sascorer">drugex.training.scorers.sascorer</a>
 </li>
@@ -1478,8 +1539,6 @@
 </li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TestModelMonitor.passToSubmonitors">passToSubmonitors() (drugex.training.tests.TestModelMonitor method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.policy_gradient">policy_gradient() (drugex.training.explorers.interfaces.Explorer method)</a>
 
       <ul>
@@ -1488,11 +1547,17 @@
         <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer.policy_gradient">(drugex.training.explorers.sequence_explorer.SequenceExplorer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.utils.PositionalEmbedding">PositionalEmbedding (class in drugex.training.generators.utils)</a>
 </li>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.utils.PositionalEncoding">PositionalEncoding (class in drugex.training.generators.utils)</a>
 </li>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.utils.PositionwiseFeedForward">PositionwiseFeedForward (class in drugex.training.generators.utils)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.SetUpGenerator.prepareInputs">prepareInputs() (drugex.train.SetUpGenerator method)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.Pretrain">Pretrain (class in drugex.train)</a>
 </li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TrainingTestCase.pretraining_file">pretraining_file (drugex.training.tests.TrainingTestCase attribute)</a>
 </li>
@@ -1505,6 +1570,14 @@
 </li>
       </ul></li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Property">Property (class in drugex.training.scorers.properties)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.qsprpred.QSPRPredScorer">QSPRPredScorer (class in drugex.training.scorers.qsprpred)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1530,6 +1603,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/drugex.html#drugex.train.Reinforce">Reinforce (class in drugex.train)</a>
+</li>
       <li><a href="api/drugex.utils.html#drugex.utils.gcmol.remove_duplicates">remove_duplicates() (in module drugex.utils.gcmol)</a>
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew">removeIfNew() (drugex.data.corpus.interfaces.SequenceVocabulary method)</a>
@@ -1578,17 +1653,11 @@
       </ul></li>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.saveBestState">saveBestState() (drugex.training.explorers.interfaces.Explorer method)</a>
 </li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.saveEpochData">saveEpochData() (drugex.training.monitors.DictMonitor method)</a>
-
-      <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveEpochData">(drugex.training.monitors.FileMonitor method)</a>
+      <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveEpochData">saveEpochData() (drugex.training.monitors.FileMonitor method)</a>
 </li>
-      </ul></li>
       <li><a href="api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.saveModel">saveModel() (drugex.training.interfaces.TrainingMonitor method)</a>
 
       <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.saveModel">(drugex.training.monitors.DictMonitor method)</a>
-</li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveModel">(drugex.training.monitors.FileMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.NullMonitor.saveModel">(drugex.training.monitors.NullMonitor method)</a>
@@ -1596,17 +1665,11 @@
         <li><a href="api/drugex.training.html#drugex.training.tests.TestModelMonitor.saveModel">(drugex.training.tests.TestModelMonitor method)</a>
 </li>
       </ul></li>
-      <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.saveMolecules">saveMolecules() (drugex.training.monitors.DictMonitor method)</a>
-
-      <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveMolecules">(drugex.training.monitors.FileMonitor method)</a>
+      <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveMolecules">saveMolecules() (drugex.training.monitors.FileMonitor method)</a>
 </li>
-      </ul></li>
       <li><a href="api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.savePerformanceInfo">savePerformanceInfo() (drugex.training.interfaces.TrainingMonitor method)</a>
 
       <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.savePerformanceInfo">(drugex.training.monitors.DictMonitor method)</a>
-</li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.savePerformanceInfo">(drugex.training.monitors.FileMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.NullMonitor.savePerformanceInfo">(drugex.training.monitors.NullMonitor method)</a>
@@ -1617,8 +1680,6 @@
       <li><a href="api/drugex.training.html#drugex.training.interfaces.TrainingMonitor.saveProgress">saveProgress() (drugex.training.interfaces.TrainingMonitor method)</a>
 
       <ul>
-        <li><a href="api/drugex.training.html#drugex.training.monitors.DictMonitor.saveProgress">(drugex.training.monitors.DictMonitor method)</a>
-</li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.FileMonitor.saveProgress">(drugex.training.monitors.FileMonitor method)</a>
 </li>
         <li><a href="api/drugex.training.html#drugex.training.monitors.NullMonitor.saveProgress">(drugex.training.monitors.NullMonitor method)</a>
@@ -1640,8 +1701,6 @@
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.scoring_functions">scoring_functions() (drugex.training.scorers.properties.Isomer method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.html#drugex.training.tests.TrainingTestCase.SEED">SEED (drugex.training.tests.TrainingTestCase attribute)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.interfaces.DataSet.sendDataToFile">sendDataToFile() (drugex.data.interfaces.DataSet method)</a>
@@ -1650,6 +1709,8 @@
 </li>
       <li><a href="api/drugex.html#drugex.dataset.SequenceDataset">SequenceDataset (class in drugex.dataset)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.explorers.html#drugex.training.explorers.sequence_explorer.SequenceExplorer">SequenceExplorer (class in drugex.training.explorers.sequence_explorer)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder">SequenceFragmentEncoder (class in drugex.data.fragments)</a>
@@ -1660,6 +1721,10 @@
 </li>
       <li><a href="api/drugex.data.corpus.html#drugex.data.corpus.interfaces.SequenceVocabulary">SequenceVocabulary (class in drugex.data.corpus.interfaces)</a>
 </li>
+      <li><a href="api/drugex.html#drugex.train.Reinforce.setExplorer">setExplorer() (drugex.train.Reinforce method)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.SetUpGenerator.setGeneratorAlgorithm">setGeneratorAlgorithm() (drugex.train.SetUpGenerator method)</a>
+</li>
       <li><a href="api/drugex.logs.html#drugex.logs.setLogger">setLogger() (in module drugex.logs)</a>
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.interfaces.Scorer.setModifier">setModifier() (drugex.training.scorers.interfaces.Scorer method)</a>
@@ -1667,6 +1732,8 @@
       <li><a href="api/drugex.html#drugex.dataset.FragmentDataset.setPairCollectors">setPairCollectors() (drugex.dataset.FragmentDataset method)</a>
 </li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TrainingTestCase.setUp">setUp() (drugex.training.tests.TrainingTestCase method)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.SetUpGenerator">SetUpGenerator (class in drugex.train)</a>
 </li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TrainingTestCase.setUpSmilesFragData">setUpSmilesFragData() (drugex.training.tests.TrainingTestCase method)</a>
 </li>
@@ -1679,6 +1746,8 @@
       <li><a href="api/drugex.molecules.html#drugex.molecules.mol.DrExMol.smiles">smiles (drugex.molecules.mol.DrExMol property)</a>
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.smiles.SmilesChecker">SmilesChecker (class in drugex.training.scorers.smiles)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.SmilesDataPreparation">SmilesDataPreparation (class in drugex.train)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.datasets.SmilesDataSet">SmilesDataSet (class in drugex.data.datasets)</a>
 </li>
@@ -1730,6 +1799,10 @@
 </li>
       <li><a href="api/drugex.data.html#drugex.data.tests.ProcessingTests.test_frag_suppliers">test_frag_suppliers() (drugex.data.tests.ProcessingTests method)</a>
 </li>
+      <li><a href="api/drugex.data.html#drugex.data.tests.ProcessingTests.test_fragmentation_with_selected_fragment">test_fragmentation_with_selected_fragment() (drugex.data.tests.ProcessingTests method)</a>
+</li>
+      <li><a href="api/drugex.training.html#drugex.training.tests.TestScorer.test_getScores">test_getScores() (drugex.training.tests.TestScorer method)</a>
+</li>
       <li><a href="api/drugex.data.html#drugex.data.tests.ProcessingTests.test_gragh_scaffold_encoding">test_gragh_scaffold_encoding() (drugex.data.tests.ProcessingTests method)</a>
 </li>
       <li><a href="api/drugex.data.html#drugex.data.tests.ProcessingTests.test_graph_frag_encoder">test_graph_frag_encoder() (drugex.data.tests.ProcessingTests method)</a>
@@ -1769,6 +1842,8 @@
       <li><a href="api/drugex.parallel.html#drugex.parallel.tests.TestFileParsers">TestFileParsers (class in drugex.parallel.tests)</a>
 </li>
       <li><a href="api/drugex.training.html#drugex.training.tests.TestModelMonitor">TestModelMonitor (class in drugex.training.tests)</a>
+</li>
+      <li><a href="api/drugex.training.html#drugex.training.tests.TestScorer">TestScorer (class in drugex.training.tests)</a>
 </li>
       <li><a href="api/drugex.molecules.converters.html#drugex.molecules.converters.tests.TestStandardizer">TestStandardizer (class in drugex.molecules.converters.tests)</a>
 </li>
@@ -1857,6 +1932,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/drugex.training.generators.html#drugex.training.generators.utils.unique">unique() (in module drugex.training.generators.utils)</a>
+</li>
+      <li><a href="api/drugex.html#drugex.train.FragGraphDataPreparation.unique_frags">unique_frags (drugex.train.FragGraphDataPreparation attribute)</a>
 </li>
       <li><a href="api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness">Uniqueness (class in drugex.training.scorers.properties)</a>
 </li>

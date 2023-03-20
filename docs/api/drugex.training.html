@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training package &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training package &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -63,8 +62,8 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -86,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">drugex</a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
       <li>drugex.training package</li>
       <li class="wy-breadcrumbs-aside">
@@ -127,7 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.interfaces">drugex.training.scorers.interfaces module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.modifiers">drugex.training.scorers.modifiers module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.properties">drugex.training.scorers.properties module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#drugex-training-scorers-qsprpred-module">drugex.training.scorers.qsprpred module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.qsprpred">drugex.training.scorers.qsprpred module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#drugex-training-scorers-ra-scorer-module">drugex.training.scorers.ra_scorer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.sascorer">drugex.training.scorers.sascorer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.similarity">drugex.training.scorers.similarity module</a></li>
@@ -460,16 +459,13 @@ On: 01.06.22, 11:29</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.interfaces.TrainingMonitor.savePerformanceInfo">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/interfaces.html#TrainingMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.interfaces.TrainingMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
-<dd><p>Save performance data.</p>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/interfaces.html#TrainingMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.interfaces.TrainingMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
+<dd><p>Save the performance data for the current epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The current loss.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
+<li><p><strong>performance_dict</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – A dictionary with the performance data.</p></li>
+<li><p><strong>df_smiles</strong> (<em>pd.DataFrame</em>) – A DataFrame with the SMILES of the molecules generated in the current epoch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -502,124 +498,9 @@ On: 01.06.22, 11:29</p>
 <p>Created by: Martin Sicho
 On: 02.06.22, 13:59</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.monitors.</span></span><span class="sig-name descname"><span class="pre">DictMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_after_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.changeEpoch">
-<span class="sig-name descname"><span class="pre">changeEpoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.changeEpoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.changeEpoch" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.changeStep">
-<span class="sig-name descname"><span class="pre">changeStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.changeStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.changeStep" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.endStep">
-<span class="sig-name descname"><span class="pre">endStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.endStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.endStep" title="Permalink to this definition"></a></dt>
-<dd><p>Notify the monitor that a step of the training has finished.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.getDict">
-<span class="sig-name descname"><span class="pre">getDict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.getDict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.getDict" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.getEpochSummary">
-<span class="sig-name descname"><span class="pre">getEpochSummary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.getEpochSummary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.getEpochSummary" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.getModel">
-<span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.getModel" title="Permalink to this definition"></a></dt>
-<dd><p>Return the current model as a <a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> instance or in serialized form.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The current model or its serialized form.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model">Model</a> or <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.getMoleculeSummary">
-<span class="sig-name descname"><span class="pre">getMoleculeSummary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.getMoleculeSummary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.getMoleculeSummary" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.saveEpochData">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saveEpochData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.saveEpochData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.saveEpochData" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.saveModel">
-<span class="sig-name descname"><span class="pre">saveModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.saveModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.saveModel" title="Permalink to this definition"></a></dt>
-<dd><p>Save the state dictionary of the <a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> instance currently being trained or serialize the model any other way.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><em>Model</em></a>) – The model to save.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.saveMolecules">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saveMolecules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.saveMolecules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.saveMolecules" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.savePerformanceInfo">
-<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
-<dd><p>Save performance data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The current loss.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="drugex.training.monitors.DictMonitor.saveProgress">
-<span class="sig-name descname"><span class="pre">saveProgress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#DictMonitor.saveProgress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.DictMonitor.saveProgress" title="Permalink to this definition"></a></dt>
-<dd><p>Notifies the monitor of the current progress of the training.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>total_steps</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The total number of training steps.</p></li>
-<li><p><strong>total_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The total number of epochs.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.monitors.</span></span><span class="sig-name descname"><span class="pre">FileMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_after_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#drugex.training.monitors.DictMonitor" title="drugex.training.monitors.DictMonitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DictMonitor</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.monitors.</span></span><span class="sig-name descname"><span class="pre">FileMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a></p>
 <p>A simple <a class="reference internal" href="#drugex.training.interfaces.TrainingMonitor" title="drugex.training.interfaces.TrainingMonitor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a> implementation with file outputs.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.appendTableToFile">
@@ -647,6 +528,20 @@ On: 02.06.22, 13:59</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.getModel">
+<span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.getModel" title="Permalink to this definition"></a></dt>
+<dd><p>Return the current model as a <a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> instance or in serialized form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The current model or its serialized form.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model">Model</a> or <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.saveEpochData">
 <span class="sig-name descname"><span class="pre">saveEpochData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.saveEpochData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.saveEpochData" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -654,12 +549,7 @@ On: 02.06.22, 13:59</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.saveModel">
 <span class="sig-name descname"><span class="pre">saveModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.saveModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.saveModel" title="Permalink to this definition"></a></dt>
-<dd><p>Save the state dictionary of the <a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> instance currently being trained or serialize the model any other way.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="#drugex.training.interfaces.Model" title="drugex.training.interfaces.Model"><em>Model</em></a>) – The model to save.</p>
-</dd>
-</dl>
+<dd><p>Save the model state.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -669,16 +559,13 @@ On: 02.06.22, 13:59</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.savePerformanceInfo">
-<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
-<dd><p>Save performance data.</p>
+<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
+<dd><p>Save the performance data for the current epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The current loss.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
+<li><p><strong>performance_dict</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – A dictionary with the performance data.</p></li>
+<li><p><strong>df_smiles</strong> (<em>pd.DataFrame</em>) – A DataFrame with the SMILES of the molecules generated in the current epoch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -686,17 +573,16 @@ On: 02.06.22, 13:59</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.FileMonitor.saveProgress">
-<span class="sig-name descname"><span class="pre">saveProgress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.saveProgress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.saveProgress" title="Permalink to this definition"></a></dt>
-<dd><p>Notifies the monitor of the current progress of the training.</p>
+<span class="sig-name descname"><span class="pre">saveProgress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#FileMonitor.saveProgress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.FileMonitor.saveProgress" title="Permalink to this definition"></a></dt>
+<dd><p>Save the current training progress: epoch, step, loss.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>total_steps</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The total number of training steps.</p></li>
-<li><p><strong>total_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The total number of epochs.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
+<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current step.</p></li>
+<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch.</p></li>
+<li><p><strong>total_steps</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of steps.</p></li>
+<li><p><strong>total_epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of epochs.</p></li>
+<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The current training loss.</p></li>
 </ul>
 </dd>
 </dl>
@@ -755,16 +641,13 @@ On: 02.06.22, 13:59</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.monitors.NullMonitor.savePerformanceInfo">
-<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#NullMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.NullMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
-<dd><p>Save performance data.</p>
+<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/monitors.html#NullMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.monitors.NullMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
+<dd><p>Save the performance data for the current epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The current loss.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
+<li><p><strong>performance_dict</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – A dictionary with the performance data.</p></li>
+<li><p><strong>df_smiles</strong> (<em>pd.DataFrame</em>) – A DataFrame with the SMILES of the molecules generated in the current epoch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -971,16 +854,13 @@ On: 31.05.22, 10:20</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.tests.TestModelMonitor.savePerformanceInfo">
-<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TestModelMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TestModelMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
-<dd><p>Save performance data.</p>
+<span class="sig-name descname"><span class="pre">savePerformanceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TestModelMonitor.savePerformanceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TestModelMonitor.savePerformanceInfo" title="Permalink to this definition"></a></dt>
+<dd><p>Save the performance data for the current epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current training step (i.e. batch).</p></li>
-<li><p><strong>current_epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The current epoch.</p></li>
-<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The current loss.</p></li>
-<li><p><strong>*args</strong> – Additional arguments depending on the model type.</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments depending on the model type.</p></li>
+<li><p><strong>performance_dict</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – A dictionary with the performance data.</p></li>
+<li><p><strong>df_smiles</strong> (<em>pd.DataFrame</em>) – A DataFrame with the SMILES of the molecules generated in the current epoch.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1003,6 +883,17 @@ On: 31.05.22, 10:20</p>
 </dd>
 </dl>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.training.tests.TestScorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.training.tests.</span></span><span class="sig-name descname"><span class="pre">TestScorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TestScorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TestScorer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.training.tests.TestScorer.test_getScores">
+<span class="sig-name descname"><span class="pre">test_getScores</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/tests.html#TestScorer.test_getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.tests.TestScorer.test_getScores" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1037,7 +928,7 @@ On: 31.05.22, 10:20</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.finetuning_file">
-<span class="sig-name descname"><span class="pre">finetuning_file</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/projects/DrugEx/drugex/training/test_data/A2AR_raw_small.txt'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.finetuning_file" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">finetuning_file</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/temp/DrugEx/drugex/training/test_data/A2AR_raw_small.txt'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.finetuning_file" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1108,12 +999,12 @@ On: 31.05.22, 10:20</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.pretraining_file">
-<span class="sig-name descname"><span class="pre">pretraining_file</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/projects/DrugEx/drugex/training/test_data/ZINC_raw_small.txt'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.pretraining_file" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pretraining_file</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/temp/DrugEx/drugex/training/test_data/ZINC_raw_small.txt'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.pretraining_file" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.scorers">
-<span class="sig-name descname"><span class="pre">scorers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[&lt;drugex.training.scorers.properties.Property</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;drugex.training.tests.MockScorer</span> <span class="pre">object&gt;]</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.scorers" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">scorers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[&lt;drugex.training.scorers.properties.Property</span> <span class="pre">object&gt;,</span> <span class="pre">&lt;drugex.training.scorers.qsprpred.QSPRPredScorer</span> <span class="pre">object&gt;]</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.scorers" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1155,7 +1046,7 @@ On: 31.05.22, 10:20</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="drugex.training.tests.TrainingTestCase.test_data_dir">
-<span class="sig-name descname"><span class="pre">test_data_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/projects/DrugEx/drugex/training/test_data'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.test_data_dir" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">test_data_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/sichom/temp/DrugEx/drugex/training/test_data'</span></em><a class="headerlink" href="#drugex.training.tests.TrainingTestCase.test_data_dir" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

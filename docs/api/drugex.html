@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex package &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex package &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="drugex.data package" href="drugex.data.html" />
-    <link rel="prev" title="drugex" href="modules.html" /> 
+    <link rel="prev" title="DrugEx Python API" href="modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,7 +31,7 @@
             <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">drugex package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -63,8 +62,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-drugex.dataset">drugex.dataset module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#drugex-designer-module">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#drugex-download-module">drugex.download module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#drugex-train-module">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -86,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">drugex</a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
       <li>drugex package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
@@ -189,7 +188,7 @@
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.interfaces">drugex.training.scorers.interfaces module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.modifiers">drugex.training.scorers.modifiers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.properties">drugex.training.scorers.properties module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#drugex-training-scorers-qsprpred-module">drugex.training.scorers.qsprpred module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.qsprpred">drugex.training.scorers.qsprpred module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#drugex-training-scorers-ra-scorer-module">drugex.training.scorers.ra_scorer module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.sascorer">drugex.training.scorers.sascorer module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="drugex.training.scorers.html#module-drugex.training.scorers.similarity">drugex.training.scorers.similarity module</a></li>
@@ -309,11 +308,319 @@ On: 24.06.22, 10:36</p>
 <section id="drugex-designer-module">
 <h2>drugex.designer module<a class="headerlink" href="#drugex-designer-module" title="Permalink to this heading"></a></h2>
 </section>
-<section id="drugex-download-module">
-<h2>drugex.download module<a class="headerlink" href="#drugex-download-module" title="Permalink to this heading"></a></h2>
+<section id="module-drugex.download">
+<span id="drugex-download-module"></span><h2>drugex.download module<a class="headerlink" href="#module-drugex.download" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.download.DownloadArgParser">
+<span class="sig-prename descclassname"><span class="pre">drugex.download.</span></span><span class="sig-name descname"><span class="pre">DownloadArgParser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/download.html#DownloadArgParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.download.DownloadArgParser" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.download.DownloadTutorial">
+<span class="sig-prename descclassname"><span class="pre">drugex.download.</span></span><span class="sig-name descname"><span class="pre">DownloadTutorial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/download.html#DownloadTutorial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.download.DownloadTutorial" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="drugex-train-module">
-<h2>drugex.train module<a class="headerlink" href="#drugex-train-module" title="Permalink to this heading"></a></h2>
+<section id="module-drugex.train">
+<span id="drugex-train-module"></span><h2>drugex.train module<a class="headerlink" href="#module-drugex.train" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.train.CreateEnvironment">
+<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateEnvironment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">140]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ECFP6'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_tw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">1.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[4,</span> <span class="pre">6]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateEnvironment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateEnvironment" title="Permalink to this definition"></a></dt>
+<dd><p>Sets up the objectives of the desirability function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – folder containing ‘qspr’ folder with saved environment-predictor models</p></li>
+<li><p><strong>predictor</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – environment-predictor algoritm</p></li>
+<li><p><strong>task</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – environment-predictor task: ‘REG’ or ‘CLS’</p></li>
+<li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – optimization scheme: ‘WS’ for weighted sum, ‘PRTD’ for Pareto ranking with Tanimoto distance or ‘PRCD’ for Pareto ranking with crowding distance.</p></li>
+<li><p><strong>active_targets</strong> (<em>lst</em>) – list of active target IDs</p></li>
+<li><p><strong>inactive_targets</strong> (<em>lst</em>) – list of inactive target IDs</p></li>
+<li><p><strong>window_targets</strong> (<em>lst</em>) – list of target IDs for selectivity window</p></li>
+<li><p><strong>activity_threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – activity threshold in case of ‘CLS’</p></li>
+<li><p><strong>qed</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, ‘quantitative estimate of drug-likeness’ included in the desirability function</p></li>
+<li><p><strong>unique</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if Trye, molecule uniqueness in an epoch included in the desirability function</p></li>
+<li><p><strong>ra_score</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, ‘Retrosythesis Accessibility score’ included in the desirability function</p></li>
+<li><p><strong>mw</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, large molecules are penalized in the desirability function</p></li>
+<li><p><strong>mw_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – molecular weight thresholds to penalize large molecules</p></li>
+<li><p><strong>logP</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, molecules with logP values are penalized in the desirability function</p></li>
+<li><p><strong>logP_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – logP thresholds to penalize large molecules</p></li>
+<li><p><strong>tpsa</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, tpsa used in the desirability function</p></li>
+<li><p><strong>tpsa_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – tpsa thresholds</p></li>
+<li><p><strong>sim_smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – reference molecules used for similarity calculation</p></li>
+<li><p><strong>sim_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – type of fingerprint or ‘graph’ used for similarity calculation</p></li>
+<li><p><strong>sim_th</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – threshold for similarity desirability</p></li>
+<li><p><strong>sim_tw</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – tversky similarity weights</p></li>
+<li><p><strong>le</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, ligand efficiency used instead of activity for active targets in the desirability function</p></li>
+<li><p><strong>le_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – ligand efficiency thresholds</p></li>
+<li><p><strong>lipe</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – if True, lipophilic efficiency used instead of activity for active targets in the desirability function</p></li>
+<li><p><strong>lipe_ths</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – lipophilic efficiency thresholds</p></li>
+<li><p><strong>log</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – log instance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>environment-predictor model</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment" title="drugex.training.environment.DrugExEnvironment">DrugExEnvironment</a> (torch model)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.DataPreparation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">DataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#DataPreparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.DataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for preparing data for training and testing from input files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
+<li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
+<li><p><strong>voc_files</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – List of vocabulary file names.</p></li>
+<li><p><strong>input</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of input file or prefix of input files.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Batch size.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of samples.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.DataPreparation.getDataPaths">
+<span class="sig-name descname"><span class="pre">getDataPaths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#DataPreparation.getDataPaths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.DataPreparation.getDataPaths" title="Permalink to this definition"></a></dt>
+<dd><p>Get paths to training and test data files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Paths to training and test data files.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a>, <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.DataPreparation.getVocPaths">
+<span class="sig-name descname"><span class="pre">getVocPaths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#DataPreparation.getVocPaths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.DataPreparation.getVocPaths" title="Permalink to this definition"></a></dt>
+<dd><p>Get paths to vocabulary files. If none are found, use internal defaults.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of paths to vocabulary files.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.Finetune">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">Finetune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#Finetune"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.Finetune" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.SetUpGenerator" title="drugex.train.SetUpGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetUpGenerator</span></code></a></p>
+<p>Finetune generator</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.FragGraphDataPreparation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">FragGraphDataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#FragGraphDataPreparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.FragGraphDataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
+<p>Data preprocessing for graph-based fragment generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
+<li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
+<li><p><strong>voc_files</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – List of vocabulary file names.</p></li>
+<li><p><strong>input</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of input file or prefix of input files.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Batch size.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of samples.</p></li>
+<li><p><strong>unique_frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, only unique fragments are used for training.</p></li>
+<li><p><strong>mol_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Type of molecule representation: ‘graph’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="drugex.train.FragGraphDataPreparation.unique_frags">
+<span class="sig-name descname"><span class="pre">unique_frags</span></span><a class="headerlink" href="#drugex.train.FragGraphDataPreparation.unique_frags" title="Permalink to this definition"></a></dt>
+<dd><p>param base_dir: Path to base directory.
+:type base_dir: str
+:param voc_files: List of vocabulary file names.
+:type voc_files: list
+:param input: Name of input file or prefix of input files.
+:type input: str
+:param batch_size: Batch size.
+:type batch_size: int
+:param n_samples: Number of samples.
+:type n_samples: int
+:param unique_frags: If True, only unique fragments are used for training.
+:type unique_frags: bool</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.FragSmilesDataPreparation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">FragSmilesDataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#FragSmilesDataPreparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.FragSmilesDataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
+<p>Data preprocessing for SMILES-based fragment generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
+<li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
+<li><p><strong>voc_files</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – List of vocabulary file names.</p></li>
+<li><p><strong>input</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of input file or prefix of input files.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Batch size.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of samples.</p></li>
+<li><p><strong>unique_frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, only unique fragments are used for training.</p></li>
+<li><p><strong>mol_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Type of molecule representation: ‘smiles’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.train.GeneratorArgParser">
+<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">GeneratorArgParser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#GeneratorArgParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.GeneratorArgParser" title="Permalink to this definition"></a></dt>
+<dd><p>Define and read command line arguments</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.Pretrain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">Pretrain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#Pretrain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.Pretrain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.SetUpGenerator" title="drugex.train.SetUpGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetUpGenerator</span></code></a></p>
+<p>Pretrain generator</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.Reinforce">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">Reinforce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#Reinforce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.Reinforce" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.SetUpGenerator" title="drugex.train.SetUpGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetUpGenerator</span></code></a></p>
+<p>Train generator with reinforcement learning</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.Reinforce.setExplorer">
+<span class="sig-name descname"><span class="pre">setExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#Reinforce.setExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.Reinforce.setExplorer" title="Permalink to this definition"></a></dt>
+<dd><p>Set explorer algorithm and parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object to be fitted</p></li>
+<li><p><strong>prior</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object to be used as prior</p></li>
+<li><p><strong>env</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Environment object to score molecules</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>explorer</strong> – DrugEx Explorer object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.SetUpGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">SetUpGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Set up generator object for training or molecule generation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.SetUpGenerator.loadStatesFromFile">
+<span class="sig-name descname"><span class="pre">loadStatesFromFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.loadStatesFromFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.loadStatesFromFile" title="Permalink to this definition"></a></dt>
+<dd><p>Load pretrained weights from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generator</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object</p></li>
+<li><p><strong>generator_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to pretrained weights</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>generator</strong> – DrugEx Generator object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.SetUpGenerator.prepareInputs">
+<span class="sig-name descname"><span class="pre">prepareInputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.prepareInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.prepareInputs" title="Permalink to this definition"></a></dt>
+<dd><p>Prepare inputs for training or molecule generation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Vocabulary, training data loader, and test data loader.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary">Vocabulary</a>, DataLoader, DataLoader]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.train.SetUpGenerator.setGeneratorAlgorithm">
+<span class="sig-name descname"><span class="pre">setGeneratorAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.setGeneratorAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.setGeneratorAlgorithm" title="Permalink to this definition"></a></dt>
+<dd><p>Set generator algorithm based on molecule type and generator algorithm type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>voc</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – Vocabulary object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>generator</strong> – DrugEx Generator object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="drugex.train.SmilesDataPreparation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">SmilesDataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voc_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SmilesDataPreparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SmilesDataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
+<p>Data preprocessing for SMILES-based molecule generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
+<li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
+<li><p><strong>voc_files</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – List of vocabulary file names.</p></li>
+<li><p><strong>input</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of input file or prefix of input files.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Batch size.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of samples.</p></li>
+<li><p><strong>unique_frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If True, only unique fragments are used for training.</p></li>
+<li><p><strong>mol_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Type of molecule representation: ‘smiles’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.train.getModifiers">
+<span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">getModifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#getModifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.getModifiers" title="Permalink to this definition"></a></dt>
+<dd><p>Gets the modifiers for a given task, scheme and activity threshold combination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The task to get the modifiers for.</p></li>
+<li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The scheme to get the modifiers for.</p></li>
+<li><p><strong>activity_threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The activity threshold to use for the modifiers when relevant.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The active modifiers for the given task.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-drugex">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-drugex" title="Permalink to this heading"></a></h2>
@@ -327,7 +634,7 @@ On: 06.04.22, 16:51</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modules.html" class="btn btn-neutral float-left" title="drugex" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="DrugEx Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="drugex.data.html" class="btn btn-neutral float-right" title="drugex.data package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

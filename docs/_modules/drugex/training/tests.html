@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.tests &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.tests &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -79,6 +78,8 @@
 <span class="sd">Created by: Martin Sicho</span>
 <span class="sd">On: 31.05.22, 10:20</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
@@ -86,6 +87,8 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.corpus</span> <span class="kn">import</span> <span class="n">SequenceCorpus</span>
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">VocSmiles</span>
 <span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="p">(</span><span class="n">GraphFragDataSet</span><span class="p">,</span> <span class="n">SmilesDataSet</span><span class="p">,</span>
@@ -104,7 +107,7 @@
                                         <span class="n">SequenceTransformer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">drugex.training.interfaces</span> <span class="kn">import</span> <span class="n">TrainingMonitor</span>
 <span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">FileMonitor</span>
-<span class="kn">from</span> <span class="nn">drugex.training.rewards</span> <span class="kn">import</span> <span class="n">ParetoTanimotoDistance</span>
+<span class="kn">from</span> <span class="nn">drugex.training.rewards</span> <span class="kn">import</span> <span class="n">ParetoCrowdingDistance</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.interfaces</span> <span class="kn">import</span> <span class="n">Scorer</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.modifiers</span> <span class="kn">import</span> <span class="n">ClippedScore</span>
 <span class="kn">from</span> <span class="nn">drugex.training.scorers.properties</span> <span class="kn">import</span> <span class="n">Property</span>
@@ -122,7 +125,7 @@
             <span class="s1">&#39;close&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">submonitors</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">FileMonitor</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">FileMonitor</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">save_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">submonitors</span> <span class="k">else</span> <span class="n">submonitors</span>
 
 <div class="viewcode-block" id="TestModelMonitor.passToSubmonitors"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestModelMonitor.passToSubmonitors">[docs]</a>    <span class="k">def</span> <span class="nf">passToSubmonitors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -136,19 +139,24 @@
 
 <div class="viewcode-block" id="TestModelMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestModelMonitor.saveProgress">[docs]</a>    <span class="k">def</span> <span class="nf">saveProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Test Progress Monitor:&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">total_epochs</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+            <span class="s1">&#39;current_step&#39;</span> <span class="p">:</span> <span class="n">current_step</span><span class="p">,</span>
+            <span class="s1">&#39;current_epoch&#39;</span> <span class="p">:</span> <span class="n">current_epoch</span><span class="p">,</span>
+            <span class="s1">&#39;total_steps&#39;</span> <span class="p">:</span> <span class="n">total_steps</span><span class="p">,</span>
+            <span class="s1">&#39;total_epochs&#39;</span> <span class="p">:</span> <span class="n">total_epochs</span><span class="p">,</span>
+        <span class="p">},</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Args:&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Kwargs:&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="p">[</span><span class="s1">&#39;progress&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">passToSubmonitors</span><span class="p">(</span><span class="s1">&#39;saveProgress&#39;</span><span class="p">,</span> <span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">total_epochs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestModelMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestModelMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TestModelMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestModelMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">performance_dict</span><span class="p">,</span> <span class="n">df_smiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Test Performance Monitor:&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">performance_dict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="p">[</span><span class="s1">&#39;performance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">passToSubmonitors</span><span class="p">(</span><span class="s1">&#39;savePerformanceInfo&#39;</span><span class="p">,</span> <span class="n">current_step</span><span class="p">,</span> <span class="n">current_epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">passToSubmonitors</span><span class="p">(</span><span class="s1">&#39;savePerformanceInfo&#39;</span><span class="p">,</span> <span class="n">performance_dict</span><span class="p">,</span> <span class="n">df_smiles</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestModelMonitor.endStep"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestModelMonitor.endStep">[docs]</a>    <span class="k">def</span> <span class="nf">endStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished step </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> of epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -179,13 +187,29 @@
 
 <div class="viewcode-block" id="getPredictor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.getPredictor">[docs]</a><span class="k">def</span> <span class="nf">getPredictor</span><span class="p">():</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">qsprpred.scorers.predictor</span> <span class="kn">import</span> <span class="n">Predictor</span> <span class="k">as</span> <span class="n">QSPRPredpredictor</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">QSPRPredpredictor</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;test_data&quot;</span><span class="p">),</span> <span class="s1">&#39;RF&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;P29274&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;CLS&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;P29274&#39;</span><span class="p">,</span>
-            <span class="n">modifier</span><span class="o">=</span><span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">qsprpred.models.models</span> <span class="kn">import</span> <span class="n">QSPRModel</span>
+        <span class="kn">from</span> <span class="nn">drugex.training.scorers.qsprpred</span> <span class="kn">import</span> <span class="n">QSPRPredScorer</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">QSPRModel</span><span class="o">.</span><span class="n">fromFile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json&quot;</span><span class="p">))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">QSPRPredScorer</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">MockScorer</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="TestScorer"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestScorer">[docs]</a><span class="k">class</span> <span class="nc">TestScorer</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestScorer.test_getScores"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TestScorer.test_getScores">[docs]</a>    <span class="k">def</span> <span class="nf">test_getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">scorer</span> <span class="o">=</span> <span class="n">getPredictor</span><span class="p">()</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;CC&quot;</span><span class="p">]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">]))</span>
+
+        <span class="n">mols</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">),</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CC&quot;</span><span class="p">)]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">]))</span></div></div>
+
+        <span class="c1"># TODO: check with empty and invalid molecules as well</span>
 
 <div class="viewcode-block" id="TrainingTestCase"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase">[docs]</a><span class="k">class</span> <span class="nc">TrainingTestCase</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
 
@@ -228,7 +252,7 @@
 <span class="sd">        DrugExEnvironment</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">scheme</span> <span class="o">=</span> <span class="n">ParetoTanimotoDistance</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span> <span class="k">else</span> <span class="n">scheme</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">ParetoCrowdingDistance</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span> <span class="k">else</span> <span class="n">scheme</span>
         <span class="k">return</span> <span class="n">DrugExEnvironment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scorers</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span> <span class="n">reward_scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TrainingTestCase.getSmiles"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.tests.TrainingTestCase.getSmiles">[docs]</a>    <span class="k">def</span> <span class="nf">getSmiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_file</span><span class="p">):</span>

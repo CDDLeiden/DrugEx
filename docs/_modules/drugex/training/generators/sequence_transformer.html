@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.generators.sequence_transformer &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.training.generators.sequence_transformer &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -76,7 +75,6 @@
 <span></span><span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
@@ -257,8 +255,7 @@
             <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
             <span class="n">current_step</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">epochs</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">savePerformanceInfo</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">saveProgress</span><span class="p">(</span><span class="n">current_step</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
 
         <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
 
@@ -296,7 +293,7 @@
         <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Iterating over validation batches&#39;</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">pbar</span><span class="p">)</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
-        <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Smiles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smiles</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smiles</span>
         <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;Frags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frags</span>
         <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;valid_ratio&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">Valid</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
         <span class="n">valid_metrics</span><span class="p">[</span><span class="s1">&#39;accurate_ratio&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">Accurate</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -364,70 +361,14 @@
         <span class="n">loader</span> <span class="o">=</span> <span class="n">out_data</span><span class="o">.</span><span class="n">asDataLoader</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">loader</span></div>
+<div class="viewcode-block" id="SequenceTransformer.decodeLoaders"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.decodeLoaders">[docs]</a>    <span class="k">def</span> <span class="nf">decodeLoaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">trg</span><span class="p">):</span>
+        <span class="n">new_smiles</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_trg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">trg</span><span class="p">]</span>
+        <span class="n">new_frags</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_trg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_frags</span><span class="p">,</span> <span class="n">new_smiles</span></div>
 
-<div class="viewcode-block" id="SequenceTransformer.generate"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_frags</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">input_loader</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">keep_frags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-                <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_undesired</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">raw_scores</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compute_desirability</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tqdm_kwargs</span><span class="o">=</span><span class="p">{}):</span>
-
-        <span class="k">if</span> <span class="n">input_loader</span> <span class="ow">and</span> <span class="n">input_frags</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only one of input_loader and input_frags can be provided&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="n">input_loader</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">input_frags</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either input_loader or input_frags must be provided&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">input_frags</span><span class="p">:</span>
-            <span class="c1"># Create a dataloader object from the input fragments</span>
-            <span class="n">loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaderFromFrags</span><span class="p">(</span><span class="n">input_frags</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="n">n_proc</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">loader</span> <span class="o">=</span> <span class="n">input_loader</span>
-
-        <span class="c1"># Duplicate of self.sample to allow dropping molecules and progress bar on the fly</span>
-        <span class="c1"># without additional overhead caused by calling nn.DataParallel a few times</span>
-        <span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gpus</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
-            <span class="n">tqdm_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;total&#39;</span><span class="p">:</span> <span class="n">num_samples</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">:</span> <span class="s1">&#39;Generating molecules&#39;</span><span class="p">})</span>
-            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="o">**</span><span class="n">tqdm_kwargs</span><span class="p">)</span>
-
-        <span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-        <span class="k">while</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">smiles</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">num_samples</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-                <span class="n">src</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">loader</span><span class="p">))</span>
-                <span class="n">trg</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-                <span class="n">new_smiles</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_trg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">trg</span><span class="p">]</span>
-                <span class="n">new_frags</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_trg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src</span><span class="p">]</span>
-
-                <span class="c1"># If drop_invalid is True, invalid (and inaccurate) SMILES are dropped</span>
-                <span class="c1"># valid molecules are canonicalized and optionally extra filtering is applied</span>
-                <span class="c1"># else invalid molecules are kept and no filtering is applied</span>
-                <span class="k">if</span> <span class="n">drop_invalid</span><span class="p">:</span>
-                    <span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filterNewMolecules</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">new_smiles</span><span class="p">,</span> <span class="n">new_frags</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="n">drop_duplicates</span><span class="p">,</span> 
-                                                              <span class="n">drop_undesired</span><span class="o">=</span><span class="n">drop_undesired</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span>
-
-                <span class="c1"># Update list of smiles and frags</span>
-                <span class="n">smiles</span> <span class="o">+=</span> <span class="n">new_smiles</span>
-                <span class="n">frags</span> <span class="o">+=</span> <span class="n">new_frags</span>
-                
-                <span class="c1"># Update progress bar</span>
-                <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
-                    <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span> <span class="k">if</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_smiles</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">num_samples</span> <span class="k">else</span> <span class="n">num_samples</span> <span class="o">-</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
-                
-        <span class="k">if</span> <span class="n">progress</span><span class="p">:</span>
-            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        
-        <span class="n">smiles</span> <span class="o">=</span> <span class="n">smiles</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">]</span>
-        <span class="n">frags</span> <span class="o">=</span> <span class="n">frags</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">]</span>
-
-        <span class="c1"># Post-processing</span>
-        <span class="n">df_smiles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;SMILES&#39;</span><span class="p">:</span> <span class="n">smiles</span><span class="p">,</span> <span class="s1">&#39;Frags&#39;</span><span class="p">:</span> <span class="n">frags</span><span class="p">})</span>
-
-        <span class="k">if</span> <span class="n">compute_desirability</span><span class="p">:</span>
-            <span class="n">df_smiles</span><span class="p">[</span><span class="s1">&#39;Desired&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">)</span><span class="o">.</span><span class="n">Desired</span>
-        <span class="k">if</span> <span class="n">raw_scores</span><span class="p">:</span>
-            <span class="n">df_smiles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_smiles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="n">no_multifrag_smiles</span><span class="p">,</span> <span class="n">unmodified_scores</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_frags</span><span class="p">:</span>
-            <span class="n">df_smiles</span> <span class="o">=</span> <span class="n">df_smiles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Frags&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">df_smiles</span></div></div>
+<div class="viewcode-block" id="SequenceTransformer.iterLoader"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.sequence_transformer.SequenceTransformer.iterLoader">[docs]</a>    <span class="k">def</span> <span class="nf">iterLoader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">src</span></div></div>
 
 </pre></div>
 

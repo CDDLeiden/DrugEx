@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.tests &mdash; DrugEx 3.4.0 documentation</title>
+  <title>drugex.data.tests &mdash; DrugEx 3.4.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.0
+                v3.4.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -44,8 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-options">CLI Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
 </ul>
 
         </div>
@@ -83,6 +82,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
 
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.corpus</span> <span class="kn">import</span> <span class="n">SequenceCorpus</span>
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocSmiles</span><span class="p">,</span> <span class="n">VocGraph</span>
@@ -90,7 +90,7 @@
     <span class="n">FragmentPairsSplitter</span><span class="p">,</span> <span class="n">FragmentPairsSupplier</span><span class="p">,</span> <span class="n">FragmentCorpusEncoder</span>
 <span class="kn">from</span> <span class="nn">drugex.data.processing</span> <span class="kn">import</span> <span class="n">Standardization</span><span class="p">,</span> <span class="n">CorpusEncoder</span>
 <span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="n">SmilesDataSet</span><span class="p">,</span> <span class="n">SmilesFragDataSet</span><span class="p">,</span> <span class="n">GraphFragDataSet</span>
-<span class="kn">from</span> <span class="nn">drugex.molecules.converters.fragmenters</span> <span class="kn">import</span> <span class="n">Fragmenter</span>
+<span class="kn">from</span> <span class="nn">drugex.molecules.converters.fragmenters</span> <span class="kn">import</span> <span class="n">Fragmenter</span><span class="p">,</span> <span class="n">FragmenterWithSelectedFragment</span>
 <span class="kn">from</span> <span class="nn">drugex.molecules.converters.standardizers</span> <span class="kn">import</span> <span class="n">DefaultStandardizer</span>
 <span class="kn">from</span> <span class="nn">drugex.molecules.converters.dummy_molecules</span> <span class="kn">import</span> <span class="n">dummyMolsFromFragments</span>
 <span class="kn">from</span> <span class="nn">drugex.parallel.evaluator</span> <span class="kn">import</span> <span class="n">ParallelSupplierEvaluator</span>
@@ -194,6 +194,37 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">mol</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">)</span>
 
         <span class="n">standardizer</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">originals</span><span class="p">,</span> <span class="n">collect</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProcessingTests.test_fragmentation_with_selected_fragment"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_fragmentation_with_selected_fragment">[docs]</a>    <span class="k">def</span> <span class="nf">test_fragmentation_with_selected_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">frag</span> <span class="o">=</span> <span class="s1">&#39;c1cnccn1&#39;</span>
+        <span class="n">mols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">()))</span>
+        <span class="n">mols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;C1=NC(=CN=C1COCC)CCCCC2CCCC2&#39;</span><span class="p">)</span> <span class="c1"># molecule containing the fragment</span>
+
+        <span class="c1"># Without exclusivity</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fragmenter</span><span class="o">=</span><span class="n">FragmenterWithSelectedFragment</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;brics&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mols</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">fragmenter</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">frags</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">frag</span><span class="p">)))</span>
+        
+        <span class="c1"># With exclusivity</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fragmenter</span><span class="o">=</span><span class="n">FragmenterWithSelectedFragment</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;brics&#39;</span><span class="p">,</span> <span class="n">exclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mols</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">fragmenter</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">frags</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frags</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">CanonSmiles</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="n">Chem</span><span class="o">.</span><span class="n">CanonSmiles</span><span class="p">(</span><span class="n">frag</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="ProcessingTests.test_smiles_encoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_encoder">[docs]</a>    <span class="k">def</span> <span class="nf">test_smiles_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">mols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTestMols</span><span class="p">()</span>
