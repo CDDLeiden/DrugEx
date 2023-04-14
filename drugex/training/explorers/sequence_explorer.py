@@ -125,17 +125,16 @@ class SequenceExplorer(Explorer):
         
         return loss.item()
  
-    def fit(self, train_loader, valid_loader=None, monitor=None, epochs=1000, patience=50, reload_interval = 50, criteria='desired_ratio', min_epochs=100):
-        
+    def fit(self, train_loader=None, valid_loader=None, monitor=None, epochs=1000, patience=50, reload_interval = 50, criteria='desired_ratio', min_epochs=100):
         """
         Fit the graph explorer to the training data.
         
         Parameters
         ----------
         train_loader : torch.utils.data.DataLoader
-            Data loader for training data
+            ignored, for compatibility with `GraphExplorer`
         valid_loader : torch.utils.data.DataLoader
-            Data loader for validation data
+            ignored, for compatibility with `GraphExplorer`
         epochs : int
             Number of epochs to train for
         patience : int
