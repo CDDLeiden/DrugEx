@@ -24,7 +24,7 @@ class SequenceExplorer(Explorer):
     """
 
     def __init__(self, agent, env, mutate=None, crover=None, no_multifrag_smiles=True,
-        batch_size=128, epsilon=0.1, beta=0.0, n_samples=128, optim=None,
+        batch_size=128, epsilon=0.1, beta=0.0, n_samples=1000, optim=None,
         device=DEFAULT_DEVICE, use_gpus=DEFAULT_GPUS):
         super(SequenceExplorer, self).__init__(agent, env, mutate, crover, no_multifrag_smiles, batch_size, epsilon, beta, n_samples, device, use_gpus)
         """
@@ -57,13 +57,12 @@ class SequenceExplorer(Explorer):
         """
 
         if self.nSamples <= 0:
-            self.nSamples = 128
-        self.repeats_per_epoch = 10
+            self.nSamples = 1000
         self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3) if optim is None else optim
 
     def forward(self):
         """
-        Generate molecules with the given `agent` network.
+        Generate molecules with the given `agent` network
 
         Returns
         -------
@@ -72,11 +71,16 @@ class SequenceExplorer(Explorer):
         seqs : torch.Tensor
             The generated encoded sequences.
         """
-    
+
+        # Generate nSamples molecules
         seqs = []
-        for _ in range(self.repeats_per_epoch):
+        while len(seqs) < range(self.nSamples):
             seq = self.agent.evolve(self.batchSize, epsilon=self.epsilon, crover=self.crover, mutate=self.mutate)
             seqs.append(seq)
+        if len(seqs) > self.nSamples:
+            seqs = seqs[:self.nSamples]
+            
+        # Decode the sequences to SMILES
         seqs = torch.cat(seqs, dim=0)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
         ix = unique(np.array([[s] for s in smiles]))
@@ -109,7 +113,7 @@ class SequenceExplorer(Explorer):
 
         # Move rewards to device and create a loader containing the sequences and the rewards
         ds = TensorDataset(seqs, torch.Tensor(reward).to(self.device))
-        loader = DataLoader(ds, batch_size=self.nSamples, shuffle=True)
+        loader = DataLoader(ds, batch_size=self.batch_size, shuffle=True)
         total_steps = len(loader)
 
         # Train model with policy gradient
@@ -160,14 +164,14 @@ class SequenceExplorer(Explorer):
             smiles, seqs = self.forward()
             train_loss = self.policy_gradient(smiles, seqs)
 
-            # Evaluate the model on the validation set
-            smiles = self.agent.sample(self.nSamples)
+            # Evaluate the model on a validation set, which is 10% of the size of training set
+            smiles = self.agent.sample(int(np.round(self.nSamples)/10))
             scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
-            scores['SMILES'] =  smiles           
+            scores['SMILES'] =  smiles       
 
             # Compute metrics
             metrics = self.getNovelMoleculeMetrics(scores)       
-            metrics['loss_train'] = train_loss  
+            metrics['loss_train'] = train_loss
 
             # Save evaluate criteria and save best model
             if metrics[criteria] > self.best_value:
