@@ -41,13 +41,13 @@ class SequenceExplorer(Explorer):
         no_multifrag_smiles : bool
             If True, only single-fragment SMILES are valid.
         batch_size : int
-            The number of molecules generated in each iteration.
+            The batch size for the policy gradient update.
         epsilon : float
             The probability of using the `mutate` network to generate molecules.
         beta : float
             The baseline for the reward.
         n_samples : int
-            The batch size for the policy gradient update.
+            The number of molecules generated in each iteration. (+ an additional 10% for evaluation)
         optim : torch.optim
             The optimizer to update the agent network.
         device : torch.device
