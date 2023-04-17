@@ -74,7 +74,7 @@ class SequenceExplorer(Explorer):
 
         # Generate nSamples molecules
         seqs = []
-        while len(seqs) < range(self.nSamples):
+        while len(seqs) < self.nSamples:
             seq = self.agent.evolve(self.batchSize, epsilon=self.epsilon, crover=self.crover, mutate=self.mutate)
             seqs.append(seq)
         if len(seqs) > self.nSamples:
