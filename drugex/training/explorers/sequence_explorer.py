@@ -55,7 +55,6 @@ class SequenceExplorer(Explorer):
         use_gpus : tuple
             The GPU ids to run the network.
         """
-
         if self.nSamples <= 0:
             self.nSamples = 1000
         self.optim = torch.optim.Adam(self.agent.parameters(), lr=1e-3) if optim is None else optim
@@ -113,7 +112,7 @@ class SequenceExplorer(Explorer):
 
         # Move rewards to device and create a loader containing the sequences and the rewards
         ds = TensorDataset(seqs, torch.Tensor(reward).to(self.device))
-        loader = DataLoader(ds, batch_size=self.batch_size, shuffle=True)
+        loader = DataLoader(ds, batch_size=self.batchSize, shuffle=True)
         total_steps = len(loader)
 
         # Train model with policy gradient
