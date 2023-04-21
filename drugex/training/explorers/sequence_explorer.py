@@ -135,7 +135,7 @@ class SequenceExplorer(Explorer):
         Parameters
         ----------
         train_loader : torch.utils.data.DataLoader
-            ignored, for compatibility with `GraphExplorer`
+            ignored, for compatibility with `FragExplorer`
         valid_loader : torch.utils.data.DataLoader
             ignored, for compatibility with `FragExplorer`
         epochs : int
