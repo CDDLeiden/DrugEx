@@ -137,7 +137,7 @@ class SequenceExplorer(Explorer):
         train_loader : torch.utils.data.DataLoader
             ignored, for compatibility with `GraphExplorer`
         valid_loader : torch.utils.data.DataLoader
-            ignored, for compatibility with `GraphExplorer`
+            ignored, for compatibility with `FragExplorer`
         epochs : int
             Number of epochs to train for
         patience : int
