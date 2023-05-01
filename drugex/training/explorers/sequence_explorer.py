@@ -73,14 +73,12 @@ class SequenceExplorer(Explorer):
 
         # Generate nSamples molecules
         seqs = []
-        while len(seqs) < self.nSamples:
+        while (len(seqs)*self.batchSize) < self.nSamples:
             seq = self.agent.evolve(self.batchSize, epsilon=self.epsilon, crover=self.crover, mutate=self.mutate)
             seqs.append(seq)
-        if len(seqs) > self.nSamples:
-            seqs = seqs[:self.nSamples]
+        seqs = torch.cat(seqs, dim=0)[:self.nSamples, :]
             
         # Decode the sequences to SMILES
-        seqs = torch.cat(seqs, dim=0)
         smiles = np.array([self.agent.voc.decode(s, is_tk = False) for s in seqs])
         ix = unique(np.array([[s] for s in smiles]))
         smiles = smiles[ix]

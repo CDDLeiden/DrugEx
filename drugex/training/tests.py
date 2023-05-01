@@ -13,30 +13,40 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from rdkit import Chem
-
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
-from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
-                                  SmilesFragDataSet)
-from drugex.data.fragments import (FragmentCorpusEncoder,
-                                   FragmentPairsSplitter, GraphFragmentEncoder,
-                                   SequenceFragmentEncoder)
-from drugex.data.processing import (CorpusEncoder, RandomTrainTestSplitter,
-                                    Standardization)
+from drugex.data.datasets import GraphFragDataSet, SmilesDataSet, SmilesFragDataSet
+from drugex.data.fragments import (
+    FragmentCorpusEncoder,
+    FragmentPairsSplitter,
+    GraphFragmentEncoder,
+    SequenceFragmentEncoder,
+)
+from drugex.data.processing import (
+    CorpusEncoder,
+    RandomTrainTestSplitter,
+    Standardization,
+)
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
 from drugex.molecules.converters.fragmenters import Fragmenter
 from drugex.training.environment import DrugExEnvironment
-from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
-                                       SequenceExplorer)
-from drugex.training.generators import (GraphTransformer, SequenceRNN,
-                                        SequenceTransformer)
+from drugex.training.explorers import (
+    FragGraphExplorer,
+    FragSequenceExplorer,
+    SequenceExplorer,
+)
+from drugex.training.generators import (
+    GraphTransformer,
+    SequenceRNN,
+    SequenceTransformer,
+)
 from drugex.training.interfaces import TrainingMonitor
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.interfaces import Scorer
 from drugex.training.scorers.modifiers import ClippedScore
 from drugex.training.scorers.properties import Property
+from rdkit import Chem
 
 
 class TestModelMonitor(TrainingMonitor):
@@ -113,8 +123,8 @@ class MockScorer(Scorer):
 
 def getPredictor():
     try:
-        from qsprpred.models.models import QSPRModel
         from drugex.training.scorers.qsprpred import QSPRPredScorer
+        from qsprpred.models.models import QSPRModel
         model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
         ret = QSPRPredScorer(model)
     except ImportError:
@@ -351,7 +361,7 @@ class TrainingTestCase(TestCase):
 
         # RL
         environment = self.getTestEnvironment()
-        explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained)
+        explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained, n_samples=10)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(type(monitor.getModel()) == OrderedDict)
