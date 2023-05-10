@@ -62,8 +62,10 @@ class MolSupplier(ABC):
                 next_item = self.convert(next_item)
             except ItemException as exp:
                 logger.warning(f"Failed to generate next item in {repr(self)}\n\t Cause: {repr(exp)}")
+                next_item = None
             except ConversionException as exp:
                 logger.warning(f"Failed to convert item {next_item} to the new representation in {repr(self)}\n\t Cause: {repr(exp)}")
+                next_item = None
 
         return next_item
 
