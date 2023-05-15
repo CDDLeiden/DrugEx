@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.molecules.interfaces &mdash; DrugEx 3.4.3 documentation</title>
+  <title>drugex.molecules.interfaces &mdash; DrugEx 3.4.4 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -28,7 +28,7 @@
             <a href="../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.3
+                v3.4.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -136,8 +136,10 @@
                 <span class="n">next_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">next_item</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">ItemException</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to generate next item in </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="se">\n\t</span><span class="s2"> Cause: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">next_item</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">except</span> <span class="n">ConversionException</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to convert item </span><span class="si">{</span><span class="n">next_item</span><span class="si">}</span><span class="s2"> to the new representation in </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="se">\n\t</span><span class="s2"> Cause: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">next_item</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">return</span> <span class="n">next_item</span>
 
@@ -228,7 +230,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho.</p>
+    <p>&#169; Copyright 2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Šícho, Olivier Béquignon.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
