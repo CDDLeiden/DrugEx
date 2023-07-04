@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'DrugEx'
-copyright = '2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho'
-author = 'Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Sicho'
+copyright = '2022, Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Šícho, Olivier Béquignon'
+author = 'Xuhan Liu, Sohvi Lukkonen, Helle van den Maagdenberg, Linde Schoenmaker, Martin Šícho, Olivier Béquignon'
 
 # The full version, including alpha/beta/rc tags
 import importlib.util
