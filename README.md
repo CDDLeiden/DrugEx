@@ -86,6 +86,12 @@ This repository contains almost all models implemented throughout DrugEx history
   </tbody>
 </table>
 
+### Hardware Requirements
+
+The DrugEx toolkit offers a variety of models with varying complexities, each with its unique hardware requirements. In order to enable the full suite of models, the user must have a GPU compatible with CUDA 9.2, with a minimum of 8 GB of video memory. This is to facilitate that the models can be transferred to the GPU along with sufficiently large training batches. 
+
+It is noteworthy, however, that even on a suboptimal configuration, it should be possible to fine-tune and optimize the basic sequential RNN model using reinforcement learning techniques if a pretrained model is used. Regarding the two transformers, we recommend leveraging multiple GPUs to increase throughput via parallelization, automated by the DrugEx package. This technique divides the model's workload across multiple GPUs, enabling the system to handle more significant volumes of data at a faster rate than when using a single GPU.
+
 History
 =======
 
@@ -111,9 +117,7 @@ Examples
 
 License
 =======
-Please see the LICENSE file for the license terms for the software. Basically it's free to academic users. If you do wish to sell the software or use it in a commercial product, then please contact us:
-
-   [Xuhan Liu](mailto:xuhanliu@hotmail.com): xuhanliu@hotmail.com 
+Please see the LICENSE file for the license terms for the software. Basically it's free to academic users. If you do wish to sell the software or use it in a commercial product, then please contact Gerard J.P. van Westen:
 
    [Gerard J.P. van Westen](mailto:gerard@lacdr.leidenuniv.nl): gerard@lacdr.leidenuniv.nl 
 
@@ -124,6 +128,11 @@ Current Development Team
 - [H. van den Maagdenberg](https://github.com/HellevdM)
 - [L. Schoenmaker](https://github.com/LindeSchoenmaker)
 - [O. Béquignon](https://github.com/OlivierBeq)
+
+Contributions
+=============
+
+If you find that there is something missing, have a question, or you just want to contribute a new model or feature, please, feel free to open an issue to initiate a discussion. We are more than happy to improve the package with your contributions, bug reports and ideas. After the feature is discussed in its designated issue, the best way to contribute is to fork the repository, make your changes and then create a pull request. We will then review your changes and merge them into the main repository. Alternatively, you can contact us directly via [email](mailto:cdd@lacdr.leidenuniv.nl).
 
 Acknowledgements
 ================
