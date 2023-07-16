@@ -19,8 +19,8 @@ class NSGAIIRanking(RankingStrategy):
         """
         Crowding distance algorithm to rank the solutions in the same pareto frontier.
 
-        Paper: Deb, Kalyanmoy, et al. "A fast and elitist multiobjective genetic algorithm: NSGA-II." IEEE transactions on
-        evolutionary computation 6.2 (2002): 182-197.
+        Paper: Deb, Kalyanmoy, et al. "A fast and elitist multiobjective genetic algorithm: NSGA-II." 
+        IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
 
         Parameters
         ----------
@@ -35,32 +35,45 @@ class NSGAIIRanking(RankingStrategy):
             Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
         """        
 
+        # Get Pareto fronts (strating with the best front)
         fronts = self.getParetoFronts(scores)
 
-        rank = []
-        # sort all fronts by crowding distance
-        for t, front in enumerate(fronts):
-            distance = np.zeros(len(front))
-            for i in range(scores.shape[1]):
-                # sort front small to large for value objective i
-                cpu_tensor = scores[front.cpu(), i]
-                order = cpu_tensor.argsort()
-                front = front[order]
-                # set distance value smallest and largest value objective i to large value
-                distance[order[0]] = 10 ** 4
-                distance[order[-1]] = 10 ** 4
-                # get all values of objective i in current front
-                m_values = [scores[j, i] for j in front]
-                # scale for crowding distance by difference between max and min of objective i in front
-                scale = max(m_values) - min(m_values)
-                if scale == 0:
-                    scale = 1
-                # calculate crowding distance
-                for j in range(1, len(front) - 1):
-                    distance[order[j]] += (scores[front[j + 1], i] - scores[front[j - 1], i]) / scale
-            # replace front by front sorted according to crowding distance
-            fronts[t] = front[np.argsort(distance)]
-            rank.extend(fronts[t].tolist())
+        # Rank molecules within each Pareto front based on crowding distance
+        ranked_fronts = []
+        for front in fronts:
+            front_scores = scores[front]
+            front_size = front_scores.shape[0]
+            crowding_distance = np.zeros(front_size)
+
+            # Calculate crowding distance for each score dimension
+            for i in range(front_scores.shape[1]):
+                sorted_indices = np.argsort(front_scores[:, i])
+
+                # Set crowding distance of boundary solutions to infinity
+                crowding_distance[sorted_indices[0]] = np.inf
+                crowding_distance[sorted_indices[-1]] = np.inf
+
+                # Get range of scores for current objective
+                score_range = front_scores[:, i].max() - front_scores[:, i].min()
+                if score_range == 0:
+                    continue
+
+                # Calculate crowding distance for all other solutions
+                for j in range(1, front_size - 1):
+                    crowding_distance[sorted_indices[j]] += (
+                        front_scores[sorted_indices[j + 1], i]
+                        - front_scores[sorted_indices[j - 1], i]
+                    ) / score_range
+
+            # Sort front indices based on crowding distance
+            sorted_indices = np.argsort(-crowding_distance)
+            ranked_front = front[sorted_indices] # First element is the best
+            ranked_fronts.append(ranked_front)
+
+        # Combine all ranked fronts
+        rank = np.concatenate(ranked_fronts)
+        rank = rank[::-1] # From worst to best
+
         return rank
 
 
@@ -224,6 +237,9 @@ class ParetoTanimotoDistance(RewardScheme):
         if not self.ranking:
             raise self.RewardException(f"{self.__class__.__name__} reward scheme requires a ranking strategy.")
 
+        
+        # TODO: Maybe change final scoring to be same as for ParetoCrowdingDistance (i.e. rank/nmols)?
+        
         ranks = self.ranking(smiles, scores)
         rewards = np.zeros((len(smiles), 1))
         score = (np.arange(undesire) / undesire / 2).tolist() + (np.arange(desire) / desire / 2 + 0.5).tolist()

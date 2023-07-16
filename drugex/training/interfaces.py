@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
-from drugex.utils import gpu_non_dominated_sort, cpu_non_dominated_sort
+from drugex.utils import get_Pareto_fronts
 from drugex.training.scorers.smiles import SmilesChecker
 #from drugex.training.monitors import NullMonitor
 
@@ -79,14 +79,11 @@ class RankingStrategy(ABC):
         Returns
         -------
         list
-            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.
+            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front. 
+            Most dominant front is the first one.
         """
 
-        if self.device == torch.device('cuda'):
-            swarm = torch.Tensor(scores).to(self.device)
-            return gpu_non_dominated_sort(swarm)
-        else:
-            return cpu_non_dominated_sort(scores)
+        return get_Pareto_fronts(scores)
 
     @abstractmethod
     def __call__(self, smiles, scores):
