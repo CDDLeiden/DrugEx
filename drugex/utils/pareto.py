@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def get_Pareto_fronts(scores):
     """Identify the Pareto fronts from a given set of scores.
