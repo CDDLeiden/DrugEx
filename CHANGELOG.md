@@ -8,7 +8,8 @@ From v3.4.4 to v3.4.5
 
 ## Changes
 
-- DrugEx is now compatible with the latest version of qsprpred v2.0.1.
+- DrugEx is now compatible with the latest version of qsprpred v2.0.1, previous versions of qsprpred are no longer
+  supported.
 
 ## Removed Features
 
