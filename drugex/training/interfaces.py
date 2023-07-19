@@ -47,57 +47,6 @@ class ModelEvaluator(ABC):
         pass
 
 
-class RankingStrategy(ABC):
-    """
-    Ranks the given molecules according to their scores.
-
-    The implementing classes can get a pareto front by calling `RankingStrategy.getParetoFronts()` on the input scores.
-
-    """
-
-    def __init__(self, device=DEFAULT_DEVICE):
-        """
-        Constructor allows to specify a GPU or CPU device for Pareto fronts calculation.
-
-        Parameters
-        ----------
-        device : torch.device
-            The device to use for the ranking.
-        """
-
-        self.device = device
-
-    def getParetoFronts(self, scores):
-        """
-        Returns Pareto fronts.
-
-        Parameters
-        ----------
-        scores : np.ndarray
-            Matrix of scores for the multiple objectives
-        
-        Returns
-        -------
-        list
-            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front. 
-            Most dominant front is the first one.
-        """
-
-        return get_Pareto_fronts(scores)
-
-    @abstractmethod
-    def __call__(self, smiles, scores):
-        """
-        Return ranks of the molecules based on the given scores.
-
-        Parameters
-        ----------
-        smiles : list
-            List of SMILES strings of the molecules to rank.
-        scores : np.ndarray
-            Matrix of scores for the multiple objectives
-        """
-        pass
 
 
 class RewardScheme(ABC):
@@ -112,20 +61,10 @@ class RewardScheme(ABC):
         """
         pass
 
-    def __init__(self, ranking=None):
-        """
-        The `RankingStrategy` function to use for ranking solutions.
 
-        Parameters
-        ----------
-        ranking : RankingStrategy
-            The ranking strategy to use for ranking solutions.
-        """
-
-        self.ranking = ranking
 
     @abstractmethod
-    def __call__(self, smiles, scores, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, thresholds):
         """
         Calculate the rewards for generated molecules and rank them according to teh given `RankingStrategy`.
 
@@ -135,10 +74,6 @@ class RewardScheme(ABC):
             List of SMILES strings of the molecules to rank.
         scores : np.ndarray
             Matrix of scores for the multiple objectives
-        desire : int
-            Number of molecules that are desirable.
-        undesire : int
-            Number of molecules that are undesirable.
         thresholds : list
             List of thresholds for the objectives.
 
@@ -254,11 +189,9 @@ class Environment(ModelEvaluator):
 
         scores = self.getScores(smiles, frags=frags)
         valid = scores.Valid.values
-        desire = scores.Desired.sum()
-        undesire = len(scores) - desire
         scores = scores[self.getScorerKeys()].values
 
-        rewards = self.rewardScheme(smiles, scores, desire, undesire, self.thresholds)
+        rewards = self.rewardScheme(smiles, scores, self.thresholds)
         rewards[valid == 0] = 0
         
         return rewards
