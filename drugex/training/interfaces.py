@@ -187,13 +187,22 @@ class Environment(ModelEvaluator):
             Array of rewards for the molecules.
         """
 
+        # Get scores
         scores = self.getScores(smiles, frags=frags)
-        valid = scores.Valid.values
-        scores = scores[self.getScorerKeys()].values
+        scores['SMILES'] = smiles  
 
-        rewards = self.rewardScheme(smiles, scores, self.thresholds)
-        rewards[valid == 0] = 0
-        
+        # Initialize rewards to 0
+        rewards = np.zeros((len(smiles),1))
+        valid_idx = scores[scores.Valid == 1].index.tolist()
+        # Compute rewards for valid molecules
+        if len(valid_idx) > 0:
+            smiles_valid = scores[scores.Valid == 1].SMILES.tolist()
+            scores_valid = scores.loc[scores.Valid == 1, self.getScorerKeys()].values
+            rewards_valid = self.rewardScheme(smiles_valid, scores_valid, self.thresholds)
+            rewards[valid_idx] = rewards_valid
+        else:
+            logger.warning("No valid molecules generated. All rewards are 0.")
+
         return rewards
 
     def getScorerKeys(self):

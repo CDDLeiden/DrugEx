@@ -79,7 +79,7 @@ class ParetoRewardScheme(RewardScheme, ABC):
         """
 
         fronts = self.getParetoFronts(scores)
-        ranks = self.getMoleculeRank(fronts, scores=scores)
+        ranks = self.getMoleculeRank(fronts, smiles=smiles, scores=scores)
         rewards = np.zeros((len(smiles), 1))
         rewards[ranks, 0] = np.arange(len(scores)) / len(scores)
         return rewards
