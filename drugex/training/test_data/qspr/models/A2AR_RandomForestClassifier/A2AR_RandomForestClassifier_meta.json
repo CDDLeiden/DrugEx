@@ -1,15 +1,22 @@
 {
     "name": "A2AR_RandomForestClassifier",
-    "task": "CLASSIFICATION",
-    "th": [
-        6.5
-    ],
-    "target_property": "pchembl_value_Median_class",
-    "parameters_path": "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_params.json",
-    "feature_calculator_path": "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_descriptor_calculator.json",
-    "feature_standardizer_path": null,
-    "model_path": "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier.json",
+    "version": "2.0.1",
     "model_class": "qsprpred.models.models.QSPRsklearn",
-    "version": "1.3.0.dev0",
-    "nClasses": 2
+    "target_properties": [
+        {
+            "name": "pchembl_value_Median_class",
+            "task": "SINGLECLASS",
+            "original_name": "pchembl_value_Median",
+            "th": [
+                6.5
+            ],
+            "n_classes": 2
+        }
+    ],
+    "parameters_path": "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_params.json",
+    "feature_calculator_paths": [
+        "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_descriptor_calculator_Descriptor.json"
+    ],
+    "feature_standardizer_path": null,
+    "estimator_path": "qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier.json"
 }

@@ -804,7 +804,7 @@ def getModifiers(task, scheme, activity_threshold):
 
     else:
         # Pareto Front reward scheme (PRTD or PRCD)
-        if task == ModelTasks.CLASSIFICATION:
+        if task.isClassification():
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
             window = ClippedScore(lower_x=0, upper_x=1)
@@ -897,7 +897,7 @@ def CreateEnvironment(
     for target in targets:
         model = predictors[target]
         task = model.task
-        if task == ModelTasks.CLASSIFICATION and model.nClasses > 2:
+        if task == ModelTasks.MULTICLASS:
             raise NotImplementedError('Classification models with more than 2 classes are not supported. Invalid model: {}'.format(target))
 
         active, inactive, window = getModifiers(task, scheme, activity_threshold)
