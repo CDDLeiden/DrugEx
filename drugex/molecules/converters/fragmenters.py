@@ -107,6 +107,10 @@ class Fragmenter(CleanSMILES):
 
         ret_frags = []
         mol = Chem.MolFromSmiles(smiles)
+        
+        if mol is None:
+            logger.warning(f"Molecule skipped due to invalid SMILES: {smiles}")
+            return None
 
         if self.maxBonds and mol.GetNumBonds() >= self.maxBonds:
             logger.warning(f"Molecule skipped due to threshold on maximum bond count ({self.maxBonds}): {smiles}")
