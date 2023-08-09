@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -65,3 +65,6 @@ where = ["."]
 
 [tool.setuptools.dynamic]
 version = { attr = "drugex.about.VERSION" }
+
+[tool.setuptools_scm]
+write_to = "drugex/_version.py"

@@ -4,6 +4,7 @@
 !.gitignore
 /build/
 /base_test/
+/drugex/_version.py
 /tutorial/data
 /tutorial/CLI/examples
 /tutorial/download.json
@@ -12,7 +13,12 @@
 /testing/clitest/data/backup*
 /testing/clitest/data/dataset.json
 /testing/clitest/generators/
+/testing/clitest/new_molecules/
 /docs/_build
+/qspr/
+/tmp/
+tmp*
+toto*
 *.pkg
 *.tgz
 *.gzip

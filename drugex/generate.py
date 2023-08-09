@@ -6,7 +6,7 @@ import os
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
 from drugex.data.utils import getVocPaths
-from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
+from drugex.logs.utils import backUpFiles, enable_file_logger
 from drugex.train import CreateEnvironment, SetUpGenerator, DataPreparation
 
 
@@ -91,8 +91,6 @@ def DesignArgParser(txt=None):
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
                         help="Batch size")
-    parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved")    
 
     args = parser.parse_args()
     designer_args = vars(args)
@@ -241,7 +239,6 @@ if __name__ == "__main__":
         'design.log',
         args.debug,
         __name__,
-        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
 

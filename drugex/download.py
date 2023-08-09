@@ -7,7 +7,7 @@ import shutil
 import argparse
 
 from drugex.logs import logger
-from drugex.logs.utils import enable_file_logger, commit_hash
+from drugex.logs.utils import enable_file_logger
 from drugex.utils.download import download_file
 from qsprpred.data.sources.papyrus import Papyrus
 
@@ -21,7 +21,6 @@ def DownloadArgParser():
                         help="If on, progress of the download is shown")
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-r', '--reload', action='store_true', default=False, help="If on, existing files are re-downloaded.")
-    parser.add_argument('-ng', '--no_git', action='store_true', help="If on, git hash is not retrieved")
 
     args = parser.parse_args()
     return args
@@ -102,7 +101,6 @@ if __name__ == '__main__':
         'download.log',
         args.debug,
         __name__,
-        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
     log = logSettings.log

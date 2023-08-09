@@ -9,13 +9,13 @@ From v3.4.4 to v3.4.5
 
 ## Changes
 
+- Installation of pip package with pyproject.toml instead of setup.cfg.
 - Methods `cpu_non_dominated_sort` and `gpu_non_dominated_sort` have been replace by `get_Pareto_fronts`.
 - Improve calculation of crowding distance.
 - The rewards module is refactored and the `RankingStrategy` class was replace by `ParetoRankingScheme` class. 
     - The final reward calcuation for `ParetoRankingScheme`-based methods is now directly the scaled rank of the molecules.
     - The `ParetoTanimotoDistance` now has a attribute `distance_metric` which can be "min", "mean" or "mutual" instead of attribute `ranking`.
-- DrugEx is now compatible with the latest version of qsprpred v2.0.1, previous versions of qsprpred are no longer
-  supported.
+- DrugEx is now compatible with the latest version of qsprpred v2.0.1, previous versions of qsprpred are no longer supported.
 
 ## Removed Features
 
@@ -23,4 +23,4 @@ None.
 
 ## New Features
 
-None.
+- When installing package with pip, the commit hash and date of the installation is saved into `qsprpred._version`

@@ -5,7 +5,7 @@ import argparse
 
 import pandas as pd
 
-from drugex.logs.utils import enable_file_logger, commit_hash, backUpFiles
+from drugex.logs.utils import enable_file_logger, backUpFiles
 
 from drugex.molecules.converters.fragmenters import Fragmenter, FragmenterWithSelectedFragment
 from drugex.molecules.converters.dummy_molecules import dummyMolsFromFragments
@@ -63,8 +63,6 @@ def DatasetArgParser():
                         help="Number of parallel processes to use for multi-core tasks.")
     parser.add_argument('-cs', '--chunk_size', type=int, default=512,
                         help="Number of iitems to be given to each process for multi-core tasks. If not specified, this number is set to 512.")
-    parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved")
     
     args = parser.parse_args()
         
@@ -273,7 +271,6 @@ if __name__ == '__main__':
         'dataset.log',
         args.debug,
         __name__,
-        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
     log = logSettings.log
