@@ -66,7 +66,10 @@ def DownloadTutorial(args):
     papyrus = Papyrus(
         data_dir=os.path.join(args.out_dir, 'data', '.Papyrus'),
         stereo=False,
-        version=papyrus_version
+        version=papyrus_version,
+        descriptors=None,
+        plus_only = True
+
     )
 
     datasets_dir = os.path.join(args.out_dir, 'data')
