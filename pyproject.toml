@@ -7,7 +7,7 @@ name = "drugex"
 dynamic = ["version"]
 description = "De Novo Drug Design with RNNs and Transformers."
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 keywords = ["Drug discovery", "De novo design", "Generative model", "Molecules", "Optimization"]
 authors = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
@@ -23,9 +23,6 @@ maintainers = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -44,12 +41,9 @@ dependencies = [
   "gitpython",
   "networkx",
   "requests",
+  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.0.1#egg=qsprpred",
 #   "RAscore @ git+https://github.com/reymond-group/RAscore.git@master#egg=RAscore",
-#   "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@main#egg=qsprpred",
 ]
-
-[project.scripts]
-drugex = "drugex.cli:main"
 
 [project.urls]
 homepage = "https://github.com/CDDLeiden/DrugEx"
