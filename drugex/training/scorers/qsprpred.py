@@ -47,10 +47,12 @@ class QSPRPredScorer(Scorer):
         else:
             # FIXME: currently we only assume that the model is a binary classifier
             # with the positive class being the last one in the list of probabilities
-            return np.array(
-                [probas[-1]
-                 if not pd.isna(probas[-1]) else self.invalidsScore
-                 for probas in self.model.predictMols(parsed_mols, use_probas=True, **self.kwargs)])
+            probas = self.model.predictMols(
+                parsed_mols,
+                use_probas=True,
+                **self.kwargs
+            )[-1][:, -1]
+            return probas if not all(pd.isna(probas)) else self.invalidsScore
 
     def getKey(self):
         return f"QSPRpred_{self.model.name}"
