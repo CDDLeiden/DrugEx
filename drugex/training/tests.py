@@ -125,7 +125,8 @@ def getPredictor():
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models.models import QSPRModel
-        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__),
+                                                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
         ret = QSPRPredScorer(model)
     except ImportError:
         ret = MockScorer()
