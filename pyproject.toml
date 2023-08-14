@@ -5,16 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "drugex"
 dynamic = ["version"]
-description = "De Novo Drug Design with RNNs and Transformers."
+description = "Software library for de novo design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-keywords = ["Drug discovery", "De novo design", "Generative model", "Molecules", "Optimization"]
+keywords = ["Drug discovery", "De novo design", "Generative model", "Molecules", "Multi-objective optimization", "Reinforcement learning"]
 authors = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
            {name = "Sohvi Luukkonen", email = "s.luukkonen@lacdr.leidenuniv.nl"},
            {name = "Helle van den Maagdenberg", email = "h.w.van.den.maagdenberg@lacdr.leidenuniv.nl"},
            {name = "Linde Schoenmaker", email = "l.schoenmaker@lacdr.leidenuniv.nl"},
            {name = "Olivier Béquignon", email = "o.j.m.bequignon@lacdr.leidenuniv.nl"},
+           {name = "Xuhan Liu", email = "xuhanliu@hotmail.com"},
            {name = "Gerard van Westen", email = "gerard@lacdr.leidenuniv.nl"}]
 maintainers = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
                {name = "Sohvi Luukkonen", email = "s.luukkonen@lacdr.leidenuniv.nl"},
@@ -48,7 +49,7 @@ dependencies = [
 [project.urls]
 homepage = "https://github.com/CDDLeiden/DrugEx"
 repository = "https://github.com/CDDLeiden/DrugEx"
-# documentation = "https://readthedocs.org" TODO
+documentation = "https://cddleiden.github.io/DrugEx/docs/"
 
 [tool.setuptools]
 include-package-data = true
