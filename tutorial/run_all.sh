@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Run all jupyter notebooks in the tutorial directory
 set -e
 
+# Run all jupyter notebooks in the tutorial directory
+
 # Install requirements
-pip install mols2grid
-pip install git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@dev#egg=papyrus-scaffold-visualizer
+# pip install mols2grid
+# pip install git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@dev#egg=papyrus-scaffold-visualizer
 
 # Download data/models
-python -m drugex.download
+# python -m drugex.download
 
 # Run each notebook (order matters so let's do it manually)
 jupyter nbconvert --to notebook --execute qsar.ipynb
