@@ -58,6 +58,7 @@ documentation = "https://cddleiden.github.io/DrugEx/docs/"
 [tool.setuptools]
 include-package-data = true
 zip-safe = false
+script-files = ["scripts/drugex"]
 
 [tool.setuptools.packages.find]
 where = ["."]
