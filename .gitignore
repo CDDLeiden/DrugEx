@@ -6,6 +6,7 @@
 /base_test/
 /drugex/_version.py
 /tutorial/data
+/tutorial/advanced/data
 /tutorial/CLI/examples
 /tutorial/download.json
 /testing/clitest/data/*.txt
