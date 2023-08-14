@@ -1,4 +1,4 @@
 recursive-include drugex * = test_files/*.*
 recursive-include drugex test_data/*.*
-recursive-include drugex test_data/qspr/models/A2AR_RandomForestClassifier/*.*
+recursive-include drugex test_data/A2AR_RandomForestClassifier/*.*
 recursive-include drugex *.pkl.gz
