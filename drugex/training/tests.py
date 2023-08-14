@@ -146,7 +146,9 @@ class TestScorer(TestCase):
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
 
-        # TODO: check with empty and invalid molecules as well
+        mols = ["CCO", "XXXX"]  # test with invalid
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
 
 class TrainingTestCase(TestCase):
 

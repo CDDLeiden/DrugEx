@@ -43,16 +43,21 @@ class QSPRPredScorer(Scorer):
             parsed_mols = mols
 
         if self.model.task == ModelTasks.REGRESSION:
-            return self.model.predictMols(parsed_mols, **self.kwargs)
+            scores = self.model.predictMols(parsed_mols, **self.kwargs)
         else:
             # FIXME: currently we only assume that the model is a binary classifier
             # with the positive class being the last one in the list of probabilities
-            probas = self.model.predictMols(
+            scores = self.model.predictMols(
                 parsed_mols,
                 use_probas=True,
                 **self.kwargs
             )[-1][:, -1]
-            return probas if not all(pd.isna(probas)) else self.invalidsScore
+        # replace missing values with invalids score
+        scores = np.array([
+            x if x is not None else self.invalidsScore
+            for x in np.array(scores)
+        ])
+        return scores
 
     def getKey(self):
         return f"QSPRpred_{self.model.name}"
