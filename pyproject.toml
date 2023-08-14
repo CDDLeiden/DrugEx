@@ -42,9 +42,13 @@ dependencies = [
   "gitpython",
   "networkx",
   "requests",
-  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.0.1#egg=qsprpred",
-#   "RAscore @ git+https://github.com/reymond-group/RAscore.git@master#egg=RAscore",
 ]
+
+[project.optional-dependencies]
+qsprpred = [
+  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.0.1#egg=qsprpred",
+]
+
 
 [project.urls]
 homepage = "https://github.com/CDDLeiden/DrugEx"
