@@ -46,7 +46,7 @@ dependencies = [
 
 [project.optional-dependencies]
 qsprpred = [
-  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.0.1#egg=qsprpred",
+  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.1.0#egg=qsprpred",
 ]
 
 
