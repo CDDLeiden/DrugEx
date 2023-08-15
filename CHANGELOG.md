@@ -23,4 +23,4 @@ None.
 
 ## New Features
 
-- When installing package with pip, the commit hash and date of the installation is saved into `qsprpred._version`
+- When installing package with pip, the commit hash and date of the installation is saved into `drugex._version`. This information is also used as a basis of a new dynamic versioning scheme for the package. The version number is generated automatically upon installation of the package and saved to `drugex.__version__`. 
