@@ -13,7 +13,7 @@ export QSPRPRED_REPO="https://<username>:<access-token>@your_hosting_service.com
 export QSPRPRED_REVISION="main" # can be branch, commit ID or a tag
 
 # spawn a runner with the given settings
-./runner.sh
+./runner.sh # make sure you are in the 'docker' group so that you have correct permissions
 ```
 
 A few tips:
