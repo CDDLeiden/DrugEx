@@ -63,8 +63,8 @@ script-files = ["scripts/drugex"]
 [tool.setuptools.packages.find]
 where = ["."]
 
-[tool.setuptools.dynamic]
-version = { attr = "drugex.about.VERSION" }
-
 [tool.setuptools_scm]
 write_to = "drugex/_version.py"
+
+[tool.setuptools.dynamic]
+version = { attr = "drugex.about.VERSION" }

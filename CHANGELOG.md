@@ -24,3 +24,4 @@ None.
 ## New Features
 
 - When installing package with pip, the commit hash and date of the installation is saved into `drugex._version`. This information is also used as a basis of a new dynamic versioning scheme for the package. The version number is generated automatically upon installation of the package and saved to `drugex.__version__`. 
+- QSPRPred is now available as an optional dependency that can be installed with DrugEx using the `[qsprpred]` option.
