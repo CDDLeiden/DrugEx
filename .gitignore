@@ -19,11 +19,12 @@
 /qspr/
 /tmp/
 tmp*
-toto*
 *.pkg
 *.tgz
 *.gzip
 *.tar.gz
+**/*.cv.tsv
+**/*.ind.tsv
 
 ### Python template
 # Byte-compiled / optimized / DLL files
