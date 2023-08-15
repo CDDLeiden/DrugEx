@@ -125,7 +125,8 @@ def getPredictor():
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models.models import QSPRModel
-        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__), "test_data/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__),
+                                                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
         ret = QSPRPredScorer(model)
     except ImportError:
         ret = MockScorer()
@@ -145,7 +146,9 @@ class TestScorer(TestCase):
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
 
-        # TODO: check with empty and invalid molecules as well
+        mols = ["CCO", "XXXX"]  # test with invalid
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
 
 class TrainingTestCase(TestCase):
 
