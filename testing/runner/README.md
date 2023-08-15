@@ -18,11 +18,10 @@ export QSPRPRED_REVISION="main" # can be branch, commit ID or a tag
 
 A few tips:
 
-- Customize the [`tests.sh`](./tests.sh) script to change what tests to run or do other stuff inside the runner container.
 - Use any repo URLs format that git will understand, but remember the docker image will not have access to your ssh keys by default.
 - You can customize the [`tests.sh`](./tests.sh) script to change what tests to run or do other stuff inside the runner container.
 - When you run the `runner.sh` script logs are saved to the `logs` folder in the current directory.
-- It is possible to permanently set the environment variables in a [`.env`](./.env) file that you can save in this directory. In this case, it would have the following contents:
+- It is possible to permanently set the environment variables in a `.env` file that you can save in this directory. In this case, it would have the following contents:
  
     ```bash
     NVIDIA_VISIBLE_DEVICES=0
