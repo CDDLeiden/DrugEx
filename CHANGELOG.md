@@ -24,3 +24,4 @@ None.
 ## New Features
 
 - When installing package with pip, the commit hash and date of the installation is saved into `qsprpred._version`
+- Added an automated Docker runner for tests that can run on GPUs. See [testing/runner/README.md](testing/runner/README.md) for more information.

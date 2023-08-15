@@ -1,0 +1,31 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+
+  drugex-test-runner:
+    image: drugex-test-runner-${TIMESTAMP:-timestamp}:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BASE_IMAGE_TAG=${BASE_IMAGE_TAG}
+    container_name: ${CONTAINER_NAME}-python${PYTHON_VERSION}-${TIMESTAMP:-timestamp}
+    entrypoint: /entrypoint.sh
+    command: bash tests.sh
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES}
+      - PYTHON_VERSION=${PYTHON_VERSION}
+      - DRUGEX_REPO=${DRUGEX_REPO}
+      - DRUGEX_REVISION=${DRUGEX_REVISION}
+      - QSPRPRED_REPO=${QSPRPRED_REPO}
+      - QSPRPRED_REVISION=${QSPRPRED_REVISION}
+      - RUNNER_NAME=${CONTAINER_NAME}-python${PYTHON_VERSION}-${TIMESTAMP:-timestamp}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+
+
