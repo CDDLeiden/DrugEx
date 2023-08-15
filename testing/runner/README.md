@@ -4,7 +4,9 @@ Run unit and other tests for DrugEx in GPU-enabled Docker containers.
 
 ```bash
 # define important variables
-export NVIDIA_VISIBLE_DEVICES=0
+export NVIDIA_VISIBLE_DEVICES=0 # ids of the GPUs to use
+export BASE_IMAGE_TAG="12.0.1-cudnn8-runtime-ubuntu22.04" # cuda base image tag, translated to nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
+export PYTHON_VERSION="3.10" # python version for the conda base environment
 export DRUGEX_REPO="https://<username>:<access-token>@your_hosting_service.com/DrugEx.git"
 export DRUGEX_REVISION="master" # can be branch, commit ID or a tag
 export QSPRPRED_REPO="https://<username>:<access-token>@your_hosting_service.com/QSPRPred.git"
