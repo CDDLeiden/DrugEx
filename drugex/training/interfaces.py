@@ -343,7 +343,7 @@ class TrainingMonitor(ModelProvider, ABC):
     """
 
     @abstractmethod
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
         """
         Save the state dictionary of the `Model` instance currently being trained or serialize the model any other way.
 
@@ -351,6 +351,8 @@ class TrainingMonitor(ModelProvider, ABC):
         ----------
         model : Model
             The model to save.
+        identifier : str
+            Suffix added to saved model.
         """
         pass
 

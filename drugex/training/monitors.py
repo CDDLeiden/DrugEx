@@ -34,13 +34,19 @@ class NullMonitor(TrainingMonitor):
     def getModel(self):
         pass
 
+    def setModel(self):
+        pass
+
+    def getModelSaveOption(self):
+        pass
+
 class FileMonitor(TrainingMonitor):
     """
     A simple `TrainingMonitor` implementation with file outputs.
 
     """
 
-    def __init__(self, path, save_smiles=False, reset_directory=False):
+    def __init__(self, path, save_smiles=False, save_model_option='final', reset_directory=False):
         """
         Initialize the file monitor.
 
@@ -56,6 +62,14 @@ class FileMonitor(TrainingMonitor):
             The path and prefix of the files to be created. 
         save_smiles : bool
             Whether to save the SMILES of the molecules generated in each epoch.
+        save_model_option : str
+            Determines which models to save during training. Use this parameter with care as saving a large number of
+            models is extremely memory-intensive. Possible values:
+            - 'all' : Save all models.
+            - 'best': Save all best models.
+            - 'final' (default): Save only the final model.
+            WARNING: Setting this option to 'all' or 'best' can be extremely memory-intensive, Use with caution and 
+            ensure you have sufficient memory resources.
         reset_directory : bool
             Whether to reset the directory where the files are to be saved. If True, the directory will be deleted and
             recreated. If False, the files will be appended to the existing directory.
@@ -72,14 +86,17 @@ class FileMonitor(TrainingMonitor):
         self.outDF = path + '_fit.tsv'
         self.outSmiles = path + '_smiles.tsv' if save_smiles else None
         self.outSmilesHeaderDone = False
+        self.currentState = None
         self.bestState = None
+        self.saveModelOption = save_model_option
 
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
         """ 
         Save the model state.
         """
-        self.bestState = model.getModel()
-        torch.save(self.bestState, self.path + '.pkg')
+        self.currentState = model.getModel() 
+        self.setSuffix = '_' + self.identifier if identifier else ''
+        torch.save(self.currentState, self.path + self.setSuffix + '.pkg')
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
         """ 
@@ -158,3 +175,9 @@ class FileMonitor(TrainingMonitor):
    
     def getModel(self):
         return self.bestState
+    
+    def setModel(self, model):
+        self.bestState = model.getModel() 
+
+    def getSaveModelOption(self):
+        return self.saveModelOption

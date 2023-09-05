@@ -225,18 +225,29 @@ class Generator(Model, ABC):
             # Validate model
             valid_metrics, smiles_scores = self.validateNet(loader=valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, n_samples=train_loader.batch_size*2)
 
-            # Save model based on validation loss or valid ratio
+            # Determine best model based on validation loss or valid ratio
             if 'loss_valid' in valid_metrics.keys(): value = valid_metrics['loss_valid']
             else : value = 1 - valid_metrics['valid_ratio']
             valid_metrics['loss_train'] = loss_train
 
             if value < best:
-                monitor.saveModel(self)    
+                monitor.setModel(self) 
                 best = value
                 last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")               
             valid_metrics['best_epoch'] = last_save
 
+            # Save model
+            save_model_option = monitor.getSaveModelOption() 
+            if save_model_option == 'all':
+                monitor.saveModel(self, epoch)
+                logger.info(f"Model was saved at epoch {epoch}") 
+            elif value < best: 
+                if save_model_option == 'best':
+                    monitor.saveModel(self, epoch)
+                else:
+                    monitor.saveModel(self)
+                logger.info(f"Model was saved at epoch {epoch}") 
+            
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, valid_metrics, smiles_scores)
 
