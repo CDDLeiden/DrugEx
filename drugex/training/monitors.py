@@ -95,7 +95,7 @@ class FileMonitor(TrainingMonitor):
         Save the model state.
         """
         self.currentState = model.getModel() 
-        self.setSuffix = '_' + self.identifier if identifier else ''
+        self.setSuffix = '_' + identifier if identifier else ''
         torch.save(self.currentState, self.path + self.setSuffix + '.pkg')
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
