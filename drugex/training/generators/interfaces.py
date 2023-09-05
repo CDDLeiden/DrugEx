@@ -237,16 +237,10 @@ class Generator(Model, ABC):
             valid_metrics['best_epoch'] = last_save
 
             # Save model
-            save_model_option = monitor.getSaveModelOption() 
-            if save_model_option == 'all':
-                monitor.saveModel(self, epoch)
-                logger.info(f"Model was saved at epoch {epoch}") 
-            elif value < best: 
-                if save_model_option == 'best':
-                    monitor.saveModel(self, epoch)
-                else:
-                    monitor.saveModel(self)
-                logger.info(f"Model was saved at epoch {epoch}") 
+            save_model_option = monitor.getSaveModelOption()
+            if save_model_option == 'all' or value < best:
+                monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)
+                logger.info(f"Model was saved at epoch {epoch}")
             
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, valid_metrics, smiles_scores)
