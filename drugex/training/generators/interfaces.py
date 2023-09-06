@@ -218,6 +218,7 @@ class Generator(Model, ABC):
          
         for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
+            is_best = False
             
             # Train model
             loss_train = self.trainNet(train_loader, epoch, epochs)
@@ -231,14 +232,14 @@ class Generator(Model, ABC):
             valid_metrics['loss_train'] = loss_train
 
             if value < best:
+                is_best = True
                 monitor.setModel(self) 
-                best = value
-                last_save = epoch
+                best, last_save = value, epoch
             valid_metrics['best_epoch'] = last_save
 
             # Save model
             save_model_option = monitor.getSaveModelOption()
-            if save_model_option == 'all' or value < best:
+            if save_model_option == 'all' or is_best == True:
                 monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)
                 logger.info(f"Model was saved at epoch {epoch}")
             
