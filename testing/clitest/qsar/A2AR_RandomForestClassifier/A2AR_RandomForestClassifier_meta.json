@@ -1,7 +1,7 @@
 {
     "name": "A2AR_RandomForestClassifier",
     "version": "2.0.1",
-    "model_class": "qsprpred.models.models.QSPRsklearn",
+    "model_class": "qsprpred.models.sklearn.SklearnModel",
     "target_properties": [
         {
             "name": "pchembl_value_Median_class",
