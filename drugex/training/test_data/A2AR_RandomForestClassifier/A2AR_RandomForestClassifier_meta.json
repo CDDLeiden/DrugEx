@@ -1,6 +1,6 @@
 {
     "name": "A2AR_RandomForestClassifier",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "model_class": "qsprpred.models.sklearn.SklearnModel",
     "target_properties": [
         {
