@@ -100,7 +100,6 @@ class TestModelMonitor(TrainingMonitor):
         self.passToSubmonitors('endStep', step, epoch)
 
     def setModel(self, model):
-        self.model = model.getModel()
         self.execution['setModel'] = True
         self.passToSubmonitors('setModel', model)
         
