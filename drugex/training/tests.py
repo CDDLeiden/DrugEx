@@ -105,11 +105,16 @@ class TestModelMonitor(TrainingMonitor):
         self.passToSubmonitors('close')
 
     def getModel(self):
-        return self.model
+        return self.bestState
 
     def allMethodsExecuted(self):
         return all([self.execution[key] for key in self.execution])
+    
+    def setModel(self, model):
+        self.bestState = model.getModel() 
 
+    def getSaveModelOption(self):
+        return self.saveModelOption
 
 class MockScorer(Scorer):
 
