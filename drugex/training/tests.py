@@ -8,7 +8,7 @@ import json
 import logging
 import os.path
 import tempfile
-from collections import OrderedDict
+import collections
 from unittest import TestCase
 
 import numpy as np
@@ -320,8 +320,7 @@ class TrainingTestCase(TestCase):
 
         monitor = TestModelMonitor()
         model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
-        pr_model = monitor.getModel()
-        self.assertTrue(type(pr_model) == OrderedDict)
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
         model.loadStates(pr_model) # initialize from the best state
         return model, monitor
@@ -374,7 +373,7 @@ class TrainingTestCase(TestCase):
         explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained, n_samples=10)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(type(monitor.getModel()) == OrderedDict)
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False)
@@ -433,7 +432,7 @@ class TrainingTestCase(TestCase):
         explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         # test molecule generation
@@ -481,7 +480,7 @@ class TrainingTestCase(TestCase):
         explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
     def test_sequence_transformer(self):
@@ -505,7 +504,7 @@ class TrainingTestCase(TestCase):
         explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         pretrained.generate([
@@ -557,5 +556,5 @@ class TrainingTestCase(TestCase):
         explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
