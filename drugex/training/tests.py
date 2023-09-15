@@ -99,19 +99,27 @@ class TestModelMonitor(TrainingMonitor):
         self.execution['end'] = True
         self.passToSubmonitors('endStep', step, epoch)
 
+    def setModel(self, model):
+        self.model = model.getModel()
+        self.execution['setModel'] = True
+        self.passToSubmonitors('setModel', model)
+        
+    def getModel(self):
+        self.execution['getModel'] = True
+        self.passToSubmonitors('getModel')
+
+    def getSaveModelOption(self):
+        self.execution['getSaveModelOption'] = True
+        self.passToSubmonitors('getSaveModelOption')
+
     def close(self):
         print("Training done.")
         self.execution['close'] = True
         self.passToSubmonitors('close')
 
-    def setModel(self, model):
-        self.bestState = model.getModel() 
-        
-    def getModel(self):
-        return self.bestState
-
     def allMethodsExecuted(self):
         return all([self.execution[key] for key in self.execution])
+
 
 
 class MockScorer(Scorer):
