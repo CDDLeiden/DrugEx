@@ -105,12 +105,11 @@ class TestModelMonitor(TrainingMonitor):
         
     def getModel(self):
         self.execution['getModel'] = True
-        self.passToSubmonitors('getModel')
-        return True
+        return self.passToSubmonitors('getModel')
 
     def getSaveModelOption(self):
         self.execution['getSaveModelOption'] = True
-        self.passToSubmonitors('getSaveModelOption')
+        return self.passToSubmonitors('getSaveModelOption')
 
     def close(self):
         print("Training done.")
