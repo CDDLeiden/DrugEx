@@ -374,7 +374,7 @@ class TrainingTestCase(TestCase):
         explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained, n_samples=10)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        print(type(monitor.getModel()))
+        raise(type(monitor.getModel()))
         self.assertTrue(type(monitor.getModel()) == 'collections.OrderedDict')
         self.assertTrue(monitor.allMethodsExecuted())
 
