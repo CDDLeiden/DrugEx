@@ -52,9 +52,11 @@ from rdkit import Chem
 class TestModelMonitor(TrainingMonitor):
 
     def __init__(self, submonitors=None):
-        self.model = None
         self.execution = {
             'model' : False,
+            'setModel' : False,
+            'getModel' : False,
+            'getSaveModelOption' : False,
             'progress' : False,
             'performance' : False,
             'end' : False,
@@ -66,10 +68,9 @@ class TestModelMonitor(TrainingMonitor):
 
     def passToSubmonitors(self, method, *args, **kwargs):
         for monitor in self.submonitors:
-            method = getattr(monitor, method)(*args, **kwargs)
+            return getattr(monitor, method)(*args, **kwargs)
 
     def saveModel(self, model, identifier=None):
-        self.model = model.getModel()
         self.execution['model'] = True
         self.passToSubmonitors('saveModel', model, identifier)
 
@@ -104,10 +105,12 @@ class TestModelMonitor(TrainingMonitor):
         self.passToSubmonitors('setModel', model)
         
     def getModel(self):
-        return self.bestState
+        self.execution['getModel'] = True
+        return self.passToSubmonitors('getModel')
 
     def getSaveModelOption(self):
-        return self.saveModelOption
+        self.execution['getSaveModelOption'] = True
+        return self.passToSubmonitors('getSaveModelOption')
 
     def close(self):
         print("Training done.")
