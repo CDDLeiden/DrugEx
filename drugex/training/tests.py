@@ -68,9 +68,10 @@ class TestModelMonitor(TrainingMonitor):
         for monitor in self.submonitors:
             method = getattr(monitor, method)(*args, **kwargs)
 
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
+        self.model = model.getModel()
         self.execution['model'] = True
-        self.passToSubmonitors('saveModel')
+        self.passToSubmonitors('saveModel', model, identifier)
 
     def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
