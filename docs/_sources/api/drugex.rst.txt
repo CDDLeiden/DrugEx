@@ -33,18 +33,18 @@ drugex.dataset module
    :undoc-members:
    :show-inheritance:
 
-drugex.designer module
-----------------------
-
-.. automodule:: drugex.designer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 drugex.download module
 ----------------------
 
 .. automodule:: drugex.download
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+drugex.generate module
+----------------------
+
+.. automodule:: drugex.generate
    :members:
    :undoc-members:
    :show-inheritance:

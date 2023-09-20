@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers package &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.scorers package &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Package API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -76,8 +80,8 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.generate">drugex.generate module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
@@ -99,11 +103,11 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
-          <li><a href="drugex.html">drugex package</a> &raquo;</li>
-          <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
-      <li>drugex.training.scorers package</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="drugex.html">drugex package</a></li>
+          <li class="breadcrumb-item"><a href="drugex.training.html">drugex.training package</a></li>
+      <li class="breadcrumb-item active">drugex.training.scorers package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -141,13 +145,13 @@
 <span class="sig-name descname"><span class="pre">getModifiedScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/interfaces.html#Scorer.getModifiedScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.interfaces.Scorer.getModifiedScores" title="Permalink to this definition"></a></dt>
 <dd><p>Modify the scores with the given <a class="reference internal" href="#drugex.training.scorers.interfaces.ScoreModifier" title="drugex.training.scorers.interfaces.ScoreModifier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScoreModifier</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>scores</strong> (<em>np.array</em>) – The scores to modify.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The modified scores.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -163,16 +167,16 @@
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/interfaces.html#Scorer.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.interfaces.Scorer.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -305,16 +309,16 @@ On: 06.06.22, 20:17</p>
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#AtomCounter.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.AtomCounter.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Count the number of atoms of a given type in the molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to score.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to score.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -343,16 +347,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Get the scores for the molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to score.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to score.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -363,14 +367,14 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_molecular_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.parse_molecular_formula"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.parse_molecular_formula" title="Permalink to this definition"></a></dt>
 <dd><p>Parse a molecular formulat to get the element types and counts.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>formula</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The molecular formula to parse.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>results</strong> – A list of tuples containing element types and number of occurrences.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list of tuples</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a> of tuples</p>
 </dd>
 </dl>
 </dd></dl>
@@ -380,10 +384,10 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">scoring_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Isomer.scoring_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Isomer.scoring_functions" title="Permalink to this definition"></a></dt>
 <dd><p>Create the scoring functions for the molecular formula.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>formula</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The molecular formula to score against.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>objs</strong> (<em>list of Scorer objects</em>) – The scoring functions for each element type.</p></li>
 <li><p><strong>mods</strong> (<em>list of ScoreModifier objects</em>) – The modifiers for each scoring function.</p></li>
@@ -410,16 +414,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#LigandEfficiency.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.LigandEfficiency.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -442,16 +446,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#LipophilicEfficiency.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.LipophilicEfficiency.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -473,16 +477,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Property.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Property.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -504,16 +508,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Scaffold.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Scaffold.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Get the scores for the molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to score.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to score.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -536,16 +540,16 @@ F.i., if the target formula is C2H4, the scoring function is the average of thre
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/properties.html#Uniqueness.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.properties.Uniqueness.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -573,16 +577,16 @@ On: 17.02.23, 13:44</p>
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/qsprpred.html#QSPRPredScorer.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.qsprpred.QSPRPredScorer.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -634,16 +638,16 @@ UGMpresentation: <a class="reference external" href="https://github.com/rdkit/UG
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/similarity.html#FraggleSimilarity.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.similarity.FraggleSimilarity.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the Fraggle similarity scores for a list of molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – List of molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – List of fragments used to generate molecules. Not used in this scorer, by default None</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – List of molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – List of fragments used to generate molecules. Not used in this scorer, by default None</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – Array of scores.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -669,16 +673,16 @@ TODO : See, if possible to speed up</p>
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/similarity.html#GraphEditInverseDistance.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.similarity.GraphEditInverseDistance.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the raw scores for the input molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -707,7 +711,7 @@ If both alpha and beta are set to 1, reduces to Tanimoto similarity.</p>
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/similarity.html#TverskyFingerprintSimilarity.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.similarity.TverskyFingerprintSimilarity.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Get Tversky similarity scores for a list of molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mols</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of SMILES strings representing molecules.</p></li>
 <li><p><strong>frags</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – A list of fragments used to generate the molecules. This is not used by this scorer.</p></li>
@@ -734,16 +738,16 @@ If both alpha and beta are set to 1, reduces to Tanimoto similarity.</p>
 <span class="sig-name descname"><span class="pre">getScores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/similarity.html#TverskyGraphSimilarity.getScores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.similarity.TverskyGraphSimilarity.getScores" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the Tversky graph similarity scores for a list of molecules.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mols</strong> (<em>list of rdkit molecules</em>) – The molecules to be scored.</p></li>
-<li><p><strong>frags</strong> (<em>list of rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em>) – The molecules to be scored.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>rdkit molecules</em><em>, </em><em>optional</em>) – The fragments used to generate the molecules, by default None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – The scores for the molecules.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.array</p>
 </dd>
 </dl>
@@ -766,17 +770,17 @@ On: 03.06.22, 13:28</p>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">checkSmiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/scorers/smiles.html#SmilesChecker.checkSmiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.scorers.smiles.SmilesChecker.checkSmiles" title="Permalink to this definition"></a></dt>
 <dd><p>This method is used to check the validity of the SMILES strings and to check if they contain given fragments.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>smiles</strong> (<em>list of str</em>) – List of SMILES strings to check.</p></li>
-<li><p><strong>frags</strong> (<em>list of str</em><em>, </em><em>optional</em>) – List of SMILES strings of fragments to check for.</p></li>
+<li><p><strong>smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – List of SMILES strings to check.</p></li>
+<li><p><strong>frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – List of SMILES strings of fragments to check for.</p></li>
 <li><p><strong>no_multifrag_smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, SMILES strings that contain more than one fragment will be marked as invalid.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>scores</strong> – Dataframe with the validity and accuracy of the SMILES strings.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>

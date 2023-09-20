@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex package &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex package &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="drugex.data package" href="drugex.data.html" />
-    <link rel="prev" title="DrugEx Python API" href="modules.html" />
+    <link rel="prev" title="DrugEx Package API Documentation" href="modules.html" />
  
 
 
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Package API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">drugex package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -75,10 +79,41 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-drugex.about">drugex.about module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#drugex-designer-module">drugex.designer module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-drugex.download">drugex.download module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.dataset">drugex.dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.DatasetArgParser"><code class="docutils literal notranslate"><span class="pre">DatasetArgParser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.FragGraphDataset"><code class="docutils literal notranslate"><span class="pre">FragGraphDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.FragSequenceDataset"><code class="docutils literal notranslate"><span class="pre">FragSequenceDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.FragmentDataset"><code class="docutils literal notranslate"><span class="pre">FragmentDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.SequenceDataset"><code class="docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.dataset.load_molecules"><code class="docutils literal notranslate"><span class="pre">load_molecules()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.download">drugex.download module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.download.DownloadArgParser"><code class="docutils literal notranslate"><span class="pre">DownloadArgParser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.download.DownloadTutorial"><code class="docutils literal notranslate"><span class="pre">DownloadTutorial()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.generate">drugex.generate module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.generate.Design"><code class="docutils literal notranslate"><span class="pre">Design()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.generate.DesignArgParser"><code class="docutils literal notranslate"><span class="pre">DesignArgParser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.generate.DesignerFragsDataPreparation"><code class="docutils literal notranslate"><span class="pre">DesignerFragsDataPreparation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-drugex.train">drugex.train module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.CreateEnvironment"><code class="docutils literal notranslate"><span class="pre">CreateEnvironment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.DataPreparation"><code class="docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.Finetune"><code class="docutils literal notranslate"><span class="pre">Finetune</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.FragGraphDataPreparation"><code class="docutils literal notranslate"><span class="pre">FragGraphDataPreparation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.FragSmilesDataPreparation"><code class="docutils literal notranslate"><span class="pre">FragSmilesDataPreparation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.GeneratorArgParser"><code class="docutils literal notranslate"><span class="pre">GeneratorArgParser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.Pretrain"><code class="docutils literal notranslate"><span class="pre">Pretrain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.Reinforce"><code class="docutils literal notranslate"><span class="pre">Reinforce</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.SetUpGenerator"><code class="docutils literal notranslate"><span class="pre">SetUpGenerator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.SmilesDataPreparation"><code class="docutils literal notranslate"><span class="pre">SmilesDataPreparation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#drugex.train.getModifiers"><code class="docutils literal notranslate"><span class="pre">getModifiers()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#module-drugex">Module contents</a></li>
 </ul>
 </li>
@@ -99,9 +134,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
-      <li>drugex package</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
+      <li class="breadcrumb-item active">drugex package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -130,20 +165,167 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.data.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.datasets">drugex.data.datasets module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.fragments">drugex.data.fragments module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.interfaces">drugex.data.interfaces module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.processing">drugex.data.processing module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.tests">drugex.data.tests module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.utils">drugex.data.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.datasets">drugex.data.datasets module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.GraphFragDataSet"><code class="docutils literal notranslate"><span class="pre">GraphFragDataSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.GraphFragDataSet.dataToLoader"><code class="docutils literal notranslate"><span class="pre">GraphFragDataSet.dataToLoader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.GraphFragDataSet.getColumns"><code class="docutils literal notranslate"><span class="pre">GraphFragDataSet.getColumns()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesDataSet"><code class="docutils literal notranslate"><span class="pre">SmilesDataSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesDataSet.columns"><code class="docutils literal notranslate"><span class="pre">SmilesDataSet.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesDataSet.dataToLoader"><code class="docutils literal notranslate"><span class="pre">SmilesDataSet.dataToLoader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesDataSet.getColumns"><code class="docutils literal notranslate"><span class="pre">SmilesDataSet.getColumns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesDataSet.readVocs"><code class="docutils literal notranslate"><span class="pre">SmilesDataSet.readVocs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.TargetCreator"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.TargetCreator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.columns"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.createLoaders"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.createLoaders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.dataToLoader"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.dataToLoader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.getColumns"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.getColumns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.datasets.SmilesFragDataSet.readVocs"><code class="docutils literal notranslate"><span class="pre">SmilesFragDataSet.readVocs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.fragments">drugex.data.fragments module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.FragmentPairsCollector"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder.FragmentPairsCollector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.apply"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.encodeFragments"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder.encodeFragments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.getFragmentPairs"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder.getFragmentPairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.splitFragmentPairs"><code class="docutils literal notranslate"><span class="pre">FragmentCorpusEncoder.splitFragmentPairs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier"><code class="docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.FragmentEncodingException"><code class="docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier.FragmentEncodingException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.MoleculeEncodingException"><code class="docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier.MoleculeEncodingException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.next"><code class="docutils literal notranslate"><span class="pre">FragmentPairsEncodedSupplier.next()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsSplitter"><code class="docutils literal notranslate"><span class="pre">FragmentPairsSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsSupplier"><code class="docutils literal notranslate"><span class="pre">FragmentPairsSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.FragmentPairsSupplier.next"><code class="docutils literal notranslate"><span class="pre">FragmentPairsSupplier.next()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.GraphFragmentEncoder"><code class="docutils literal notranslate"><span class="pre">GraphFragmentEncoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.GraphFragmentEncoder.encodeFrag"><code class="docutils literal notranslate"><span class="pre">GraphFragmentEncoder.encodeFrag()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.GraphFragmentEncoder.encodeMol"><code class="docutils literal notranslate"><span class="pre">GraphFragmentEncoder.encodeMol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.GraphFragmentEncoder.getVoc"><code class="docutils literal notranslate"><span class="pre">GraphFragmentEncoder.getVoc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder"><code class="docutils literal notranslate"><span class="pre">SequenceFragmentEncoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeFrag"><code class="docutils literal notranslate"><span class="pre">SequenceFragmentEncoder.encodeFrag()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeMol"><code class="docutils literal notranslate"><span class="pre">SequenceFragmentEncoder.encodeMol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.getVoc"><code class="docutils literal notranslate"><span class="pre">SequenceFragmentEncoder.getVoc()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.interfaces">drugex.data.interfaces module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet"><code class="docutils literal notranslate"><span class="pre">DataSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.asDataLoader"><code class="docutils literal notranslate"><span class="pre">DataSet.asDataLoader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.createLoaders"><code class="docutils literal notranslate"><span class="pre">DataSet.createLoaders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.dataToLoader"><code class="docutils literal notranslate"><span class="pre">DataSet.dataToLoader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.fromFile"><code class="docutils literal notranslate"><span class="pre">DataSet.fromFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.getData"><code class="docutils literal notranslate"><span class="pre">DataSet.getData()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.getVoc"><code class="docutils literal notranslate"><span class="pre">DataSet.getVoc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.getVocPath"><code class="docutils literal notranslate"><span class="pre">DataSet.getVocPath()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.readVocs"><code class="docutils literal notranslate"><span class="pre">DataSet.readVocs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.reset"><code class="docutils literal notranslate"><span class="pre">DataSet.reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.sendDataToFile"><code class="docutils literal notranslate"><span class="pre">DataSet.sendDataToFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.setVoc"><code class="docutils literal notranslate"><span class="pre">DataSet.setVoc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet.updateVoc"><code class="docutils literal notranslate"><span class="pre">DataSet.updateVoc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSplitter"><code class="docutils literal notranslate"><span class="pre">DataSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataToLoader"><code class="docutils literal notranslate"><span class="pre">DataToLoader</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.FragmentPairEncoder"><code class="docutils literal notranslate"><span class="pre">FragmentPairEncoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.encodeFrag"><code class="docutils literal notranslate"><span class="pre">FragmentPairEncoder.encodeFrag()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.encodeMol"><code class="docutils literal notranslate"><span class="pre">FragmentPairEncoder.encodeMol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.getVoc"><code class="docutils literal notranslate"><span class="pre">FragmentPairEncoder.getVoc()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.processing">drugex.data.processing module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.processing.CorpusEncoder"><code class="docutils literal notranslate"><span class="pre">CorpusEncoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.processing.CorpusEncoder.apply"><code class="docutils literal notranslate"><span class="pre">CorpusEncoder.apply()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.processing.RandomTrainTestSplitter"><code class="docutils literal notranslate"><span class="pre">RandomTrainTestSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.processing.Standardization"><code class="docutils literal notranslate"><span class="pre">Standardization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.processing.Standardization.Collector"><code class="docutils literal notranslate"><span class="pre">Standardization.Collector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.processing.Standardization.apply"><code class="docutils literal notranslate"><span class="pre">Standardization.apply()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.tests">drugex.data.tests module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.tests.FragmentPairs"><code class="docutils literal notranslate"><span class="pre">FragmentPairs</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.FragmentPairs.getPairs"><code class="docutils literal notranslate"><span class="pre">FragmentPairs.getPairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_graph"><code class="docutils literal notranslate"><span class="pre">FragmentPairs.test_pair_encode_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_smiles"><code class="docutils literal notranslate"><span class="pre">FragmentPairs.test_pair_encode_smiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.FragmentPairs.test_pair_encode_smiles_parallel"><code class="docutils literal notranslate"><span class="pre">FragmentPairs.test_pair_encode_smiles_parallel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests"><code class="docutils literal notranslate"><span class="pre">ProcessingTests</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.getRandomFile"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.getRandomFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.getStandardizationMols"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.getStandardizationMols()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.getTestMols"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.getTestMols()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_frag_suppliers"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_frag_suppliers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_fragmentation_with_selected_fragment"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_fragmentation_with_selected_fragment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_gragh_scaffold_encoding"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_gragh_scaffold_encoding()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_graph_frag_encoder"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_graph_frag_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_encoder"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_smiles_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_frag_encoder"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_smiles_frag_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_smiles_scaffold_encoding"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_smiles_scaffold_encoding()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.data.html#drugex.data.tests.ProcessingTests.test_standardization"><code class="docutils literal notranslate"><span class="pre">ProcessingTests.test_standardization()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data.utils">drugex.data.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.utils.getDataPaths"><code class="docutils literal notranslate"><span class="pre">getDataPaths()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.data.html#drugex.data.utils.getVocPaths"><code class="docutils literal notranslate"><span class="pre">getVocPaths()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.data.html#module-drugex.data">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="drugex.logs.html">drugex.logs package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.config">drugex.logs.config module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.utils">drugex.logs.utils module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.config">drugex.logs.config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.LevelFilter"><code class="docutils literal notranslate"><span class="pre">LevelFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.LevelFilter.filter"><code class="docutils literal notranslate"><span class="pre">LevelFilter.filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.LevelFormatter"><code class="docutils literal notranslate"><span class="pre">LevelFormatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.LevelFormatter.format"><code class="docutils literal notranslate"><span class="pre">LevelFormatter.format()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.LogFileConfig"><code class="docutils literal notranslate"><span class="pre">LogFileConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.config_logger"><code class="docutils literal notranslate"><span class="pre">config_logger()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.get_git_info"><code class="docutils literal notranslate"><span class="pre">get_git_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.get_runid"><code class="docutils literal notranslate"><span class="pre">get_runid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.config.init_logfile"><code class="docutils literal notranslate"><span class="pre">init_logfile()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs.utils">drugex.logs.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.backUpFiles"><code class="docutils literal notranslate"><span class="pre">backUpFiles()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.backUpFilesInFolder"><code class="docutils literal notranslate"><span class="pre">backUpFilesInFolder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.callwarning"><code class="docutils literal notranslate"><span class="pre">callwarning()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.enable_file_logger"><code class="docutils literal notranslate"><span class="pre">enable_file_logger()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.export_conda_environment"><code class="docutils literal notranslate"><span class="pre">export_conda_environment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.generateBackupDir"><code class="docutils literal notranslate"><span class="pre">generateBackupDir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.utils.generate_backup_runID"><code class="docutils literal notranslate"><span class="pre">generate_backup_runID()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.logs.html#module-drugex.logs">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.logs.html#drugex.logs.setLogger"><code class="docutils literal notranslate"><span class="pre">setLogger()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="drugex.molecules.html">drugex.molecules package</a><ul>
@@ -162,18 +344,98 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.interfaces">drugex.molecules.interfaces module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.mol">drugex.molecules.mol module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.suppliers">drugex.molecules.suppliers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.interfaces">drugex.molecules.interfaces module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.BaseMolSupplier"><code class="docutils literal notranslate"><span class="pre">BaseMolSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.BaseMolSupplier.convert"><code class="docutils literal notranslate"><span class="pre">BaseMolSupplier.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.ItemException"><code class="docutils literal notranslate"><span class="pre">ItemException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier"><code class="docutils literal notranslate"><span class="pre">MolSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier.convert"><code class="docutils literal notranslate"><span class="pre">MolSupplier.convert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier.next"><code class="docutils literal notranslate"><span class="pre">MolSupplier.next()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier.toList"><code class="docutils literal notranslate"><span class="pre">MolSupplier.toList()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule"><code class="docutils literal notranslate"><span class="pre">Molecule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule.annotate"><code class="docutils literal notranslate"><span class="pre">Molecule.annotate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule.asRDKit"><code class="docutils literal notranslate"><span class="pre">Molecule.asRDKit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule.getAnnotation"><code class="docutils literal notranslate"><span class="pre">Molecule.getAnnotation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule.getMetadata"><code class="docutils literal notranslate"><span class="pre">Molecule.getMetadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.Molecule.getUniqueID"><code class="docutils literal notranslate"><span class="pre">Molecule.getUniqueID()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.mol">drugex.molecules.mol module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol"><code class="docutils literal notranslate"><span class="pre">DrExMol</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.annotate"><code class="docutils literal notranslate"><span class="pre">DrExMol.annotate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.asRDKit"><code class="docutils literal notranslate"><span class="pre">DrExMol.asRDKit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.getAnnotation"><code class="docutils literal notranslate"><span class="pre">DrExMol.getAnnotation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.getMetadata"><code class="docutils literal notranslate"><span class="pre">DrExMol.getMetadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.getUniqueID"><code class="docutils literal notranslate"><span class="pre">DrExMol.getUniqueID()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.DrExMol.smiles"><code class="docutils literal notranslate"><span class="pre">DrExMol.smiles</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.mol.InitializationException"><code class="docutils literal notranslate"><span class="pre">InitializationException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules.suppliers">drugex.molecules.suppliers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.suppliers.ListSupplier"><code class="docutils literal notranslate"><span class="pre">ListSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.suppliers.ListSupplier.next"><code class="docutils literal notranslate"><span class="pre">ListSupplier.next()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.suppliers.StandardizedSupplier"><code class="docutils literal notranslate"><span class="pre">StandardizedSupplier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.molecules.html#drugex.molecules.suppliers.StandardizedSupplier.next"><code class="docutils literal notranslate"><span class="pre">StandardizedSupplier.next()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.molecules.html#module-drugex.molecules">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="drugex.parallel.html">drugex.parallel package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.collectors">drugex.parallel.collectors module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.evaluator">drugex.parallel.evaluator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.interfaces">drugex.parallel.interfaces module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.tests">drugex.parallel.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.collectors">drugex.parallel.collectors module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.collectors.ListAppend"><code class="docutils literal notranslate"><span class="pre">ListAppend</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.collectors.ListExtend"><code class="docutils literal notranslate"><span class="pre">ListExtend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.collectors.ListExtend.getList"><code class="docutils literal notranslate"><span class="pre">ListExtend.getList()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.evaluator">drugex.parallel.evaluator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator"><code class="docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator.apply"><code class="docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator.error"><code class="docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator.initSupplier"><code class="docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.initSupplier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.evaluator.ParallelSupplierEvaluator.run"><code class="docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.interfaces">drugex.parallel.interfaces module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ListCollector"><code class="docutils literal notranslate"><span class="pre">ListCollector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ListCollector.getList"><code class="docutils literal notranslate"><span class="pre">ListCollector.getList()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ParallelException"><code class="docutils literal notranslate"><span class="pre">ParallelException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ParallelProcessor"><code class="docutils literal notranslate"><span class="pre">ParallelProcessor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ParallelProcessor.apply"><code class="docutils literal notranslate"><span class="pre">ParallelProcessor.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ParallelProcessor.getChunkSize"><code class="docutils literal notranslate"><span class="pre">ParallelProcessor.getChunkSize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.interfaces.ResultCollector"><code class="docutils literal notranslate"><span class="pre">ResultCollector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel.tests">drugex.parallel.tests module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.tests.TestFileParsers"><code class="docutils literal notranslate"><span class="pre">TestFileParsers</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.tests.TestFileParsers.getTestFile"><code class="docutils literal notranslate"><span class="pre">TestFileParsers.getTestFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.tests.TestFileParsers.test_parallel"><code class="docutils literal notranslate"><span class="pre">TestFileParsers.test_parallel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.parallel.html#drugex.parallel.tests.TestFileParsers.test_parallel_with_suppliers"><code class="docutils literal notranslate"><span class="pre">TestFileParsers.test_parallel_with_suppliers()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.parallel.html#module-drugex.parallel">Module contents</a></li>
 </ul>
 </li>
@@ -214,21 +476,174 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.environment">drugex.training.environment module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.interfaces">drugex.training.interfaces module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.monitors">drugex.training.monitors module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.rewards">drugex.training.rewards module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.tests">drugex.training.tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.environment">drugex.training.environment module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment"><code class="docutils literal notranslate"><span class="pre">DrugExEnvironment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment.getScores"><code class="docutils literal notranslate"><span class="pre">DrugExEnvironment.getScores()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment.getUnmodifiedScores"><code class="docutils literal notranslate"><span class="pre">DrugExEnvironment.getUnmodifiedScores()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.interfaces">drugex.training.interfaces module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment"><code class="docutils literal notranslate"><span class="pre">Environment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment.getRewards"><code class="docutils literal notranslate"><span class="pre">Environment.getRewards()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment.getScorerKeys"><code class="docutils literal notranslate"><span class="pre">Environment.getScorerKeys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment.getScores"><code class="docutils literal notranslate"><span class="pre">Environment.getScores()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Environment.getUnmodifiedScores"><code class="docutils literal notranslate"><span class="pre">Environment.getUnmodifiedScores()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model.attachToGPUs"><code class="docutils literal notranslate"><span class="pre">Model.attachToGPUs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model.fit"><code class="docutils literal notranslate"><span class="pre">Model.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model.loadStates"><code class="docutils literal notranslate"><span class="pre">Model.loadStates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model.loadStatesFromFile"><code class="docutils literal notranslate"><span class="pre">Model.loadStatesFromFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.Model.updateDevices"><code class="docutils literal notranslate"><span class="pre">Model.updateDevices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelEvaluator"><code class="docutils literal notranslate"><span class="pre">ModelEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelProvider"><code class="docutils literal notranslate"><span class="pre">ModelProvider</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelProvider.getModel"><code class="docutils literal notranslate"><span class="pre">ModelProvider.getModel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.RewardScheme"><code class="docutils literal notranslate"><span class="pre">RewardScheme</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.RewardScheme.RewardException"><code class="docutils literal notranslate"><span class="pre">RewardScheme.RewardException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor.close"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor.endStep"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor.endStep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor.saveModel"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor.saveModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor.savePerformanceInfo"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor.savePerformanceInfo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.interfaces.TrainingMonitor.saveProgress"><code class="docutils literal notranslate"><span class="pre">TrainingMonitor.saveProgress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.monitors">drugex.training.monitors module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor"><code class="docutils literal notranslate"><span class="pre">FileMonitor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.appendTableToFile"><code class="docutils literal notranslate"><span class="pre">FileMonitor.appendTableToFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.close"><code class="docutils literal notranslate"><span class="pre">FileMonitor.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.endStep"><code class="docutils literal notranslate"><span class="pre">FileMonitor.endStep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.getModel"><code class="docutils literal notranslate"><span class="pre">FileMonitor.getModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.saveEpochData"><code class="docutils literal notranslate"><span class="pre">FileMonitor.saveEpochData()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.saveModel"><code class="docutils literal notranslate"><span class="pre">FileMonitor.saveModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.saveMolecules"><code class="docutils literal notranslate"><span class="pre">FileMonitor.saveMolecules()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.savePerformanceInfo"><code class="docutils literal notranslate"><span class="pre">FileMonitor.savePerformanceInfo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.FileMonitor.saveProgress"><code class="docutils literal notranslate"><span class="pre">FileMonitor.saveProgress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor"><code class="docutils literal notranslate"><span class="pre">NullMonitor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.close"><code class="docutils literal notranslate"><span class="pre">NullMonitor.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.endStep"><code class="docutils literal notranslate"><span class="pre">NullMonitor.endStep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.getModel"><code class="docutils literal notranslate"><span class="pre">NullMonitor.getModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.saveModel"><code class="docutils literal notranslate"><span class="pre">NullMonitor.saveModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.savePerformanceInfo"><code class="docutils literal notranslate"><span class="pre">NullMonitor.savePerformanceInfo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.monitors.NullMonitor.saveProgress"><code class="docutils literal notranslate"><span class="pre">NullMonitor.saveProgress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.rewards">drugex.training.rewards module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoCrowdingDistance"><code class="docutils literal notranslate"><span class="pre">ParetoCrowdingDistance</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoCrowdingDistance.getMoleculeRank"><code class="docutils literal notranslate"><span class="pre">ParetoCrowdingDistance.getMoleculeRank()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoRewardScheme"><code class="docutils literal notranslate"><span class="pre">ParetoRewardScheme</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoRewardScheme.getMoleculeRank"><code class="docutils literal notranslate"><span class="pre">ParetoRewardScheme.getMoleculeRank()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoRewardScheme.getParetoFronts"><code class="docutils literal notranslate"><span class="pre">ParetoRewardScheme.getParetoFronts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoTanimotoDistance"><code class="docutils literal notranslate"><span class="pre">ParetoTanimotoDistance</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoTanimotoDistance.calc_fps"><code class="docutils literal notranslate"><span class="pre">ParetoTanimotoDistance.calc_fps()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoTanimotoDistance.getFPs"><code class="docutils literal notranslate"><span class="pre">ParetoTanimotoDistance.getFPs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.ParetoTanimotoDistance.getMoleculeRank"><code class="docutils literal notranslate"><span class="pre">ParetoTanimotoDistance.getMoleculeRank()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.rewards.WeightedSum"><code class="docutils literal notranslate"><span class="pre">WeightedSum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training.tests">drugex.training.tests module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.tests.MockScorer"><code class="docutils literal notranslate"><span class="pre">MockScorer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.MockScorer.getKey"><code class="docutils literal notranslate"><span class="pre">MockScorer.getKey()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.MockScorer.getScores"><code class="docutils literal notranslate"><span class="pre">MockScorer.getScores()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.allMethodsExecuted"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.allMethodsExecuted()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.close"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.endStep"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.endStep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.getModel"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.getModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.passToSubmonitors"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.passToSubmonitors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.saveModel"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.saveModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.savePerformanceInfo"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.savePerformanceInfo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestModelMonitor.saveProgress"><code class="docutils literal notranslate"><span class="pre">TestModelMonitor.saveProgress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestScorer"><code class="docutils literal notranslate"><span class="pre">TestScorer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TestScorer.test_getScores"><code class="docutils literal notranslate"><span class="pre">TestScorer.test_getScores()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.BATCH_SIZE"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.BATCH_SIZE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.MAX_SMILES"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.MAX_SMILES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.N_EPOCHS"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.N_EPOCHS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.N_PROC"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.N_PROC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.SEED"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.SEED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.finetuning_file"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.finetuning_file</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.fitTestModel"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.fitTestModel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.getRandomFile"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.getRandomFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.getSmiles"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.getSmiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.getTestEnvironment"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.getTestEnvironment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.pretraining_file"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.pretraining_file</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.scorers"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.scorers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.setUp"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.setUp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.setUpSmilesFragData"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.setUpSmilesFragData()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.standardize"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.standardize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_data_dir"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_data_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_graph_transformer"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_graph_transformer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_graph_transformer_scaffold"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_graph_transformer_scaffold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_rnn"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_sequence_rnn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_transformer"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_sequence_transformer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.test_sequence_transformer_scaffold"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.test_sequence_transformer_scaffold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.training.html#drugex.training.tests.TrainingTestCase.thresholds"><code class="docutils literal notranslate"><span class="pre">TrainingTestCase.thresholds</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.training.html#drugex.training.tests.getPredictor"><code class="docutils literal notranslate"><span class="pre">getPredictor()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.training.html#module-drugex.training">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="drugex.utils.html">drugex.utils package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.download">drugex.utils.download module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.fingerprints">drugex.utils.fingerprints module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.gcmol">drugex.utils.gcmol module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.nsgaii">drugex.utils.nsgaii module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.optim">drugex.utils.optim module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.download">drugex.utils.download module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.download.check_sha256sum"><code class="docutils literal notranslate"><span class="pre">check_sha256sum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.download.download_file"><code class="docutils literal notranslate"><span class="pre">download_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.download.sha256sum"><code class="docutils literal notranslate"><span class="pre">sha256sum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.fingerprints">drugex.utils.fingerprints module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.fingerprints.get_fingerprint"><code class="docutils literal notranslate"><span class="pre">get_fingerprint()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.gcmol">drugex.utils.gcmol module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.gcmol.canonicalize"><code class="docutils literal notranslate"><span class="pre">canonicalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.gcmol.canonicalize_list"><code class="docutils literal notranslate"><span class="pre">canonicalize_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.gcmol.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">remove_duplicates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.optim">drugex.utils.optim module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.optim.ScheduledOptim"><code class="docutils literal notranslate"><span class="pre">ScheduledOptim</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#drugex.utils.optim.ScheduledOptim.step"><code class="docutils literal notranslate"><span class="pre">ScheduledOptim.step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="drugex.utils.html#drugex.utils.optim.ScheduledOptim.zero_grad"><code class="docutils literal notranslate"><span class="pre">ScheduledOptim.zero_grad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils.pareto">drugex.utils.pareto module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.utils.html#drugex.utils.pareto.get_Pareto_fronts"><code class="docutils literal notranslate"><span class="pre">get_Pareto_fronts()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.utils.html#module-drugex.utils">Module contents</a></li>
 </ul>
 </li>
@@ -310,18 +725,15 @@ On: 24.06.22, 10:36</p>
 :param input_file: file containing SMILES, can be ‘sdf.gz’ or (compressed) ‘tsv’ or ‘csv’ file
 :type input_file: str</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list of SMILES extracted from input_file</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>mols (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
 </dd>
 </dl>
 </dd></dl>
 
-</section>
-<section id="drugex-designer-module">
-<h2>drugex.designer module<a class="headerlink" href="#drugex-designer-module" title="Permalink to this heading"></a></h2>
 </section>
 <section id="module-drugex.download">
 <span id="drugex-download-module"></span><h2>drugex.download module<a class="headerlink" href="#module-drugex.download" title="Permalink to this heading"></a></h2>
@@ -336,6 +748,46 @@ On: 24.06.22, 10:36</p>
 <dd></dd></dl>
 
 </section>
+<section id="module-drugex.generate">
+<span id="drugex-generate-module"></span><h2>drugex.generate module<a class="headerlink" href="#module-drugex.generate" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.generate.Design">
+<span class="sig-prename descclassname"><span class="pre">drugex.generate.</span></span><span class="sig-name descname"><span class="pre">Design</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/generate.html#Design"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.generate.Design" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.generate.DesignArgParser">
+<span class="sig-prename descclassname"><span class="pre">drugex.generate.</span></span><span class="sig-name descname"><span class="pre">DesignArgParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/generate.html#DesignArgParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.generate.DesignArgParser" title="Permalink to this definition"></a></dt>
+<dd><p>Define and read command line arguments</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="drugex.generate.DesignerFragsDataPreparation">
+<span class="sig-prename descclassname"><span class="pre">drugex.generate.</span></span><span class="sig-name descname"><span class="pre">DesignerFragsDataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><span class="pre">list</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/generate.html#DesignerFragsDataPreparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.generate.DesignerFragsDataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Reads and preprocesses the vocabulary and input data for a graph-based generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>voc_files</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – list of vocabulary file prefixes</p></li>
+<li><p><strong>data_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – name of the folder input files</p></li>
+<li><p><strong>input_file</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – name of file containing input fragments</p></li>
+<li><p><strong>mol_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – molecule type</p></li>
+<li><p><strong>alg</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – generator algoritm</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – batch size</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – number of molecules to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>atom vocabulary
+loader                      : torch DataLoader containing input fragements</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>voc</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-drugex.train">
 <span id="drugex-train-module"></span><h2>drugex.train module<a class="headerlink" href="#module-drugex.train" title="Permalink to this heading"></a></h2>
 <dl class="py function">
@@ -343,7 +795,7 @@ On: 24.06.22, 10:36</p>
 <span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">CreateEnvironment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mw_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[200,</span> <span class="pre">600]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpsa_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">140]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ECFP6'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_tw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">1.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipe_ths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[4,</span> <span class="pre">6]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#CreateEnvironment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.CreateEnvironment" title="Permalink to this definition"></a></dt>
 <dd><p>Sets up the objectives of the desirability function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – folder containing ‘qspr’ folder with saved environment-predictor models</p></li>
 <li><p><strong>predictor</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – environment-predictor algoritm</p></li>
@@ -373,10 +825,10 @@ On: 24.06.22, 10:36</p>
 <li><p><strong>log</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – log instance</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>environment-predictor model</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="drugex.training.html#drugex.training.environment.DrugExEnvironment" title="drugex.training.environment.DrugExEnvironment">DrugExEnvironment</a> (torch model)</p>
 </dd>
 </dl>
@@ -388,7 +840,7 @@ On: 24.06.22, 10:36</p>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for preparing data for training and testing from input files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
 <li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
@@ -404,10 +856,10 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">getDataPaths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#DataPreparation.getDataPaths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.DataPreparation.getDataPaths" title="Permalink to this definition"></a></dt>
 <dd><p>Get paths to training and test data files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Paths to training and test data files.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple[<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a>, <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a>]</p>
 </dd>
 </dl>
@@ -418,10 +870,10 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">getVocPaths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#DataPreparation.getVocPaths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.DataPreparation.getVocPaths" title="Permalink to this definition"></a></dt>
 <dd><p>Get paths to vocabulary files. If none are found, use internal defaults.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List of paths to vocabulary files.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
 </dd>
 </dl>
@@ -442,7 +894,7 @@ On: 24.06.22, 10:36</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
 <p>Data preprocessing for graph-based fragment generation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
 <li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
@@ -480,7 +932,7 @@ On: 24.06.22, 10:36</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
 <p>Data preprocessing for SMILES-based fragment generation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
 <li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
@@ -518,17 +970,17 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">setExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#Reinforce.setExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.Reinforce.setExplorer" title="Permalink to this definition"></a></dt>
 <dd><p>Set explorer algorithm and parameters</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>agent</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object to be fitted</p></li>
 <li><p><strong>prior</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object to be used as prior</p></li>
 <li><p><strong>env</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Environment object to score molecules</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>explorer</strong> – DrugEx Explorer object</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
 </dd>
 </dl>
@@ -546,16 +998,16 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">loadStatesFromFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.loadStatesFromFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.loadStatesFromFile" title="Permalink to this definition"></a></dt>
 <dd><p>Load pretrained weights from file</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>generator</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – DrugEx Generator object</p></li>
 <li><p><strong>generator_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to pretrained weights</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>generator</strong> – DrugEx Generator object</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
 </dd>
 </dl>
@@ -566,10 +1018,10 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">prepareInputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.prepareInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.prepareInputs" title="Permalink to this definition"></a></dt>
 <dd><p>Prepare inputs for training or molecule generation</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Vocabulary, training data loader, and test data loader.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple[<a class="reference internal" href="drugex.data.corpus.html#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary">Vocabulary</a>, DataLoader, DataLoader]</p>
 </dd>
 </dl>
@@ -580,13 +1032,13 @@ On: 24.06.22, 10:36</p>
 <span class="sig-name descname"><span class="pre">setGeneratorAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#SetUpGenerator.setGeneratorAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.SetUpGenerator.setGeneratorAlgorithm" title="Permalink to this definition"></a></dt>
 <dd><p>Set generator algorithm based on molecule type and generator algorithm type</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>voc</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><em>object</em></a>) – Vocabulary object</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>generator</strong> – DrugEx Generator object</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)">object</a></p>
 </dd>
 </dl>
@@ -600,7 +1052,7 @@ On: 24.06.22, 10:36</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.train.DataPreparation" title="drugex.train.DataPreparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreparation</span></code></a></p>
 <p>Data preprocessing for SMILES-based molecule generation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Variables</dt>
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to base directory.</p></li>
 <li><p><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to data directory.</p></li>
@@ -620,17 +1072,17 @@ On: 24.06.22, 10:36</p>
 <span class="sig-prename descclassname"><span class="pre">drugex.train.</span></span><span class="sig-name descname"><span class="pre">getModifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity_threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/train.html#getModifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.train.getModifiers" title="Permalink to this definition"></a></dt>
 <dd><p>Gets the modifiers for a given task, scheme and activity threshold combination.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>task</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The task to get the modifiers for.</p></li>
 <li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The scheme to get the modifiers for.</p></li>
 <li><p><strong>activity_threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The activity threshold to use for the modifiers when relevant.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The active modifiers for the given task.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
 </dd>
 </dl>
@@ -649,7 +1101,7 @@ On: 06.04.22, 16:51</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modules.html" class="btn btn-neutral float-left" title="DrugEx Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="DrugEx Package API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="drugex.data.html" class="btn btn-neutral float-right" title="drugex.data package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

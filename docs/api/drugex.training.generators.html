@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.generators package &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.generators package &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Python API</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Package API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -76,8 +80,8 @@
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex-designer-module">drugex.designer module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.generate">drugex.generate module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
@@ -99,11 +103,11 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Python API</a> &raquo;</li>
-          <li><a href="drugex.html">drugex package</a> &raquo;</li>
-          <li><a href="drugex.training.html">drugex.training package</a> &raquo;</li>
-      <li>drugex.training.generators package</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="drugex.html">drugex package</a></li>
+          <li class="breadcrumb-item"><a href="drugex.training.html">drugex.training package</a></li>
+      <li class="breadcrumb-item active">drugex.training.generators package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -137,11 +141,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.AtomLayer.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.graph_transformer.AtomLayer.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -162,11 +161,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.Block.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.graph_transformer.Block.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -178,11 +172,17 @@ registered hooks while the latter silently ignores them.</p>
 <dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.attachToGPUs">
 <span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.attachToGPUs" title="Permalink to this definition"></a></dt>
 <dd><p>Attach model to GPUs</p>
+<section id="parameters">
+<h3>Parameters:<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>gpus: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a></dt><dd><p>A tuple of GPU ids to use</p>
 </dd>
 </dl>
+</section>
+<section id="returns">
+<h3>Returns:<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h3>
 <p>None</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -194,20 +194,29 @@ registered hooks while the latter silently ignores them.</p>
 <dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.forward" title="Permalink to this definition"></a></dt>
 <dd><p>Forward pass</p>
+<section id="id1">
+<h3>Parameters:<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>src: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Input tensor of shape [batch_size, 80, 5] (transpose of the encoded graphs as drawn in the paper)</p>
 </dd>
 <dt>is_train: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">bool</span></code></a></dt><dd><p>Whether the model is in training mode</p>
 </dd>
 </dl>
+</section>
+<section id="id2">
+<h3>Returns:<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <p>TODO : fill outputs</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.init_states">
 <span class="sig-name descname"><span class="pre">init_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.init_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.init_states" title="Permalink to this definition"></a></dt>
 <dd><p>Initialize model parameters</p>
+<section id="notes">
+<h3>Notes:<a class="headerlink" href="#notes" title="Permalink to this heading"></a></h3>
 <p>Xavier initialization for all parameters except for the embedding layer</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -219,6 +228,8 @@ registered hooks while the latter silently ignores them.</p>
 <dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.loaderFromFrags">
 <span class="sig-name descname"><span class="pre">loaderFromFrags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.loaderFromFrags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.loaderFromFrags" title="Permalink to this definition"></a></dt>
 <dd><p>Encode the input fragments and create a dataloader object</p>
+<section id="id3">
+<h3>Parameters:<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>frags: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of input fragments (in SMILES format)</p>
 </dd>
@@ -227,10 +238,14 @@ registered hooks while the latter silently ignores them.</p>
 <dt>n_proc: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Number of processes to use for encoding the fragments</p>
 </dd>
 </dl>
+</section>
+<section id="id4">
+<h3>Returns:<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the input fragments</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -238,10 +253,10 @@ registered hooks while the latter silently ignores them.</p>
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.sample" title="Permalink to this definition"></a></dt>
 <dd><p>Sample SMILES from the network</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – The data loader for the input fragments</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>smiles</strong> (<em>list</em>) – List of SMILES</p></li>
 <li><p><strong>frags</strong> (<em>list</em>) – List of fragments</p></li>
@@ -256,40 +271,35 @@ registered hooks while the latter silently ignores them.</p>
 <span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.trainNet" title="Permalink to this definition"></a></dt>
 <dd><p>Train the network for one epoch</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – The data loader for the training set</p></li>
 <li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current epoch</p></li>
 <li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of epochs</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>loss</strong> – The training loss of the epoch</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.graph_transformer.GraphTransformer.validateNet">
 <span class="sig-name descname"><span class="pre">validateNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/graph_transformer.html#GraphTransformer.validateNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.graph_transformer.GraphTransformer.validateNet" title="Permalink to this definition"></a></dt>
 <dd><p>Validate the network</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – A dataloader object to iterate over the validation data</p></li>
 <li><p><strong>evaluator</strong> (<em>Evaluator</em>) – An evaluator object to evaluate the generated SMILES</p></li>
 <li><p><strong>no_multifrag_smiles</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, only single-fragment SMILES are considered valid</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>valid_metrics</strong> (<em>dict</em>) – Dictionary containing the validation metrics</p></li>
 <li><p><strong>scores</strong> (<em>pandas.DataFrame</em>) – DataFrame containing Smiles, frags and the scores for each SMILES</p></li>
@@ -325,10 +335,13 @@ On: 01.06.22, 11:29</p>
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.FragGenerator.attachToGPUs">
 <span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#FragGenerator.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.attachToGPUs" title="Permalink to this definition"></a></dt>
 <dd><p>Attach model to GPUs</p>
+<section id="id5">
+<h3>Parameters:<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>gpus: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a></dt><dd><p>A tuple of GPU ids to use</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -338,10 +351,10 @@ On: 01.06.22, 11:29</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.FragGenerator.generate">
-<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Optional" title="(in Python v3.9)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Optional" title="(in Python v3.9)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><span class="pre">DataSet</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_invalid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_undesired</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tqdm_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#FragGenerator.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.generate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="drugex.data.html#drugex.data.interfaces.DataSet" title="drugex.data.interfaces.DataSet"><span class="pre">DataSet</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_invalid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_undesired</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tqdm_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#FragGenerator.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.generate" title="Permalink to this definition"></a></dt>
 <dd><p>Generate SMILES from either a list of input fragments (<code class="xref any docutils literal notranslate"><span class="pre">input_frags</span></code>) or a dataset object directly (<code class="xref any docutils literal notranslate"><span class="pre">input_dataset</span></code>). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_frags</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of input fragments to incorporate in the (as molecules in SMILES format)</p></li>
 <li><p><strong>input_dataset</strong> (<a class="reference internal" href="drugex.data.html#drugex.data.datasets.GraphFragDataSet" title="drugex.data.datasets.GraphFragDataSet"><em>GraphFragDataSet</em></a>) – a <a class="reference internal" href="drugex.data.html#drugex.data.datasets.GraphFragDataSet" title="drugex.data.datasets.GraphFragDataSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GraphFragDataSet</span></code></a> object to use to provide the input fragments</p></li>
@@ -367,7 +380,10 @@ On: 01.06.22, 11:29</p>
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.FragGenerator.init_states">
 <span class="sig-name descname"><span class="pre">init_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#FragGenerator.init_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.init_states" title="Permalink to this definition"></a></dt>
 <dd><p>Initialize model parameters</p>
+<section id="id6">
+<h3>Notes:<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
 <p>Xavier initialization for all parameters except for the embedding layer</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -379,6 +395,8 @@ On: 01.06.22, 11:29</p>
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.FragGenerator.loaderFromFrags">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loaderFromFrags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#FragGenerator.loaderFromFrags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.loaderFromFrags" title="Permalink to this definition"></a></dt>
 <dd><p>Encode the input fragments and create a dataloader object</p>
+<section id="id7">
+<h3>Parameters:<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>frags: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of input fragments (in SMILES format)</p>
 </dd>
@@ -387,16 +405,15 @@ On: 01.06.22, 11:29</p>
 <dt>n_proc: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Number of processes to use for encoding the fragments</p>
 </dd>
 </dl>
+</section>
+<section id="id8">
+<h3>Returns:<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the input fragments</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.interfaces.FragGenerator.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.interfaces.FragGenerator.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -407,8 +424,10 @@ On: 01.06.22, 11:29</p>
 <p>The base generator class for fitting and evaluating a DrugEx generator.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.Generator.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Optional" title="(in Python v3.9)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unmodified_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.evaluate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unmodified_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate molecules by using the given evaluator or checking for validity.</p>
+<section id="id9">
+<h3>Parameters:<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>smiles: List</dt><dd><p>List of SMILES to evaluate</p>
 </dd>
@@ -422,19 +441,22 @@ On: 01.06.22, 11:29</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>scores</strong> – A <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code> with the scores for each molecule</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.Generator.filterNewMolecules">
 <span class="sig-name descname"><span class="pre">filterNewMolecules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_undesired</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.filterNewMolecules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.filterNewMolecules" title="Permalink to this definition"></a></dt>
 <dd><p>Filter the generated SMILES</p>
+<section id="id10">
+<h3>Parameters:<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>smiles: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of previous SMILES</p>
 </dd>
@@ -451,12 +473,16 @@ On: 01.06.22, 11:29</p>
 <dt>no_multifrag_smiles: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">bool</span></code></a></dt><dd><p>If <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, only single-fragment SMILES are considered valid</p>
 </dd>
 </dl>
+</section>
+<section id="id11">
+<h3>Returns:<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>new_smiles: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of filtered SMILES</p>
 </dd>
 <dt>new_frags: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of filtered input fragments</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -464,7 +490,7 @@ On: 01.06.22, 11:29</p>
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Fit the generator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>train_loader</strong> (<em>DataLoader</em>) – a <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> instance to use for training</p></li>
 <li><p><strong>valid_loader</strong> (<em>DataLoader</em>) – a <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> instance to use for validation</p></li>
@@ -484,10 +510,10 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.generate" title="Permalink to this definition"></a></dt>
 <dd><p>Generate molecules from the generator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>df_smiles</strong> – a <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code> with the generated molecules (and their scores)</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
@@ -498,10 +524,10 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <span class="sig-name descname"><span class="pre">getModel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.getModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.getModel" title="Permalink to this definition"></a></dt>
 <dd><p>Return a copy of this model as a state dictionary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> – A serializable copy of this model as a state dictionary</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
 </dd>
 </dl>
@@ -511,6 +537,8 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.Generator.logPerformanceAndCompounds">
 <span class="sig-name descname"><span class="pre">logPerformanceAndCompounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.logPerformanceAndCompounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.logPerformanceAndCompounds" title="Permalink to this definition"></a></dt>
 <dd><p>Log performance and compounds</p>
+<section id="id12">
+<h3>Parameters:<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>epoch: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>The current epoch</p>
 </dd>
@@ -519,6 +547,7 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <dt>scores: <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code></dt><dd><p>A <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code> with generated molecules and their scores</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -526,7 +555,7 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.sample" title="Permalink to this definition"></a></dt>
 <dd><p>Samples molcules from the generator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><strong>smiles</strong> (<em>List</em>) – List of SMILES strings</p></li>
 <li><p><strong>frags</strong> (<em>List, optional</em>) – List of fragments used to generate the molecules</p></li>
@@ -541,7 +570,7 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.trainNet" title="Permalink to this definition"></a></dt>
 <dd><p>Train the generator for a single epoch.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loader</strong> (<em>DataLoader</em>) – a <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> instance to use for training</p></li>
 <li><p><strong>epoch</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the current epoch</p></li>
@@ -551,17 +580,12 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.interfaces.Generator.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.interfaces.Generator.validateNet">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validateNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/interfaces.html#Generator.validateNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.interfaces.Generator.validateNet" title="Permalink to this definition"></a></dt>
 <dd><p>Validate the performance of the generator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loader</strong> (<em>DataLoader</em>) – a <code class="xref any docutils literal notranslate"><span class="pre">DataLoader</span></code> instance to use for validation.</p></li>
 <li><p><strong>evaluator</strong> (<a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelEvaluator" title="drugex.training.interfaces.ModelEvaluator"><em>ModelEvaluator</em></a>) – a <a class="reference internal" href="drugex.training.html#drugex.training.interfaces.ModelEvaluator" title="drugex.training.interfaces.ModelEvaluator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ModelEvaluator</span></code></a> instance to use for validation</p></li>
@@ -569,7 +593,7 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of samples to use for validation. Not used by transformers.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>valid_metrics</strong> (<em>dict</em>) – a dictionary with the validation metrics</p></li>
 <li><p><strong>smiles_scores</strong> (<em>DataFrame</em>) – a <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code> with the scores for each molecule</p></li>
@@ -593,17 +617,25 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.attachToGPUs">
 <span class="sig-name descname"><span class="pre">attachToGPUs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.attachToGPUs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.attachToGPUs" title="Permalink to this definition"></a></dt>
 <dd><p>This model currently uses only one GPU. Therefore, only the first one from the list will be used.</p>
+<section id="id13">
+<h3>Parameters:<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>gpus: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">tuple</span></code></a></dt><dd><p>A tuple of GPU indices.</p>
 </dd>
 </dl>
+</section>
+<section id="id14">
+<h3>Returns:<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
 <p>None</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.evolve">
 <span class="sig-name descname"><span class="pre">evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.evolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.evolve" title="Permalink to this definition"></a></dt>
 <dd><p>Evolve a SMILES from the model by sequantial addition of tokens.</p>
+<section id="id15">
+<h3>Parameters:<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>batch_size: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Batch size.</p>
 </dd>
@@ -614,13 +646,19 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 <dt>mutate: <code class="xref any docutils literal notranslate"><span class="pre">drugex.models.Mutate</span></code></dt><dd><p>Mutate network.</p>
 </dd>
 </dl>
+</section>
+<section id="id16">
+<h3>Returns:<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
 <p>TODO: check if ouput smiles are still encoded</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.forward" title="Permalink to this definition"></a></dt>
 <dd><p>Forward pass of the model.</p>
+<section id="id17">
+<h3>Parameters:<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>input: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Input tensor of shape (batch_size, 1).</p>
 </dd>
@@ -628,7 +666,11 @@ TODO: maybe the evaluator should be hard coded to None here as during PT/FT trai
 Hidden state tensor of shape (num_layers, batch_size, hidden_size).</p>
 </dd>
 </dl>
+</section>
+<section id="id18">
+<h3>Returns:<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
 <p>TODO: fill outputs</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -636,10 +678,10 @@ Hidden state tensor of shape (num_layers, batch_size, hidden_size).</p>
 <span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_invalid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_undesired</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tqdm_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.generate" title="Permalink to this definition"></a></dt>
 <dd><p>Generate molecules from the generator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>df_smiles</strong> – a <code class="xref any docutils literal notranslate"><span class="pre">DataFrame</span></code> with the generated molecules (and their scores)</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
 </dd>
 </dl>
@@ -651,47 +693,67 @@ Hidden state tensor of shape (num_layers, batch_size, hidden_size).</p>
 <dd><p>Initialize hidden state of the model.</p>
 <p>Hidden state is initialized with random values.
 If labels are provided, the first hidden state will be set to the labels.</p>
+<section id="id19">
+<h3>Parameters:<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>batch_size: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Batch size.</p>
 </dd>
 <dt>labels: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Labels tensor of shape (batch_size, 1).</p>
 </dd>
 </dl>
+</section>
+<section id="id20">
+<h3>Returns:<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
 <p>TODO: fill outputs</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.likelihood">
 <span class="sig-name descname"><span class="pre">likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.likelihood"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.likelihood" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the likelihood of the target sequence.</p>
+<section id="id21">
+<h3>Parameters:<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>target: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Target tensor of shape (batch_size, seq_len).</p>
 </dd>
 </dl>
+</section>
+<section id="id22">
+<h3>Returns:<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>scores: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Scores tensor of shape (batch_size, seq_len).</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.sample">
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.sample" title="Permalink to this definition"></a></dt>
 <dd><p>Sample a SMILES from the model.</p>
+<section id="id23">
+<h3>Parameters:<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>batch_size: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Batch size.</p>
 </dd>
 </dl>
+</section>
+<section id="id24">
+<h3>Returns:<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>smiles: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>List of SMILES.</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.trainNet">
 <span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.trainNet" title="Permalink to this definition"></a></dt>
 <dd><p>Train the RNN network for one epoch</p>
+<section id="id25">
+<h3>Parameters:<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader<span class="classifier">torch.utils.data.DataLoader</span></dt><dd><p>The data loader for the training set</p>
 </dd>
@@ -701,26 +763,22 @@ If labels are provided, the first hidden state will be set to the labels.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>loss</strong> – The training loss of the epoch</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_rnn.SequenceRNN.validateNet">
 <span class="sig-name descname"><span class="pre">validateNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_rnn.html#SequenceRNN.validateNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_rnn.SequenceRNN.validateNet" title="Permalink to this definition"></a></dt>
 <dd><p>Validate the network</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>loader</strong> (<em>torch.utils.data.DataLoader</em>) – A dataloader object to iterate over the validation data to compute the validation loss</p></li>
 <li><p><strong>evaluator</strong> (<em>Evaluator</em>) – An evaluator object to evaluate the generated SMILES</p></li>
@@ -728,7 +786,7 @@ If labels are provided, the first hidden state will be set to the labels.</p>
 <li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of SMILES to sample from the model</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>valid_metrics</strong> (<em>dict</em>) – Dictionary containing the validation metrics</p></li>
 <li><p><strong>scores</strong> (<em>pandas.DataFrame</em>) – DataFrame containing Smiles, frags and the scores for each SMILES</p></li>
@@ -770,11 +828,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.Block.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.sequence_transformer.Block.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -795,11 +848,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.GPT2Layer.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.sequence_transformer.GPT2Layer.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -816,6 +864,8 @@ registered hooks while the latter silently ignores them.</p>
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_transformer.html#SequenceTransformer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.forward" title="Permalink to this definition"></a></dt>
 <dd><p>Forward pass of the model</p>
+<section id="id26">
+<h3>Parameters:<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>src: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>TODO: check that the shape is correct
 Source tensor of shape [batch_size, 200]</p>
@@ -823,7 +873,11 @@ Source tensor of shape [batch_size, 200]</p>
 <dt>trg: <code class="xref any docutils literal notranslate"><span class="pre">torch.Tensor</span></code></dt><dd><p>Target tensor of shape [batch_size, 200]</p>
 </dd>
 </dl>
+</section>
+<section id="id27">
+<h3>Returns:<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
 <p>TODO: fill outputs</p>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -835,6 +889,8 @@ Source tensor of shape [batch_size, 200]</p>
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.loaderFromFrags">
 <span class="sig-name descname"><span class="pre">loaderFromFrags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_transformer.html#SequenceTransformer.loaderFromFrags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.loaderFromFrags" title="Permalink to this definition"></a></dt>
 <dd><p>Encode the input fragments and create a dataloader object</p>
+<section id="id28">
+<h3>Parameters:<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>frags: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of input fragments (in SMILES format)</p>
 </dd>
@@ -843,32 +899,44 @@ Source tensor of shape [batch_size, 200]</p>
 <dt>n_proc: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Number of processes to use for encoding the fragments</p>
 </dd>
 </dl>
+</section>
+<section id="id29">
+<h3>Returns:<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the input fragments</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.sample">
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_transformer.html#SequenceTransformer.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.sample" title="Permalink to this definition"></a></dt>
 <dd><p>Sample SMILES from the model</p>
+<section id="id30">
+<h3>Parameters:<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the input fragments</p>
 </dd>
 </dl>
+</section>
+<section id="id31">
+<h3>Returns:<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>smiles: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of sampled SMILES</p>
 </dd>
 <dt>frags: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a></dt><dd><p>A list of input fragments</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.trainNet">
 <span class="sig-name descname"><span class="pre">trainNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_transformer.html#SequenceTransformer.trainNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.trainNet" title="Permalink to this definition"></a></dt>
 <dd><p>Train the model for one epoch</p>
+<section id="id32">
+<h3>Parameters:<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the training data</p>
 </dd>
@@ -877,21 +945,22 @@ Source tensor of shape [batch_size, 200]</p>
 <dt>epochs: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></dt><dd><p>Total number of epochs</p>
 </dd>
 </dl>
+</section>
+<section id="id33">
+<h3>Returns:<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loss: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">float</span></code></a></dt><dd><p>The loss value for the current epoch</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.training.generators.sequence_transformer.SequenceTransformer.validateNet">
 <span class="sig-name descname"><span class="pre">validateNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_multifrag_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/sequence_transformer.html#SequenceTransformer.validateNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.sequence_transformer.SequenceTransformer.validateNet" title="Permalink to this definition"></a></dt>
 <dd><p>Validate the model</p>
+<section id="id34">
+<h3>Parameters:<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>loader: <code class="xref any docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></dt><dd><p>A dataloader object to iterate over the validation data</p>
 </dd>
@@ -900,12 +969,18 @@ Source tensor of shape [batch_size, 200]</p>
 <dt>no_multifrag_smiles: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">bool</span></code></a></dt><dd><p>If <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, only single-fragment SMILES are considered valid</p>
 </dd>
 </dl>
+</section>
+<section id="id35">
+<h3>Returns:<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>valid_metrics: <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></a></dt><dd><p>A dictionary containing the validation metrics</p>
 </dd>
 <dt>scores: <code class="xref any docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></dt><dd><p>DataFrame containing Smiles, frags and the scores for each SMILES</p>
 </dd>
 </dl>
+</section>
+<section id="id36">
+<h3>Notes:<a class="headerlink" href="#id36" title="Permalink to this heading"></a></h3>
 <dl class="simple">
 <dt>The validation metrics are:</dt><dd><ul class="simple">
 <li><p>valid_ratio: ratio of valid SMILES</p></li>
@@ -914,6 +989,7 @@ Source tensor of shape [batch_size, 200]</p>
 </ul>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 </dd></dl>
@@ -941,11 +1017,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.utils.PositionalEmbedding.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.utils.PositionalEmbedding.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -966,11 +1037,6 @@ instead of this since the former takes care of running the
 registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.utils.PositionalEncoding.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.utils.PositionalEncoding.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -993,11 +1059,6 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.utils.PositionwiseFeedForward.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.utils.PositionwiseFeedForward.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1010,11 +1071,6 @@ registered hooks while the latter silently ignores them.</p>
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sublayer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/training/generators/utils.html#SublayerConnection.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.training.generators.utils.SublayerConnection.forward" title="Permalink to this definition"></a></dt>
 <dd><p>Apply residual connection to any sublayer with the same size</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="drugex.training.generators.utils.SublayerConnection.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#drugex.training.generators.utils.SublayerConnection.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus.vocabulary &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.data.corpus.vocabulary &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.data.corpus.vocabulary</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.data.corpus.vocabulary</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -106,7 +110,7 @@
 
 
 <div class="viewcode-block" id="VocSmiles"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles">[docs]</a><span class="k">class</span> <span class="nc">VocSmiles</span><span class="p">(</span><span class="n">SequenceVocabulary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The class for handling encoding/decoding from SMILES to an array of indices for the main SMILES-based models (`GPT2Model` and `RNN`)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The class for handling encoding/decoding from SMILES to an array of indices for the main SMILES-based models (`GPT2Model` and `RNN`)&quot;&quot;&quot;</span>
 
     <span class="n">defaultWords</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="s1">&#39;)&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;2&#39;</span><span class="p">,</span><span class="s1">&#39;3&#39;</span><span class="p">,</span><span class="s1">&#39;4&#39;</span><span class="p">,</span><span class="s1">&#39;5&#39;</span><span class="p">,</span><span class="s1">&#39;6&#39;</span><span class="p">,</span><span class="s1">&#39;7&#39;</span><span class="p">,</span><span class="s1">&#39;8&#39;</span><span class="p">,</span><span class="s1">&#39;9&#39;</span><span class="p">,</span><span class="s1">&#39;=&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">,</span><span class="s1">&#39;P&#39;</span><span class="p">,</span><span class="s1">&#39;R&#39;</span><span class="p">,</span><span class="s1">&#39;S&#39;</span><span class="p">,</span><span class="s1">&#39;[Ag-3]&#39;</span><span class="p">,</span><span class="s1">&#39;[As+]&#39;</span><span class="p">,</span><span class="s1">&#39;[As]&#39;</span><span class="p">,</span><span class="s1">&#39;[B-]&#39;</span><span class="p">,</span><span class="s1">&#39;[BH-]&#39;</span><span class="p">,</span><span class="s1">&#39;[BH2-]&#39;</span><span class="p">,</span><span class="s1">&#39;[BH3-]&#39;</span><span class="p">,</span><span class="s1">&#39;[B]&#39;</span><span class="p">,</span><span class="s1">&#39;[C+]&#39;</span><span class="p">,</span><span class="s1">&#39;[C-]&#39;</span><span class="p">,</span><span class="s1">&#39;[CH-]&#39;</span><span class="p">,</span><span class="s1">&#39;[CH2]&#39;</span><span class="p">,</span><span class="s1">&#39;[CH]&#39;</span><span class="p">,</span><span class="s1">&#39;[I+]&#39;</span><span class="p">,</span><span class="s1">&#39;[IH2]&#39;</span><span class="p">,</span><span class="s1">&#39;[N+]&#39;</span><span class="p">,</span><span class="s1">&#39;[N-]&#39;</span><span class="p">,</span><span class="s1">&#39;[NH+]&#39;</span><span class="p">,</span><span class="s1">&#39;[NH-]&#39;</span><span class="p">,</span><span class="s1">&#39;[NH2+]&#39;</span><span class="p">,</span><span class="s1">&#39;[N]&#39;</span><span class="p">,</span><span class="s1">&#39;[O+]&#39;</span><span class="p">,</span><span class="s1">&#39;[O-]&#39;</span><span class="p">,</span><span class="s1">&#39;[OH+]&#39;</span><span class="p">,</span><span class="s1">&#39;[O]&#39;</span><span class="p">,</span><span class="s1">&#39;[P+]&#39;</span><span class="p">,</span><span class="s1">&#39;[PH]&#39;</span><span class="p">,</span><span class="s1">&#39;[S+]&#39;</span><span class="p">,</span><span class="s1">&#39;[S-]&#39;</span><span class="p">,</span><span class="s1">&#39;[SH+]&#39;</span><span class="p">,</span><span class="s1">&#39;[SH2]&#39;</span><span class="p">,</span><span class="s1">&#39;[SH]&#39;</span><span class="p">,</span><span class="s1">&#39;[Se+]&#39;</span><span class="p">,</span><span class="s1">&#39;[SeH]&#39;</span><span class="p">,</span><span class="s1">&#39;[Se]&#39;</span><span class="p">,</span><span class="s1">&#39;[SiH2]&#39;</span><span class="p">,</span><span class="s1">&#39;[SiH]&#39;</span><span class="p">,</span><span class="s1">&#39;[Si]&#39;</span><span class="p">,</span><span class="s1">&#39;[Te]&#39;</span><span class="p">,</span><span class="s1">&#39;[b-]&#39;</span><span class="p">,</span><span class="s1">&#39;[c+]&#39;</span><span class="p">,</span><span class="s1">&#39;[c-]&#39;</span><span class="p">,</span><span class="s1">&#39;[cH-]&#39;</span><span class="p">,</span><span class="s1">&#39;[n+]&#39;</span><span class="p">,</span><span class="s1">&#39;[n-]&#39;</span><span class="p">,</span><span class="s1">&#39;[nH+]&#39;</span><span class="p">,</span><span class="s1">&#39;[nH]&#39;</span><span class="p">,</span><span class="s1">&#39;[o+]&#39;</span><span class="p">,</span><span class="s1">&#39;[s+]&#39;</span><span class="p">,</span><span class="s1">&#39;[se+]&#39;</span><span class="p">,</span><span class="s1">&#39;[se]&#39;</span><span class="p">,</span><span class="s1">&#39;[te+]&#39;</span><span class="p">,</span><span class="s2">&quot;[te]&quot;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="s1">&#39;p&#39;</span><span class="p">,</span><span class="s1">&#39;s&#39;</span>
     <span class="p">)</span>
@@ -115,7 +119,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">encode_frags</span><span class="p">,</span> <span class="n">words</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="n">min_len</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">max_len</span><span class="p">)</span>
 
 <div class="viewcode-block" id="VocSmiles.encode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Takes a list of tokens (eg &#39;[NH]&#39;) and encodes to array of indices</span>
 <span class="sd">        Args:</span>
 <span class="sd">            input: a list of SMILES sequence represented as a series of tokens</span>
@@ -131,7 +135,7 @@
         <span class="k">return</span> <span class="n">output</span></div>
 
 <div class="viewcode-block" id="VocSmiles.decode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes an array of indices and returns the corresponding SMILES</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes an array of indices and returns the corresponding SMILES</span>
 <span class="sd">        Args:</span>
 <span class="sd">            tensor(torch.LongTensor): a long tensor containing all the indices of given tokens.</span>
 
@@ -156,7 +160,7 @@
         <span class="k">return</span> <span class="n">smiles</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="VocSmiles.splitSequence"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.splitSequence">[docs]</a>    <span class="k">def</span> <span class="nf">splitSequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smile</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes a SMILES and return a list of characters/tokens</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes a SMILES and return a list of characters/tokens</span>
 <span class="sd">        Args:</span>
 <span class="sd">            smile (str): a decoded smiles sequence.</span>
 
@@ -177,7 +181,7 @@
 
 <div class="viewcode-block" id="VocSmiles.fromFile"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocSmiles.fromFile">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">fromFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encode_frags</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes a file containing \n separated characters to initialize the vocabulary&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes a file containing \n separated characters to initialize the vocabulary&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">words</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">VocSmiles</span><span class="p">(</span><span class="n">encode_frags</span><span class="p">,</span> <span class="n">words</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">max_len</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="n">min_len</span><span class="p">)</span></div>
@@ -195,7 +199,7 @@
         <span class="k">return</span> <span class="n">fps</span></div></div>
 
 <div class="viewcode-block" id="VocNonGPT"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocNonGPT">[docs]</a><span class="k">class</span> <span class="nc">VocNonGPT</span><span class="p">(</span><span class="n">VocSmiles</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Modified version of `VocSmiles` adjusted for the legacy sequence models (`Seq2Seq` and `EncDec`).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -206,7 +210,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">trg_len</span> <span class="o">=</span> <span class="n">trg_len</span>
 
 <div class="viewcode-block" id="VocNonGPT.encode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocNonGPT.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">is_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes a list of characters (eg &#39;[NH]&#39;) and encodes to array of indices&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes a list of characters (eg &#39;[NH]&#39;) and encodes to array of indices&quot;&quot;&quot;</span>
         <span class="n">seq_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trg_len</span> <span class="k">if</span> <span class="n">is_smiles</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_len</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">),</span> <span class="n">seq_len</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
@@ -215,7 +219,7 @@
         <span class="k">return</span> <span class="n">output</span></div>
 
 <div class="viewcode-block" id="VocNonGPT.decode"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocNonGPT.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">is_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_tk</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Takes an array of indices and returns the corresponding SMILES.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chars</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">VocNonGPT</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">is_tk</span><span class="p">)</span>
@@ -229,7 +233,7 @@
 
 <div class="viewcode-block" id="VocNonGPT.fromFile"><a class="viewcode-back" href="../../../../api/drugex.data.corpus.html#drugex.data.corpus.vocabulary.VocNonGPT.fromFile">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">fromFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">src_len</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">trg_len</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Takes a file containing \n separated characters to initialize the vocabulary&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes a file containing \n separated characters to initialize the vocabulary&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">words</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">VocNonGPT</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">src_len</span><span class="o">=</span><span class="n">src_len</span><span class="p">,</span> <span class="n">trg_len</span><span class="o">=</span><span class="n">trg_len</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">max_len</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="n">min_len</span><span class="p">)</span></div></div>

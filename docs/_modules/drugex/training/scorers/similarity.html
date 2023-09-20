@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.similarity &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.scorers.similarity &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.scorers.similarity</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.scorers.similarity</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -107,13 +111,13 @@
 
 <div class="viewcode-block" id="TverskyFingerprintSimilarity"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.TverskyFingerprintSimilarity">[docs]</a><span class="k">class</span> <span class="nc">TverskyFingerprintSimilarity</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Scoring function for similarity to a reference molecule. Tversky similarity between fingerprints.</span>
 <span class="sd">    If both alpha and beta are set to 1, reduces to Tanimoto similarity. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fp_type</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">alpha</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">beta</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the TverskyFingerprintSimilarity scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -138,7 +142,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
 
 <div class="viewcode-block" id="TverskyFingerprintSimilarity.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.TverskyFingerprintSimilarity.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Get Tversky similarity scores for a list of molecules.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -160,14 +164,14 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Fingerprint similarity (fp_type=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp_type</span><span class="si">}</span><span class="s2">, Tversky weights=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="si">}</span><span class="s2">, smiles=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">smiles</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
 
 <div class="viewcode-block" id="TverskyGraphSimilarity"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.TverskyGraphSimilarity">[docs]</a><span class="k">class</span> <span class="nc">TverskyGraphSimilarity</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Scoring function for similarity to a reference molecule. Tversky similarity between graphs.</span>
 <span class="sd">    If both alpha and beta are set to 1, reduces to Tanimoto similarity. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">alpha</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">beta</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the TverskyGraphSimilarity scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -188,7 +192,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
 
 <div class="viewcode-block" id="TverskyGraphSimilarity.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.TverskyGraphSimilarity.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Calculate the Tversky graph similarity scores for a list of molecules.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -219,15 +223,15 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Graph similarity (Tversky weights=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="si">}</span><span class="s2">, smiles=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">smiles</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
 
 <div class="viewcode-block" id="FraggleSimilarity"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.FraggleSimilarity">[docs]</a><span class="k">class</span> <span class="nc">FraggleSimilarity</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Scoring function for similarity to a reference molecule. Fraggle similarity from python source </span>
 <span class="sd">    for an implementation of the fraggle similarity algorithm developed at GSK and described in this RDKit </span>
 <span class="sd">    UGMpresentation: https://github.com/rdkit/UGM_2013/blob/master/Presentations/Hussain.Fraggle.pdf</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">trevsky_th</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initiate the Fraggle similarity scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -245,7 +249,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">th</span> <span class="o">=</span> <span class="n">trevsky_th</span>
 
 <div class="viewcode-block" id="FraggleSimilarity.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.FraggleSimilarity.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Calculate the Fraggle similarity scores for a list of molecules.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -272,7 +276,7 @@
 
 <div class="viewcode-block" id="GraphEditInverseDistance"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.similarity.GraphEditInverseDistance">[docs]</a><span class="k">class</span> <span class="nc">GraphEditInverseDistance</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scoring function for similarity to a reference molecule. </span>
 <span class="sd">    Inverse of Graph Edit distance between two molecular graphs.</span>
 <span class="sd">    </span>

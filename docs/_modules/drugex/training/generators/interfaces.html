@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.generators.interfaces &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.generators.interfaces &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.generators.interfaces</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.generators.interfaces</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -113,13 +117,13 @@
 <span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
 
 <div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The base generator class for fitting and evaluating a DrugEx generator.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
 <div class="viewcode-block" id="Generator.sample"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Samples molcules from the generator.</span>
 
 <span class="sd">        Returns</span>
@@ -133,7 +137,7 @@
 
 <div class="viewcode-block" id="Generator.trainNet"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.trainNet">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">trainNet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Train the generator for a single epoch.</span>
 
 <span class="sd">        Parameters</span>
@@ -149,7 +153,7 @@
 
 <div class="viewcode-block" id="Generator.validateNet"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.validateNet">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">validateNet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate the performance of the generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -175,7 +179,7 @@
 <div class="viewcode-block" id="Generator.generate"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.generate">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate molecules from the generator.</span>
 
 <span class="sd">        Returns</span>
@@ -186,7 +190,7 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Generator.filterNewMolecules"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.filterNewMolecules">[docs]</a>    <span class="k">def</span> <span class="nf">filterNewMolecules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_old</span><span class="p">,</span> <span class="n">df_new</span><span class="p">,</span> <span class="n">with_frags</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_undesired</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Filter the generated SMILES</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters:</span>
@@ -249,7 +253,7 @@
         <span class="k">return</span> <span class="n">df_new</span></div>
     
 <div class="viewcode-block" id="Generator.logPerformanceAndCompounds"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.logPerformanceAndCompounds">[docs]</a>    <span class="k">def</span> <span class="nf">logPerformanceAndCompounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Log performance and compounds</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters:</span>
@@ -280,7 +284,7 @@
 
 
 <div class="viewcode-block" id="Generator.fit"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -340,7 +344,7 @@
 
 
 <div class="viewcode-block" id="Generator.evaluate"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span> <span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unmodified_scores</span> <span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluate molecules by using the given evaluator or checking for validity.</span>
 
 <span class="sd">        Parameters:</span>
@@ -373,7 +377,7 @@
         <span class="k">return</span> <span class="n">scores</span></div>
 
 <div class="viewcode-block" id="Generator.getModel"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.Generator.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a copy of this model as a state dictionary.</span>
 
 <span class="sd">        Returns</span>
@@ -385,12 +389,12 @@
 
 <div class="viewcode-block" id="FragGenerator"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator">[docs]</a><span class="k">class</span> <span class="nc">FragGenerator</span><span class="p">(</span><span class="n">Generator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A generator for fragment-based molecules.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FragGenerator.init_states"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.init_states">[docs]</a>    <span class="k">def</span> <span class="nf">init_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize model parameters</span>
 <span class="sd">        </span>
 <span class="sd">        Notes:</span>
@@ -403,7 +407,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gpus</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FragGenerator.attachToGPUs"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.attachToGPUs">[docs]</a>    <span class="k">def</span> <span class="nf">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpus</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attach model to GPUs</span>
 
 <span class="sd">        Parameters:</span>
@@ -416,7 +420,7 @@
 
 <div class="viewcode-block" id="FragGenerator.loaderFromFrags"><a class="viewcode-back" href="../../../../api/drugex.training.generators.html#drugex.training.generators.interfaces.FragGenerator.loaderFromFrags">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">loaderFromFrags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frags</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode the input fragments and create a dataloader object</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters:</span>
@@ -448,7 +452,7 @@
                  <span class="n">keep_frags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_invalid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">evaluator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_undesired</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">raw_scores</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tqdm_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">()):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate SMILES from either a list of input fragments (`input_frags`) or a dataset object directly (`input_dataset`). You have to specify either one or the other. Various other options are available to filter, score and show generation progress (see below).</span>
 
 <span class="sd">        Args:</span>

@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.download &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.download &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>drugex.download</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.download</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -96,7 +100,7 @@
 <span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="kn">from</span> <span class="nn">drugex.logs</span> <span class="kn">import</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">drugex.logs.utils</span> <span class="kn">import</span> <span class="n">enable_file_logger</span><span class="p">,</span> <span class="n">commit_hash</span>
+<span class="kn">from</span> <span class="nn">drugex.logs.utils</span> <span class="kn">import</span> <span class="n">enable_file_logger</span>
 <span class="kn">from</span> <span class="nn">drugex.utils.download</span> <span class="kn">import</span> <span class="n">download_file</span>
 <span class="kn">from</span> <span class="nn">qsprpred.data.sources.papyrus</span> <span class="kn">import</span> <span class="n">Papyrus</span>
 
@@ -110,7 +114,6 @@
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, progress of the download is shown&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="s1">&#39;--reload&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, existing files are re-downloaded.&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-ng&#39;</span><span class="p">,</span> <span class="s1">&#39;--no_git&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, git hash is not retrieved&quot;</span><span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">args</span></div>
@@ -122,7 +125,7 @@
     <span class="c1"># Link to DrugEx v3 pretrained model (graph-based; Papyrus 05.5)</span>
     <span class="n">link_pretrained_model2</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/record/7085421/files/DrugEx_PT_Papyrus05.5.zip?download=1&quot;</span>
     <span class="c1"># Link to QSAR example model</span>
-    <span class="n">link_qsar_model</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/record/7694931/files/qspr.zip?download=1&quot;</span>
+    <span class="n">link_qsar_model</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/record/8325021/files/A2AR_RandomForestClassifier.zip?download=1&quot;</span>
 
     <span class="c1"># Download model files</span>
     <span class="n">pretrained_models_path_rnn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">,</span> <span class="s1">&#39;pretrained&#39;</span><span class="p">,</span> <span class="s1">&#39;smiles-rnn&#39;</span><span class="p">)</span>
@@ -156,7 +159,10 @@
     <span class="n">papyrus</span> <span class="o">=</span> <span class="n">Papyrus</span><span class="p">(</span>
         <span class="n">data_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;.Papyrus&#39;</span><span class="p">),</span>
         <span class="n">stereo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">version</span><span class="o">=</span><span class="n">papyrus_version</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">papyrus_version</span><span class="p">,</span>
+        <span class="n">descriptors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plus_only</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="p">)</span>
 
     <span class="n">datasets_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
@@ -191,7 +197,6 @@
         <span class="s1">&#39;download.log&#39;</span><span class="p">,</span>
         <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
-        <span class="n">commit_hash</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_git</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">logSettings</span><span class="o">.</span><span class="n">log</span>

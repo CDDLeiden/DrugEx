@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.train &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.train &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>drugex.train</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.train</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -100,7 +104,7 @@
 <span class="kn">from</span> <span class="nn">drugex.data.corpus.vocabulary</span> <span class="kn">import</span> <span class="n">VocGraph</span><span class="p">,</span> <span class="n">VocSmiles</span>
 <span class="kn">from</span> <span class="nn">drugex.data.datasets</span> <span class="kn">import</span> <span class="p">(</span><span class="n">GraphFragDataSet</span><span class="p">,</span> <span class="n">SmilesDataSet</span><span class="p">,</span>
                                   <span class="n">SmilesFragDataSet</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">drugex.logs.utils</span> <span class="kn">import</span> <span class="n">backUpFiles</span><span class="p">,</span> <span class="n">commit_hash</span><span class="p">,</span> <span class="n">enable_file_logger</span>
+<span class="kn">from</span> <span class="nn">drugex.logs.utils</span> <span class="kn">import</span> <span class="n">backUpFiles</span><span class="p">,</span> <span class="n">enable_file_logger</span>
 <span class="kn">from</span> <span class="nn">drugex.training.environment</span> <span class="kn">import</span> <span class="n">DrugExEnvironment</span>
 <span class="kn">from</span> <span class="nn">drugex.training.explorers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FragGraphExplorer</span><span class="p">,</span> <span class="n">FragSequenceExplorer</span><span class="p">,</span>
                                        <span class="n">SequenceExplorer</span><span class="p">)</span>
@@ -122,7 +126,7 @@
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
     
 <div class="viewcode-block" id="GeneratorArgParser"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.GeneratorArgParser">[docs]</a><span class="k">def</span> <span class="nf">GeneratorArgParser</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; Define and read command line arguments &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Define and read command line arguments &quot;&quot;&quot;</span>
     
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentDefaultsHelpFormatter</span><span class="p">)</span>
     
@@ -222,10 +226,6 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-sim_tw&#39;</span><span class="p">,</span> <span class="s1">&#39;--similarity_tversky_weights&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.&quot;</span><span class="p">)</span>       
     
-
-    
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-ng&#39;</span><span class="p">,</span> <span class="s1">&#39;--no_git&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
-                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If on, git hash is not retrieved&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
 
             
@@ -252,7 +252,7 @@
 
 <div class="viewcode-block" id="DataPreparation"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.DataPreparation">[docs]</a><span class="k">class</span> <span class="nc">DataPreparation</span><span class="p">():</span>
 
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Class for preparing data for training and testing from input files.</span>
 
 <span class="sd">    Attributes</span>
@@ -272,7 +272,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">mt</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        base_dir : str</span>
@@ -298,7 +298,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mol_type</span> <span class="o">=</span> <span class="n">mt</span>
 
 <div class="viewcode-block" id="DataPreparation.getVocPaths"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.DataPreparation.getVocPaths">[docs]</a>    <span class="k">def</span> <span class="nf">getVocPaths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Get paths to vocabulary files. If none are found, use internal defaults.</span>
 
 <span class="sd">        Returns</span>
@@ -326,7 +326,7 @@
     
 <div class="viewcode-block" id="DataPreparation.getDataPaths"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.DataPreparation.getDataPaths">[docs]</a>    <span class="k">def</span> <span class="nf">getDataPaths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Get paths to training and test data files.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -356,7 +356,7 @@
 
 <div class="viewcode-block" id="FragGraphDataPreparation"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.FragGraphDataPreparation">[docs]</a><span class="k">class</span> <span class="nc">FragGraphDataPreparation</span><span class="p">(</span><span class="n">DataPreparation</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Data preprocessing for graph-based fragment generation.</span>
 
 <span class="sd">    Attributes</span>
@@ -384,7 +384,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="s1">&#39;graph&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unique_frags</span> <span class="o">=</span> <span class="n">unique_frags</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        base_dir : str</span>
@@ -403,7 +403,7 @@
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get data loaders for training and testing and vocabulary.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -438,7 +438,7 @@
         <span class="k">return</span> <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span></div>
 
 <div class="viewcode-block" id="FragSmilesDataPreparation"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.FragSmilesDataPreparation">[docs]</a><span class="k">class</span> <span class="nc">FragSmilesDataPreparation</span><span class="p">(</span><span class="n">DataPreparation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Data preprocessing for SMILES-based fragment generation.</span>
 
 <span class="sd">    Attributes</span>
@@ -464,7 +464,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">unique_frags</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="s1">&#39;smiles&#39;</span><span class="p">)</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        base_dir : str</span>
@@ -484,7 +484,7 @@
 
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get data loaders for training and testing and vocabulary.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -514,7 +514,7 @@
         <span class="k">return</span> <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span></div>
     
 <div class="viewcode-block" id="SmilesDataPreparation"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.SmilesDataPreparation">[docs]</a><span class="k">class</span> <span class="nc">SmilesDataPreparation</span><span class="p">(</span><span class="n">DataPreparation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Data preprocessing for SMILES-based molecule generation.</span>
 
 <span class="sd">    Attributes</span>
@@ -539,7 +539,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">unique_frags</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">voc_files</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="s1">&#39;smiles&#39;</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        base_dir : str</span>
@@ -558,7 +558,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">unique_frags</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get data loaders for training and testing and vocabulary.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -590,13 +590,13 @@
 
 <div class="viewcode-block" id="SetUpGenerator"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.SetUpGenerator">[docs]</a><span class="k">class</span> <span class="nc">SetUpGenerator</span><span class="p">():</span>
 
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Set up generator object for training or molecule generation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Set up generator object for training or molecule generation</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -610,7 +610,7 @@
 
 <div class="viewcode-block" id="SetUpGenerator.setGeneratorAlgorithm"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.SetUpGenerator.setGeneratorAlgorithm">[docs]</a>    <span class="k">def</span> <span class="nf">setGeneratorAlgorithm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">voc</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Set generator algorithm based on molecule type and generator algorithm type</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -639,7 +639,7 @@
         <span class="k">return</span> <span class="n">generator</span></div>
     
 <div class="viewcode-block" id="SetUpGenerator.prepareInputs"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.SetUpGenerator.prepareInputs">[docs]</a>    <span class="k">def</span> <span class="nf">prepareInputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Prepare inputs for training or molecule generation</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -662,7 +662,7 @@
         <span class="k">return</span> <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span>  </div>
     
 <div class="viewcode-block" id="SetUpGenerator.loadStatesFromFile"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.SetUpGenerator.loadStatesFromFile">[docs]</a>    <span class="k">def</span> <span class="nf">loadStatesFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">,</span> <span class="n">generator_path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load pretrained weights from file</span>
 
 <span class="sd">        Parameters</span>
@@ -692,14 +692,14 @@
     
 <div class="viewcode-block" id="Pretrain"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.Pretrain">[docs]</a><span class="k">class</span> <span class="nc">Pretrain</span><span class="p">(</span><span class="n">SetUpGenerator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Pretrain generator</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Initialize class</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        args : Namespace</span>
@@ -708,7 +708,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">unique_frags</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Pretrain generator &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Pretrain generator &quot;&quot;&quot;</span>
 
         <span class="c1"># Get vocabulary and data loaders</span>
         <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareInputs</span><span class="p">()</span>
@@ -725,13 +725,13 @@
 
 
 <div class="viewcode-block" id="Finetune"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.Finetune">[docs]</a><span class="k">class</span> <span class="nc">Finetune</span><span class="p">(</span><span class="n">SetUpGenerator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Finetune generator</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        args : Namespace</span>
@@ -740,7 +740,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">unique_frags</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Finetune generator &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Finetune generator &quot;&quot;&quot;</span>
 
         <span class="c1"># Get vocabulary and data loaders</span>
         <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareInputs</span><span class="p">()</span>
@@ -758,11 +758,11 @@
 
 
 <div class="viewcode-block" id="Reinforce"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.Reinforce">[docs]</a><span class="k">class</span> <span class="nc">Reinforce</span><span class="p">(</span><span class="n">SetUpGenerator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Train generator with reinforcement learning &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Train generator with reinforcement learning &quot;&quot;&quot;</span>
 
     <span class="c1"># Initialize class</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        args : Namespace</span>
@@ -772,7 +772,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">unique_frags</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="Reinforce.setExplorer"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.Reinforce.setExplorer">[docs]</a>    <span class="k">def</span> <span class="nf">setExplorer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">prior</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set explorer algorithm and parameters</span>
 
 <span class="sd">        Parameters</span>
@@ -811,7 +811,7 @@
         <span class="k">return</span> <span class="n">explorer</span>        </div>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Train generator with reinforcement learning &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Train generator with reinforcement learning &quot;&quot;&quot;</span>
             
         <span class="c1"># Get vocabulary and data loaders</span>
         <span class="n">voc</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepareInputs</span><span class="p">()</span>
@@ -867,7 +867,7 @@
         <span class="n">evolver</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patience</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="getModifiers"><a class="viewcode-back" href="../../api/drugex.html#drugex.train.getModifiers">[docs]</a><span class="k">def</span> <span class="nf">getModifiers</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">activity_threshold</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gets the modifiers for a given task, scheme and activity threshold combination.</span>
 
 <span class="sd">    Arguments:</span>
@@ -893,7 +893,7 @@
 
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Pareto Front reward scheme (PRTD or PRCD)</span>
-        <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="n">ModelTasks</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">isClassification</span><span class="p">():</span>
             <span class="n">active</span> <span class="o">=</span> <span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
             <span class="n">inactive</span> <span class="o">=</span> <span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
             <span class="n">window</span> <span class="o">=</span> <span class="n">ClippedScore</span><span class="p">(</span><span class="n">lower_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper_x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -934,7 +934,7 @@
         <span class="n">logger</span><span class="o">=</span><span class="kc">None</span>
         <span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sets up the objectives of the desirability function.</span>
 <span class="sd">    </span>
 <span class="sd">    Arguments:</span>
@@ -986,7 +986,7 @@
     <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">predictors</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
         <span class="n">task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">task</span>
-        <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="n">ModelTasks</span><span class="o">.</span><span class="n">CLASSIFICATION</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">nClasses</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="n">ModelTasks</span><span class="o">.</span><span class="n">MULTICLASS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Classification models with more than 2 classes are not supported. Invalid model: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
 
         <span class="n">active</span><span class="p">,</span> <span class="n">inactive</span><span class="p">,</span> <span class="n">window</span> <span class="o">=</span> <span class="n">getModifiers</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">activity_threshold</span><span class="p">)</span>
@@ -1072,7 +1072,6 @@
         <span class="n">args</span><span class="o">.</span><span class="n">output_long</span> <span class="o">+</span> <span class="s1">&#39;.log&#39;</span><span class="p">,</span>
         <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
-        <span class="n">commit_hash</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_git</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">logSettings</span><span class="o">.</span><span class="n">log</span>

@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.processing &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.data.processing &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.data.processing</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.data.processing</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -107,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">drugex.molecules.suppliers</span> <span class="kn">import</span> <span class="n">StandardizedSupplier</span>
 
 <div class="viewcode-block" id="Standardization"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.processing.Standardization">[docs]</a><span class="k">class</span> <span class="nc">Standardization</span><span class="p">(</span><span class="n">ParallelProcessor</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Processor to standardize molecules in parallel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -117,7 +121,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">standardizer</span><span class="o">=</span><span class="n">DefaultStandardizer</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the standardization processor.</span>
 
 <span class="sd">        Args:</span>
@@ -128,7 +132,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">standardizer</span> <span class="o">=</span> <span class="n">standardizer</span>
 
 <div class="viewcode-block" id="Standardization.apply"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.processing.Standardization.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply defined standardization to an iterable of molecules.</span>
 
 <span class="sd">        This method just automates initialization of a `ParallelSupplierEvaluator` on the given molecules. Molecules can be given</span>
@@ -158,12 +162,12 @@
         <span class="k">return</span> <span class="n">collector</span><span class="o">.</span><span class="n">getList</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">collector</span><span class="p">,</span> <span class="s1">&#39;getList&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div></div>
 
 <div class="viewcode-block" id="CorpusEncoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.processing.CorpusEncoder">[docs]</a><span class="k">class</span> <span class="nc">CorpusEncoder</span><span class="p">(</span><span class="n">ParallelProcessor</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This processor translates input molecules to representations that can be used directly as input to both sequence- and graph-based models. It works by evaluating a `Corpus` in parallel on the input data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corpus_class</span><span class="p">,</span> <span class="n">corpus_options</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize from a `Corpus` class and its options.</span>
 
 <span class="sd">        Args:</span>
@@ -178,7 +182,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">corpus_options</span>
 
 <div class="viewcode-block" id="CorpusEncoder.apply"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.processing.CorpusEncoder.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply the encoder to given molecules.</span>
 
 <span class="sd">        Args:</span>
@@ -198,12 +202,12 @@
         <span class="n">evaluator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="RandomTrainTestSplitter"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.processing.RandomTrainTestSplitter">[docs]</a><span class="k">class</span> <span class="nc">RandomTrainTestSplitter</span><span class="p">(</span><span class="n">DataSplitter</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simple splitter to facilitate a random split into training and test set with the option to fix the maximum size of the test set.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">max_test_size</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            test_size (`float`): Size of the test set as a ratio of the original data (i.e. 0.1 for 10%).</span>
@@ -216,7 +220,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply a split to the data.</span>
 
 <span class="sd">        Args:</span>

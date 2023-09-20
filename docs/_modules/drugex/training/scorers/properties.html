@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.properties &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.scorers.properties &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.scorers.properties</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.scorers.properties</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -153,7 +157,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the AtomCounter scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -167,7 +171,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">element</span>
 
 <div class="viewcode-block" id="AtomCounter.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Count the number of atoms of a given type in the molecules.</span>
 
 <span class="sd">        Parameters</span>
@@ -199,7 +203,7 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;AtomCounter (element=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
 
 <div class="viewcode-block" id="Isomer"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer">[docs]</a><span class="k">class</span> <span class="nc">Isomer</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scoring function for closeness to a molecular formula.</span>
 <span class="sd">    The score penalizes deviations from the required number of atoms for each element type, and for the total</span>
 <span class="sd">    number of atoms.</span>
@@ -210,7 +214,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean_func</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the Isomer scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -228,7 +232,7 @@
 
 <div class="viewcode-block" id="Isomer.parse_molecular_formula"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.parse_molecular_formula">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse_molecular_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parse a molecular formulat to get the element types and counts.</span>
 
 <span class="sd">        Parameters</span>
@@ -253,7 +257,7 @@
         <span class="k">return</span> <span class="n">results</span></div>
 
 <div class="viewcode-block" id="Isomer.scoring_functions"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.scoring_functions">[docs]</a>    <span class="k">def</span> <span class="nf">scoring_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the scoring functions for the molecular formula.</span>
 
 <span class="sd">        Parameters</span>
@@ -282,7 +286,7 @@
         <span class="k">return</span> <span class="n">objs</span><span class="p">,</span> <span class="n">mods</span></div>
 
 <div class="viewcode-block" id="Isomer.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the scores for the molecules.</span>
 
 <span class="sd">        Parameters</span>
@@ -308,7 +312,7 @@
 
 <div class="viewcode-block" id="Scaffold"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold">[docs]</a><span class="k">class</span> <span class="nc">Scaffold</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smart</span><span class="p">,</span> <span class="n">is_match</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the Scaffold scorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -326,7 +330,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_match</span> <span class="o">=</span> <span class="n">is_match</span>
 
 <div class="viewcode-block" id="Scaffold.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Get the scores for the molecules.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -355,7 +359,7 @@
 
 <div class="viewcode-block" id="Uniqueness"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness">[docs]</a><span class="k">class</span> <span class="nc">Uniqueness</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the ratio of occurence of a molecule in a set of molecules</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -373,7 +377,7 @@
 
 
 <div class="viewcode-block" id="LipophilicEfficiency"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency">[docs]</a><span class="k">class</span> <span class="nc">LipophilicEfficiency</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the lipophilic efficiency of a molecule: LiPE = pChEMBL value - logP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -392,7 +396,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span></div></div>
 
 <div class="viewcode-block" id="LigandEfficiency"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency">[docs]</a><span class="k">class</span> <span class="nc">LigandEfficiency</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the ligand efficiency of a molecule: LE = 1.4 * pChEMBL / nAtoms</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

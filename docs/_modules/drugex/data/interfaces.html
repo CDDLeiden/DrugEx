@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.interfaces &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.data.interfaces &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.data.interfaces</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.data.interfaces</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -103,13 +107,13 @@
 <span class="kn">from</span> <span class="nn">drugex.parallel.interfaces</span> <span class="kn">import</span> <span class="n">ResultCollector</span>
 
 <div class="viewcode-block" id="DataSplitter"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSplitter">[docs]</a><span class="k">class</span> <span class="nc">DataSplitter</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Splits input data into multiple parts.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            data: input data to split</span>
@@ -122,7 +126,7 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="DataToLoader"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataToLoader">[docs]</a><span class="k">class</span> <span class="nc">DataToLoader</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Responsible for the conversion of raw input data into data loaders used by the DrugEx models for training.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -131,12 +135,12 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="DataSet"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet">[docs]</a><span class="k">class</span> <span class="nc">DataSet</span><span class="p">(</span><span class="n">ResultCollector</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Data sets represent encoded input data for the various DrugEx models. Each `DataSet` is associated with a file and also acts as a `ResultCollector` to append data from parallel operations (see `ParallelProcessor`). The `DataSet` is also coupled with the `Vocabulary` used to encode the data in it. However, `Vocabulary` is usually saved in a separate file(s) and needs to be loaded explicitly with `DataSet.readVocs()`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">rewrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_voc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">voc_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize this `DataSet`. A path to the associated file must be given. Data is saved to this file upon calling `DataSet.save()`.</span>
 
 <span class="sd">        If the associated file already exists, the data is loaded automatically upon initialization.</span>
@@ -198,7 +202,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="DataSet.getData"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.getData">[docs]</a>    <span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get this `DataSet` as a pandas `DataFrame`.</span>
 
 <span class="sd">        Args:</span>
@@ -214,7 +218,7 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="DataSet.updateVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.updateVoc">[docs]</a>    <span class="k">def</span> <span class="nf">updateVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">voc</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept a `Vocabulary` instance and add it to the existing one.</span>
 
 <span class="sd">        Args:</span>
@@ -233,7 +237,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">voc</span><span class="o">.</span><span class="n">toFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getVocPath</span><span class="p">())</span>   </div>
 
 <div class="viewcode-block" id="DataSet.getVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.getVoc">[docs]</a>    <span class="k">def</span> <span class="nf">getVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the `Vocabulary` associated with this data set (should comprise all tokens within it). The vocabulary can be generated from the results collected from `CorpusEncoder` or `FragmentCorpusEncoder` on which this class acts as a collector. Or it can be loaded from files with `DataSet.readVocs()`.</span>
 
 <span class="sd">        Returns:</span>
@@ -246,7 +250,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">voc</span> <span class="o">=</span> <span class="n">voc</span></div>
 
 <div class="viewcode-block" id="DataSet.fromFile"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.fromFile">[docs]</a>    <span class="k">def</span> <span class="nf">fromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">vocs</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(),</span> <span class="n">voc_class</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize this `DataSet` from file and load the associated vocabulary.</span>
 
 <span class="sd">        Args:</span>
@@ -266,7 +270,7 @@
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The specified data file does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outpath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DataSet.asDataLoader"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.asDataLoader">[docs]</a>    <span class="k">def</span> <span class="nf">asDataLoader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_converter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_samples_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert the data in this `DataSet` to a compatible PyTorch `DataLoader`.</span>
 
 <span class="sd">        Args:</span>
@@ -307,7 +311,7 @@
 <div class="viewcode-block" id="DataSet.dataToLoader"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.dataToLoader">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">dataToLoader</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">vocabulary</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The default method to use to convert data (as returned from `DataSet.getData()`) to a PyTorch `DataLoader`. Basically, mirrors the `DataToLoader` interface.</span>
 
 <span class="sd">        Args:</span>
@@ -322,7 +326,7 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="DataSet.createLoaders"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.createLoaders">[docs]</a>    <span class="k">def</span> <span class="nf">createLoaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Facilitates splitting and conversion of data to `DataLoader`s.</span>
 
 <span class="sd">        Args:</span>
@@ -343,7 +347,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">converter</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVoc</span><span class="p">())</span> <span class="k">if</span> <span class="n">converter</span> <span class="k">else</span> <span class="n">split</span> <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="DataSet.readVocs"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.DataSet.readVocs">[docs]</a>    <span class="k">def</span> <span class="nf">readVocs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">voc_class</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read vocabularies from files and add them together to form the full vocabulary for this `DataSet`.</span>
 
 <span class="sd">        Args:</span>
@@ -367,13 +371,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setVoc</span><span class="p">(</span><span class="n">voc</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="FragmentPairEncoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder">[docs]</a><span class="k">class</span> <span class="nc">FragmentPairEncoder</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encode fragments and the associated molecules for the fragment-based DrugEx models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FragmentPairEncoder.encodeMol"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.encodeMol">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">encodeMol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode molecule.</span>
 
 <span class="sd">        Args:</span>
@@ -386,7 +390,7 @@
 
 <div class="viewcode-block" id="FragmentPairEncoder.encodeFrag"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.encodeFrag">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">mol_tokens</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode fragment.</span>
 
 <span class="sd">        Args:</span>
@@ -401,7 +405,7 @@
 
 <div class="viewcode-block" id="FragmentPairEncoder.getVoc"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.interfaces.FragmentPairEncoder.getVoc">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">getVoc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The vocabulary used for encoding.</span>
 
 <span class="sd">        Returns:</span>

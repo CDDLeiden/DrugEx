@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.explorers.frag_sequence_explorer &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.explorers.frag_sequence_explorer &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.explorers.frag_sequence_explorer</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.explorers.frag_sequence_explorer</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -102,13 +106,13 @@
 
 
 <div class="viewcode-block" id="FragSequenceExplorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer">[docs]</a><span class="k">class</span> <span class="nc">FragSequenceExplorer</span><span class="p">(</span><span class="n">FragExplorer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    `Explorer` to optimize a sequence-based fragment-using agent with the given `Environment`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">crover</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mutate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">optim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">DEFAULT_GPUS</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FragSequenceExplorer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">mutate</span><span class="p">,</span> <span class="n">crover</span><span class="p">,</span> <span class="n">no_multifrag_smiles</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">use_gpus</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        </span>
@@ -142,7 +146,7 @@
             <span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">betas</span><span class="o">=</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">),</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">optim</span> <span class="k">else</span> <span class="n">optim</span>
 
 <div class="viewcode-block" id="FragSequenceExplorer.forward"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Forward pass of the agent.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -183,8 +187,8 @@
         <span class="k">return</span> <span class="n">out</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">voc_trg</span><span class="o">.</span><span class="n">max_len</span><span class="p">:]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span></div>
             
 <div class="viewcode-block" id="FragSequenceExplorer.sample_input"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sample_input">[docs]</a>    <span class="k">def</span> <span class="nf">sample_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a batch of fragments-molecule pairs from the dataset.</span>
 
 <span class="sd">        Parameters</span>
@@ -209,7 +213,7 @@
                 
         <span class="k">if</span> <span class="n">n_pairs</span> <span class="o">&gt;</span> <span class="n">n_samples</span><span class="p">:</span>
         
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2"> fragments-molecule pairs were sampled at random from original </span><span class="si">{</span><span class="n">n_pairs</span><span class="si">}</span><span class="s2"> pairs for </span><span class="si">{</span><span class="s1">&#39;validation&#39;</span> <span class="k">if</span> <span class="n">is_test</span> <span class="k">else</span> <span class="s1">&#39;training&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2"> fragments-molecule pairs were sampled at random from original </span><span class="si">{</span><span class="n">n_pairs</span><span class="si">}</span><span class="s2"> pairs for </span><span class="si">{</span><span class="s1">&#39;validation&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is_test</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;training&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">sample_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_pairs</span><span class="p">)],</span> <span class="n">n_samples</span><span class="p">))</span>
             <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span><span class="n">encoded_in</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sample_idx</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span><span class="n">encoded_out</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sample_idx</span><span class="p">)</span> <span class="p">]</span>
             <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -217,8 +221,8 @@
         <span class="k">return</span> <span class="n">loader</span></div>
 
 <div class="viewcode-block" id="FragSequenceExplorer.getBatchOutputs"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.getBatchOutputs">[docs]</a>    <span class="k">def</span> <span class="nf">getBatchOutputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
-        
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.</span>
 
 <span class="sd">        Parameters</span>
@@ -247,7 +251,7 @@
 
 <div class="viewcode-block" id="FragSequenceExplorer.sampleEncodedPairsToLoader"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.frag_sequence_explorer.FragSequenceExplorer.sampleEncodedPairsToLoader">[docs]</a>    <span class="k">def</span> <span class="nf">sampleEncodedPairsToLoader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample new fragments-molecule pairs from a data loader.</span>
 
 <span class="sd">        Parameters</span>

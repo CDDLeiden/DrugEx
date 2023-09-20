@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.monitors &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.monitors &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.monitors</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.monitors</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -124,13 +128,13 @@
         <span class="k">pass</span></div></div>
 
 <div class="viewcode-block" id="FileMonitor"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor">[docs]</a><span class="k">class</span> <span class="nc">FileMonitor</span><span class="p">(</span><span class="n">TrainingMonitor</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A simple `TrainingMonitor` implementation with file outputs.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">save_smiles</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reset_directory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the file monitor.</span>
 
 <span class="sd">        The monitor will create three/four files:</span>
@@ -164,14 +168,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="FileMonitor.saveModel"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveModel">[docs]</a>    <span class="k">def</span> <span class="nf">saveModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Save the model state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bestState</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">getModel</span><span class="p">()</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestState</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;.pkg&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FileMonitor.saveProgress"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.saveProgress">[docs]</a>    <span class="k">def</span> <span class="nf">saveProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">current_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">total_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Save the current training progress: epoch, step, loss.</span>
 
 <span class="sd">        Parameters</span>
@@ -188,17 +192,17 @@
 <span class="sd">            The current training loss.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="n">txt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">current_epoch</span> <span class="k">if</span> <span class="n">current_epoch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">/&quot;</span>
-        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">total_epochs</span> <span class="k">if</span> <span class="n">total_epochs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">,&quot;</span> 
-        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Step </span><span class="si">{</span><span class="n">current_step</span> <span class="k">if</span> <span class="n">current_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">/&quot;</span>
-        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">total_steps</span> <span class="k">if</span> <span class="n">total_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">current_epoch</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">current_epoch</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">total_epochs</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">total_epochs</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">,&quot;</span> 
+        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Step </span><span class="si">{</span><span class="n">current_step</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">current_step</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="n">txt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">total_steps</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">total_steps</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;--&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outLog</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">loss</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">outLog</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current training loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outLog</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="FileMonitor.savePerformanceInfo"><a class="viewcode-back" href="../../../api/drugex.training.html#drugex.training.monitors.FileMonitor.savePerformanceInfo">[docs]</a>    <span class="k">def</span> <span class="nf">savePerformanceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">performance_dict</span><span class="p">,</span> <span class="n">df_smiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Save the performance data for the current epoch.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>

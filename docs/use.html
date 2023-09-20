@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; DrugEx 3.4.4 documentation</title>
+  <title>Usage &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="DrugEx Python API" href="api/modules.html" />
+    <link rel="next" title="DrugEx Package API Documentation" href="api/modules.html" />
     <link rel="prev" title="Installation" href="install.html" />
  
 
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,7 +88,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -100,8 +104,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Usage</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -112,20 +116,20 @@
              
   <section id="usage">
 <span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
-<p>In this document, the use of command line interface (CLI) will be described. If you want more control over the inputs and outputs or want to customize DrugEx itself, you can also use the Python API directly (see <a class="reference internal" href="api/modules.html#api-docs"><span class="std std-ref">DrugEx Python API</span></a>). You can find a complete <a class="reference external" href="https://github.com/CDDLeiden/DrugEx/tree/master/tutorial">tutorial</a> illustrating some common use cases for each model type on the project’s GitHub.</p>
+<p>In this document, the use of command line interface (CLI) will be described. If you want more control over the inputs and outputs or want to customize DrugEx itself, you can also use the Python API directly (see <a class="reference internal" href="api/modules.html#api-docs"><span class="std std-ref">DrugEx Package API Documentation</span></a>). You can find a complete <a class="reference external" href="https://github.com/CDDLeiden/DrugEx/tree/master/tutorial">tutorial</a> illustrating some common use cases for each model type on the project’s GitHub.</p>
 <p>The command-line is a simple interface that can be used to preprocess data and build models quickly. In order to obtain a final model and generate novel compounds you will need to run multiple scripts, however.
 The description of the functionality of each script can be displayed with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument. For example, the help message for the <code class="code docutils literal notranslate"><span class="pre">drugex.dataset</span></code> script can be shown as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.dataset --help
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>--help
 </pre></div>
 </div>
 <p>On Linux and MacOS, you do not need to call python explicitly and the following will suffice:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>drugex dataset --help
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>drugex<span class="w"> </span>dataset<span class="w"> </span>--help
 </pre></div>
 </div>
 <p>A basic command-line workflow to fine-tune and optimize a graph-based model is given below (see <a class="reference internal" href="#cli-example"><span class="std std-ref">CLI Example</span></a>).
 However, we also show a few other workflows to show some of the other functionalities.</p>
 <p>Before you start, make sure you have downloaded the example data and models in the <code class="code docutils literal notranslate"><span class="pre">tutorial/CLI/examples</span></code> folder:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.download -o tutorial/CLI/examples <span class="c1"># ran from the repository root</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.download<span class="w"> </span>-o<span class="w"> </span>tutorial/CLI/examples<span class="w"> </span><span class="c1"># ran from the repository root</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -153,8 +157,8 @@ To use the CLI all the input data should be in the <code class="code docutils li
 For fine-tuning this input is a file with compounds (<code class="code docutils literal notranslate"><span class="pre">A2AR_LIGANDS.tsv</span></code>)
 Before we begin the fine-tuning, we have to preprocess the training data, as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># input is in tutorial/CLI/examples/data/A2AR_LIGANDS.tsv</span>
-<span class="nb">export</span> <span class="nv">BASE_DIR</span><span class="o">=</span>tutorial/CLI/examples
-python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i A2AR_LIGANDS.tsv -mc SMILES -o arl -mt graph
+<span class="nb">export</span><span class="w"> </span><span class="nv">BASE_DIR</span><span class="o">=</span>tutorial/CLI/examples
+python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>A2AR_LIGANDS.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>arl<span class="w"> </span>-mt<span class="w"> </span>graph
 </pre></div>
 </div>
 <p>This will tell DrugEx to preprocess compounds saved in the <code class="code docutils literal notranslate"><span class="pre">-mc</span> <span class="pre">SMILES</span></code> column of the <code class="code docutils literal notranslate"><span class="pre">-i</span> <span class="pre">A2AR_LIGANDS.tsv</span></code> file for a <code class="code docutils literal notranslate"><span class="pre">-mt</span> <span class="pre">graph</span></code> type transformer</p>
@@ -162,7 +166,7 @@ python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR<
 For the graph-based transformers these inputs also need to be encoded into a graph representation.</p>
 <p>The resulting files will be saved in the data folder and given a prefix (<code class="code docutils literal notranslate"><span class="pre">-o</span> <span class="pre">arl</span></code>). You can use this prefix to load the compiled data files in the next step. If you made and error somewhere or got an exception, you may also notice some <code class="code docutils literal notranslate"><span class="pre">backup_{number}</span></code> folders being created in the data folder. These are backups of the data files before the last step. You can use them to go back to the previous results if you accidentally overwrite them.</p>
 <p>Now that we have our data sets prepared, we can finetune the pretrained generator on the preprocessed molecules with the <code class="code docutils literal notranslate"><span class="pre">train</span></code> script:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.train -tm FT -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i arl -o arl -ag <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -mt graph -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>FT<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>arl<span class="w"> </span>-o<span class="w"> </span>arl<span class="w"> </span>-ag<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg<span class="w"> </span>-mt<span class="w"> </span>graph<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 <p>This tells DrugEx to use the generated file (prefixed with <code class="code docutils literal notranslate"><span class="pre">-i</span> <span class="pre">arl</span></code>) to fine-tune (<code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">FT</span></code>) a pretrained model with model states saved in the <code class="code docutils literal notranslate"><span class="pre">-pt</span> <span class="pre">Papyrus05.5_graph_trans_PT.pkg</span></code> file.
@@ -177,7 +181,7 @@ The predictor model (a Random Forest QSAR model for binary A2A bioactivity predi
 <p>During RL a combination of two generators with the same architecture is used to create molecules; the agent that is optimized during RL for exploitation and
 the prior that is kept fixed for exploration.
 At each iteration, generated molecules are scored based on the environment and send a back to the agent for tuning.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.train -tm RL -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i arl -o arl -ag arl_graph_trans_FT -pr <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>RL<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>arl<span class="w"> </span>-o<span class="w"> </span>arl<span class="w"> </span>-ag<span class="w"> </span>arl_graph_trans_FT<span class="w"> </span>-pr<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg<span class="w"> </span>-p<span class="w"> </span>models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json<span class="w"> </span>-ta<span class="w"> </span>A2AR_RandomForestClassifier<span class="w"> </span>-sas<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 <p>This tells DrugEx to create molecules from input fragments encoded in preprocessed data file (prefixed with <code class="code docutils literal notranslate"><span class="pre">arl</span></code>)
@@ -192,7 +196,7 @@ The best model found during RL will be saved as <code class="code docutils liter
 <section id="design-new-molecules">
 <h3>Design new molecules<a class="headerlink" href="#design-new-molecules" title="Permalink to this heading"></a></h3>
 <p>In this example, we use the optimized agent model to design new compounds that should be active on A2AR and have high synthetic accessibility.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i arl_test_graph.txt -g arl_graph_trans_RL
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.generate<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>arl_test_graph.txt<span class="w"> </span>-g<span class="w"> </span>arl_graph_trans_RL
 </pre></div>
 </div>
 <p>This tells DrugEx to generate new molecules based on the input fragment in <code class="code docutils literal notranslate"><span class="pre">arl_test_graph.txt</span></code> with the <code class="code docutils literal notranslate"><span class="pre">arl_graph_trans_RL.pkg</span></code> model.
@@ -211,9 +215,9 @@ Therefore, this model does not use input fragments for training or sampling. To 
 are standardized and encoded based on the vocabulary of the pretrained model <code class="code docutils literal notranslate"><span class="pre">-vf</span> <span class="pre">Papyrus05.5_smiles_voc.txt</span></code>, but no fragmentation is done <code class="code docutils literal notranslate"><span class="pre">-nof</span></code>.
 To fine-tune an RNN-based generator on the A2AR set, the algorithm needs to be specified <code class="code docutils literal notranslate"><span class="pre">-a</span> <span class="pre">rnn</span></code>.
 Here the generator is fine-tuned on the A2AR set and then used to generate new compounds.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i A2AR_LIGANDS.tsv -mc SMILES -o rnn-example -nof -vf Papyrus05.5_smiles_voc.txt
-python -m drugex.train -tm FT -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i rnn-example -ag <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT/Papyrus05.5_smiles_rnn_PT.pkg -vfs Papyrus05.5_smiles_voc.txt -mt smiles -a rnn -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
-python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -g rnn-example_smiles_rnn_FT -vfs Papyrus05.5_smiles_voc.txt -gpu <span class="m">0</span> -n <span class="m">30</span> --keep_undesired
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>A2AR_LIGANDS.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>rnn-example<span class="w"> </span>-nof<span class="w"> </span>-vf<span class="w"> </span>Papyrus05.5_smiles_voc.txt
+python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>FT<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>rnn-example<span class="w"> </span>-ag<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT/Papyrus05.5_smiles_rnn_PT.pkg<span class="w"> </span>-vfs<span class="w"> </span>Papyrus05.5_smiles_voc.txt<span class="w"> </span>-mt<span class="w"> </span>smiles<span class="w"> </span>-a<span class="w"> </span>rnn<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
+python<span class="w"> </span>-m<span class="w"> </span>drugex.generate<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-g<span class="w"> </span>rnn-example_smiles_rnn_FT<span class="w"> </span>-vfs<span class="w"> </span>Papyrus05.5_smiles_voc.txt<span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>-n<span class="w"> </span><span class="m">30</span><span class="w"> </span>--keep_undesired
 </pre></div>
 </div>
 </section>
@@ -225,8 +229,8 @@ By default the transformer algorithm (<code class="code docutils literal notrans
 <p class="admonition-title">Warning</p>
 <p>Note that the pretrained model for this model is not fetched by the tutorial utility at this point so you will have download its files separately. This model is also still more experimental and will likely not perform as well as the previous models.</p>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i A2AR_LIGANDS.tsv -mc SMILES -o ast -mt smiles
-python -m drugex.train -tm FT -i ast -ag <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/smiles-trans/Papyrus05.5_smiles_trans_PT/Papyrus05.5_smiles_trans_PT.pkg -mt smiles -a trans -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>A2AR_LIGANDS.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>ast<span class="w"> </span>-mt<span class="w"> </span>smiles
+python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>FT<span class="w"> </span>-i<span class="w"> </span>ast<span class="w"> </span>-ag<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/smiles-trans/Papyrus05.5_smiles_trans_PT/Papyrus05.5_smiles_trans_PT.pkg<span class="w"> </span>-mt<span class="w"> </span>smiles<span class="w"> </span>-a<span class="w"> </span>trans<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 </section>
@@ -235,8 +239,8 @@ python -m drugex.train -tm FT -i ast -ag <span class="si">${</span><span class="
 <h3>Pretraining a Generator<a class="headerlink" href="#pretraining-a-generator" title="Permalink to this heading"></a></h3>
 <p>Pretraining <code class="code docutils literal notranslate"><span class="pre">-m</span> <span class="pre">PT</span></code> of a model from scratch works exactly the same way as finetuning,
 the only difference is that the generator will not be initialized with pretrained model weights.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i A2AR_LIGANDS.tsv -mc SMILES -o example_pt -mt graph
-python -m drugex.train -tm PT -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i example_pt -mt graph -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>A2AR_LIGANDS.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>example_pt<span class="w"> </span>-mt<span class="w"> </span>graph
+python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>PT<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>example_pt<span class="w"> </span>-mt<span class="w"> </span>graph<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 </section>
@@ -247,9 +251,9 @@ python -m drugex.train -tm PT -b <span class="si">${</span><span class="nv">BASE
 <section id="with-subset-of-molecules-containing-the-scaffold">
 <h4>With subset of molecules containing the scaffold<a class="headerlink" href="#with-subset-of-molecules-containing-the-scaffold" title="Permalink to this heading"></a></h4>
 <p>First the molecules from the given dataset are fragmented and encoding while only selecting fragments-molecule pairs (<code class="code docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;scaffold&gt;</span></code>) containing the xanthine in the input fragements, then we proceed with RL with this subset of molecules.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i A2AR_LIGANDS.tsv -mc SMILES -o arl_xanthine -mt graph -sf c1<span class="o">[</span>nH<span class="o">]</span>c2c<span class="o">(</span>n1<span class="o">)</span>nc<span class="o">(</span>nc2O<span class="o">)</span>O
-python -m drugex.train -tm RL -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i arl_xanthine -o arl_xanthine -ag arl_graph_trans_FT -pr <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
-python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i arl_xanthine -g arl_xanthine_graph_trans_RL -gpu <span class="m">0</span> -n <span class="m">5</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>A2AR_LIGANDS.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>arl_xanthine<span class="w"> </span>-mt<span class="w"> </span>graph<span class="w"> </span>-sf<span class="w"> </span>c1<span class="o">[</span>nH<span class="o">]</span>c2c<span class="o">(</span>n1<span class="o">)</span>nc<span class="o">(</span>nc2O<span class="o">)</span>O
+python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>RL<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>arl_xanthine<span class="w"> </span>-o<span class="w"> </span>arl_xanthine<span class="w"> </span>-ag<span class="w"> </span>arl_graph_trans_FT<span class="w"> </span>-pr<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg<span class="w"> </span>-p<span class="w"> </span>models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json<span class="w"> </span>-ta<span class="w"> </span>A2AR_RandomForestClassifier<span class="w"> </span>-sas<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
+python<span class="w"> </span>-m<span class="w"> </span>drugex.generate<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>arl_xanthine<span class="w"> </span>-g<span class="w"> </span>arl_xanthine_graph_trans_RL<span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>-n<span class="w"> </span><span class="m">5</span>
 </pre></div>
 </div>
 <p>If you want the fragments-molecule pairs consist of ones with exclusively the selected scaffold as the input fragment add the argument <code class="code docutils literal notranslate"><span class="pre">-sfe</span></code></p>
@@ -258,9 +262,9 @@ python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR
 <h4>With input scaffold<a class="headerlink" href="#with-input-scaffold" title="Permalink to this heading"></a></h4>
 <p>First this molecule is encoded, then reinforcement learning is done with this scaffold as input. Lastly a new molecule is generated containing this scaffold.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># input is in tutorial/CLI/data/xanthine.tsv</span>
-python -m drugex.dataset -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i xanthine.tsv -mc SMILES -o scaffold_based -mt graph -s
-python -m drugex.train -tm RL -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i scaffold_based_graph.txt -o scaffold_based -ag arl_graph_trans_FT -pr <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e <span class="m">2</span> -bs <span class="m">32</span> -gpu <span class="m">0</span>
-python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span> -i scaffold_based_graph.txt -g scaffold_based_graph_trans_RL -gpu <span class="m">0</span> -n <span class="m">5</span>
+python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>xanthine.tsv<span class="w"> </span>-mc<span class="w"> </span>SMILES<span class="w"> </span>-o<span class="w"> </span>scaffold_based<span class="w"> </span>-mt<span class="w"> </span>graph<span class="w"> </span>-s
+python<span class="w"> </span>-m<span class="w"> </span>drugex.train<span class="w"> </span>-tm<span class="w"> </span>RL<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>scaffold_based_graph.txt<span class="w"> </span>-o<span class="w"> </span>scaffold_based<span class="w"> </span>-ag<span class="w"> </span>arl_graph_trans_FT<span class="w"> </span>-pr<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg<span class="w"> </span>-p<span class="w"> </span>models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json<span class="w"> </span>-ta<span class="w"> </span>A2AR_RandomForestClassifier<span class="w"> </span>-sas<span class="w"> </span>-e<span class="w"> </span><span class="m">2</span><span class="w"> </span>-bs<span class="w"> </span><span class="m">32</span><span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span>
+python<span class="w"> </span>-m<span class="w"> </span>drugex.generate<span class="w"> </span>-b<span class="w"> </span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="w"> </span>-i<span class="w"> </span>scaffold_based_graph.txt<span class="w"> </span>-g<span class="w"> </span>scaffold_based_graph_trans_RL<span class="w"> </span>-gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>-n<span class="w"> </span><span class="m">5</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -277,7 +281,7 @@ python -m drugex.generate -b <span class="si">${</span><span class="nv">BASE_DIR
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/modules.html" class="btn btn-neutral float-right" title="DrugEx Python API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api/modules.html" class="btn btn-neutral float-right" title="DrugEx Package API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

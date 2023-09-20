@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.explorers.interfaces &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.training.explorers.interfaces &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.training.explorers.interfaces</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.training.explorers.interfaces</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -109,7 +113,7 @@
 <span class="kn">from</span> <span class="nn">drugex.training.monitors</span> <span class="kn">import</span> <span class="n">NullMonitor</span>
 
 <div class="viewcode-block" id="Explorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer">[docs]</a><span class="k">class</span> <span class="nc">Explorer</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implements the DrugEx exploration strategy for DrugEx models under the reinforcement learning framework.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -117,7 +121,7 @@
         <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> 
         <span class="n">device</span><span class="o">=</span><span class="n">DEFAULT_DEVICE</span><span class="p">,</span> <span class="n">use_gpus</span><span class="o">=</span><span class="n">DEFAULT_GPUS</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the explorer.</span>
 
 <span class="sd">        Parameters</span>
@@ -164,7 +168,7 @@
 
 <div class="viewcode-block" id="Explorer.attachToGPUs"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.attachToGPUs">[docs]</a>    <span class="k">def</span> <span class="nf">attachToGPUs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpus</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Attach the model to GPUs</span>
 
 <span class="sd">        Parameters</span>
@@ -183,7 +187,7 @@
 
 <div class="viewcode-block" id="Explorer.getNovelMoleculeMetrics"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.getNovelMoleculeMetrics">[docs]</a>    <span class="k">def</span> <span class="nf">getNovelMoleculeMetrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot; Get metrics for novel molecules</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get metrics for novel molecules</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -230,7 +234,7 @@
     
 <div class="viewcode-block" id="Explorer.saveBestState"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.saveBestState">[docs]</a>    <span class="k">def</span> <span class="nf">saveBestState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save best state based on selection criteria</span>
 
 <span class="sd">        Parameters</span>
@@ -251,7 +255,7 @@
 
 <div class="viewcode-block" id="Explorer.logPerformanceAndCompounds"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.logPerformanceAndCompounds">[docs]</a>    <span class="k">def</span> <span class="nf">logPerformanceAndCompounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Log performance of model</span>
 
 <span class="sd">        Parameters</span>
@@ -285,13 +289,13 @@
 
 <div class="viewcode-block" id="Explorer.policy_gradient"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.policy_gradient">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">policy_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Policy gradient training.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Explorer.getModel"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.Explorer.getModel">[docs]</a>    <span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the current state of the agent</span>
 
 <span class="sd">        Returns</span>
@@ -302,20 +306,20 @@
         <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span></div></div>
 
 <div class="viewcode-block" id="FragExplorer"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer">[docs]</a><span class="k">class</span> <span class="nc">FragExplorer</span><span class="p">(</span><span class="n">Explorer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implements the DrugEx exploration strategy for DrugEx models under </span>
 <span class="sd">    the reinforcement learning framework for fragment-based generators</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FragExplorer.getBatchOutputs"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.getBatchOutputs">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">getBatchOutputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Outputs (frags, smiles) and loss of the agent for a batch of fragments-molecule pairs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="FragExplorer.policy_gradient"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.policy_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">policy_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Policy gradient training.</span>
 <span class="sd"> </span>
 <span class="sd">        Novel molecules are generated by the agent and are scored by the environment.</span>
@@ -361,21 +365,21 @@
 
 <div class="viewcode-block" id="FragExplorer.sampleEncodedPairsToLoader"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.sampleEncodedPairsToLoader">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sampleEncodedPairsToLoader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample new fragments-molecule pairs from a data loader.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="FragExplorer.sample_input"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.sample_input">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sample a batch of fragments-molecule pairs from the training data loader.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="FragExplorer.fit"><a class="viewcode-back" href="../../../../api/drugex.training.explorers.html#drugex.training.explorers.interfaces.FragExplorer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="s1">&#39;desired_ratio&#39;</span><span class="p">,</span> <span class="n">min_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the graph explorer to the training data.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>

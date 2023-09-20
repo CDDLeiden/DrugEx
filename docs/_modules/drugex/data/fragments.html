@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.fragments &mdash; DrugEx 3.4.4 documentation</title>
+  <title>drugex.data.fragments &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -40,14 +40,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -59,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -75,9 +79,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>drugex.data.fragments</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">drugex.data.fragments</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -100,7 +104,7 @@
 
 
 <div class="viewcode-block" id="SequenceFragmentEncoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder">[docs]</a><span class="k">class</span> <span class="nc">SequenceFragmentEncoder</span><span class="p">(</span><span class="n">FragmentPairEncoder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encode fragment-molecule pairs for the sequence-based models.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -111,7 +115,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">throw</span> <span class="o">=</span> <span class="n">throw</span>
 
 <div class="viewcode-block" id="SequenceFragmentEncoder.encodeMol"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeMol">[docs]</a>    <span class="k">def</span> <span class="nf">encodeMol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode a molecule sequence.</span>
 
 <span class="sd">        Args:</span>
@@ -135,7 +139,7 @@
         <span class="k">return</span> <span class="n">tokens</span><span class="p">,</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="SequenceFragmentEncoder.encodeFrag"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.SequenceFragmentEncoder.encodeFrag">[docs]</a>    <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">mol_tokens</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Encode a fragment.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Encode a fragment.</span>
 
 <span class="sd">        Is called by `FragmentPairsEncodedSupplier` with the `mol`</span>
 <span class="sd">        argument being the output of the above `encodeMol` method.</span>
@@ -156,12 +160,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span></div></div>
 
 <div class="viewcode-block" id="GraphFragmentEncoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.GraphFragmentEncoder">[docs]</a><span class="k">class</span> <span class="nc">GraphFragmentEncoder</span><span class="p">(</span><span class="n">FragmentPairEncoder</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encode molecules and fragments for the graph-based transformer (`GraphModel`).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocabulary</span><span class="o">=</span><span class="n">VocGraph</span><span class="p">()):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize this instance with the vocabulary to use.</span>
 
 <span class="sd">        Args:</span>
@@ -171,7 +175,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span> <span class="o">=</span> <span class="n">vocabulary</span>
 
 <div class="viewcode-block" id="GraphFragmentEncoder.encodeMol"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.GraphFragmentEncoder.encodeMol">[docs]</a>    <span class="k">def</span> <span class="nf">encodeMol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smiles</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Molecules are encoded together with fragments -&gt; we just pass the smiles back as both tokens and result of encoding.</span>
 
 <span class="sd">        Args:</span>
@@ -184,7 +188,7 @@
         <span class="k">return</span> <span class="n">smiles</span><span class="p">,</span> <span class="n">smiles</span></div>
 
 <div class="viewcode-block" id="GraphFragmentEncoder.encodeFrag"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.GraphFragmentEncoder.encodeFrag">[docs]</a>    <span class="k">def</span> <span class="nf">encodeFrag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">mol_tokens</span><span class="p">,</span> <span class="n">frag</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encode molecules and fragments at once.</span>
 
 <span class="sd">        Args:</span>
@@ -214,27 +218,27 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary</span></div></div>
 
 <div class="viewcode-block" id="FragmentPairsEncodedSupplier"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier">[docs]</a><span class="k">class</span> <span class="nc">FragmentPairsEncodedSupplier</span><span class="p">(</span><span class="n">MolSupplier</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Transforms fragment-molecule pairs to the encoded representation used by the fragment-based DrugEx models.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FragmentPairsEncodedSupplier.FragmentEncodingException"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.FragmentEncodingException">[docs]</a>    <span class="k">class</span> <span class="nc">FragmentEncodingException</span><span class="p">(</span><span class="n">ConversionException</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Raise this when a fragment failed to encode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="FragmentPairsEncodedSupplier.MoleculeEncodingException"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.MoleculeEncodingException">[docs]</a>    <span class="k">class</span> <span class="nc">MoleculeEncodingException</span><span class="p">(</span><span class="n">ConversionException</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Raise this when the parent molecule of the fragment failed to be encoded.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">pass</span></div>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pairs</span><span class="p">,</span> <span class="n">encoder</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize from a `DataFrame` containing the fragment-molecule pairs.</span>
 
 <span class="sd">        Args:</span>
@@ -245,7 +249,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FragmentPairsEncodedSupplier.next"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsEncodedSupplier.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the next pair and encode it with the encoder.</span>
 
 <span class="sd">        Returns:</span>
@@ -268,13 +272,13 @@
 
 
 <div class="viewcode-block" id="FragmentPairsSupplier"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsSupplier">[docs]</a><span class="k">class</span> <span class="nc">FragmentPairsSupplier</span><span class="p">(</span><span class="n">MolSupplier</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Produces fragment-molecule pairs from input molecules.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecules</span><span class="p">,</span> <span class="n">fragmenter</span><span class="p">,</span> <span class="n">max_bonds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            molecules: the input molecules as a `list`-like object or an iterator</span>
@@ -286,7 +290,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">maxBonds</span> <span class="o">=</span> <span class="n">max_bonds</span>
 
 <div class="viewcode-block" id="FragmentPairsSupplier.next"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsSupplier.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate the next fragment-molecule pair.</span>
 
 <span class="sd">        Returns:</span>
@@ -307,18 +311,18 @@
         <span class="k">return</span> <span class="n">frags</span></div></div>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder">[docs]</a><span class="k">class</span> <span class="nc">FragmentCorpusEncoder</span><span class="p">(</span><span class="n">ParallelProcessor</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fragments and encodes fragment-molecule pairs in parallel. Each encoded pair is used as input to the fragment-based DrugEx models.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder.FragmentPairsCollector"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.FragmentPairsCollector">[docs]</a>    <span class="k">class</span> <span class="nc">FragmentPairsCollector</span><span class="p">(</span><span class="n">ListExtend</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A simple `ResultCollector` that extends an internal `list`. It can also wrap another instance of itself.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">            Args:</span>
 <span class="sd">                other: another instance of `FragmentPairsCollector` to call after extending</span>
@@ -332,7 +336,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">other</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmenter</span><span class="p">,</span> <span class="n">encoder</span><span class="p">,</span> <span class="n">pairs_splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fragmenter (MolConverter): a `MolConverter` that returns a `list` of (fragment, molecule) `tuple`s for a given molecule supplied as its SMILES string. See the reference implementation in `Fragmenter`.</span>
@@ -348,7 +352,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pairsSplitter</span> <span class="o">=</span> <span class="n">pairs_splitter</span>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder.getFragmentPairs"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.getFragmentPairs">[docs]</a>    <span class="k">def</span> <span class="nf">getFragmentPairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply the given &quot;fragmenter&quot; in parallel.</span>
 
 <span class="sd">        Args:</span>
@@ -371,7 +375,7 @@
         <span class="n">evaluator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mols</span><span class="p">,</span> <span class="n">collector</span><span class="p">,</span> <span class="n">desc_string</span><span class="o">=</span><span class="s2">&quot;Creating fragment-molecule pairs&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder.splitFragmentPairs"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.splitFragmentPairs">[docs]</a>    <span class="k">def</span> <span class="nf">splitFragmentPairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pairs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Use the &quot;pairs_splitter&quot; to get splits of the calculated molecule-fragment pairs from `FragmentCorpusEncoder.getFragmentPairs()`</span>
 
 <span class="sd">        Args:</span>
@@ -385,7 +389,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairsSplitter</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairsSplitter</span> <span class="k">else</span> <span class="p">[</span><span class="n">pairs</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder.encodeFragments"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.encodeFragments">[docs]</a>    <span class="k">def</span> <span class="nf">encodeFragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pairs</span><span class="p">,</span> <span class="n">collector</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Encodes fragment-pairs obtained from `FragmentCorpusEncoder.getFragmentPairs()` with the specified `FragmentPairEncoder` initialized in &quot;encoder&quot;.</span>
 
 <span class="sd">        Args:</span>
@@ -408,7 +412,7 @@
         <span class="n">evaluator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">collector</span><span class="p">,</span> <span class="n">desc_string</span><span class="o">=</span><span class="s2">&quot;Encoding fragment-molecule pairs.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FragmentCorpusEncoder.apply"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentCorpusEncoder.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">fragmentPairsCollector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encodingCollectors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply fragmentation and encoding to the given molecules represented as SMILES strings. Collectors can be used to fetch fragment-molecule pairs and the final encoding with vocabulary.</span>
 
 <span class="sd">        Args:</span>
@@ -429,12 +433,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">encodeFragments</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="n">split_idx</span><span class="p">],</span> <span class="n">encodingCollectors</span><span class="p">[</span><span class="n">split_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">encodingCollectors</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="FragmentPairsSplitter"><a class="viewcode-back" href="../../../api/drugex.data.html#drugex.data.fragments.FragmentPairsSplitter">[docs]</a><span class="k">class</span> <span class="nc">FragmentPairsSplitter</span><span class="p">(</span><span class="n">DataSplitter</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `DataSplitter` to be used to split molecule-fragment pairs into training and test data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">max_test_samples</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">train_collector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_collector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique_collector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set settings for the splitter.</span>
 
 <span class="sd">        Args:</span>
@@ -456,7 +460,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pairs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Split the input `list` to the desired data sets. The split is done on the fragments so that no single fragment is contained in both the training and test split.</span>
 
 <span class="sd">        Args:</span>
