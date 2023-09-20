@@ -42,6 +42,6 @@ bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}" # 
 
 echo "Running tutorials..."
 cd "${WD}/DrugEx/tutorial"
-bash -c "${RUN_CMD} && drugex download && ./run_all.sh"
+bash -c "${RUN_CMD} && ./run_all.sh"
 
 echo "All tests finished successfully. Exiting..."

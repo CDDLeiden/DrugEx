@@ -48,6 +48,13 @@ dependencies = [
 qsprpred = [
   "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.1.0#egg=qsprpred",
 ]
+dev = [
+  "jupyterlab",
+  "mols2grid",
+  "papyrus_structure_pipeline",
+  "papyrus-scaffold-visualizer @ git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@v0.6.0",
+  "drugex[qsprpred]",
+]
 
 
 [project.urls]
