@@ -5,79 +5,164 @@ Created by: Martin Sicho
 On: 26.06.22, 18:07
 """
 import numpy as np
+from abc import ABC, abstractmethod
 
-from drugex import DEFAULT_DEVICE
 from drugex.logs import logger
-from drugex.training.interfaces import RankingStrategy, RewardScheme
+from drugex.training.interfaces import RewardScheme
 from drugex.utils.fingerprints import get_fingerprint
+from drugex.utils import get_Pareto_fronts
+
 from rdkit import Chem, DataStructs
 
+class ParetoRewardScheme(RewardScheme, ABC):
 
-class NSGAIIRanking(RankingStrategy):
-
-    def __call__(self, smiles, scores):
+    def getParetoFronts(self, scores):
         """
-        Crowding distance algorithm to rank the solutions in the same pareto frontier.
-
-        Paper: Deb, Kalyanmoy, et al. "A fast and elitist multiobjective genetic algorithm: NSGA-II." IEEE transactions on
-        evolutionary computation 6.2 (2002): 182-197.
+        Returns Pareto fronts.
 
         Parameters
         ----------
+        scores : np.ndarray
+            Matrix of scores for the multiple objectives
+        
+        Returns
+        -------
+        list
+            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front. 
+            Most dominant front is the first one.
+        """
+
+        return get_Pareto_fronts(scores)
+
+    @abstractmethod
+    def getMoleculeRank(self, fronts, smiles=None, scores=None):
+        """
+        Ranks molecules within each Pareto front and returns the indices of the molecules in the ranked order.
+
+        Parameters
+        ----------
+        fronts : list
+            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.
         smiles : list
-            List of SMILES sequence to be ranked (not used in the calculation -> just a requirement of the interface because some ranking strategies need it)
+            List of SMILES sequence to be ranked
         scores : np.ndarray
             matrix of scores for the multiple objectives
 
         Returns
         -------
         rank : np.array
-            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
+            Indices of the ranked SMILES sequences
         """        
+        pass
+
+
+    def __call__(self, smiles, scores, thresholds) -> np.ndarray:
+        """
+        Returns the rewards for the given SMILES sequences. The reward is calculated 
+        based on Pareto fronts and the rank of the molecule within the Pareto front.
+        The rank of molecule in a Pareto front depends on the distance metric used by
+        the specific ranking strategy.
+
+        Parameters
+        ----------
+        smiles : list
+            List of SMILES sequence to be ranked
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        thresholds : list
+            List of thresholds for the multiple objectives (not used, only for compatibility)
+
+        Returns
+        -------
+        rewards : np.array
+            Rewards for the given SMILES sequences
+        """
 
         fronts = self.getParetoFronts(scores)
+        ranks = self.getMoleculeRank(fronts, smiles=smiles, scores=scores)
+        rewards = np.zeros((len(smiles), 1))
+        rewards[ranks, 0] = np.arange(len(scores)) / len(scores)
+        return rewards
 
-        rank = []
-        # sort all fronts by crowding distance
-        for t, front in enumerate(fronts):
-            distance = np.zeros(len(front))
-            for i in range(scores.shape[1]):
-                # sort front small to large for value objective i
-                cpu_tensor = scores[front.cpu(), i]
-                order = cpu_tensor.argsort()
-                front = front[order]
-                # set distance value smallest and largest value objective i to large value
-                distance[order[0]] = 10 ** 4
-                distance[order[-1]] = 10 ** 4
-                # get all values of objective i in current front
-                m_values = [scores[j, i] for j in front]
-                # scale for crowding distance by difference between max and min of objective i in front
-                scale = max(m_values) - min(m_values)
-                if scale == 0:
-                    scale = 1
-                # calculate crowding distance
-                for j in range(1, len(front) - 1):
-                    distance[order[j]] += (scores[front[j + 1], i] - scores[front[j - 1], i]) / scale
-            # replace front by front sorted according to crowding distance
-            fronts[t] = front[np.argsort(distance)]
-            rank.extend(fronts[t].tolist())
+class ParetoCrowdingDistance(ParetoRewardScheme):
+    """
+    Reward scheme that uses the NSGA-II crowding distance 
+    ranking strategy to rank the solutions in the same Pareto frontier.
+
+    Paper: Deb, Kalyanmoy, et al. "A fast and elitist multiobjective genetic algorithm: 
+    NSGA-II. IEEE transactions on evolutionary computation 6.2 (2002): 182-197."
+    """
+
+    def getMoleculeRank(self, fronts, smiles=None, scores=None):
+        """
+        Crowding distance algorithm to rank the solutions in the same pareto frontier.
+
+        Parameters
+        ----------
+        fronts : list
+            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.
+        smiles : list
+            List of SMILES sequence to be ranked (not used in the calculation -> just a requirement of the interface because some ranking strategies need it)"
+        scores : np.ndarray
+            matrix of scores for the multiple objectives
+        
+        Returns
+        -------
+        rank : np.array
+            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method from worst to best
+        """
+
+        # Rank molecules within each Pareto front based on crowding distance
+        ranked_fronts = []
+        for front in fronts:
+            front_scores = scores[front]
+            front_size = front_scores.shape[0]
+            crowding_distance = np.zeros(front_size)
+
+            # Calculate crowding distance for each score dimension
+            for i in range(front_scores.shape[1]):
+                sorted_indices = np.argsort(front_scores[:, i])
+
+                # Set crowding distance of boundary solutions to infinity
+                crowding_distance[sorted_indices[0]] = np.inf
+                crowding_distance[sorted_indices[-1]] = np.inf
+
+                # Get range of scores for current objective
+                score_range = front_scores[:, i].max() - front_scores[:, i].min()
+                if score_range == 0:
+                    continue
+
+                # Calculate crowding distance for all other solutions
+                for j in range(1, front_size - 1):
+                    crowding_distance[sorted_indices[j]] += (
+                        front_scores[sorted_indices[j + 1], i]
+                        - front_scores[sorted_indices[j - 1], i]
+                    ) / score_range
+
+            # Sort front indices based on crowding distance
+            sorted_indices = np.argsort(-crowding_distance)
+            ranked_front = front[sorted_indices] # First element is the best
+            ranked_fronts.append(ranked_front)
+
+        # Combine all ranked fronts
+        rank = np.concatenate(ranked_fronts)
+        rank = rank[::-1] # From worst to best
+
         return rank
 
-
-class MinMeanSimilarityRanking(RankingStrategy):
+class ParetoTanimotoDistance(ParetoRewardScheme):
     """
-    Revised crowding distance algorithm to rank the solutions in the same pareto frontier with Tanimoto-distance.
+    Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
     """
 
-    def __init__(self, device=DEFAULT_DEVICE, func='mean'):
+    def __init__(self, distance_metric : str ='min'):
         """
         Args:
-            device: pytorch device
-            func: 'min' or 'mean' - how to calculate the similarity between the molecules in the same front
+            distance_metric: 'mean', 'min' or 'mutual' - how to compare Tanimoto
+                similarities of molecules in the same front
         """
-
-        super().__init__(device=device)
-        self.func = np.min if func == 'min' else np.mean
+        super().__init__()
+        self.distance_metric = distance_metric
 
     @staticmethod
     def calc_fps(mols, fp_type='ECFP6'):
@@ -118,32 +203,7 @@ class MinMeanSimilarityRanking(RankingStrategy):
         mols = [Chem.MolFromSmiles(smile) for smile in smiles]
         return self.calc_fps(mols)
 
-
-    def __call__(self, smiles, scores):
-        """
-        Revised crowding distance algorithm to rank the solutions in the same frontier with Tanimoto-distance.
-        Molecules with the lowest Tanimoto-distance to the other molecules in the same front are ranked first.
-
-        Args:
-            smiles (list): List of SMILES sequence to be ranked
-            scores (np.ndarray): matrix of scores for the multiple objectives
-
-        Parameters
-        ----------
-        smiles : list
-            List of SMILES sequence to be ranked
-        scores : np.ndarray
-            matrix of scores for the multiple objectives
-        func : str
-            'min' takes minimium tanimoto distance, 'avg' takes average tanimoto distance in the front
-
-        Returns
-        -------
-        rank : np.array
-            Indices of the SMILES sequences ranked with the NSGA-II crowding distance method
-        """
-        fps = self.getFPs(smiles)
-        fronts = self.getParetoFronts(scores)
+    def _min_mean_similarity_ranking(self, fronts, fps):
 
         rank = []
         for i, front in enumerate(fronts):
@@ -153,22 +213,21 @@ class MinMeanSimilarityRanking(RankingStrategy):
                 dist = np.array(
                     [self.func(1 - np.array(DataStructs.BulkTanimotoSimilarity(fp, list(np.delete(front_fps, idx)))))
                      for idx, fp in enumerate(front_fps)])
-                fronts[i] = front[dist.argsort()] # sort front (molecule with the lowest min/average distance to the others is first)
+                # sort front (molecule with the lowest min/average distance to the others is first)
+                fronts[i] = front[dist.argsort()] 
             elif None in front_fps:
                 logger.warning("Invalid molecule in front. Front not ranked.")
             rank.extend(fronts[i].tolist())
-        return rank # sorted list of all molecules in all fronts (molecules with the lowest min/average distance to the others are ranked first)
+        
+        # from worst to best (most similar in worst front to most dissimilar in best front)
+        return rank 
 
-class MutualSimilaritySortRanking(MinMeanSimilarityRanking):
-    """
-    Alternative implementation of the `MinMeanSimilarityRanking` ranking strategy that tries
-    to more closely emulate the crowding distance with fingerprint similarities. Adapted
-    from the original code by @XuhanLiu (https://github.com/XuhanLiu/DrugEx/blob/cd384f4a8ed4982776e92293f77afd4ea78644f9/utils/nsgaii.py#L92).
-    """
-
-    def __call__(self, smiles, scores):
-        fps = self.getFPs(smiles)
-        fronts = self.getParetoFronts(scores)
+    def _mutual_similarity_ranking(self, fronts, fps):
+        """
+        Alternative Tanimoto similarity based ranking strategy that tries to more closely 
+        emulate the crowding distance with fingerprint similarities. Adapted from the 
+        original code by @XuhanLiu (https://github.com/XuhanLiu/DrugEx/blob/cd384f4a8ed4982776e92293f77afd4ea78644f9/utils/nsgaii.py#L92).
+        """
 
         rank = []
         for i, front in enumerate(fronts):
@@ -186,91 +245,42 @@ class MutualSimilaritySortRanking(MinMeanSimilarityRanking):
                         dist[order[k]] += tanimoto[order[k + 1]] - tanimoto[order[k - 1]]
                 fronts[i] = front[dist.argsort()]
             rank.extend(fronts[i].tolist())
+        
         return rank
 
 
-class ParetoTanimotoDistance(RewardScheme):
-    """
-    Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
-    """
-
-    def __init__(self, ranking=MinMeanSimilarityRanking()):
-        super().__init__(ranking)
+    def getMoleculeRank(self, fronts, smiles=None, scores=None):
         """
-        Parameters
-        ----------
-        ranking : RankingStrategy
-            Ranking strategy to use
-        """
-
-    def __call__(self, smiles, scores, desire, undesire, thresholds):
-        """
-        Reward scheme that uses the Tanimoto distance ranking strategy to rank the solutions in the same Pareto frontier.
+        Get the rank of the molecules in the Pareto front based on the Tanimoto distance
+        of molecules in a front.
 
         Parameters
         ----------
+        fronts : list
+            List of Pareto fronts
         smiles : list
             List of SMILES sequence to be ranked
         scores : np.ndarray
-            matrix of scores for the multiple objectives
-        desire : int
-            Number of desired molecules
-        undesire : int
-            Number of undesired molecules
-        thresholds : np.ndarray
-            Thresholds for the multiple objectives
-        """
-
-        if not self.ranking:
-            raise self.RewardException(f"{self.__class__.__name__} reward scheme requires a ranking strategy.")
-
-        ranks = self.ranking(smiles, scores)
-        rewards = np.zeros((len(smiles), 1))
-        score = (np.arange(undesire) / undesire / 2).tolist() + (np.arange(desire) / desire / 2 + 0.5).tolist()
-        rewards[ranks, 0] = score
-        return rewards
-
-
-class ParetoCrowdingDistance(RewardScheme):
-    """
-    Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.
-    """
-
-    def __init__(self, ranking=NSGAIIRanking()):
-        super().__init__(ranking)
-        """
-        Parameters
-        ----------
-        ranking : RankingStrategy
-            Ranking strategy to use
-        """
-
-    def __call__(self, smiles, scores, desire, undesire, thresholds):
-        """
-        Reward scheme that uses the NSGA-II crowding distance ranking strategy to rank the solutions in the same Pareto frontier.
+            Array of scores for each molecule (not used)
         
-        Parameters
-        ----------
-        smiles : list  
-            List of SMILES sequence to be ranked
-        scores : np.ndarray
-            matrix of scores for the multiple objectives
-        desire : int
-            array of desired molecules
-        undesire : int
-            array of undesired molecules
-        thresholds : np.ndarray
-            Thresholds for the multiple objectives
-
         Returns
         -------
-        rewards : np.ndarray
-            Array of rewards for the SMILES sequences
+        rank : list
+            List of indices of molecules, ranked from worst to best
         """
-        ranks = self.ranking(smiles, scores)
-        rewards = np.zeros((len(smiles), 1))
-        rewards[ranks, 0] = np.arange(len(scores)) / len(scores)
-        return rewards
+
+        fronts  = fronts[::-1] # From worst to best
+        fps = self.getFPs(smiles)
+
+        if self.distance_metric == 'mean':
+            self.func = np.mean
+            return self._min_mean_similarity_ranking(fronts, fps)
+        elif self.distance_metric == 'min':
+            self.func = np.min
+            return self._min_mean_similarity_ranking(fronts, fps)
+        if self.distance_metric == 'mutual':
+            return self._mutual_similarity_ranking(fronts, fps)
+
 
 
 class WeightedSum(RewardScheme):
@@ -278,7 +288,7 @@ class WeightedSum(RewardScheme):
     Reward scheme that uses the weighted sum ranking strategy to rank the solutions.
     """
 
-    def __call__(self, smiles, scores, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, thresholds):
         """
         Reward scheme that uses the weighted sum ranking strategy to rank the solutions.
 
@@ -288,10 +298,6 @@ class WeightedSum(RewardScheme):
             List of SMILES sequence to be ranked
         scores : np.ndarray
             matrix of scores for the multiple objectives
-        desire : int
-            array of desired molecules
-        undesire : int
-            array of undesired molecules
         thresholds : np.ndarray
             Thresholds for the multiple objectives
 

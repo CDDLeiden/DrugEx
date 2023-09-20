@@ -10,22 +10,33 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import warnings
 
-import git
 from drugex.logs import config, logger, setLogger
 from drugex.logs.config import LogFileConfig
 
 BACKUP_DIR_FOLDER_PREFIX = 'backup'
 
-def commit_hash(GIT_PATH):
+def export_conda_environment(filepath: str):
+    """Export the conda environment to a yaml file.
+
+    Args:
+        filepath (str): path to the yaml file
+
+    Raises:
+        subprocess.CalledProcessError: if the command fails
+        Exception: if an unexpected error occurs
+    """
     try:
-        repo = git.Repo.init(GIT_PATH)
-        repo_hash = '#' + repo.head.object.hexsha[:8]
-    except ValueError:
-        from drugex import __version__
-        repo_hash = __version__
-    return repo_hash
+        cmd = f"conda env export > {filepath}"
+        subprocess.run(cmd, shell=True, check=True)
+        print(f"Environment exported to {filepath} successfully!")
+    except subprocess.CalledProcessError as e:
+        print(f"Error exporting the environment: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 
 def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_hash=None, init_data=None, disable_existing_loggers=True):
     
@@ -39,7 +50,7 @@ def enable_file_logger(log_folder, filename, debug=False, log_name=None, git_has
     settings = LogFileConfig(path, log, debug)
 
     # Begin log file
-    config.init_logfile(log, git_hash, json.dumps(init_data, sort_keys=False, indent=2))
+    config.init_logfile(log, json.dumps(init_data, sort_keys=False, indent=2))
     
     if not debug:
         # Disable 'qsprpred' logger if it exists

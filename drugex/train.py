@@ -11,7 +11,7 @@ from drugex import VERSION
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import (GraphFragDataSet, SmilesDataSet,
                                   SmilesFragDataSet)
-from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
+from drugex.logs.utils import backUpFiles, enable_file_logger
 from drugex.training.environment import DrugExEnvironment
 from drugex.training.explorers import (FragGraphExplorer, FragSequenceExplorer,
                                        SequenceExplorer)
@@ -133,10 +133,6 @@ def GeneratorArgParser():
     parser.add_argument('-sim_tw', '--similarity_tversky_weights', nargs=2, type=float, default=[0.7, 0.3],
                         help="Weights (alpha and beta) for Tversky similarity. If both equal to 1.0, Tanimoto similarity.")       
     
-
-    
-    parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved")
     parser.add_argument('-d', '--debug', action='store_true')
 
             
@@ -804,7 +800,7 @@ def getModifiers(task, scheme, activity_threshold):
 
     else:
         # Pareto Front reward scheme (PRTD or PRCD)
-        if task == ModelTasks.CLASSIFICATION:
+        if task.isClassification():
             active = ClippedScore(lower_x=0.2, upper_x=0.5)
             inactive = ClippedScore(lower_x=0.8, upper_x=0.5)
             window = ClippedScore(lower_x=0, upper_x=1)
@@ -897,7 +893,7 @@ def CreateEnvironment(
     for target in targets:
         model = predictors[target]
         task = model.task
-        if task == ModelTasks.CLASSIFICATION and model.nClasses > 2:
+        if task == ModelTasks.MULTICLASS:
             raise NotImplementedError('Classification models with more than 2 classes are not supported. Invalid model: {}'.format(target))
 
         active, inactive, window = getModifiers(task, scheme, activity_threshold)
@@ -983,7 +979,6 @@ if __name__ == "__main__":
         args.output_long + '.log',
         args.debug,
         __name__,
-        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
     log = logSettings.log

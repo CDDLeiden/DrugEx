@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drugex"
+dynamic = ["version"]
+description = "Software library for de novo design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = ["Drug discovery", "De novo design", "Generative model", "Molecules", "Multi-objective optimization", "Reinforcement learning"]
+authors = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
+           {name = "Sohvi Luukkonen", email = "s.luukkonen@lacdr.leidenuniv.nl"},
+           {name = "Helle van den Maagdenberg", email = "h.w.van.den.maagdenberg@lacdr.leidenuniv.nl"},
+           {name = "Linde Schoenmaker", email = "l.schoenmaker@lacdr.leidenuniv.nl"},
+           {name = "Olivier Béquignon", email = "o.j.m.bequignon@lacdr.leidenuniv.nl"},
+           {name = "Xuhan Liu", email = "xuhanliu@hotmail.com"},
+           {name = "Gerard van Westen", email = "gerard@lacdr.leidenuniv.nl"}]
+maintainers = [{name = "Martin Sicho", email = "m.sicho@lacdr.leidenuniv.nl"},
+               {name = "Sohvi Luukkonen", email = "s.luukkonen@lacdr.leidenuniv.nl"},
+               {name = "Helle van den Maagdenberg", email = "h.w.van.den.maagdenberg@lacdr.leidenuniv.nl"},
+               {name = "Linde Schoenmaker", email = "l.schoenmaker@lacdr.leidenuniv.nl"},]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+dependencies = [
+  "numpy >= 1.19",
+  "scikit-learn >= 1.0.2",
+  "pandas >= 1.2.2",
+  "torch >= 1.7.0",
+  "matplotlib >= 2.0",
+  "tqdm",
+  "rdkit-pypi",
+  "joblib",
+  "gitpython",
+  "networkx",
+  "requests",
+]
+
+[project.optional-dependencies]
+qsprpred = [
+  "qsprpred @ git+https://github.com/CDDLeiden/QSPRPred.git@v2.1.0#egg=qsprpred",
+]
+dev = [
+  "jupyterlab",
+  "mols2grid",
+  "papyrus_structure_pipeline",
+  "papyrus-scaffold-visualizer @ git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@v0.6.0",
+  "drugex[qsprpred]",
+]
+
+
+[project.urls]
+homepage = "https://github.com/CDDLeiden/DrugEx"
+repository = "https://github.com/CDDLeiden/DrugEx"
+documentation = "https://cddleiden.github.io/DrugEx/docs/"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+script-files = ["scripts/drugex"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools_scm]
+write_to = "drugex/_version.py"

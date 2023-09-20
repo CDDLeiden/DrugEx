@@ -26,8 +26,9 @@ import importlib.util
 spec = importlib.util.spec_from_file_location("drugex.about", "../drugex/about.py")
 about = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(about)
-release = about.VERSION
-version = f'v{release}'
+from importlib.metadata import version
+release = f"v{version('drugex')}"
+version = release
 
 
 # -- General configuration ---------------------------------------------------

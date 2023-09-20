@@ -5,6 +5,7 @@ Created by: Martin Sicho
 On: 17.02.23, 13:44
 """
 import numpy as np
+import pandas as pd
 from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer
 from qsprpred.models.tasks import ModelTasks
@@ -42,14 +43,21 @@ class QSPRPredScorer(Scorer):
             parsed_mols = mols
 
         if self.model.task == ModelTasks.REGRESSION:
-            return self.model.predictMols(parsed_mols, **self.kwargs)
+            scores = self.model.predictMols(parsed_mols, **self.kwargs)
         else:
             # FIXME: currently we only assume that the model is a binary classifier
             # with the positive class being the last one in the list of probabilities
-            return np.array(
-                [probas[-1]
-                 if not np.isnan(probas[-1]) else self.invalidsScore
-                 for probas in self.model.predictMols(parsed_mols, use_probas=True, **self.kwargs)])
+            scores = self.model.predictMols(
+                parsed_mols,
+                use_probas=True,
+                **self.kwargs
+            )[-1][:, -1]
+        # replace missing values with invalids score
+        scores = np.array([
+            x if x is not None else self.invalidsScore
+            for x in np.array(scores)
+        ])
+        return scores
 
     def getKey(self):
         return f"QSPRpred_{self.model.name}"

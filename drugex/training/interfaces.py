@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
-from drugex.utils import gpu_non_dominated_sort, cpu_non_dominated_sort
+from drugex.utils import get_Pareto_fronts
 from drugex.training.scorers.smiles import SmilesChecker
 #from drugex.training.monitors import NullMonitor
 
@@ -47,60 +47,6 @@ class ModelEvaluator(ABC):
         pass
 
 
-class RankingStrategy(ABC):
-    """
-    Ranks the given molecules according to their scores.
-
-    The implementing classes can get a pareto front by calling `RankingStrategy.getParetoFronts()` on the input scores.
-
-    """
-
-    def __init__(self, device=DEFAULT_DEVICE):
-        """
-        Constructor allows to specify a GPU or CPU device for Pareto fronts calculation.
-
-        Parameters
-        ----------
-        device : torch.device
-            The device to use for the ranking.
-        """
-
-        self.device = device
-
-    def getParetoFronts(self, scores):
-        """
-        Returns Pareto fronts.
-
-        Parameters
-        ----------
-        scores : np.ndarray
-            Matrix of scores for the multiple objectives
-        
-        Returns
-        -------
-        list
-            `list` of Pareto fronts. Each front is a `list` of indices of the molecules in the Pareto front.
-        """
-
-        if self.device == torch.device('cuda'):
-            swarm = torch.Tensor(scores).to(self.device)
-            return gpu_non_dominated_sort(swarm)
-        else:
-            return cpu_non_dominated_sort(scores)
-
-    @abstractmethod
-    def __call__(self, smiles, scores):
-        """
-        Return ranks of the molecules based on the given scores.
-
-        Parameters
-        ----------
-        smiles : list
-            List of SMILES strings of the molecules to rank.
-        scores : np.ndarray
-            Matrix of scores for the multiple objectives
-        """
-        pass
 
 
 class RewardScheme(ABC):
@@ -115,20 +61,10 @@ class RewardScheme(ABC):
         """
         pass
 
-    def __init__(self, ranking=None):
-        """
-        The `RankingStrategy` function to use for ranking solutions.
 
-        Parameters
-        ----------
-        ranking : RankingStrategy
-            The ranking strategy to use for ranking solutions.
-        """
-
-        self.ranking = ranking
 
     @abstractmethod
-    def __call__(self, smiles, scores, desire, undesire, thresholds):
+    def __call__(self, smiles, scores, thresholds):
         """
         Calculate the rewards for generated molecules and rank them according to teh given `RankingStrategy`.
 
@@ -138,10 +74,6 @@ class RewardScheme(ABC):
             List of SMILES strings of the molecules to rank.
         scores : np.ndarray
             Matrix of scores for the multiple objectives
-        desire : int
-            Number of molecules that are desirable.
-        undesire : int
-            Number of molecules that are undesirable.
         thresholds : list
             List of thresholds for the objectives.
 
@@ -255,15 +187,22 @@ class Environment(ModelEvaluator):
             Array of rewards for the molecules.
         """
 
+        # Get scores
         scores = self.getScores(smiles, frags=frags)
-        valid = scores.Valid.values
-        desire = scores.Desired.sum()
-        undesire = len(scores) - desire
-        scores = scores[self.getScorerKeys()].values
+        scores['SMILES'] = smiles  
 
-        rewards = self.rewardScheme(smiles, scores, desire, undesire, self.thresholds)
-        rewards[valid == 0] = 0
-        
+        # Initialize rewards to 0
+        rewards = np.zeros((len(smiles),1))
+        valid_idx = scores[scores.Valid == 1].index.tolist()
+        # Compute rewards for valid molecules
+        if len(valid_idx) > 0:
+            smiles_valid = scores[scores.Valid == 1].SMILES.tolist()
+            scores_valid = scores.loc[scores.Valid == 1, self.getScorerKeys()].values
+            rewards_valid = self.rewardScheme(smiles_valid, scores_valid, self.thresholds)
+            rewards[valid_idx] = rewards_valid
+        else:
+            logger.warning("No valid molecules generated. All rewards are 0.")
+
         return rewards
 
     def getScorerKeys(self):

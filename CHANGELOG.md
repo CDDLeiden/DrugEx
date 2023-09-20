@@ -1,18 +1,30 @@
 # Change Log
-From v3.4.3 to v3.4.4
+From v3.4.4 to v3.4.5
 
 ## Fixes
 
-- Fixed a bug that may have caused the standardizer to return molecules failing in standardization in their original form instead of removing them (14fd58dc758cb882c2a24e4a481a9064318927f1).
+- Fixed a bug in calculation of the Pareto fronts (fronts are now calculated for maximization of objectives instead of objective minimization).
+- Patch a bug that that caused a crash when an invalid smiles was encountered in the fragment generation step. This
+  bug was introduced in v3.4.4, now invalid smiles are skipped and a warning is printed to the log.
 
 ## Changes
 
-None.
+- Installation of pip package with pyproject.toml instead of setup.cfg.
+- Methods `cpu_non_dominated_sort` and `gpu_non_dominated_sort` have been replace by `get_Pareto_fronts`.
+- Improve calculation of crowding distance.
+- The rewards module is refactored and the `RankingStrategy` class was replace by `ParetoRankingScheme` class. 
+    - The final reward calcuation for `ParetoRankingScheme`-based methods is now directly the scaled rank of the molecules.
+    - The `ParetoTanimotoDistance` now has a attribute `distance_metric` which can be "min", "mean" or "mutual" instead of attribute `ranking`.
+- DrugEx is now compatible with the latest version of qsprpred v2.0.1, previous versions of qsprpred are no longer supported.
+- `drugex.generate` CLI environment arguments are no longer overwritten by environment variables from generator.
 
 ## Removed Features
 
-None.
+None. 
 
 ## New Features
 
-None.
+- When installing package with pip, the commit hash and date of the installation is saved into `qsprpred._version`
+- Added an automated Docker runner for tests that can run on GPUs. See [testing/runner/README.md](testing/runner/README.md) for more information.
+- When installing package with pip, the commit hash and date of the installation is saved into `drugex._version`. This information is also used as a basis of a new dynamic versioning scheme for the package. The version number is generated automatically upon installation of the package and saved to `drugex.__version__`. 
+- QSPRPred is now available as an optional dependency that can be installed with DrugEx using the `[qsprpred]` option.

@@ -1,5 +1,0 @@
-{
-    "criterion": "entropy",
-    "n_estimators": 250,
-    "n_jobs": 1
-}

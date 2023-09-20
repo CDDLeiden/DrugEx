@@ -6,7 +6,7 @@ import os
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles
 from drugex.data.datasets import GraphFragDataSet, SmilesFragDataSet
 from drugex.data.utils import getVocPaths
-from drugex.logs.utils import backUpFiles, commit_hash, enable_file_logger
+from drugex.logs.utils import backUpFiles, enable_file_logger
 from drugex.train import CreateEnvironment, SetUpGenerator, DataPreparation
 
 
@@ -22,13 +22,13 @@ def DesignArgParser(txt=None):
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
-                        help="For v3, name of file containing fragments for generation without _graph.txt / _smiles.txt extension")
+                        help="For v3, name of file containing fragments for generation without _test_graph.txt / _test_smiles.txt extension or full path")
     # TODO: Is reading voc files necessary? Is the vocabulary saved to the generator file?
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
 
     parser.add_argument('-n', '--num', type=int, default=1,
-                        help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
+                        help="Number of molecules to generate in total.")
     parser.add_argument('--keep_invalid', action='store_true',
                         help="If on, invalid molecules are kept in the output. Else, they are dropped.")
     parser.add_argument('--keep_duplicates', action='store_true',
@@ -91,16 +91,12 @@ def DesignArgParser(txt=None):
                         help="List of GPUs") 
     parser.add_argument('-bs', '--batch_size', type=int, default=1048,
                         help="Batch size")
-    parser.add_argument('-ng', '--no_git', action='store_true',
-                        help="If on, git hash is not retrieved")    
 
     args = parser.parse_args()
     designer_args = vars(args)
     
     # Load parameters generator/environment from trained model    
-    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
-        'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
-        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds', 'use_gru', 'predictor' ]
+    train_parameters = ['mol_type', 'algorithm', 'beta', 'scheme', 'use_gru']
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
@@ -211,9 +207,9 @@ def Design(args):
     
     # Generate molecules and save them
     if args.keep_invalid and not args.keep_duplicates:
-        logSettings.log.warning('Ignoring droping of duplicates because invalides are kept.')
+        logSettings.log.warning('Ignoring dropping of duplicates because invalids are kept.')
     if args.keep_invalid and not args.keep_undesired:
-        logSettings.log.warning('Ignoring droping of undesirables because invalides are kept.')  
+        logSettings.log.warning('Ignoring dropping of undesirables because invalids are kept.')  
 
     gen_kwargs = dict(num_samples=args.num, batch_size=args.batch_size, n_proc=8,
         drop_invalid=not args.keep_invalid, no_multifrag_smiles=True, drop_duplicates=not args.keep_duplicates, drop_undesired=not args.keep_undesired, 
@@ -241,7 +237,6 @@ if __name__ == "__main__":
         'design.log',
         args.debug,
         __name__,
-        commit_hash(os.path.dirname(os.path.realpath(__file__))) if not args.no_git else None,
         vars(args)
     )
 
