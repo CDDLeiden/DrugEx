@@ -16,6 +16,7 @@ From v3.4.4 to v3.4.5
     - The final reward calcuation for `ParetoRankingScheme`-based methods is now directly the scaled rank of the molecules.
     - The `ParetoTanimotoDistance` now has a attribute `distance_metric` which can be "min", "mean" or "mutual" instead of attribute `ranking`.
 - DrugEx is now compatible with the latest version of qsprpred v2.0.1, previous versions of qsprpred are no longer supported.
+- `drugex.generate` CLI environment arguments are no longer overwritten by environment variables from generator.
 
 ## Removed Features
 
