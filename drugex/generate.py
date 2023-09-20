@@ -22,13 +22,13 @@ def DesignArgParser(txt=None):
     parser.add_argument('-g', '--generator', type=str, default='ligand_mf_brics_gpt_128',
                         help="Name of final generator model file without .pkg extension")
     parser.add_argument('-i', '--input_file', type=str, default='ligand_4:4_brics_test',
-                        help="For v3, name of file containing fragments for generation without _graph.txt / _smiles.txt extension")
+                        help="For v3, name of file containing fragments for generation without _test_graph.txt / _test_smiles.txt extension or full path")
     # TODO: Is reading voc files necessary? Is the vocabulary saved to the generator file?
     parser.add_argument('-vfs', '--voc_files', type=str, nargs='*', default=['smiles'],
                         help="Names of voc files to use as vocabulary.")
 
     parser.add_argument('-n', '--num', type=int, default=1,
-                        help="For v2 number of molecules to generate in total, for v3 number of molecules to generate per fragment")
+                        help="Number of molecules to generate in total.")
     parser.add_argument('--keep_invalid', action='store_true',
                         help="If on, invalid molecules are kept in the output. Else, they are dropped.")
     parser.add_argument('--keep_duplicates', action='store_true',
@@ -96,9 +96,7 @@ def DesignArgParser(txt=None):
     designer_args = vars(args)
     
     # Load parameters generator/environment from trained model    
-    train_parameters = ['mol_type', 'algorithm', 'epsilon', 'beta', 'scheme', 'env_alg', 'env_task',
-        'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold', 'qed', 'sa_score', 'ra_score', 
-        'molecular_weight', 'mw_thresholds', 'logP', 'logP_thresholds', 'use_gru', 'predictor' ]
+    train_parameters = ['mol_type', 'algorithm', 'beta', 'scheme', 'use_gru']
     with open(args.base_dir + '/generators/' + args.generator + '.json') as f:
         train_args = json.load(f)
     for k, v in train_args.items():
