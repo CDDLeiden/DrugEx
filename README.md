@@ -44,6 +44,7 @@ pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 
 ### Optional Dependencies
 
+<<<<<<< HEAD
 **[QSPRPred](https://github.com/CDDLeiden/QSPRPred.git)** - Optional package to install if you want to use the command line interface of DrugEx, which requires the models to be serialized with this package. It is also used by some examples in the tutorial. Install DrugEx with the following command if you want these features:
 
 ```bash
