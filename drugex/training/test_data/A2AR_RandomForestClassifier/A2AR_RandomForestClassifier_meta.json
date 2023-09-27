@@ -1,0 +1,22 @@
+{
+    "name": "A2AR_RandomForestClassifier",
+    "version": "2.1.0",
+    "model_class": "qsprpred.models.sklearn.SklearnModel",
+    "target_properties": [
+        {
+            "name": "pchembl_value_Median_class",
+            "task": "SINGLECLASS",
+            "original_name": "pchembl_value_Median",
+            "th": [
+                6.5
+            ],
+            "n_classes": 2
+        }
+    ],
+    "parameters_path": "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_params.json",
+    "feature_calculator_paths": [
+        "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_descriptor_calculator_Descriptor.json"
+    ],
+    "feature_standardizer_path": null,
+    "estimator_path": "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier.json"
+}

@@ -42,7 +42,7 @@ Basics
 ------
 
 Fine-tuning a Pretrained Generator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this example, we will use the DrugEx CLI to fine-tune a pretrained graph transformer (trained on the latest version of the Papyrus data set).
 This pretrained model has been trained on a diverse set of molecules.

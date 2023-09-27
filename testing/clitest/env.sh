@@ -59,8 +59,8 @@ export TRAIN_VOCAB_ARGS="-vfs ${PRETRAINING_PREFIX} ${FINETUNING_PREFIX}"
 #export TRAIN_VOCAB_ARGS="" # uncomment to test with the default vocabularies
 
 export ENV_MODEL_NAME="A2AR_RandomForestClassifier"
-export ENV_MODEL_PATH="qsar/qspr/models/${ENV_MODEL_NAME}/${ENV_MODEL_NAME}_meta.json"
-export TRAIN_RL_ARGS="-ng -p ${ENV_MODEL_PATH} -ta ${ENV_MODEL_NAME}"
+export ENV_MODEL_PATH="qsar/${ENV_MODEL_NAME}/${ENV_MODEL_NAME}_meta.json"
+export TRAIN_RL_ARGS="-p ${ENV_MODEL_PATH} -ta ${ENV_MODEL_NAME}"
 
 ############
 # GENERATE #
