@@ -153,12 +153,11 @@ class Explorer(Model, ABC):
         it : int
         """
         
-        self.monitor.saveModel(self.agent)
+        self.monitor.setModel(self.agent)
         self.bestState = deepcopy(self.agent.state_dict())
         self.best_value = value
         self.last_save = epoch
         self.last_iter = it
-        logger.info(f"Model saved at epoch {epoch}")
 
     def logPerformanceAndCompounds(self, epoch, metrics, scores):
 
@@ -309,6 +308,7 @@ class FragExplorer(Explorer):
         
         self.monitor = monitor if monitor else NullMonitor()
         self.bestState = deepcopy(self.agent.state_dict())
+        self.monitor.setModel(self.agent)
         self.monitor.saveModel(self.agent)
 
         n_iters = 1 if self.crover is None else 10
@@ -320,6 +320,7 @@ class FragExplorer(Explorer):
                 logger.info('\n----------\nITERATION %d/%d\n----------' % (it, n_iters))
             for epoch in tqdm(range(epochs), desc='Fitting graph explorer'):
                 epoch += 1
+                is_best = False
 
                 # If nSamples is set, sample a subset of the training data at each epoch              
                 if self.nSamples > 0:
@@ -344,9 +345,16 @@ class FragExplorer(Explorer):
                 metrics = self.getNovelMoleculeMetrics(scores)    
                 metrics['loss_train'] = train_loss     
 
-                # Save evaluate criteria and save best model
+                # Save evaluate criteria and set best model
                 if metrics[criteria] > self.best_value:
+                    is_best = True
                     self.saveBestState(metrics[criteria], epoch, it)
+
+                # Optional: Save intermediate models
+                save_model_option = monitor.getSaveModelOption()
+                if save_model_option == 'all' or is_best == True:
+                    monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)
+                    logger.info(f"Model saved at epoch {epoch}")
 
                 # Log performance and generated compounds
                 self.logPerformanceAndCompounds(epoch, metrics, scores)
