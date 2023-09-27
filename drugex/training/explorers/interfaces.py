@@ -350,7 +350,7 @@ class FragExplorer(Explorer):
                     is_best = True
                     self.saveBestState(metrics[criteria], epoch, it)
 
-                # Optional: Save intermediate models
+                # Save (intermediate) models
                 save_model_option = monitor.getSaveModelOption()
                 if save_model_option == 'all' or is_best == True:
                     monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)

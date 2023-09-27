@@ -151,13 +151,15 @@ class SequenceExplorer(Explorer):
         """
         
         self.monitor = monitor if monitor else NullMonitor()
+        self.monitor.setModel(self)
         self.monitor.saveModel(self)
         self.bestState = deepcopy(self.agent.state_dict())
 
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
             if epoch % 50 == 0 or epoch == 1: logger.info('\n----------\nEPOCH %d\n----------' % epoch)
-            
+            is_best = False
+
             smiles, seqs = self.forward()
             train_loss = self.policy_gradient(smiles, seqs)
 
@@ -170,9 +172,16 @@ class SequenceExplorer(Explorer):
             metrics = self.getNovelMoleculeMetrics(scores)       
             metrics['loss_train'] = train_loss
 
-            # Save evaluate criteria and save best model
+            # Save evaluate criteria and set best model
             if metrics[criteria] > self.best_value:
+                is_best = True
                 self.saveBestState(metrics[criteria], epoch, None)
+
+            # Save (intermediate) models
+            save_model_option = monitor.getSaveModelOption()
+            if save_model_option == 'all' or is_best == True:
+                monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)
+                logger.info(f"Model saved at epoch {epoch}")
 
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, metrics, scores)
