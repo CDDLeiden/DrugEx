@@ -46,7 +46,7 @@ class FileMonitor(TrainingMonitor):
 
     """
 
-    def __init__(self, path, save_smiles=False, save_model_option='final', reset_directory=False):
+    def __init__(self, path, save_smiles=False, save_model_option='best', reset_directory=False):
         """
         Initialize the file monitor.
 
@@ -66,8 +66,8 @@ class FileMonitor(TrainingMonitor):
             Determines which models to save during training. Use this parameter with care as saving a large number of
             models is extremely memory-intensive. Possible values:
             - 'all' : Save all models.
-            - 'best': Save all best models.
-            - 'final' (default): Save only the final model.
+            - 'improvement': Save all models that improve upon the previous best model.
+            - 'best' (default): Save only the final best model.
             WARNING: Setting this option to 'all' or 'best' can be extremely memory-intensive, Use with caution and 
             ensure you have sufficient memory resources.
         reset_directory : bool

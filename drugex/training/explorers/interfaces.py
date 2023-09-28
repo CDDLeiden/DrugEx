@@ -353,7 +353,7 @@ class FragExplorer(Explorer):
                 # Save (intermediate) models
                 save_model_option = monitor.getSaveModelOption()
                 if save_model_option == 'all' or is_best == True:
-                    monitor.saveModel(self, epoch if save_model_option in ('all', 'best') else None)
+                    monitor.saveModel(self, epoch if save_model_option in ('all', 'improvement') else None)
                     logger.info(f"Model saved at epoch {epoch}")
 
                 # Log performance and generated compounds
