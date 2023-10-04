@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.training.scorers.properties &mdash; DrugEx v3.4.5 documentation</title>
+  <title>drugex.training.scorers.properties &mdash; DrugEx v3.4.4 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -40,18 +40,14 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../../../../index.html" class="icon icon-home">
-            DrugEx
+            <a href="../../../../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.5
+                v3.4.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -79,9 +75,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">drugex.training.scorers.properties</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>drugex.training.scorers.properties</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -115,7 +111,7 @@
 
 <div class="viewcode-block" id="Property"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Property">[docs]</a><span class="k">class</span> <span class="nc">Property</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="s1">&#39;MW&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Property.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Property.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="s1">&#39;MW&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prop</span> <span class="o">=</span> <span class="n">prop</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prop_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;MW&#39;</span><span class="p">:</span> <span class="n">desc</span><span class="o">.</span><span class="n">MolWt</span><span class="p">,</span>
@@ -139,7 +135,7 @@
                           <span class="s1">&#39;MR&#39;</span><span class="p">:</span> <span class="n">Crippen</span><span class="o">.</span><span class="n">MolMR</span><span class="p">,</span>
                           <span class="s1">&#39;QED&#39;</span><span class="p">:</span> <span class="n">qed</span><span class="p">,</span>
                           <span class="s1">&#39;SA&#39;</span><span class="p">:</span> <span class="n">calculateScore</span><span class="p">,</span>
-                          <span class="s1">&#39;Bertz&#39;</span><span class="p">:</span> <span class="n">BertzCT</span><span class="p">}</span>
+                          <span class="s1">&#39;Bertz&#39;</span><span class="p">:</span> <span class="n">BertzCT</span><span class="p">}</span></div>
 
 <div class="viewcode-block" id="Property.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Property.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
@@ -155,7 +151,7 @@
 
 <div class="viewcode-block" id="AtomCounter"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter">[docs]</a><span class="k">class</span> <span class="nc">AtomCounter</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="AtomCounter.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the AtomCounter scorer.</span>
@@ -168,7 +164,7 @@
 <span class="sd">            A `ScoreModifier` object to modify the scores, by default None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">element</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">element</span></div>
 
 <div class="viewcode-block" id="AtomCounter.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.AtomCounter.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -213,7 +209,7 @@
 <span class="sd">    - total number of atoms with a Gaussian modifier with mu=6, sigma=2</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean_func</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Isomer.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean_func</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the Isomer scorer.</span>
 
@@ -228,7 +224,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">objs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mods</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring_functions</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mean_func</span> <span class="o">=</span> <span class="n">mean_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_func</span> <span class="o">=</span> <span class="n">mean_func</span></div>
 
 <div class="viewcode-block" id="Isomer.parse_molecular_formula"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Isomer.parse_molecular_formula">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse_molecular_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -311,7 +307,7 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Isomer (mean_func=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_func</span><span class="si">}</span><span class="s2">)&quot;</span></div></div>
 
 <div class="viewcode-block" id="Scaffold"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold">[docs]</a><span class="k">class</span> <span class="nc">Scaffold</span><span class="p">(</span><span class="n">Scorer</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smart</span><span class="p">,</span> <span class="n">is_match</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Scaffold.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smart</span><span class="p">,</span> <span class="n">is_match</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the Scaffold scorer.</span>
 
@@ -327,7 +323,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">smart</span> <span class="o">=</span> <span class="n">smart</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frag</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="n">smart</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_match</span> <span class="o">=</span> <span class="n">is_match</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_match</span> <span class="o">=</span> <span class="n">is_match</span></div>
 
 <div class="viewcode-block" id="Scaffold.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Scaffold.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
@@ -363,8 +359,8 @@
 <span class="sd">    Calculates the ratio of occurence of a molecule in a set of molecules</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+<div class="viewcode-block" id="Uniqueness.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Uniqueness.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.Uniqueness.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mols</span><span class="p">))</span>
@@ -381,10 +377,10 @@
 <span class="sd">    Calculates the lipophilic efficiency of a molecule: LiPE = pChEMBL value - logP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LipophilicEfficiency.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span> <span class="o">=</span> <span class="n">qsar_scorer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LipE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LipE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span></div>
 
 <div class="viewcode-block" id="LipophilicEfficiency.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LipophilicEfficiency.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">pChEMBL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
@@ -400,10 +396,10 @@
 <span class="sd">    Calculates the ligand efficiency of a molecule: LE = 1.4 * pChEMBL / nAtoms</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LigandEfficiency.__init__"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsar_scorer</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span> <span class="o">=</span> <span class="n">qsar_scorer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;LE_</span><span class="si">{</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getKey</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span></div>
 
 <div class="viewcode-block" id="LigandEfficiency.getScores"><a class="viewcode-back" href="../../../../api/drugex.training.scorers.html#drugex.training.scorers.properties.LigandEfficiency.getScores">[docs]</a>    <span class="k">def</span> <span class="nf">getScores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">frags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">pChEMBL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsar_scorer</span><span class="o">.</span><span class="n">getScores</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>

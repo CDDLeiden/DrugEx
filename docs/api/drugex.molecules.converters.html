@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.molecules.converters package &mdash; DrugEx v3.4.5 documentation</title>
+  <title>drugex.molecules.converters package &mdash; DrugEx v3.4.4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,18 +43,14 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            DrugEx
+            <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.5
+                v3.4.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -103,11 +99,11 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
-          <li class="breadcrumb-item"><a href="drugex.html">drugex package</a></li>
-          <li class="breadcrumb-item"><a href="drugex.molecules.html">drugex.molecules package</a></li>
-      <li class="breadcrumb-item active">drugex.molecules.converters package</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Package API Documentation</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.molecules.html">drugex.molecules package</a> &raquo;</li>
+      <li>drugex.molecules.converters package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -166,7 +162,7 @@ On: 27.09.22, 13:40</p>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">addCCToFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/dummy_molecules.html#dummyMolsFromFragments.addCCToFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.addCCToFragments" title="Permalink to this definition"></a></dt>
 <dd><p>Add CC to a single fragment to build a dummy molecule.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>frag</strong> – fragment to be converted to a dummy molecule</p>
 </dd>
 </dl>
@@ -178,10 +174,10 @@ On: 27.09.22, 13:40</p>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bridgeFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/dummy_molecules.html#dummyMolsFromFragments.bridgeFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.dummy_molecules.dummyMolsFromFragments.bridgeFragments" title="Permalink to this definition"></a></dt>
 <dd><p>Bridge multiple fragments together into one dummy molecule.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>frags</strong> – fragments to be bridged together</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">str</span></code></a> of a SMILES representation of the bridged fragments</p>
 </dd>
 </dl>
@@ -201,15 +197,32 @@ On: 06.05.22, 12:19</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="drugex.molecules.converters.standardizers.CleanSMILES"><code class="xref py py-class docutils literal notranslate"><span class="pre">CleanSMILES</span></code></a></p>
 <p>Reference implementation of the original fragmenter used in DrugEx v3.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_combs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'recap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep_clean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bonds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_single</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_frags</strong> – number of fragments to generate per compound</p></li>
+<li><p><strong>n_combs</strong> – maximum number of combinations of the found leaf fragments</p></li>
+<li><p><strong>method</strong> – fragmentation method to use. Possible values: (‘recap’, ‘brics’)</p></li>
+<li><p><strong>deep_clean</strong> – deep clean the SMILES before fragmentation (see <a class="reference internal" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="drugex.molecules.converters.standardizers.CleanSMILES"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CleanSMILES</span></code></a>)</p></li>
+<li><p><strong>max_bonds</strong> – only accept molecules with the number of bonds below or equal to this threshold</p></li>
+<li><p><strong>allow_single</strong> – return the fragment also for molecules that result in only one fragment</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter.filterFragments">
 <span class="sig-name descname"><span class="pre">filterFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.List" title="(in Python v3.9)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter.filterFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter.filterFragments" title="Permalink to this definition"></a></dt>
 <dd><p>Filter fragments to remove those that are contained in other fragments or are too small,
 and keep only the largest ones.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>frags</strong> – <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of fragments</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> of filtered fragments</p>
 </dd>
 </dl>
@@ -217,13 +230,13 @@ and keep only the largest ones.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.Fragmenter.getFragments">
-<span class="sig-name descname"><span class="pre">getFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter.getFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter.getFragments" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">getFragments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Optional" title="(in Python v3.9)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#Fragmenter.getFragments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.Fragmenter.getFragments" title="Permalink to this definition"></a></dt>
 <dd><p>Get fragments form an RDKit molecule</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>mol</strong> – instance of <code class="xref any docutils literal notranslate"><span class="pre">rdkit.Chem.Mol</span></code></p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">numpy.array</span></code> of generated fragments</p>
 </dd>
 </dl>
@@ -238,6 +251,25 @@ and keep only the largest ones.</p>
 <p>Fragmenter that only returns fragments-molecule pairs where the input fragments contain the fragment
 specified in the constructor.</p>
 <p>If <code class="xref any docutils literal notranslate"><span class="pre">exclusive=True</span></code>, only return fragments that contain the specified fragment and nothing else</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.fragmenters.FragmenterWithSelectedFragment.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_frags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_combs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'recap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep_clean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bonds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_single</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclusive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/fragmenters.html#FragmenterWithSelectedFragment.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.fragmenters.FragmenterWithSelectedFragment.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fragment</strong> – fragment to search for</p></li>
+<li><p><strong>n_frags</strong> – number of fragments to generate per compound</p></li>
+<li><p><strong>n_combs</strong> – maximum number of combinations of the found leaf fragments</p></li>
+<li><p><strong>method</strong> – fragmentation method to use. Possible values: (‘recap’, ‘brics’)</p></li>
+<li><p><strong>deep_clean</strong> – deep clean the SMILES before fragmentation (see <a class="reference internal" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="drugex.molecules.converters.standardizers.CleanSMILES"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CleanSMILES</span></code></a>)</p></li>
+<li><p><strong>max_bonds</strong> – only accept molecules with the number of bonds below or equal to this threshold</p></li>
+<li><p><strong>allow_single</strong> – return the fragment also for molecules that result in only one fragment</p></li>
+<li><p><strong>exclusive</strong> – if True, only return fragments that contain the specified fragment and nothing else</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -269,6 +301,11 @@ On: 21.04.22, 12:19</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.converters.standardizers.</span></span><span class="sig-name descname"><span class="pre">CleanSMILES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/standardizers.html#CleanSMILES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.standardizers.CleanSMILES" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a></p>
 <p>Converter used to clean SMILES strings at some places. At the moment the reasons for its existence are unclear…</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.molecules.converters.standardizers.CleanSMILES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/converters/standardizers.html#CleanSMILES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.converters.standardizers.CleanSMILES.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

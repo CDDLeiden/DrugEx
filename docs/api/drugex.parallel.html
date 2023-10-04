@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.parallel package &mdash; DrugEx v3.4.5 documentation</title>
+  <title>drugex.parallel package &mdash; DrugEx v3.4.4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,18 +43,14 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            DrugEx
+            <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.5
+                v3.4.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -103,10 +99,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
-          <li class="breadcrumb-item"><a href="drugex.html">drugex package</a></li>
-      <li class="breadcrumb-item active">drugex.parallel package</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Package API Documentation</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+      <li>drugex.parallel package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -136,6 +132,11 @@ On: 14.07.22, 10:58</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.parallel.collectors.</span></span><span class="sig-name descname"><span class="pre">ListExtend</span></span><a class="reference internal" href="../_modules/drugex/parallel/collectors.html#ListExtend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.collectors.ListExtend" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.parallel.interfaces.ListCollector" title="drugex.parallel.interfaces.ListCollector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListCollector</span></code></a></p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.parallel.collectors.ListExtend.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/collectors.html#ListExtend.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.collectors.ListExtend.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.parallel.collectors.ListExtend.getList">
 <span class="sig-name descname"><span class="pre">getList</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/collectors.html#ListExtend.getList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.collectors.ListExtend.getList" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -154,11 +155,27 @@ On: 29.05.22, 18:12</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.parallel.interfaces.ParallelProcessor" title="drugex.parallel.interfaces.ParallelProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelProcessor</span></code></a></p>
 <p>Class implementing parallel evaluation of <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> instances on input data (see <a class="reference internal" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.apply" title="drugex.parallel.evaluator.ParallelSupplierEvaluator.apply"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.apply</span></code></a>).</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.parallel.evaluator.ParallelSupplierEvaluator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supplier_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/evaluator.html#ParallelSupplierEvaluator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize this instance with a <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> and other parameters. Note that the supplier is passed as a class and not an instance. This helps to avoid some issues with serialization between processes and, thus, <a class="reference internal" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator" title="drugex.parallel.evaluator.ParallelSupplierEvaluator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator</span></code></a> serves only as a template for execution. Also note that the <a class="reference internal" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator" title="drugex.parallel.evaluator.ParallelSupplierEvaluator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator</span></code></a> assumes that the first argument of the <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> constructor accepts the data to be processed.</p>
+<p>Results of the calculation invoked by <a class="reference internal" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.apply" title="drugex.parallel.evaluator.ParallelSupplierEvaluator.apply"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.apply</span></code></a> are concatenated and returned as a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a> unless ‘return_suppliers’ is specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>supplier_class</strong> – Class of the <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> to use for evaluation.</p></li>
+<li><p><strong>args</strong> – </p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.parallel.evaluator.ParallelSupplierEvaluator.apply">
 <span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desc_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/evaluator.html#ParallelSupplierEvaluator.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.apply" title="Permalink to this definition"></a></dt>
 <dd><p>Apply the <a class="reference internal" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.run" title="drugex.parallel.evaluator.ParallelSupplierEvaluator.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ParallelSupplierEvaluator.run()</span></code></a> across a <code class="xref any docutils literal notranslate"><span class="pre">Pool</span></code> of workers.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – input data to divide into chunks and process in parallel</p></li>
 <li><p><strong>collector</strong> – a <a class="reference internal" href="#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> that receives results of parallel processes</p></li>
@@ -166,7 +183,7 @@ On: 29.05.22, 18:12</p>
 <li><p><strong>desc_string</strong> – progress bar description string</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
@@ -177,10 +194,10 @@ On: 29.05.22, 18:12</p>
 <span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/evaluator.html#ParallelSupplierEvaluator.error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.error" title="Permalink to this definition"></a></dt>
 <dd><p>Catch and log an error occurring in the parallel process.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#drugex.parallel.interfaces.ParallelException" title="drugex.parallel.interfaces.ParallelException"><strong>ParallelException</strong></a> – </p>
 </dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dt class="field-even">Parameters</dt>
 <dd class="field-even"><p><strong>data</strong> – error data</p>
 </dd>
 </dl>
@@ -193,7 +210,7 @@ On: 29.05.22, 18:12</p>
 :param supplier_class: <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> to initialize.
 :param chunk: Data chunk.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>initialized <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a></p>
 </dd>
 </dl>
@@ -204,10 +221,10 @@ On: 29.05.22, 18:12</p>
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/evaluator.html#ParallelSupplierEvaluator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.evaluator.ParallelSupplierEvaluator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Initialize and start evaluation of the <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> instance on the given chunk of data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>chunk</strong> – Current chunk of data.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>result of the <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier.toList" title="drugex.molecules.interfaces.MolSupplier.toList"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">MolSupplier.toList()</span></code></a> method for the given chunk.</p>
 </dd>
 </dl>
@@ -244,17 +261,31 @@ On: 29.05.22, 18:09</p>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Simple interface to define parameters for parallel processing of data.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.parallel.interfaces.ParallelProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_proc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/interfaces.html#ParallelProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.interfaces.ParallelProcessor.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_proc</strong> – Number of processes to initialize. Defaults to all available CPUs.</p></li>
+<li><p><strong>chunk_size</strong> – Maximum size of a chunk to process by a single CPU (can help bring down memory usage, but more processing overhead). If <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a>, it is set to “len(data) / n_proc” by <a class="reference internal" href="#drugex.parallel.interfaces.ParallelProcessor.getChunkSize" title="drugex.parallel.interfaces.ParallelProcessor.getChunkSize"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getChunkSize</span></code></a>.</p></li>
+<li><p><strong>chunks</strong> – Number of chunks to divide the input data into. Defaults to ‘n_proc’. If both “chunks” and “chunk_size” are specified, “chunk_size” takes precedence (see <a class="reference internal" href="#drugex.parallel.interfaces.ParallelProcessor.getChunkSize" title="drugex.parallel.interfaces.ParallelProcessor.getChunkSize"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getChunkSize</span></code></a>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.parallel.interfaces.ParallelProcessor.apply">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/interfaces.html#ParallelProcessor.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.interfaces.ParallelProcessor.apply" title="Permalink to this definition"></a></dt>
 <dd><p>Apply the processor to the given data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – input data (format depends on the implementation)</p></li>
 <li><p><strong>collector</strong> – a <a class="reference internal" href="#drugex.parallel.interfaces.ResultCollector" title="drugex.parallel.interfaces.ResultCollector"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ResultCollector</span></code></a> that is used to collect data produced from each process.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a>.</p>
 </dd>
 </dl>
@@ -265,10 +296,10 @@ On: 29.05.22, 18:09</p>
 <span class="sig-name descname"><span class="pre">getChunkSize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/parallel/interfaces.html#ParallelProcessor.getChunkSize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.parallel.interfaces.ParallelProcessor.getChunkSize" title="Permalink to this definition"></a></dt>
 <dd><p>Determine the chunk size from data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>data</strong> – input data (needs to have <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#len" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">len</span></code></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a> representing the size of one chunk sent to the parallel process</p>
 </dd>
 </dl>

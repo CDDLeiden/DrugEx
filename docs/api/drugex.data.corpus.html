@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex.data.corpus package &mdash; DrugEx v3.4.5 documentation</title>
+  <title>drugex.data.corpus package &mdash; DrugEx v3.4.4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,18 +43,14 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            DrugEx
+            <a href="../index.html" class="icon icon-home"> DrugEx
           </a>
               <div class="version">
-                v3.4.5
+                v3.4.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -103,11 +99,11 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">DrugEx Package API Documentation</a></li>
-          <li class="breadcrumb-item"><a href="drugex.html">drugex package</a></li>
-          <li class="breadcrumb-item"><a href="drugex.data.html">drugex.data package</a></li>
-      <li class="breadcrumb-item active">drugex.data.corpus package</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">DrugEx Package API Documentation</a> &raquo;</li>
+          <li><a href="drugex.html">drugex package</a> &raquo;</li>
+          <li><a href="drugex.data.html">drugex.data package</a> &raquo;</li>
+      <li>drugex.data.corpus package</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -132,11 +128,28 @@ On: 26.04.22, 16:47</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.interfaces.Corpus" title="drugex.data.corpus.interfaces.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></p>
 <p>A <a class="reference internal" href="#drugex.data.corpus.interfaces.Corpus" title="drugex.data.corpus.interfaces.Corpus"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a> to encode molecules for the sequence-based models.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.corpus.SequenceCorpus.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocabulary=&lt;drugex.data.corpus.vocabulary.VocSmiles</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_voc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throw=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Create a sequence corpus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>molecules</strong> – an <a class="reference external" href="https://docs.python.org/3.9/glossary.html#term-iterable" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">iterable</span></code></a>, <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> or a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a>-like data structure to supply sequence representations of molecules (i.e. SMILES strings)</p></li>
+<li><p><strong>vocabulary</strong> – a <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary" title="drugex.data.corpus.interfaces.SequenceVocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SequenceVocabulary</span></code></a> instance to be used for encoding and collecting tokens</p></li>
+<li><p><strong>update_voc</strong> – <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> if the tokens in the vocabulary should be updated with new tokens derived from the data (the <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq" title="drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SequenceVocabulary.addWordsFromSeq()</span></code></a> method is used for splitting instead of doing simply <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary.splitSequence" title="drugex.data.corpus.interfaces.SequenceVocabulary.splitSequence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SequenceVocabulary.splitSequence()</span></code></a>)</p></li>
+<li><p><strong>throw</strong> – ‘True’ if molecules that contain tokens that are not in the vocabulary should be thrown out of corpus (the <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew" title="drugex.data.corpus.interfaces.SequenceVocabulary.removeIfNew"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SequenceVocabulary.removeIfNew()</span></code></a> method is used for splitting instead of doing simply <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary.splitSequence" title="drugex.data.corpus.interfaces.SequenceVocabulary.splitSequence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SequenceVocabulary.splitSequence()</span></code></a>)</p></li>
+<li><p><strong>check_unique</strong> – Skip identical sequences in “molecules”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.corpus.SequenceCorpus.getVoc">
 <span class="sig-name descname"><span class="pre">getVoc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus.getVoc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus.getVoc" title="Permalink to this definition"></a></dt>
 <dd><p>Return current vocabulary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Current vocabulary as a <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary" title="drugex.data.corpus.interfaces.SequenceVocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SequenceVocabulary</span></code></a> instance.</p>
 </dd>
 </dl>
@@ -147,10 +160,10 @@ On: 26.04.22, 16:47</p>
 <span class="sig-name descname"><span class="pre">processMolecule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus.processMolecule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus.processMolecule" title="Permalink to this definition"></a></dt>
 <dd><p>Generate encoding information for the given molecule sequence.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>seq</strong> – molecule as a sequence (i.e. SMILES string)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></a> where “seq” is the key to the original sequence and “token” to the generated encoding of this sequence</p>
 </dd>
 </dl>
@@ -161,10 +174,10 @@ On: 26.04.22, 16:47</p>
 <span class="sig-name descname"><span class="pre">saveVoc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/corpus.html#SequenceCorpus.saveVoc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.corpus.SequenceCorpus.saveVoc" title="Permalink to this definition"></a></dt>
 <dd><p>Save the current state of the vocabulary to a file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>path</strong> – Path to the generated file.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
@@ -184,14 +197,24 @@ On: 26.04.22, 13:12</p>
 <dd><p>Bases: <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>A <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> that generates encoded molecule data from the given input.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.interfaces.Corpus.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Corpus.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Corpus.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>molecules</strong> – an <a class="reference external" href="https://docs.python.org/3.9/glossary.html#term-iterable" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">iterable</span></code></a>, <a class="reference internal" href="drugex.molecules.html#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> or a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">list</span></code></a>-like data structure to supply molecules</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.interfaces.Corpus.convert">
 <span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Corpus.convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Corpus.convert" title="Permalink to this definition"></a></dt>
 <dd><p>Can be used to convert a molecule from the supplied representation to a different one. This method is called automatically on the output of <a class="reference internal" href="#drugex.data.corpus.interfaces.Corpus.next" title="drugex.data.corpus.interfaces.Corpus.next"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">next</span></code></a>. By default, it returns the produced representation as is.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>next</strong> (<em>representation - the output produced by</em>) – </p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>molecule - molecule converted from “representation” to the desired output</p>
 </dd>
 </dl>
@@ -202,7 +225,7 @@ On: 26.04.22, 13:12</p>
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getVoc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Corpus.getVoc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Corpus.getVoc" title="Permalink to this definition"></a></dt>
 <dd><p>Corpus should keep track of the ‘Vocabulary’ used to encode molecules. This method should return its current state.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>currently used <a class="reference internal" href="#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a></p>
 </dd>
 </dl>
@@ -213,14 +236,14 @@ On: 26.04.22, 13:12</p>
 <span class="sig-name descname"><span class="pre">next</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Corpus.next"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Corpus.next" title="Permalink to this definition"></a></dt>
 <dd><p>Implement this method so that it provides iteration over molecules item by item. It should fetch next item from a generator, line from a file or next item from a remote API. If there are no more items, raise <a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#StopIteration" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">StopIteration</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#StopIteration" title="(in Python v3.9)"><strong>StopIteration</strong></a> – no more items to  return</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one instance of a molecule
 annotations (optional): molecule associated metadata as a <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>molecule</p>
 </dd>
 </dl>
@@ -231,10 +254,10 @@ annotations (optional): molecule associated metadata as a <a class="reference ex
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">processMolecule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecule</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Corpus.processMolecule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Corpus.processMolecule" title="Permalink to this definition"></a></dt>
 <dd><p>Process one molecule.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>molecule</strong> – a molecule instance (representation depend on the implementation).</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>encoded data of the molecule (i.e. data associated with one input sample to the desired DrugEx model)</p>
 </dd>
 </dl>
@@ -247,6 +270,20 @@ annotations (optional): molecule associated metadata as a <a class="reference ex
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.interfaces.</span></span><span class="sig-name descname"><span class="pre">SequenceVocabulary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encode_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#SequenceVocabulary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.SequenceVocabulary" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Generic vocabulary for sequence-based models.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.interfaces.SequenceVocabulary.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encode_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#SequenceVocabulary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.SequenceVocabulary.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encode_frags</strong> – boolean indicating if used to also encode fragments</p></li>
+<li><p><strong>words</strong> – iterable of words in this vocabulary</p></li>
+<li><p><strong>max_len</strong> – the maximum number of tokens contained in one SMILES</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq">
 <span class="sig-name descname"><span class="pre">addWordsFromSeq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreConstraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#SequenceVocabulary.addWordsFromSeq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.SequenceVocabulary.addWordsFromSeq" title="Permalink to this definition"></a></dt>
@@ -279,6 +316,11 @@ annotations (optional): molecule associated metadata as a <a class="reference ex
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.interfaces.</span></span><span class="sig-name descname"><span class="pre">Vocabulary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Vocabulary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Vocabulary" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Definition of the vocabulary interface. All vocabularies contain “words” that are used for encoding and decoding molecules.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.interfaces.Vocabulary.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Vocabulary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Vocabulary.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.interfaces.Vocabulary.decode">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/interfaces.html#Vocabulary.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.interfaces.Vocabulary.decode" title="Permalink to this definition"></a></dt>
@@ -344,6 +386,11 @@ On: 26.04.22, 13:16</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.data.corpus.vocabulary.</span></span><span class="sig-name descname"><span class="pre">VocGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('2O',</span> <span class="pre">'3O+',</span> <span class="pre">'1O-',</span> <span class="pre">'4C',</span> <span class="pre">'3C+',</span> <span class="pre">'3C-',</span> <span class="pre">'3N',</span> <span class="pre">'4N+',</span> <span class="pre">'2N-',</span> <span class="pre">'1Cl',</span> <span class="pre">'2S',</span> <span class="pre">'6S',</span> <span class="pre">'4S',</span> <span class="pre">'3S+',</span> <span class="pre">'5S+',</span> <span class="pre">'1S-',</span> <span class="pre">'1F',</span> <span class="pre">'1I',</span> <span class="pre">'5I',</span> <span class="pre">'2I+',</span> <span class="pre">'1Br',</span> <span class="pre">'5P',</span> <span class="pre">'3P',</span> <span class="pre">'4P+',</span> <span class="pre">'2Se',</span> <span class="pre">'6Se',</span> <span class="pre">'4Se',</span> <span class="pre">'3Se+',</span> <span class="pre">'4Si',</span> <span class="pre">'3B',</span> <span class="pre">'4B-',</span> <span class="pre">'5As',</span> <span class="pre">'3As',</span> <span class="pre">'4As+',</span> <span class="pre">'2Te',</span> <span class="pre">'4Te',</span> <span class="pre">'3Te+')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocGraph" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.interfaces.Vocabulary" title="drugex.data.corpus.interfaces.Vocabulary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vocabulary</span></code></a></p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocGraph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('2O',</span> <span class="pre">'3O+',</span> <span class="pre">'1O-',</span> <span class="pre">'4C',</span> <span class="pre">'3C+',</span> <span class="pre">'3C-',</span> <span class="pre">'3N',</span> <span class="pre">'4N+',</span> <span class="pre">'2N-',</span> <span class="pre">'1Cl',</span> <span class="pre">'2S',</span> <span class="pre">'6S',</span> <span class="pre">'4S',</span> <span class="pre">'3S+',</span> <span class="pre">'5S+',</span> <span class="pre">'1S-',</span> <span class="pre">'1F',</span> <span class="pre">'1I',</span> <span class="pre">'5I',</span> <span class="pre">'2I+',</span> <span class="pre">'1Br',</span> <span class="pre">'5P',</span> <span class="pre">'3P',</span> <span class="pre">'4P+',</span> <span class="pre">'2Se',</span> <span class="pre">'6Se',</span> <span class="pre">'4Se',</span> <span class="pre">'3Se+',</span> <span class="pre">'4Si',</span> <span class="pre">'3B',</span> <span class="pre">'4B-',</span> <span class="pre">'5As',</span> <span class="pre">'3As',</span> <span class="pre">'4As+',</span> <span class="pre">'2Te',</span> <span class="pre">'4Te',</span> <span class="pre">'3Te+')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_frags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocGraph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocGraph.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocGraph.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocGraph.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocGraph.decode" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -396,6 +443,20 @@ On: 26.04.22, 13:16</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.vocabulary.VocSmiles" title="drugex.data.corpus.vocabulary.VocSmiles"><code class="xref py py-class docutils literal notranslate"><span class="pre">VocSmiles</span></code></a></p>
 <p>Modified version of <a class="reference internal" href="#drugex.data.corpus.vocabulary.VocSmiles" title="drugex.data.corpus.vocabulary.VocSmiles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VocSmiles</span></code></a> adjusted for the legacy sequence models (<code class="xref any docutils literal notranslate"><span class="pre">Seq2Seq</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">EncDec</span></code>).</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocNonGPT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trg_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocNonGPT.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocNonGPT.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encode_frags</strong> – boolean indicating if used to also encode fragments</p></li>
+<li><p><strong>words</strong> – iterable of words in this vocabulary</p></li>
+<li><p><strong>max_len</strong> – the maximum number of tokens contained in one SMILES</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocNonGPT.decode">
 <span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_smiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_tk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocNonGPT.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocNonGPT.decode" title="Permalink to this definition"></a></dt>
 <dd><p>Takes an array of indices and returns the corresponding SMILES.</p>
@@ -422,6 +483,20 @@ separated characters to initialize the vocabulary</p>
 <dd><p>Bases: <a class="reference internal" href="#drugex.data.corpus.interfaces.SequenceVocabulary" title="drugex.data.corpus.interfaces.SequenceVocabulary"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceVocabulary</span></code></a></p>
 <p>The class for handling encoding/decoding from SMILES to an array of indices for the main SMILES-based models (<code class="xref any docutils literal notranslate"><span class="pre">GPT2Model</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">RNN</span></code>)</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocSmiles.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encode_frags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('#',</span> <span class="pre">'%',</span> <span class="pre">'(',</span> <span class="pre">')',</span> <span class="pre">'-',</span> <span class="pre">'0',</span> <span class="pre">'1',</span> <span class="pre">'2',</span> <span class="pre">'3',</span> <span class="pre">'4',</span> <span class="pre">'5',</span> <span class="pre">'6',</span> <span class="pre">'7',</span> <span class="pre">'8',</span> <span class="pre">'9',</span> <span class="pre">'=',</span> <span class="pre">'B',</span> <span class="pre">'C',</span> <span class="pre">'F',</span> <span class="pre">'I',</span> <span class="pre">'L',</span> <span class="pre">'N',</span> <span class="pre">'O',</span> <span class="pre">'P',</span> <span class="pre">'R',</span> <span class="pre">'S',</span> <span class="pre">'[Ag-3]',</span> <span class="pre">'[As+]',</span> <span class="pre">'[As]',</span> <span class="pre">'[B-]',</span> <span class="pre">'[BH-]',</span> <span class="pre">'[BH2-]',</span> <span class="pre">'[BH3-]',</span> <span class="pre">'[B]',</span> <span class="pre">'[C+]',</span> <span class="pre">'[C-]',</span> <span class="pre">'[CH-]',</span> <span class="pre">'[CH2]',</span> <span class="pre">'[CH]',</span> <span class="pre">'[I+]',</span> <span class="pre">'[IH2]',</span> <span class="pre">'[N+]',</span> <span class="pre">'[N-]',</span> <span class="pre">'[NH+]',</span> <span class="pre">'[NH-]',</span> <span class="pre">'[NH2+]',</span> <span class="pre">'[N]',</span> <span class="pre">'[O+]',</span> <span class="pre">'[O-]',</span> <span class="pre">'[OH+]',</span> <span class="pre">'[O]',</span> <span class="pre">'[P+]',</span> <span class="pre">'[PH]',</span> <span class="pre">'[S+]',</span> <span class="pre">'[S-]',</span> <span class="pre">'[SH+]',</span> <span class="pre">'[SH2]',</span> <span class="pre">'[SH]',</span> <span class="pre">'[Se+]',</span> <span class="pre">'[SeH]',</span> <span class="pre">'[Se]',</span> <span class="pre">'[SiH2]',</span> <span class="pre">'[SiH]',</span> <span class="pre">'[Si]',</span> <span class="pre">'[Te]',</span> <span class="pre">'[b-]',</span> <span class="pre">'[c+]',</span> <span class="pre">'[c-]',</span> <span class="pre">'[cH-]',</span> <span class="pre">'[n+]',</span> <span class="pre">'[n-]',</span> <span class="pre">'[nH+]',</span> <span class="pre">'[nH]',</span> <span class="pre">'[o+]',</span> <span class="pre">'[s+]',</span> <span class="pre">'[se+]',</span> <span class="pre">'[se]',</span> <span class="pre">'[te+]',</span> <span class="pre">'[te]',</span> <span class="pre">'b',</span> <span class="pre">'c',</span> <span class="pre">'n',</span> <span class="pre">'o',</span> <span class="pre">'p',</span> <span class="pre">'s')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocSmiles.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocSmiles.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encode_frags</strong> – boolean indicating if used to also encode fragments</p></li>
+<li><p><strong>words</strong> – iterable of words in this vocabulary</p></li>
+<li><p><strong>max_len</strong> – the maximum number of tokens contained in one SMILES</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="drugex.data.corpus.vocabulary.VocSmiles.calc_voc_fp">
 <span class="sig-name descname"><span class="pre">calc_voc_fp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/data/corpus/vocabulary.html#VocSmiles.calc_voc_fp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.data.corpus.vocabulary.VocSmiles.calc_voc_fp" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -433,10 +508,10 @@ separated characters to initialize the vocabulary</p>
 :param tensor: a long tensor containing all the indices of given tokens.
 :type tensor: torch.LongTensor</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a decoded smiles sequence.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>smiles (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a>)</p>
 </dd>
 </dl>
@@ -453,10 +528,10 @@ separated characters to initialize the vocabulary</p>
 <dd><p>Takes a list of tokens (eg ‘[NH]’) and encodes to array of indices
 :param input: a list of SMILES sequence represented as a series of tokens</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a long tensor containing all the indices of given tokens.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>output (torch.LongTensor)</p>
 </dd>
 </dl>
@@ -481,10 +556,10 @@ separated characters to initialize the vocabulary</p>
 :param smile: a decoded smiles sequence.
 :type smile: str</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a list of tokens decoded from the SMILES sequence.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>tokens (List)</p>
 </dd>
 </dl>
