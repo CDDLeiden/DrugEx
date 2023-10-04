@@ -1,7 +1,5 @@
-..  _api-docs:
-
-DrugEx Package API Documentation
-================================
+drugex
+======
 
 .. toctree::
    :maxdepth: 4

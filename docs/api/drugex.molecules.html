@@ -62,7 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DrugEx Package API Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">drugex</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="drugex.html">drugex package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="drugex.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="drugex.data.html">drugex.data package</a></li>
@@ -100,7 +100,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">DrugEx Package API Documentation</a> &raquo;</li>
+          <li><a href="modules.html">drugex</a> &raquo;</li>
           <li><a href="drugex.html">drugex package</a> &raquo;</li>
       <li>drugex.molecules package</li>
       <li class="wy-breadcrumbs-aside">
@@ -144,6 +144,14 @@ On: 06.04.22, 16:54</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.interfaces.</span></span><span class="sig-name descname"><span class="pre">BaseMolSupplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/interfaces.html#BaseMolSupplier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.interfaces.BaseMolSupplier" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a>, <a class="reference external" href="https://docs.python.org/3.9/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Extended <a class="reference internal" href="#drugex.molecules.interfaces.MolSupplier" title="drugex.molecules.interfaces.MolSupplier"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolSupplier</span></code></a> that produces instances of <a class="reference internal" href="#drugex.molecules.mol.DrExMol" title="drugex.molecules.mol.DrExMol"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DrExMol</span></code></a> that implements identification of duplicates and other useful features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>converter</strong> – a <a class="reference internal" href="drugex.molecules.converters.html#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a> that produces an instance of <a class="reference internal" href="#drugex.molecules.interfaces.Molecule" title="drugex.molecules.interfaces.Molecule"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Molecule</span></code></a> from the given input.</p></li>
+<li><p><strong>hide_duplicates</strong> – If <a class="reference external" href="https://docs.python.org/3.9/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, the returned instances will be tested on uniqueness and only the first encountered item will be processed.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.molecules.interfaces.BaseMolSupplier.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/interfaces.html#BaseMolSupplier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.interfaces.BaseMolSupplier.__init__" title="Permalink to this definition"></a></dt>
@@ -320,6 +328,15 @@ On: 22.04.22, 13:50</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.suppliers.</span></span><span class="sig-name descname"><span class="pre">ListSupplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converter=&lt;drugex.molecules.converters.default.SmilesToDrEx</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_duplicates=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/suppliers.html#ListSupplier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.suppliers.ListSupplier" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.interfaces.BaseMolSupplier" title="drugex.molecules.interfaces.BaseMolSupplier"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseMolSupplier</span></code></a></p>
 <p>Basic supplier that converts molecules in a list to the desired representation (SMILES string to <a class="reference internal" href="#drugex.molecules.mol.DrExMol" title="drugex.molecules.mol.DrExMol"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DrExMol</span></code></a> by default).</p>
+<p>Initialize list supplier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – A list of molecules. By default, representation as SMILES is assumed.</p></li>
+<li><p><strong>converter</strong> (<a class="reference internal" href="drugex.molecules.converters.html#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><em>MolConverter</em></a>) – Converter to transform molecules in ‘mols’ to the desired representation, <a class="reference internal" href="drugex.molecules.converters.html#drugex.molecules.converters.default.SmilesToDrEx" title="drugex.molecules.converters.default.SmilesToDrEx"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SmilesToDrEx</span></code></a> by default.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.molecules.suppliers.ListSupplier.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converter=&lt;drugex.molecules.converters.default.SmilesToDrEx</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_duplicates=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/suppliers.html#ListSupplier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.suppliers.ListSupplier.__init__" title="Permalink to this definition"></a></dt>
@@ -359,6 +376,15 @@ annotations (optional): molecule associated metadata as a <a class="reference ex
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">drugex.molecules.suppliers.</span></span><span class="sig-name descname"><span class="pre">StandardizedSupplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/suppliers.html#StandardizedSupplier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.suppliers.StandardizedSupplier" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#drugex.molecules.interfaces.BaseMolSupplier" title="drugex.molecules.interfaces.BaseMolSupplier"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseMolSupplier</span></code></a></p>
 <p>Supplies standardized molecules from the input molecules. It requires a standardizer.</p>
+<p>Initialize a standardized supplier with the given standardizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mols</strong> – A set of input molecules. It will be converted to an iterator if not one already.</p></li>
+<li><p><strong>standardizer</strong> – a <a class="reference internal" href="drugex.molecules.converters.html#drugex.molecules.converters.interfaces.MolConverter" title="drugex.molecules.converters.interfaces.MolConverter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MolConverter</span></code></a> to transform items in ‘mols’ to the standardized form. It should return the same representation as in the original ‘mols’ (i.e. SMILES if the original input was SMILES).</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="drugex.molecules.suppliers.StandardizedSupplier.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standardizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/drugex/molecules/suppliers.html#StandardizedSupplier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#drugex.molecules.suppliers.StandardizedSupplier.__init__" title="Permalink to this definition"></a></dt>
