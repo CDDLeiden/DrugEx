@@ -371,12 +371,14 @@ class TrainingMonitor(ModelProvider, ABC):
         pass
 
     @abstractmethod
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         """
         Notifies the monitor of the current progress of the training.
 
         Parameters
         ----------
+        model : Model
+            The model being trained.
         current_step : int, optional
             The current training step (i.e. batch).
         current_epoch : int, optional

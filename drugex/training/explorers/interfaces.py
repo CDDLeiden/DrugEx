@@ -265,7 +265,7 @@ class FragExplorer(Explorer):
             loss.backward()
             self.optim.step()
 
-            self.monitor.saveProgress(step_idx, None, total_steps, None, loss=loss.item())
+            self.monitor.saveProgress(self, step_idx, None, total_steps, None, loss=loss.item())
             
         return loss.item()
 

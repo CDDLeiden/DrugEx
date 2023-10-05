@@ -181,7 +181,7 @@ class SequenceTransformer(FragGenerator):
             loss.backward()
             self.optim.step()
             current_step += 1
-            self.monitor.saveProgress(current_step, epoch, total_steps, epochs, loss.item())
+            self.monitor.saveProgress(self, current_step, epoch, total_steps, epochs, loss.item())
 
         return loss.item()
 

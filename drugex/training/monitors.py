@@ -6,13 +6,12 @@ On: 02.06.22, 13:59
 """
 import os.path
 import shutil
-from abc import ABC, abstractmethod
 
-import numpy as np
 import pandas as pd
 import torch
 
-from drugex.training.interfaces import TrainingMonitor
+from drugex.training.interfaces import TrainingMonitor, Model
+
 
 class NullMonitor(TrainingMonitor):
 
@@ -22,7 +21,7 @@ class NullMonitor(TrainingMonitor):
     def savePerformanceInfo(self, performance_dict, df_smiles=None):
         pass
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         pass
 
     def endStep(self, step, epoch):
@@ -46,7 +45,7 @@ class FileMonitor(TrainingMonitor):
 
     """
 
-    def __init__(self, path, save_smiles=False, save_model_option='best', reset_directory=False):
+    def __init__(self, path, save_smiles=False, save_model_option='best', reset_directory=False, on_model_update=None):
         """
         Initialize the file monitor.
 
@@ -89,6 +88,7 @@ class FileMonitor(TrainingMonitor):
         self.currentState = None
         self.bestState = None
         self.saveModelOption = save_model_option
+        self.onModelUpdate = on_model_update
 
     def saveModel(self, model, identifier=None):
         """ 
@@ -98,12 +98,14 @@ class FileMonitor(TrainingMonitor):
         suffix = '_' + str(identifier) if identifier else ''
         torch.save(self.currentState, self.path + suffix + '.pkg')
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
         """ 
         Save the current training progress: epoch, step, loss.
 
         Parameters
         ----------
+        model : Model
+            The model currently being trained.
         current_step : int
             The current step.
         current_epoch : int
@@ -115,6 +117,8 @@ class FileMonitor(TrainingMonitor):
         loss : float
             The current training loss.
         """
+        if self.onModelUpdate:
+            self.onModelUpdate(model)
         
         txt = f"Epoch {current_epoch if current_epoch is not None else '--'}/"
         txt += f"{total_epochs if total_epochs is not None else '--'}," 

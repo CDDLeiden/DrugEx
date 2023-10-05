@@ -40,7 +40,7 @@ from drugex.training.generators import (
     SequenceRNN,
     SequenceTransformer,
 )
-from drugex.training.interfaces import TrainingMonitor
+from drugex.training.interfaces import TrainingMonitor, Model
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.interfaces import Scorer
@@ -71,7 +71,7 @@ class TestModelMonitor(TrainingMonitor):
         self.execution['model'] = True
         self.passToSubmonitors('saveModel', model, identifier)
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
         print(json.dumps({
             'current_step' : current_step,
@@ -84,7 +84,7 @@ class TestModelMonitor(TrainingMonitor):
         if kwargs:
             print("Kwargs:", json.dumps(kwargs, indent=4))
         self.execution['progress'] = True
-        self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
+        self.passToSubmonitors('saveProgress', model, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
     def savePerformanceInfo(self, performance_dict, df_smiles=None):
         print("Test Performance Monitor:")
