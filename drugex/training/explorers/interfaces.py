@@ -153,8 +153,8 @@ class Explorer(Model, ABC):
         it : int
         """
         
-        self.monitor.setModel(self.agent)
-        self.bestState = deepcopy(self.agent.state_dict())
+        self.monitor.setModel(self)
+        self.bestState = self.getModel()
         self.best_value = value
         self.last_save = epoch
         self.last_iter = it
@@ -307,9 +307,9 @@ class FragExplorer(Explorer):
         """
         
         self.monitor = monitor if monitor else NullMonitor()
-        self.bestState = deepcopy(self.agent.state_dict())
-        self.monitor.setModel(self.agent)
-        self.monitor.saveModel(self.agent)
+        self.monitor.setModel(self)
+        self.monitor.saveModel(self)
+        self.bestState = self.getModel()
 
         n_iters = 1 if self.crover is None else 10
         net = nn.DataParallel(self, device_ids=self.gpus)

@@ -153,7 +153,7 @@ class SequenceExplorer(Explorer):
         self.monitor = monitor if monitor else NullMonitor()
         self.monitor.setModel(self)
         self.monitor.saveModel(self)
-        self.bestState = deepcopy(self.agent.state_dict())
+        self.bestState = self.getModel()
 
         for epoch in tqdm(range(epochs), desc='Fitting SMILES RNN explorer'):
             epoch += 1
