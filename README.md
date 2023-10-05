@@ -2,11 +2,11 @@
  
 <img src='figures/logo.png' width=20% align=right>
 <p align=left width=70%>
-DrugEx is an open-source software library for <i>de novo</i> design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework. The package contains multiple generator architectures and a variety of scoring tools and multi-objective optimisation methods. It has a flexible application programming interface and can readily be used via the command line interface [<a href="sicho_drugex">4</a>] (see [Quick Start](#quick-start) to get to work right away).
+DrugEx is an open-source software library for <i>de novo</i> design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework. The package contains multiple generator architectures and a variety of scoring tools and multi-objective optimisation methods. It has a flexible application programming interface and can readily be used via the command line interface [[1](https://pubs.acs.org/doi/10.1021/acs.jcim.3c00434)] (see [Quick Start](#quick-start) to get to work right away).
 
 ## History
 
-This software is a continuation of the original and incremental work of Liu et al.'s DrugEx [<a href="liu_drugex1">1</a>, <a href="liu_drugex2">2</a>, <a href="liu_drugex3">3</a>] and is currently developed by [Gerard van Westen's Computational Drug Discovery](https://twitter.com/cddleiden) group in Leiden, Netherlands. The first version of DrugEx [<a href="liu_drugex1">1</a>] consisted of a recurrent neural network (RNN) single-task agent of gated recurrent units (GRU) which were updated to long short-term memory (LSTM) units in the second version [<a href="liu_drugex2">2</a>], also introducing MOO-based RL and an updated exploitation-exploration strategy. In its third version, [<a href="liu_drugex3">3</a>] generators based on a variant of the transformer and a novel graph-based encoding allowing for the sampling of molecules with specific substructures were introduced. This package builds on these works and provides a unified API with increased usability and flexibile enough for customization. However, new additional features are beeing added as well [<a href="sicho_drugex">4</a>]. Furthermore, the development and traning of QSAR models, used to score molecules during reinforcement learning has been moved to a separate [QSPRpred](https://github.com/CDDLeiden/QSPRPred)-package, which became a useful library in its own right.
+This software is a continuation of the original and incremental work of Liu et al.'s DrugEx [[2](https://doi.org/10.1186/s13321-019-0355-6),[3](https://doi.org/10.1186/s13321-021-00561-9),[4](https://doi.org/10.1186/s13321-023-00694-z)] and is currently developed by [Gerard van Westen's Computational Drug Discovery](https://twitter.com/cddleiden) group in Leiden, Netherlands. The first version of DrugEx [[2](https://doi.org/10.1186/s13321-019-0355-6)] consisted of a recurrent neural network (RNN) single-task agent of gated recurrent units (GRU) which were updated to long short-term memory (LSTM) units in the second version [[3](https://doi.org/10.1186/s13321-021-00561-9)], also introducing MOO-based RL and an updated exploitation-exploration strategy. In its third version, [[4](https://doi.org/10.1186/s13321-023-00694-z)] generators based on a variant of the transformer and a novel graph-based encoding allowing for the sampling of molecules with specific substructures were introduced. This package builds on these works and provides a unified API with increased usability and flexibile enough for customization. However, new additional features are beeing added as well [[1](https://pubs.acs.org/doi/10.1021/acs.jcim.3c00434)]. Furthermore, the development and traning of QSAR models, used to score molecules during reinforcement learning has been moved to a separate [QSPRpred](https://github.com/CDDLeiden/QSPRPred)-package, which became a useful library in its own right.
 
 
 ## Workflow
@@ -44,7 +44,6 @@ pip install git+https://github.com/CDDLeiden/DrugEx.git@master
 
 ### Optional Dependencies
 
-<<<<<<< HEAD
 **[QSPRPred](https://github.com/CDDLeiden/QSPRPred.git)** - Optional package to install if you want to use the command line interface of DrugEx, which requires the models to be serialized with this package. It is also used by some examples in the tutorial. Install DrugEx with the following command if you want these features:
 
 ```bash
@@ -152,10 +151,10 @@ We also thank the following Git repositories that gave Xuhan a lot of inspiratio
 
 # References
 
-<a name="liu_drugex1"></a> [1] [Liu X., Ye K., van Vlijmen H.W.T, IJzerman A.P., van Westen G.J.P. An exploration strategy improves the diversity of de novo ligands using deep reinforcement learning: a case for the adenosine A2A receptor. Journal of cheminformatics. 2019;11(1):35.](https://jcheminf.biomedcentral.com/articles/10.1186/s13321-019-0355-6)
+[1] [Sicho M., Luukkonen S., van den Maagdenberg H.W., Schoenmaker L., Béquignon O.J.M., van Westen G.J.P. DrugEx: Deep Learning Models and Tools for Exploration of Drug-like Chemical Space. *J. Chem. Inf. Model.*, **2023**, 63, 12.](https://pubs.acs.org/doi/10.1021/acs.jcim.3c00434)
 
-<a name="liu_drugex2"></a> [2] [Liu X, Ye K, van Vlijmen H.W.T, Emmerich M.T.M., IJzerman AP, van Westen G.J.P. DrugEx v2: De Novo Design of Drug Molecule by Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology. Journal of cheminformatics 2021:13(1):85.](https://doi.org/10.1186/s13321-021-00561-9) 
+[2] [Liu X., Ye K., van Vlijmen H.W.T, IJzerman A.P., van Westen G.J.P. An Exploration Strategy Improves the Diversity of de novo Ligands Using Deep Reinforcement Learning: a case for the adenosine A2A receptor.  *J Cheminform.*, **2019**, 11, 35.](https://jcheminf.biomedcentral.com/articles/10.1186/s13321-019-0355-6)
 
-<a name="liu_drugex3"></a> [3] [Liu, X., Ye, K., van Vlijmen, H.W.T. IJzerman A.P., van Westen G.J.P. DrugEx v3: scaffold-constrained drug design with graph transformer-based reinforcement learning. J Cheminform 15, 24 (2023).](https://doi.org/10.1186/s13321-023-00694-z)
+[3] [Liu X, Ye K, van Vlijmen H.W.T, Emmerich M.T.M., IJzerman AP, van Westen G.J.P. DrugEx v2: De Novo Design of Drug Molecule by Pareto-based Multi-Objective Reinforcement Learning in Polypharmacology. *J Cheminform.*, **2021**, 13, 85.](https://doi.org/10.1186/s13321-021-00561-9) 
 
-<a name="sicho_drugex"></a> [4] [Sicho M., Luukkonen S., van den Maagdenberg H.W., Schoenmaker L., Béquignon O.J.M., van Westen G.J.P. DrugEx: Deep Learning Models and Tools for Exploration of Drug-like Chemical Space.](https://chemrxiv.org/engage/chemrxiv/article-details/6408c3f5cc600523a3df2174)
+[4] [Liu, X., Ye, K., van Vlijmen, H.W.T. IJzerman A.P., van Westen G.J.P. DrugEx v3: Scaffold-Constrained Drug Design with Graph Transformer-based Reinforcement Learning. *J Cheminform.*, **2023**, 15, 24.](https://doi.org/10.1186/s13321-023-00694-z)
