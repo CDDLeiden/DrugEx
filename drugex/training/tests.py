@@ -51,6 +51,11 @@ from rdkit import Chem
 
 class TestModelMonitor(TrainingMonitor):
 
+    @staticmethod
+    def onModelUpdate(model: Model):
+        assert isinstance(model, Model)
+        assert isinstance(model.getModel(), collections.OrderedDict)
+
     def __init__(self, submonitors=None):
         self.execution = {
             'model' : False,
@@ -60,7 +65,27 @@ class TestModelMonitor(TrainingMonitor):
             'close' : False,
         }
         self.submonitors = [
-            FileMonitor(tempfile.NamedTemporaryFile().name, save_smiles=True)
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="all",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            ),
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="best",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            ),
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="improvement",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            )
         ] if not submonitors else submonitors
 
     def passToSubmonitors(self, method, *args, **kwargs):
