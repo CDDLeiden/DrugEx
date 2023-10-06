@@ -10,6 +10,7 @@ from typing import Literal
 import pandas as pd
 import torch
 
+from drugex.logs import logger
 from drugex.training.interfaces import TrainingMonitor, Model
 
 
@@ -18,7 +19,7 @@ class NullMonitor(TrainingMonitor):
     def getSaveModelOption(self) -> Literal['best', 'all', 'improvement']:
         pass
 
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
         pass
 
     def savePerformanceInfo(self, performance_dict, df_smiles=None):
@@ -89,6 +90,7 @@ class FileMonitor(TrainingMonitor):
         elif reset_directory:
             for file in os.listdir(self.directory):
                 if file.startswith(os.path.basename(path)):
+                    logger.warning(f"Removing {file} from {self.directory}")
                     os.remove(os.path.join(self.directory, file))
         self.outLog = open(path + '_fit.log', 'w', encoding='utf-8')
         self.outDF = path + '_fit.tsv'
