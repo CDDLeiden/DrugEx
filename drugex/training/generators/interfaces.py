@@ -238,7 +238,7 @@ class Generator(Model, ABC):
 
             # Save model
             save_model_option = monitor.getSaveModelOption()
-            if save_model_option == 'all' or is_best == True:
+            if save_model_option == 'all' or is_best:
                 monitor.saveModel(self, epoch if save_model_option in ('all', 'improvement') else None)
                 logger.info(f"Model was saved at epoch {epoch}")
             
