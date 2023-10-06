@@ -9,7 +9,7 @@ from copy import deepcopy
 
 import numpy as np
 from scipy.stats import gmean
-from typing import List, Tuple, Union, Dict, Optional
+from typing import List, Tuple, Union, Dict, Optional, Literal
 
 import torch
 from torch import nn
@@ -412,5 +412,17 @@ class TrainingMonitor(ModelProvider, ABC):
     def close(self):
         """
         Close this monitor. Training has finished.
+        """
+        pass
+
+    @abstractmethod
+    def getSaveModelOption(self) -> Literal['best', 'all', 'improvement']:
+        """
+        Return the scheme implemented by the monitor to save model snapshots.
+
+        Returns
+        -------
+        Literal['best', 'all', 'improvement']
+            The scheme implemented by the monitor to save model snapshots.
         """
         pass

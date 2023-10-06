@@ -5,7 +5,7 @@ Created by: Martin Sicho
 On: 02.06.22, 13:59
 """
 import os.path
-import shutil
+from typing import Literal
 
 import pandas as pd
 import torch
@@ -14,6 +14,9 @@ from drugex.training.interfaces import TrainingMonitor, Model
 
 
 class NullMonitor(TrainingMonitor):
+
+    def getSaveModelOption(self) -> Literal['best', 'all', 'improvement']:
+        pass
 
     def saveModel(self, model):
         pass
