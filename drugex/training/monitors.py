@@ -36,12 +36,6 @@ class NullMonitor(TrainingMonitor):
     def getModel(self):
         pass
 
-    def setModel(self):
-        pass
-
-    def getModelSaveOption(self):
-        pass
-
 class FileMonitor(TrainingMonitor):
     """
     A simple `TrainingMonitor` implementation with file outputs.
