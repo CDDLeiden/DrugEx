@@ -153,7 +153,7 @@ class Explorer(Model, ABC):
         it : int
         """
         
-        self.monitor.setModel(self)
+        self.monitor.saveModel(self)
         self.bestState = self.getModel()
         self.best_value = value
         self.last_save = epoch
@@ -307,7 +307,6 @@ class FragExplorer(Explorer):
         """
         
         self.monitor = monitor if monitor else NullMonitor()
-        self.monitor.setModel(self)
         self.monitor.saveModel(self)
         self.bestState = self.getModel()
 

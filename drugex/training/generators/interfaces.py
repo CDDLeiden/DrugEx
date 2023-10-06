@@ -233,7 +233,6 @@ class Generator(Model, ABC):
 
             if value < best:
                 is_best = True
-                monitor.setModel(self) 
                 best, last_save = value, epoch
             valid_metrics['best_epoch'] = last_save
 

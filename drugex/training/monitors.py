@@ -89,7 +89,6 @@ class FileMonitor(TrainingMonitor):
         self.outSmiles = path + '_smiles.tsv' if save_smiles else None
         self.outSmilesHeaderDone = False
         self.currentState = None
-        self.bestState = None
         self.saveModelOption = save_model_option
         self.onModelUpdate = on_model_update
 
@@ -181,10 +180,7 @@ class FileMonitor(TrainingMonitor):
         self.outLog.close()
    
     def getModel(self):
-        return self.bestState
-    
-    def setModel(self, model):
-        self.bestState = model.getModel() 
+        return self.currentState
 
     def getSaveModelOption(self):
         return self.saveModelOption

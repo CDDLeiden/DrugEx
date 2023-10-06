@@ -96,9 +96,6 @@ class TestModelMonitor(TrainingMonitor):
         print(f"Finished step {step} of epoch {epoch}.")
         self.execution['end'] = True
         self.passToSubmonitors('endStep', step, epoch)
-
-    def setModel(self, model):
-        self.passToSubmonitors('setModel', model)
         
     def getModel(self):
         return self.passToSubmonitors('getModel')
