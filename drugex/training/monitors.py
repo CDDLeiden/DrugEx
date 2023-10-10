@@ -5,24 +5,27 @@ Created by: Martin Sicho
 On: 02.06.22, 13:59
 """
 import os.path
-import shutil
-from abc import ABC, abstractmethod
+from typing import Literal
 
-import numpy as np
 import pandas as pd
 import torch
 
-from drugex.training.interfaces import TrainingMonitor
+from drugex.logs import logger
+from drugex.training.interfaces import TrainingMonitor, Model
+
 
 class NullMonitor(TrainingMonitor):
 
-    def saveModel(self, model):
+    def getSaveModelOption(self) -> Literal['best', 'all', 'improvement']:
+        pass
+
+    def saveModel(self, model, identifier=None):
         pass
 
     def savePerformanceInfo(self, performance_dict, df_smiles=None):
         pass
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         pass
 
     def endStep(self, step, epoch):
@@ -40,7 +43,14 @@ class FileMonitor(TrainingMonitor):
 
     """
 
-    def __init__(self, path, save_smiles=False, reset_directory=False):
+    def __init__(
+            self,
+            path,
+            save_smiles=False,
+            save_model_option: Literal['best', 'all', 'improvement'] = 'best',
+            reset_directory=False,
+            on_model_update=None
+    ):
         """
         Initialize the file monitor.
 
@@ -53,12 +63,24 @@ class FileMonitor(TrainingMonitor):
         Parameters
         ----------
         path : str
-            The path and prefix of the files to be created. 
+            The path and prefix of the files to be created (i.e. /tmp/drugex_rl/experiment_01). This will ensure all files
+            are saved to the given directory and have the given prefix.
         save_smiles : bool
             Whether to save the SMILES of the molecules generated in each epoch.
+        save_model_option : str
+            Determines which models to save during training. Use this parameter with care as saving a large number of
+            models is extremely memory-intensive. Possible values:
+            - 'all' : Save all models.
+            - 'improvement': Save all models that improve upon the previous best model.
+            - 'best' (default): Save only the final best model.
+            WARNING: Setting this option to 'all' or 'best' can be extremely memory-intensive, Use with caution and 
+            ensure you have sufficient memory resources.
         reset_directory : bool
-            Whether to reset the directory where the files are to be saved. If True, the directory will be deleted and
-            recreated. If False, the files will be appended to the existing directory.
+            Whether to reset the directory where the files are to be saved. If `True`, all files
+            with the given prefix will be removed from the directory upon creation of the monitor.
+        on_model_update : callable
+            A callable that will be called after each model update/epoch. The callable will be passed a `Model` subclass
+            instance as the only argument.
         """
         
         self.path = path
@@ -66,27 +88,34 @@ class FileMonitor(TrainingMonitor):
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         elif reset_directory:
-            shutil.rmtree(self.directory)
-            os.makedirs(self.directory)
+            for file in os.listdir(self.directory):
+                if file.startswith(os.path.basename(path)):
+                    logger.warning(f"Removing {file} from {self.directory}")
+                    os.remove(os.path.join(self.directory, file))
         self.outLog = open(path + '_fit.log', 'w', encoding='utf-8')
         self.outDF = path + '_fit.tsv'
         self.outSmiles = path + '_smiles.tsv' if save_smiles else None
         self.outSmilesHeaderDone = False
-        self.bestState = None
+        self.currentState = None
+        self.saveModelOption = save_model_option
+        self.onModelUpdate = on_model_update
 
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
         """ 
         Save the model state.
         """
-        self.bestState = model.getModel()
-        torch.save(self.bestState, self.path + '.pkg')
+        self.currentState = model.getModel() 
+        suffix = '_' + str(identifier) if identifier else ''
+        torch.save(self.currentState, self.path + suffix + '.pkg')
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, loss=None, *args, **kwargs):
         """ 
         Save the current training progress: epoch, step, loss.
 
         Parameters
         ----------
+        model : Model
+            The model currently being trained.
         current_step : int
             The current step.
         current_epoch : int
@@ -98,6 +127,8 @@ class FileMonitor(TrainingMonitor):
         loss : float
             The current training loss.
         """
+        if self.onModelUpdate:
+            self.onModelUpdate(model)
         
         txt = f"Epoch {current_epoch if current_epoch is not None else '--'}/"
         txt += f"{total_epochs if total_epochs is not None else '--'}," 
@@ -157,4 +188,7 @@ class FileMonitor(TrainingMonitor):
         self.outLog.close()
    
     def getModel(self):
-        return self.bestState
+        return self.currentState
+
+    def getSaveModelOption(self):
+        return self.saveModelOption

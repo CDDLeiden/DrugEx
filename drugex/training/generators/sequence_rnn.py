@@ -237,7 +237,7 @@ class SequenceRNN(Generator):
             loss = -loss.mean()
             loss.backward()
             self.optim.step()
-            self.monitor.saveProgress(i, epoch, total_steps, epochs, loss=loss.item())
+            self.monitor.saveProgress(self, i, epoch, total_steps, epochs, loss.item())
 
         return loss.item()
 
