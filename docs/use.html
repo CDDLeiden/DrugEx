@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; DrugEx v3.4.4 documentation</title>
+  <title>Usage &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="drugex" href="api/modules.html" />
+    <link rel="next" title="DrugEx Package API Documentation" href="api/modules.html" />
     <link rel="prev" title="Installation" href="install.html" />
  
 
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,7 +88,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">drugex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">DrugEx Package API Documentation</a></li>
 </ul>
 
         </div>
@@ -100,8 +104,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Usage</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -112,7 +116,7 @@
              
   <section id="usage">
 <span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
-<p>In this document, the use of command line interface (CLI) will be described. If you want more control over the inputs and outputs or want to customize DrugEx itself, you can also use the Python API directly (see <span class="xref std std-ref">api-docs</span>). You can find a complete <a class="reference external" href="https://github.com/CDDLeiden/DrugEx/tree/master/tutorial">tutorial</a> illustrating some common use cases for each model type on the project’s GitHub.</p>
+<p>In this document, the use of command line interface (CLI) will be described. If you want more control over the inputs and outputs or want to customize DrugEx itself, you can also use the Python API directly (see <a class="reference internal" href="api/modules.html#api-docs"><span class="std std-ref">DrugEx Package API Documentation</span></a>). You can find a complete <a class="reference external" href="https://github.com/CDDLeiden/DrugEx/tree/master/tutorial">tutorial</a> illustrating some common use cases for each model type on the project’s GitHub.</p>
 <p>The command-line is a simple interface that can be used to preprocess data and build models quickly. In order to obtain a final model and generate novel compounds you will need to run multiple scripts, however.
 The description of the functionality of each script can be displayed with the <code class="code docutils literal notranslate"><span class="pre">--help</span></code> argument. For example, the help message for the <code class="code docutils literal notranslate"><span class="pre">drugex.dataset</span></code> script can be shown as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>drugex.dataset<span class="w"> </span>--help
@@ -277,7 +281,7 @@ python<span class="w"> </span>-m<span class="w"> </span>drugex.generate<span cla
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/modules.html" class="btn btn-neutral float-right" title="drugex" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api/modules.html" class="btn btn-neutral float-right" title="DrugEx Package API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

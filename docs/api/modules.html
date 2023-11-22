@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>drugex &mdash; DrugEx v3.4.4 documentation</title>
+  <title>DrugEx Package API Documentation &mdash; DrugEx v3.4.5 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,14 +43,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> DrugEx
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DrugEx
           </a>
               <div class="version">
-                v3.4.4
+                v3.4.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,7 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use.html#cli-example">CLI Example</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">drugex</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DrugEx Package API Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drugex.html">drugex package</a></li>
 </ul>
 </li>
@@ -81,8 +85,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>drugex</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">DrugEx Package API Documentation</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -91,8 +95,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="drugex">
-<h1>drugex<a class="headerlink" href="#drugex" title="Permalink to this heading"></a></h1>
+  <section id="drugex-package-api-documentation">
+<span id="api-docs"></span><h1>DrugEx Package API Documentation<a class="headerlink" href="#drugex-package-api-documentation" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="drugex.html">drugex package</a><ul>
@@ -159,10 +163,25 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.about">drugex.about module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.download">drugex.download module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.generate">drugex.generate module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.train">drugex.train module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex.dataset">drugex.dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.html#drugex.dataset.Dataset.setVocabulary"><code class="docutils literal notranslate"><span class="pre">Dataset.setVocabulary()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.DatasetArgParser"><code class="docutils literal notranslate"><span class="pre">DatasetArgParser()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.FragGraphDataset"><code class="docutils literal notranslate"><span class="pre">FragGraphDataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.FragSequenceDataset"><code class="docutils literal notranslate"><span class="pre">FragSequenceDataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.FragmentDataset"><code class="docutils literal notranslate"><span class="pre">FragmentDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="drugex.html#drugex.dataset.FragmentDataset.setPairCollectors"><code class="docutils literal notranslate"><span class="pre">FragmentDataset.setPairCollectors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.SequenceDataset"><code class="docutils literal notranslate"><span class="pre">SequenceDataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="drugex.html#drugex.dataset.load_molecules"><code class="docutils literal notranslate"><span class="pre">load_molecules()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#drugex-download-module">drugex.download module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#drugex-generate-module">drugex.generate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drugex.html#drugex-train-module">drugex.train module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drugex.html#module-drugex">Module contents</a></li>
 </ul>
 </li>
