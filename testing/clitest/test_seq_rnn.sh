@@ -130,7 +130,6 @@ echo "Test: Generate molecules with sequence RNN ..."
 echo $line
 python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
-${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_rnn_RL" \
 -vfs "${PRETRAINING_PREFIX}_corpus.txt.vocab" \

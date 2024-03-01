@@ -45,7 +45,7 @@ def DesignArgParser(txt=None):
     designer_args = vars(args)
     
     # Load parameters generator/environment from trained model    
-    train_parameters = ['mol_type', 'algorithm', 'predictor', 'scheme',
+    train_parameters = ['mol_type', 'algorithm', 'predictor', 'scheme', 'use_gru',
         'active_targets', 'inactive_targets', 'window_targets', 'activity_threshold',
         'qed', 'uniqueness', 'sa_score', 'ra_score', 'molecular_weight',
         'mw_thresholds', 'logP', 'logP_thresholds', 'tpsa', 'tpsa_thresholds',
