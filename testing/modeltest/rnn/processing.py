@@ -1,11 +1,4 @@
-"""
-processing
-
-Created by: Martin Sicho
-On: 26.10.22, 16:07
-"""
 import pandas as pd
-import os
 
 from drugex.data.corpus.corpus import SequenceCorpus
 from drugex.data.corpus.vocabulary import VocSmiles

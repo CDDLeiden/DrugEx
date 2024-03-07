@@ -1,9 +1,3 @@
-"""
-utils
-
-Created by: Martin Sicho
-On: 17.05.22, 9:55
-"""
 import datetime
 import json
 import logging

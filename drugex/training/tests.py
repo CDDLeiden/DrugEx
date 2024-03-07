@@ -1,9 +1,3 @@
-"""
-tests
-
-Created by: Martin Sicho
-On: 31.05.22, 10:20
-"""
 import json
 import logging
 import os.path
@@ -151,10 +145,13 @@ def getPredictor():
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models.models import QSPRModel
-        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__),
-                                                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        model = QSPRModel.fromFile(
+            os.path.join(os.path.dirname(__file__),
+            "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
+        )
         ret = QSPRPredScorer(model)
     except ImportError:
+        logging.warning("QSPRPred not installed. Using mock scorer.")
         ret = MockScorer()
     return ret
 

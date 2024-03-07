@@ -4,8 +4,8 @@ import json
 import argparse
 import warnings
 
-from qsprpred.models.interfaces import QSPRModel
-from qsprpred.models.tasks import ModelTasks
+from qsprpred.models import QSPRModel
+from qsprpred.tasks import ModelTasks
 
 from drugex import VERSION
 from drugex.data.corpus.vocabulary import VocGraph, VocSmiles

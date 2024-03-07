@@ -1,9 +1,3 @@
-"""
-rewards
-
-Created by: Martin Sicho
-On: 26.06.22, 18:07
-"""
 import numpy as np
 from abc import ABC, abstractmethod
 

@@ -32,7 +32,7 @@ def DownloadTutorial(args):
     # Link to DrugEx v3 pretrained model (graph-based; Papyrus 05.5)
     link_pretrained_model2 = "https://zenodo.org/record/7085421/files/DrugEx_PT_Papyrus05.5.zip?download=1"
     # Link to QSAR example model
-    link_qsar_model = "https://zenodo.org/record/8325021/files/A2AR_RandomForestClassifier.zip?download=1"
+    link_qsar_model = "https://zenodo.org/records/10792358/files/A2AR_RandomForestClassifier.zip?download=1"
 
     # Download model files
     pretrained_models_path_rnn = os.path.join(args.out_dir, 'models', 'pretrained', 'smiles-rnn')
@@ -68,17 +68,17 @@ def DownloadTutorial(args):
         stereo=False,
         version=papyrus_version,
         descriptors=None,
-        plus_only = True
+        plus_only=True
 
     )
 
     datasets_dir = os.path.join(args.out_dir, 'data')
     os.makedirs(datasets_dir, exist_ok=True)
     dataset = papyrus.getData(
+        dataset_name,
         acc_keys,
         quality,
         output_dir=datasets_dir,
-        name=dataset_name,
         use_existing=True
     )
 

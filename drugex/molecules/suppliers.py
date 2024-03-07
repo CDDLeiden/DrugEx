@@ -1,9 +1,3 @@
-"""
-suppliers
-
-Created by: Martin Sicho
-On: 22.04.22, 13:50
-"""
 from drugex.molecules.converters.default import SmilesToDrEx
 from drugex.molecules.interfaces import BaseMolSupplier
 

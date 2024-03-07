@@ -1,10 +1,3 @@
-"""
-defaultdatasets
-
-Created by: Martin Sicho
-On: 25.06.22, 19:42
-"""
-
 from itertools import chain
 import numpy as np
 import pandas as pd

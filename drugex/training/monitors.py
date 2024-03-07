@@ -1,9 +1,3 @@
-"""
-monitors
-
-Created by: Martin Sicho
-On: 02.06.22, 13:59
-"""
 import os.path
 from typing import Literal
 

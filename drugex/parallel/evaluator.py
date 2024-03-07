@@ -1,9 +1,3 @@
-"""
-evaluator
-
-Created by: Martin Sicho
-On: 29.05.22, 18:12
-"""
 import concurrent
 from tqdm.auto import tqdm
 

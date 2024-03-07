@@ -1,9 +1,3 @@
-"""
-scorers
-
-Created by: Martin Sicho
-On: 03.06.22, 13:28
-"""
 import numpy as np
 import pandas as pd
 from rdkit import Chem

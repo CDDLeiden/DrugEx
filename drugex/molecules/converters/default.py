@@ -1,9 +1,3 @@
-"""
-converters
-
-Created by: Martin Sicho
-On: 21.04.22, 12:20
-"""
 from rdkit import Chem
 
 from drugex.molecules.converters.interfaces import ConversionException, MolConverter
