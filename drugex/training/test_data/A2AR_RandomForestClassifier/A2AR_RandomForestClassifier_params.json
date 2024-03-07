@@ -1,5 +1,0 @@
-{
-    "criterion": "log_loss",
-    "n_estimators": 200,
-    "n_jobs": 1
-}
