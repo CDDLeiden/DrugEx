@@ -1,9 +1,3 @@
-"""
-vocabulary
-
-Created by: Martin Sicho
-On: 26.04.22, 13:16
-"""
 import re
 
 import numpy as np

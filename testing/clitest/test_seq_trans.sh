@@ -120,7 +120,6 @@ echo "Test: Generate molecules with sequence transformer ..."
 echo $line
 python -m drugex.generate \
 ${DESIGN_COMMON_ARGS} \
-${TRAIN_RL_ARGS} \
 -i "${FINETUNING_PREFIX}" \
 -g "${FINETUNING_PREFIX}_${RL_PREFIX}_smiles_trans_RL" \
 -vfs "${PRETRAINING_PREFIX}_smiles.txt.vocab" \

@@ -1,14 +1,8 @@
-"""
-tests
-
-Created by: Martin Sicho
-On: 31.05.22, 10:20
-"""
 import json
 import logging
 import os.path
 import tempfile
-from collections import OrderedDict
+import collections
 from unittest import TestCase
 
 import numpy as np
@@ -40,7 +34,7 @@ from drugex.training.generators import (
     SequenceRNN,
     SequenceTransformer,
 )
-from drugex.training.interfaces import TrainingMonitor
+from drugex.training.interfaces import TrainingMonitor, Model
 from drugex.training.monitors import FileMonitor
 from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.interfaces import Scorer
@@ -51,8 +45,12 @@ from rdkit import Chem
 
 class TestModelMonitor(TrainingMonitor):
 
+    @staticmethod
+    def onModelUpdate(model: Model):
+        assert isinstance(model, Model)
+        assert isinstance(model.getModel(), collections.OrderedDict)
+
     def __init__(self, submonitors=None):
-        self.model = None
         self.execution = {
             'model' : False,
             'progress' : False,
@@ -61,19 +59,38 @@ class TestModelMonitor(TrainingMonitor):
             'close' : False,
         }
         self.submonitors = [
-            FileMonitor(tempfile.NamedTemporaryFile().name, save_smiles=True)
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="all",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            ),
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="best",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            ),
+            FileMonitor(
+                tempfile.NamedTemporaryFile().name,
+                save_smiles=True,
+                save_model_option="improvement",
+                reset_directory=True,
+                on_model_update=self.onModelUpdate
+            )
         ] if not submonitors else submonitors
 
     def passToSubmonitors(self, method, *args, **kwargs):
         for monitor in self.submonitors:
-            method = getattr(monitor, method)(*args, **kwargs)
+            return getattr(monitor, method)(*args, **kwargs)
 
-    def saveModel(self, model):
-        self.model = model.getModel()
+    def saveModel(self, model, identifier=None):
         self.execution['model'] = True
-        self.passToSubmonitors('saveModel', model)
+        self.passToSubmonitors('saveModel', model, identifier)
 
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         print("Test Progress Monitor:")
         print(json.dumps({
             'current_step' : current_step,
@@ -86,7 +103,7 @@ class TestModelMonitor(TrainingMonitor):
         if kwargs:
             print("Kwargs:", json.dumps(kwargs, indent=4))
         self.execution['progress'] = True
-        self.passToSubmonitors('saveProgress', current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
+        self.passToSubmonitors('saveProgress', model, current_step, current_epoch, total_steps, total_epochs, *args, **kwargs)
 
     def savePerformanceInfo(self, performance_dict, df_smiles=None):
         print("Test Performance Monitor:")
@@ -98,14 +115,17 @@ class TestModelMonitor(TrainingMonitor):
         print(f"Finished step {step} of epoch {epoch}.")
         self.execution['end'] = True
         self.passToSubmonitors('endStep', step, epoch)
+        
+    def getModel(self):
+        return self.passToSubmonitors('getModel')
+
+    def getSaveModelOption(self):
+        return self.passToSubmonitors('getSaveModelOption')
 
     def close(self):
         print("Training done.")
         self.execution['close'] = True
         self.passToSubmonitors('close')
-
-    def getModel(self):
-        return self.model
 
     def allMethodsExecuted(self):
         return all([self.execution[key] for key in self.execution])
@@ -125,10 +145,13 @@ def getPredictor():
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models.models import QSPRModel
-        model = QSPRModel.fromFile(os.path.join(os.path.dirname(__file__),
-                                                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"))
+        model = QSPRModel.fromFile(
+            os.path.join(os.path.dirname(__file__),
+            "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
+        )
         ret = QSPRPredScorer(model)
     except ImportError:
+        logging.warning("QSPRPred not installed. Using mock scorer.")
         ret = MockScorer()
     return ret
 
@@ -314,7 +337,8 @@ class TrainingTestCase(TestCase):
         monitor = TestModelMonitor()
         model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
         pr_model = monitor.getModel()
-        self.assertTrue(type(pr_model) == OrderedDict)
+        
+        self.assertTrue(type(pr_model) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
         model.loadStates(pr_model) # initialize from the best state
         return model, monitor
@@ -367,7 +391,7 @@ class TrainingTestCase(TestCase):
         explorer = SequenceExplorer(pretrained, env=environment, mutate=finetuned, crover=pretrained, n_samples=10)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(type(monitor.getModel()) == OrderedDict)
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False)
@@ -426,7 +450,7 @@ class TrainingTestCase(TestCase):
         explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         # test molecule generation
@@ -474,7 +498,7 @@ class TrainingTestCase(TestCase):
         explorer = FragGraphExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
     def test_sequence_transformer(self):
@@ -498,7 +522,7 @@ class TrainingTestCase(TestCase):
         explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned, batch_size=self.BATCH_SIZE)
         monitor = TestModelMonitor()
         explorer.fit(ft_loader_train, ft_loader_test, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
         pretrained.generate([
@@ -550,5 +574,5 @@ class TrainingTestCase(TestCase):
         explorer = FragSequenceExplorer(pretrained, environment, mutate=finetuned)
         monitor = TestModelMonitor()
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
-        self.assertTrue(monitor.getModel())
+        self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())

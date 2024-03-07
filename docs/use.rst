@@ -92,7 +92,7 @@ At each iteration, generated molecules are scored based on the environment and s
 
 .. code-block:: bash
 
-    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl -o arl -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
+    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl -o arl -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
 
 This tells DrugEx to create molecules from input fragments encoded in preprocessed data file (prefixed with :code:`arl`)
 and optimize the initial agent (the fine-tuned model) (:code:`-ag arl_graph_trans_FT`) with RL (:code:`-m RL`). In this case we are using two desirability functions to score molecules:
@@ -111,7 +111,7 @@ In this example, we use the optimized agent model to design new compounds that s
 
 .. code-block:: bash
 
-    python -m drugex.generate -b ${BASE_DIR} -i arl_test_graph.txt -g arl_graph_trans_RL
+    python -m drugex.generate -b ${BASE_DIR} -i arl_test_graph.txt -g arl_graph_trans_RL -gpu 0
 
 This tells DrugEx to generate new molecules based on the input fragment in :code:`arl_test_graph.txt` with the :code:`arl_graph_trans_RL.pkg` model.
 The new compounds are saved to :code:`${BASE_DIR}/new_molecules/arl_graph_trans_RL.tsv` and are also scored with the original environment used to create the model.
@@ -177,7 +177,7 @@ First the molecules from the given dataset are fragmented and encoding while onl
 .. code-block:: bash
 
     python -m drugex.dataset -b ${BASE_DIR} -i A2AR_LIGANDS.tsv -mc SMILES -o arl_xanthine -mt graph -sf c1[nH]c2c(n1)nc(nc2O)O 
-    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl_xanthine -o arl_xanthine -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
+    python -m drugex.train -tm RL -b ${BASE_DIR} -i arl_xanthine -o arl_xanthine -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
     python -m drugex.generate -b ${BASE_DIR} -i arl_xanthine -g arl_xanthine_graph_trans_RL -gpu 0 -n 5
 
 If you want the fragments-molecule pairs consist of ones with exclusively the selected scaffold as the input fragment add the argument :code:`-sfe` 
@@ -190,7 +190,7 @@ First this molecule is encoded, then reinforcement learning is done with this sc
 
     # input is in tutorial/CLI/data/xanthine.tsv
     python -m drugex.dataset -b ${BASE_DIR} -i xanthine.tsv -mc SMILES -o scaffold_based -mt graph -s
-    python -m drugex.train -tm RL -b ${BASE_DIR} -i scaffold_based_graph.txt -o scaffold_based -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/qspr/models/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
+    python -m drugex.train -tm RL -b ${BASE_DIR} -i scaffold_based_graph.txt -o scaffold_based -ag arl_graph_trans_FT -pr ${BASE_DIR}/models/pretrained/graph-trans/Papyrus05.5_graph_trans_PT/Papyrus05.5_graph_trans_PT.pkg -p models/qsar/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json -ta A2AR_RandomForestClassifier -sas -e 2 -bs 32 -gpu 0
     python -m drugex.generate -b ${BASE_DIR} -i scaffold_based_graph.txt -g scaffold_based_graph_trans_RL -gpu 0 -n 5
 
 .. note:: The not fully converged model here will have trouble producing the scaffold that we need so the generate command may take a long time.

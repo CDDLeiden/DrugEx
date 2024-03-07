@@ -1,9 +1,3 @@
-"""
-environment
-
-Created by: Martin Sicho
-On: 06.06.22, 16:51
-"""
 import pandas as pd
 from rdkit import Chem
 

@@ -1,13 +1,8 @@
 """
-gcmol
-
-Created by: Martin Sicho
-On: 10.06.22, 16:50
+THESE FUNCTIONS WERE ADDED BY HELLE FROM:
+https://github.com/BenevolentAI/guacamol/blob/8247bbd5e927fbc3d328865d12cf83cb7019e2d6/guacamol/utils/data.py#L11
+to solve AttributeError: module 'utils' has no attribute 'canonicalize_list'
 """
-
-#THESE FUNCTIONS WERE ADDED BY HELLE FROM:
-#   https://github.com/BenevolentAI/guacamol/blob/8247bbd5e927fbc3d328865d12cf83cb7019e2d6/guacamol/utils/data.py#L11
-# to solve AttributeError: module 'utils' has no attribute 'canonicalize_list'
 from typing import Optional, Iterable, List
 
 from rdkit import Chem

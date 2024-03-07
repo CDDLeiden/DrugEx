@@ -1,9 +1,3 @@
-"""
-splitting
-
-Created by: Martin Sicho
-On: 07.05.22, 15:54
-"""
 import os
 from abc import ABC, abstractmethod
 

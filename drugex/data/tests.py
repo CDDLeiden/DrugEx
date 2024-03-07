@@ -1,10 +1,3 @@
-"""
-tests
-
-
-Created by: Martin Sicho
-On: 18.05.22, 11:49
-"""
 import pandas as pd
 import tempfile
 from unittest import TestCase

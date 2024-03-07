@@ -1,9 +1,3 @@
-"""
-tests.py
-
-Created by: Martin Sicho
-On: 22.04.22, 13:40
-"""
 from unittest import TestCase
 
 from drugex.molecules.converters.standardizers import DefaultStandardizer

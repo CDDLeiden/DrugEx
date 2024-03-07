@@ -1,9 +1,3 @@
-"""
-run
-
-Created by: Martin Sicho
-On: 06.11.22, 16:14
-"""
 import importlib
 import modeltest.settings as settings
 from modeltest.settings import *

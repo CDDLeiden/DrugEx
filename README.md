@@ -131,6 +131,7 @@ The software is licensed under the standard MIT license, which means it is free 
 - [H. van den Maagdenberg](https://github.com/HellevdM)
 - [L. Schoenmaker](https://github.com/LindeSchoenmaker)
 - [O. Béquignon](https://github.com/OlivierBeq)
+- [R.L. van den Broek](https://github.com/rlvandenbroek)
 
 # Contributions
 

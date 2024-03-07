@@ -1,25 +1,13 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 01.06.22, 11:29
-"""
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 import numpy as np
-from scipy.stats import gmean
-from typing import List, Tuple, Union, Dict, Optional
+from typing import Literal
 
 import torch
 from torch import nn
-from tqdm import tqdm
 
 from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
 from drugex.logs import logger
-from drugex.utils import get_Pareto_fronts
-from drugex.training.scorers.smiles import SmilesChecker
-#from drugex.training.monitors import NullMonitor
 
 
 class ModelEvaluator(ABC):
@@ -343,7 +331,7 @@ class TrainingMonitor(ModelProvider, ABC):
     """
 
     @abstractmethod
-    def saveModel(self, model):
+    def saveModel(self, model, identifier=None):
         """
         Save the state dictionary of the `Model` instance currently being trained or serialize the model any other way.
 
@@ -351,6 +339,8 @@ class TrainingMonitor(ModelProvider, ABC):
         ----------
         model : Model
             The model to save.
+        identifier : str
+            Suffix added to saved model.
         """
         pass
 
@@ -369,12 +359,14 @@ class TrainingMonitor(ModelProvider, ABC):
         pass
 
     @abstractmethod
-    def saveProgress(self, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
+    def saveProgress(self, model: Model, current_step=None, current_epoch=None, total_steps=None, total_epochs=None, *args, **kwargs):
         """
         Notifies the monitor of the current progress of the training.
 
         Parameters
         ----------
+        model : Model
+            The model being trained.
         current_step : int, optional
             The current training step (i.e. batch).
         current_epoch : int, optional
@@ -408,5 +400,17 @@ class TrainingMonitor(ModelProvider, ABC):
     def close(self):
         """
         Close this monitor. Training has finished.
+        """
+        pass
+
+    @abstractmethod
+    def getSaveModelOption(self) -> Literal['best', 'all', 'improvement']:
+        """
+        Return the scheme implemented by the monitor to save model snapshots.
+
+        Returns
+        -------
+        Literal['best', 'all', 'improvement']
+            The scheme implemented by the monitor to save model snapshots.
         """
         pass

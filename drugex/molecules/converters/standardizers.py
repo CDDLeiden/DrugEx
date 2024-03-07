@@ -1,10 +1,3 @@
-"""
-standardizers
-
-Created by: Martin Sicho
-On: 21.04.22, 12:19
-"""
-
 from rdkit import Chem
 from rdkit.Chem.MolStandardize import rdMolStandardize
 

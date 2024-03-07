@@ -1,16 +1,8 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 01.06.22, 11:29
-"""
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-import pandas as pd
 import torch
 import torch.nn as nn
-import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
@@ -218,6 +210,7 @@ class Generator(Model, ABC):
          
         for epoch in tqdm(range(epochs), desc='Fitting model'):
             epoch += 1
+            is_best = False
             
             # Train model
             loss_train = self.trainNet(train_loader, epoch, epochs)
@@ -225,18 +218,22 @@ class Generator(Model, ABC):
             # Validate model
             valid_metrics, smiles_scores = self.validateNet(loader=valid_loader, evaluator=evaluator, no_multifrag_smiles=no_multifrag_smiles, n_samples=train_loader.batch_size*2)
 
-            # Save model based on validation loss or valid ratio
+            # Determine best model based on validation loss or valid ratio
             if 'loss_valid' in valid_metrics.keys(): value = valid_metrics['loss_valid']
             else : value = 1 - valid_metrics['valid_ratio']
             valid_metrics['loss_train'] = loss_train
 
             if value < best:
-                monitor.saveModel(self)    
-                best = value
-                last_save = epoch
-                logger.info(f"Model was saved at epoch {epoch}")               
+                is_best = True
+                best, last_save = value, epoch
             valid_metrics['best_epoch'] = last_save
 
+            # Save model
+            save_model_option = monitor.getSaveModelOption()
+            if save_model_option == 'all' or is_best:
+                monitor.saveModel(self, epoch if save_model_option in ('all', 'improvement') else None)
+                logger.info(f"Model was saved at epoch {epoch}")
+            
             # Log performance and generated compounds
             self.logPerformanceAndCompounds(epoch, valid_metrics, smiles_scores)
 

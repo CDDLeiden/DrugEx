@@ -1,9 +1,3 @@
-"""
-processing
-
-Created by: Martin Sicho
-On: 26.10.22, 16:07
-"""
 import pandas as pd
 import os
 

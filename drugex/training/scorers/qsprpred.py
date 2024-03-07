@@ -1,14 +1,7 @@
-"""
-qsprpred
-
-Created by: Martin Sicho
-On: 17.02.23, 13:44
-"""
 import numpy as np
-import pandas as pd
 from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer
-from qsprpred.models.tasks import ModelTasks
+from qsprpred.tasks import ModelTasks
 from rdkit import Chem
 
 

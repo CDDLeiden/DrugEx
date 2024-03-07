@@ -1,9 +1,3 @@
-"""
-processing
-
-Created by: Martin Sicho
-On: 27.05.22, 10:16
-"""
 import math
 
 import numpy as np
