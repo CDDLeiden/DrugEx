@@ -1,9 +1,3 @@
-"""
-tests
-
-Created by: Martin Sicho
-On: 31.05.22, 10:20
-"""
 import json
 import logging
 import os.path

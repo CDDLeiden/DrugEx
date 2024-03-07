@@ -1,10 +1,3 @@
-"""
-dummy molecules
-
-Created by: Sohvi Luukkonen
-On: 27.09.22, 13:40
-"""
-
 from rdkit import Chem
 
 from drugex.logs import logger

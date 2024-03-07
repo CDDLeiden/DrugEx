@@ -1,10 +1,3 @@
-"""
-commons
-
-Created by: Martin Sicho
-On: 26.10.22, 16:08
-"""
-
 import drugex
 import os
 import nvgpu

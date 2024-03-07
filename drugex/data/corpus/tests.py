@@ -1,9 +1,3 @@
-"""
-tests
-
-Created by: Martin Sicho
-On: 28.04.22, 14:08
-"""
 import os.path
 import tempfile
 from unittest import TestCase

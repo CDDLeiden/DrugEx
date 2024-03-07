@@ -1,9 +1,3 @@
-"""
-corpus
-
-Created by: Martin Sicho
-On: 26.04.22, 16:47
-"""
 from rdkit import Chem
 
 from drugex.logs import logger

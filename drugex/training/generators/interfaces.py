@@ -1,16 +1,8 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 01.06.22, 11:29
-"""
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-import pandas as pd
 import torch
 import torch.nn as nn
-import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 

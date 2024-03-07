@@ -1,9 +1,3 @@
-"""
-similarity
-
-Created by: Sohvi Luukkonen
-On: 07.10.22, 15:05
-"""
 import tqdm
 import networkx
 

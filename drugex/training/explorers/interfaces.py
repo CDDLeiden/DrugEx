@@ -1,9 +1,3 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 01.06.22, 11:29
-"""
 from abc import ABC, abstractmethod
 from copy import deepcopy
 

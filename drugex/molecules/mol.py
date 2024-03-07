@@ -1,10 +1,3 @@
-"""
-core
-
-Created by: Martin Sicho
-On: 21.04.22, 22:03
-"""
-
 from rdkit import Chem
 
 from drugex.molecules.interfaces import Molecule

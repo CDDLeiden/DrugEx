@@ -1,9 +1,3 @@
-"""
-fragmenters
-
-Created by: Martin Sicho
-On: 06.05.22, 12:19
-"""
 import re
 from itertools import combinations
 from typing import List, Tuple, Union

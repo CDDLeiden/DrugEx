@@ -1,9 +1,3 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 26.04.22, 13:12
-"""
 from abc import ABC, abstractmethod
 
 from drugex.logs import logger

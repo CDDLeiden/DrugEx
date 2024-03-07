@@ -1,9 +1,3 @@
-"""
-qsprpred
-
-Created by: Martin Sicho
-On: 17.02.23, 13:44
-"""
 import numpy as np
 from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer

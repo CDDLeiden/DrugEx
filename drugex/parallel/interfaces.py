@@ -1,9 +1,3 @@
-"""
-interfaces
-
-Created by: Martin Sicho
-On: 29.05.22, 18:09
-"""
 import multiprocessing
 from abc import ABC, abstractmethod
 

@@ -1,9 +1,3 @@
-"""
-collectors
-
-Created by: Martin Sicho
-On: 14.07.22, 10:58
-"""
 from drugex.parallel.interfaces import ListCollector
 
 

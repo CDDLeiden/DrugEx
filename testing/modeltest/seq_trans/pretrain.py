@@ -1,9 +1,3 @@
-"""
-test_trans
-
-Created by: Martin Sicho
-On: 26.10.22, 15:16
-"""
 from drugex.data.corpus.vocabulary import VocSmiles
 from drugex.data.datasets import SmilesFragDataSet
 from drugex.training.models import SequenceTransformer

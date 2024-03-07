@@ -1,9 +1,3 @@
-"""
-about
-
-Created by: Martin Sicho
-On: 24.06.22, 10:36
-"""
 import os
 
 VERSION = "3.4.6"
