@@ -14,6 +14,9 @@ class QSPRPredScorer(Scorer):
         self.kwargs = kwargs
 
     def getScores(self, mols, frags=None):
+        if len(mols) == 0:
+            logger.warning("No molecules to score. Returning empty list...")
+            return []
         parsed_mols = []
         if not isinstance(mols[0], str):
             invalids = 0

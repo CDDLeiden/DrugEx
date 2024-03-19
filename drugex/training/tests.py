@@ -159,19 +159,25 @@ class TestScorer(TestCase):
 
     def test_getScores(self):
         scorer = getPredictor()
+        # test with invalid
+        mols = ["CCO", "XXXX"]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        # test with empty
+        mols = []
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        # test with valid
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
-
+        # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
 
-        mols = ["CCO", "XXXX"]  # test with invalid
-        scores = scorer.getScores(mols)
-        self.assertEqual(len(scores), len(mols))
 
 class TrainingTestCase(TestCase):
 
