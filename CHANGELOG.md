@@ -7,7 +7,7 @@ From v3.4.6 to v3.4.7
 
 ## Changes
 
-None.
+- update depency rdkit-pypi to rdkit
 
 ## Removed Features
 
