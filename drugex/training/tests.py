@@ -159,19 +159,25 @@ class TestScorer(TestCase):
 
     def test_getScores(self):
         scorer = getPredictor()
+        # test with invalid
+        mols = ["CCO", "XXXX"]
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        # test with empty
+        mols = []
+        scores = scorer.getScores(mols)
+        self.assertEqual(len(scores), len(mols))
+        # test with valid
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
-
+        # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
 
-        mols = ["CCO", "XXXX"]  # test with invalid
-        scores = scorer.getScores(mols)
-        self.assertEqual(len(scores), len(mols))
 
 class TrainingTestCase(TestCase):
 
@@ -394,7 +400,8 @@ class TrainingTestCase(TestCase):
         self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
 
-        pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False)
+        pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False, raw_scores=True)
+        pretrained.generate(num_samples=10, evaluator=environment, drop_invalid=False, raw_scores=False)
 
     def test_graph_transformer(self):
         """
@@ -457,7 +464,13 @@ class TrainingTestCase(TestCase):
         pretrained.generate([
             "c1ccncc1CCC",
             "CCO"
-        ], num_samples=1, evaluator=environment, drop_invalid=False)
+        ], num_samples=2, evaluator=environment, drop_invalid=False, raw_scores=True)
+        pretrained.generate([
+            "c1ccncc1CCC",
+            "CCO"
+        ], num_samples=2, evaluator=environment, drop_invalid=False, raw_scores=False)
+        pretrained.generate(input_dataset=pr_data_set_test, num_samples=20, evaluator=environment, drop_invalid=False, raw_scores=True)
+        pretrained.generate(input_dataset=pr_data_set_test, num_samples=20, evaluator=environment, drop_invalid=False, raw_scores=False)
 
     def test_graph_transformer_scaffold(self):
         """
@@ -500,6 +513,10 @@ class TrainingTestCase(TestCase):
         explorer.fit(train_loader, test_loader, monitor=monitor, epochs=self.N_EPOCHS)
         self.assertTrue(type(monitor.getModel()) == collections.OrderedDict)
         self.assertTrue(monitor.allMethodsExecuted())
+
+        # generate molecules
+        pretrained.generate(input_dataset=data_set, num_samples=5, evaluator=environment, drop_invalid=False, raw_scores=True)
+        pretrained.generate(frags, num_samples=5, evaluator=environment, drop_invalid=False, raw_scores=False)
 
     def test_sequence_transformer(self):
         """

@@ -37,7 +37,7 @@ dependencies = [
   "torch >= 1.7.0",
   "matplotlib >= 2.0",
   "tqdm",
-  "rdkit-pypi",
+  "rdkit",
   "joblib",
   "gitpython",
   "networkx",
