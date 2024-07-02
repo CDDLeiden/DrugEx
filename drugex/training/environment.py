@@ -27,7 +27,7 @@ class DrugExEnvironment(Environment):
         
         Returns
         -------
-        preds : pd.DataFrame
+        scores : pd.DataFrame
             Dataframe with the scores from the scorers and the validity and desireability of the molecules.
         """
 
