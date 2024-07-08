@@ -86,14 +86,16 @@ class Environment(ModelEvaluator):
         scorers : list
             List of objective functions to use for scoring molecules.
         thresholds : list, optional
-            List of desirability thresholds for the objective functions. If `None`, all thresholds are set to 0.99.
+            List of desirability thresholds for the objective functions.
+            If `None`, all thresholds are set to 0.99.
         reward_scheme : RewardScheme, optional
             The reward scheme to use for ranking solutions. If `None`, the `DefaultRewardScheme` is used.
         
         Raises
         ------
         AssertionError
-            If the number of scorers and thresholds does not match.
+            If the number of scorers and thresholds does not match. In case of,
+            multi-task scorer, a threshold should be provided for each task.
         
         Notes
         -----
@@ -101,8 +103,9 @@ class Environment(ModelEvaluator):
         """
 
         self.scorers = scorers
-        self.thresholds = thresholds if thresholds is not None else [0.99] * len(scorers)
-        assert len(self.scorers) == len(self.thresholds)
+        num_scorers = len(self.getScorerKeys())
+        self.thresholds = thresholds if thresholds is not None else [0.99] * num_scorers
+        assert num_scorers == len(self.thresholds)
         self.rewardScheme = reward_scheme
 
     def __call__(self, smiles, frags=None):
@@ -202,7 +205,10 @@ class Environment(ModelEvaluator):
         list
             List of keys of the scorers.
         """
-        return [x.getKey() for x in self.scorers]
+        keys = []
+        for scorer in self.scorers:
+            keys.extend(scorer.getKey())
+        return keys
 
 class ModelProvider(ABC):
     """
