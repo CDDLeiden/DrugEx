@@ -103,9 +103,9 @@ class Environment(ModelEvaluator):
         """
 
         self.scorers = scorers
-        num_scorers = len(self.getScorerKeys())
+        num_scorers = len(self.getScorerKeys()) if isinstance(self.scorers, list) else 1
         self.thresholds = thresholds if thresholds is not None else [0.99] * num_scorers
-        assert num_scorers == len(self.thresholds)
+        assert num_scorers == len(self.thresholds), f"Number of scorers ({num_scorers}) and thresholds ({len(self.thresholds)}) do not match."
         self.rewardScheme = reward_scheme
 
     def __call__(self, smiles, frags=None):
@@ -207,7 +207,11 @@ class Environment(ModelEvaluator):
         """
         keys = []
         for scorer in self.scorers:
-            keys.extend(scorer.getKey())
+            scorer_keys = scorer.getKey()
+            if isinstance(scorer_keys, list):
+                keys.extend(scorer_keys)
+            else:
+                keys.append(scorer_keys)
         return keys
 
 class ModelProvider(ABC):

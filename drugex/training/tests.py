@@ -139,12 +139,20 @@ class MockScorer(Scorer):
 
     def getKey(self):
         return "MockScorer"
+    
+class MultiTaskMockScorer(Scorer):
+    
+        def getScores(self, mols, frags=None):
+            return np.random.random((len(mols), 2))
+    
+        def getKey(self):
+            return ["MockScorer_Task1", "MockScorer_Task2"]
 
 
 def getPredictor():
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
-        from qsprpred.models.models import QSPRModel
+        from qsprpred.models import QSPRModel
         model = QSPRModel.fromFile(
             os.path.join(os.path.dirname(__file__),
             "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
@@ -157,12 +165,16 @@ def getPredictor():
 
 class TestScorer(TestCase):
 
-    def test_getScores(self):
-        scorer = getPredictor()
+    def getScores_test(self, scorer):
         # test with invalid
         mols = ["CCO", "XXXX"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
+        # check shape (should be 1D or 2D array depending on the number of tasks)
+        if isinstance(scorer.getKey(), list):
+            self.assertEqual(scores.shape, (len(mols), len(scorer.getKey())))
+        else:
+            self.assertEqual(scores.shape, (len(mols),))
         # test with empty
         mols = []
         scores = scorer.getScores(mols)
@@ -171,13 +183,21 @@ class TestScorer(TestCase):
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores.flatten()]))
         # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
-
+        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores.flatten()]))
+        
+    def test_single_task_scorer(self):
+        scorer = getPredictor()
+        self.getScores_test(scorer)
+        
+    def test_multi_task_scorer(self):
+        scorer = MultiTaskMockScorer()
+        self.getScores_test(scorer)
+        
 
 class TrainingTestCase(TestCase):
 
