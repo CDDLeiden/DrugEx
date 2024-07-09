@@ -149,20 +149,13 @@ class MultiTaskMockScorer(Scorer):
             return ["MockScorer_Task1", "MockScorer_Task2"]
 
 
-def getPredictor(multi_task=False, **kwargs):
+def getPredictor(path, **kwargs):
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models import QSPRModel
-        if not multi_task:
-            model = QSPRModel.fromFile(
-                os.path.join(os.path.dirname(__file__),
-                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
-            )
-        else:
-            model = QSPRModel.fromFile(
-                os.path.join(os.path.dirname(__file__),
-                "test_data/MultiTaskTutorialModel/MultiTaskTutorialModel_meta.json")
-            )
+        model = QSPRModel.fromFile(
+            os.path.join(os.path.dirname(__file__), "test_data", path),
+        )
         ret = QSPRPredScorer(model, **kwargs)
     except ImportError:
         logging.warning("QSPRPred not installed. Using mock scorer.")
@@ -198,11 +191,20 @@ class TestScorer(TestCase):
         self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores.flatten()]))
         
     def test_single_task_scorer(self):
-        scorer = getPredictor()
+        path = "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"
+        scorer = getPredictor(path)
         self.getScores_test(scorer)
         
     def test_multi_task_scorer(self):
-        scorer = getPredictor(multi_task=True)
+        # multi-task regression model
+        path = "MultiTaskTutorialModel/MultiTaskTutorialModel_meta.json"
+        
+        # test with all tasks
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with selected tasks
+        scorer = getPredictor(path, multi_task=["P29274", "P30542"])
         self.getScores_test(scorer)
         
 
@@ -221,12 +223,13 @@ class TrainingTestCase(TestCase):
     BATCH_SIZE = 8
 
     # environment objectives (TODO: we should test more options and combinations here)
+    path = "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"
     scorers = [
         Property(
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        getPredictor()
+        getPredictor(path)
     ]
     thresholds = [0.5, 0.99]
 
