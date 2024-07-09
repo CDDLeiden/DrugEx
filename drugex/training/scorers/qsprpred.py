@@ -1,7 +1,7 @@
 import numpy as np
 from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer
-from qsprpred.tasks import ModelTasks, TargetProperty
+from qsprpred.tasks import TargetProperty, TargetTasks
 
 class QSPRPredScorer(Scorer):
 
@@ -104,18 +104,24 @@ class QSPRPredScorer(Scorer):
         base_key = f"QSPRpred_{self.model.name}"
         keys = []
         for target_prop in self.model.targetProperties:
-            # include only the tasks that are in multi_task
-            if self.multi_task is None or target_prop.name in self.multi_task:
-                # if multi_class is not None, include the classes as separate tasks
-                if target_prop.task == ModelTasks.MULTICLASS and self.use_probas:
-                    if self.multi_class is not None:
-                        for i in self.multi_class:
-                            keys.append(f"{base_key}_{target_prop.name}_{i}")
-                    else:
-                        for i in range(target_prop.n_classes):
-                            keys.append(f"{base_key}_{target_prop.name}_{i}")
+            # add the task name to the key if a multi-task model
+            if self.model.isMultiTask:
+                if ((self.multi_task is not None and target_prop.name in self.multi_task)
+                    or self.multi_task is None):
+                    task_key = f"{base_key}_{target_prop.name}"
                 else:
-                    keys.append(f"{base_key}_{target_prop.name}")
+                    continue
+            else:
+                task_key = f"{base_key}"
+                
+            # if multiclass probabilities, include the classes as separate tasks
+            if target_prop.task == TargetTasks.MULTICLASS and self.use_probas:
+                idx = self.multi_class if self.multi_class is not None else range(target_prop.nClasses)
+                for i in idx:
+                    keys.append(f"{task_key}_{i}")
+            else:
+                keys.append(task_key)
+
         if len(keys) == 1:
             return keys[0]
         return keys

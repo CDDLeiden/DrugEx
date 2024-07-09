@@ -183,21 +183,48 @@ class TestScorer(TestCase):
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores.flatten()]))
+        data_type = np.int64 if not scorer.use_probas else float
+        self.assertTrue(all([isinstance(score, data_type) for score in scores.flatten()]))
         # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores.flatten()]))
+        self.assertTrue(all([isinstance(score, data_type) for score in scores.flatten()]))
         
-    def test_single_task_scorer(self):
-        path = "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"
+    def test_reg_scorer(self):
+        path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
         scorer = getPredictor(path)
         self.getScores_test(scorer)
         
-    def test_multi_task_scorer(self):
-        # multi-task regression model
-        path = "MultiTaskTutorialModel/MultiTaskTutorialModel_meta.json"
+    def test_single_class_scorer(self):
+        path = "A2AR_RF_cls/A2AR_RF_cls_meta.json"
+        
+        # test with probabilities
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_multi_class_scorer(self):
+        path = "A2AR_RF_multicls/A2AR_RF_multicls_meta.json"
+        
+        ## test with probabilities
+        # test with all classes
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with selected classes
+        scorer = getPredictor(path, multi_class=[0, 1])
+        self.getScores_test(scorer)
+        
+        ## test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_multi_task_reg_scorer(self):
+        path = "AR_RF_reg/AR_RF_reg_meta.json"
         
         # test with all tasks
         scorer = getPredictor(path)
@@ -205,6 +232,22 @@ class TestScorer(TestCase):
         
         # test with selected tasks
         scorer = getPredictor(path, multi_task=["P29274", "P30542"])
+        self.getScores_test(scorer)
+        
+    def test_multi_task_cls_scorer(self):
+        path = "AR_RF_cls/AR_RF_cls_meta.json"
+        
+        # test with probabilities
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_with_app(self):
+        path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
+        scorer = getPredictor(path)
         self.getScores_test(scorer)
         
 
@@ -223,15 +266,15 @@ class TrainingTestCase(TestCase):
     BATCH_SIZE = 8
 
     # environment objectives (TODO: we should test more options and combinations here)
-    path = "A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json"
+    path = "AR_RF_reg/AR_RF_reg_meta.json"
     scorers = [
         Property(
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        getPredictor(path)
+        getPredictor(path, multi_task=["P29274", "P30542"])
     ]
-    thresholds = [0.5, 0.99]
+    thresholds = [0.5, 0.99, 0.99]
 
     def setUp(self):
         self.monitor = TestModelMonitor()
