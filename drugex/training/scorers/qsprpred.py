@@ -1,13 +1,44 @@
 import numpy as np
 from drugex.logs import logger
 from drugex.training.scorers.interfaces import Scorer
-from qsprpred.tasks import ModelTasks
+from qsprpred.tasks import ModelTasks, TargetProperty
 
 class QSPRPredScorer(Scorer):
 
-    def __init__(self, model, invalids_score=0.0, modifier=None, **kwargs):
+    def __init__(
+        self,
+        model,
+        use_probas=True,
+        multi_task=None,
+        multi_class=None,
+        invalids_score=0.0,
+        modifier=None,
+        **kwargs):
+        """ Scorer that uses a QSPRpred predictor to score molecules.
+            Can return the probabilities or the predictions of the model.
+            Multi-task models can be used, with the option to select specific tasks.
+
+        Args:
+            model (QSPRpredModel): QSPRpred predictor model.
+            use_probas (bool, optional): Whether to use the probabilities instead of the predictions. Defaults to True.
+            multi_task (list[str], optional): If the model is a multitask model, a list of tasks to use. Defaults to None (use all tasks).
+            if multi_task is None, all tasks will be used.
+            multi_class (list[int], optional): Which classes to use for multi-class models.
+                If use_probas, the different classes will be returned as separate tasks, with their own
+                key (task name with suffix "_{class number}". If single-class, the
+                probabilities of the positive class will be returned. Defaults to None.
+            invalids_score (float, optional): Score to return for invalid molecules. Defaults to 0.0.
+            modifier (callable, optional): Function to modify the scores. Defaults to None.
+            **kwargs: Additional keyword arguments to pass to the model's predictMols method.
+        """
         super(QSPRPredScorer, self).__init__(modifier)
         self.model = model
+        self.use_probas = use_probas
+        self.multi_task = multi_task
+        if multi_task is not None:
+            assert all(task in TargetProperty.getNames(model.targetProperties) for task in multi_task), \
+            f"Tasks {multi_task} not found in model tasks {model.targetProperties}"
+        self.multi_class = multi_class
         self.invalidsScore = invalids_score
         self.kwargs = kwargs
 
@@ -17,17 +48,38 @@ class QSPRPredScorer(Scorer):
             return []
 
         valid_mols = [mol for mol in mols if mol is not None]
+        
+        if len(valid_mols) == 0:
+            logger.warning("No valid molecules to score. Returning all invalidsScore...")
+            return [self.invalidsScore] * len(mols)
 
-        if self.model.task == ModelTasks.REGRESSION:
+        if self.model.task.isRegression() or not self.use_probas:
             scores = self.model.predictMols(valid_mols, **self.kwargs)
+            if self.model.isMultiTask and self.multi_task is not None:
+                # take the column of the predictions where task is in multi_task
+                target_props = TargetProperty.getNames(self.model.targetProperties)
+                column_idx = [target_props.index(task) for task in self.multi_task]
+                scores = scores[:, column_idx]
         else:
-            # FIXME: currently we only assume that the model is a binary classifier
-            # with the positive class being the last one in the list of probabilities
             scores = self.model.predictMols(
                 valid_mols,
-                use_probas=True,
+                use_probas=self.use_probas,
                 **self.kwargs
-            )[-1][:, -1]
+            )
+            for i, scores_per_task in enumerate(scores):
+                if scores_per_task.shape[1] == 2:
+                    # Take the probabilities of the positive class if binary
+                    scores[i] = scores_per_task[:, 1]
+                elif self.multi_class is not None:
+                    scores[i] = scores_per_task[:, self.multi_class]
+            
+            if self.model.isMultiTask and self.multi_task is not None:
+                target_props = TargetProperty.getNames(self.model.targetProperties)
+                if self.multi_task is not None:
+                    scores = [scores[target_props.index(task)] for task in self.multi_task]
+            
+            if isinstance(scores, list):
+                scores = np.concatenate(scores, axis=1)
             
         scores = scores.tolist()
         
@@ -40,4 +92,15 @@ class QSPRPredScorer(Scorer):
         return full_scores
 
     def getKey(self):
-        return f"QSPRpred_{self.model.name}"
+        base_key = f"QSPRpred_{self.model.name}"
+        keys = []
+        for target_prop in self.model.targetProperties:
+            if self.multi_task is None or target_prop.name in self.multi_task:
+                if target_prop.task == ModelTasks.MULTICLASS and self.use_probas:
+                    for i in range(target_prop.n_classes):
+                        keys.append(f"{base_key}_{target_prop.name}_{i}")
+                else:
+                    keys.append(f"{base_key}_{target_prop.name}")
+        if len(keys) == 1:
+            return keys[0]
+        return keys

@@ -149,19 +149,26 @@ class MultiTaskMockScorer(Scorer):
             return ["MockScorer_Task1", "MockScorer_Task2"]
 
 
-def getPredictor():
+def getPredictor(multi_task=False, **kwargs):
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
         from qsprpred.models import QSPRModel
-        model = QSPRModel.fromFile(
-            os.path.join(os.path.dirname(__file__),
-            "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
-        )
-        ret = QSPRPredScorer(model)
+        if not multi_task:
+            model = QSPRModel.fromFile(
+                os.path.join(os.path.dirname(__file__),
+                "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
+            )
+        else:
+            model = QSPRModel.fromFile(
+                os.path.join(os.path.dirname(__file__),
+                "test_data/MultiTaskTutorialModel/MultiTaskTutorialModel_meta.json")
+            )
+        ret = QSPRPredScorer(model, **kwargs)
     except ImportError:
         logging.warning("QSPRPred not installed. Using mock scorer.")
         ret = MockScorer()
     return ret
+        
 
 class TestScorer(TestCase):
 
@@ -195,7 +202,7 @@ class TestScorer(TestCase):
         self.getScores_test(scorer)
         
     def test_multi_task_scorer(self):
-        scorer = MultiTaskMockScorer()
+        scorer = getPredictor(multi_task=True)
         self.getScores_test(scorer)
         
 
