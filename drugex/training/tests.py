@@ -244,6 +244,17 @@ class TestScorer(TestCase):
         scorer = getPredictor(path, use_probas=False)
         self.getScores_test(scorer)
         
+    def test_invalids_score(self):    
+        path = "AR_RF_reg/AR_RF_reg_meta.json"
+
+        # test with list of invalidscores
+        # check that with incorrect number of invalid scores, an assertion error is raised
+        with self.assertRaises(AssertionError):
+            scorer = getPredictor(path, invalids_score=[-1, -2])
+        
+        scorer = getPredictor(path, invalids_score=[-1., -2., -3., -4.])
+        self.getScores_test(scorer)
+
     def test_with_app(self):
         path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
         scorer = getPredictor(path)

@@ -27,7 +27,9 @@ class QSPRPredScorer(Scorer):
                 If use_probas, the different classes will be returned as separate tasks, with their own
                 key (task name with suffix "_{class number}". If single-class, the
                 probabilities of the positive class will be returned. Defaults to None.
-            invalids_score (float, optional): Score to return for invalid molecules. Defaults to 0.0.
+            invalids_score (float | list[float], optional): Score to return for invalid molecules. Defaults to 0.0.
+                invalids_score can be a list of scores if multi-task, one for each task. If a single score is given,
+                it will be broadcasted to all tasks.
             modifier (callable, optional): Function to modify the scores. Defaults to None.
             **kwargs: Additional keyword arguments to pass to the model's predictMols method.
         """
@@ -40,6 +42,13 @@ class QSPRPredScorer(Scorer):
             f"Tasks {multi_task} not found in model tasks {model.targetProperties}"
         self.multi_class = multi_class
         self.invalidsScore = invalids_score
+        if isinstance(invalids_score, list):
+            assert len(invalids_score) == self.nTasks, \
+                "Invalids score list must have the same length as the number of tasks"
+            assert all(isinstance(score, float) for score in invalids_score), \
+                "Invalids score list must contain only floats"
+        else:
+            assert isinstance(invalids_score, float), "Invalids score must be a float"
         self.kwargs = kwargs
 
     def getScores(self, mols, frags=None):
@@ -92,7 +101,21 @@ class QSPRPredScorer(Scorer):
                 scores = np.concatenate(scores, axis=1)
 
         # Place the valid scores into their corresponding positions in the array with invalid scores
-        full_scores = np.full((len(mols), self.nTasks), self.invalidsScore)
+        # check if any None values in scores, if so, replace with invalidsScore
+        if isinstance(self.invalidsScore, list):
+            full_scores = np.tile(self.invalidsScore, (len(mols), 1))
+        else:
+            full_scores = np.full((len(mols), self.nTasks), self.invalidsScore)
+            
+        # Identify rows containing NaN values
+        nan_mask = np.isnan(scores.astype(float)).any(axis=1)
+
+        # Remove rows with NaN values from scores and valid_indices
+        if np.any(nan_mask):
+            logger.warning("Some scores are NaN. Dropping these scores...")
+            scores = scores[~nan_mask]
+            valid_indices = valid_indices[~nan_mask]
+        
         full_scores[valid_indices, :] = scores
         
         # return 1D array if only one task
