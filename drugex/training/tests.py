@@ -183,13 +183,12 @@ class TestScorer(TestCase):
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        data_type = np.int64 if not scorer.use_probas else float
-        self.assertTrue(all([isinstance(score, data_type) for score in scores.flatten()]))
+        self.assertTrue(all([isinstance(score, float) for score in scores.flatten()]))
         # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, data_type) for score in scores.flatten()]))
+        self.assertTrue(all([isinstance(score, float) for score in scores.flatten()]))
         
     def test_reg_scorer(self):
         path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"

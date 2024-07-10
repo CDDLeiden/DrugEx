@@ -47,11 +47,15 @@ class QSPRPredScorer(Scorer):
             logger.warning("No molecules to score. Returning empty list...")
             return []
 
-        valid_mols = [mol for mol in mols if mol is not None]
+        # Get valid molecules
+        mols_array = np.array(mols, dtype=object)
+        valid_mask = mols_array != None
+        valid_mols = mols_array[valid_mask]
+        valid_indices = np.where(valid_mask)[0]
         
         if len(valid_mols) == 0:
             logger.warning("No valid molecules to score. Returning all invalidsScore...")
-            return [self.invalidsScore] * len(mols)
+            return np.full((len(mols), self.nTasks), self.invalidsScore)
 
         # Get the predictions
         if self.model.task.isRegression() or not self.use_probas:
@@ -86,13 +90,10 @@ class QSPRPredScorer(Scorer):
             # Concatenate the scores list into a single 2D array
             if isinstance(scores, list):
                 scores = np.concatenate(scores, axis=1)
-            
-        # Replace missing values with invalidsScore
-        scores = scores.tolist()
-        full_scores = np.array([
-            scores.pop(0) if mol is not None and scores[0] is not None else self.invalidsScore
-            for mol in mols
-        ])
+
+        # Place the valid scores into their corresponding positions in the array with invalid scores
+        full_scores = np.full((len(mols), self.nTasks), self.invalidsScore)
+        full_scores[valid_indices, :] = scores
         
         # return 1D array if only one task
         if full_scores.shape[1] == 1:
@@ -125,3 +126,8 @@ class QSPRPredScorer(Scorer):
         if len(keys) == 1:
             return keys[0]
         return keys
+    
+    @property
+    def nTasks(self):
+        tasks = self.getKey()
+        return len(tasks) if isinstance(tasks, list) else 1
