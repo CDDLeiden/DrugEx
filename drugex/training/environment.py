@@ -30,8 +30,7 @@ class DrugExEnvironment(Environment):
         scores : pd.DataFrame
             Dataframe with the scores from the scorers and the validity and desireability of the molecules.
         """
-
-        mols = [Chem.MolFromSmiles(s) for s in smiles]
+        mols = [Chem.MolFromSmiles(s) if s != '' else None for s in smiles]
         
         # Check molecule validity and accuracy
         scores = SmilesChecker.checkSmiles(smiles, frags=frags, no_multifrag_smiles=no_multifrag_smiles)
