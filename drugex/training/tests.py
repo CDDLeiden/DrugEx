@@ -256,8 +256,20 @@ class TestScorer(TestCase):
         self.getScores_test(scorer)
 
     def test_with_app(self):
+        class dummyAD():            
+            # returns half of the molecules as outliers
+            def contains(self, mols):
+                return pd.DataFrame(np.array([0 if i % 2 == 0 else 1 for i in range(len(mols))]).reshape(-1, 1))
+        
+        dummy_ad = dummyAD()
+        
         path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
-        scorer = getPredictor(path)
+        scorer = getPredictor(path, app_domain=True)
+        scorer.model.applicabilityDomain = dummy_ad
+        self.getScores_test(scorer)
+
+        scorer = getPredictor(path, app_domain='invalid')
+        scorer.model.applicabilityDomain = dummy_ad
         self.getScores_test(scorer)
         
 
