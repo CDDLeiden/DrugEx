@@ -1,13 +1,14 @@
 # Change Log
-From v3.4.6 to v3.4.7
+From v3.4.7 to v3.5.0
 
 ## Fixes
 
-- Prevent the QSPRpred scorer from crashing when an empty list of molecules is supplied. The scorer now returns an empty list of scores and outputs a warning.
+None.
 
 ## Changes
 
-- update depency rdkit-pypi to rdkit
+- `Scorer` class now supports returning multiple scores for a single prediction.
+    This is useful for models that output multiple scores for a single input.
 
 ## Removed Features
 
@@ -15,4 +16,7 @@ None.
 
 ## New Features
 
-None.
+- `QSPRpredScorer` now also supports multi-task, multi-class and attached applicability
+    domain predictions.
+- A new tutorial on how to use multi-task scorers is now available under
+    the advanced tutorials (tutorial/advanced/multitask_scorers.ipynb)
