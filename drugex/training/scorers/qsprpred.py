@@ -166,6 +166,8 @@ class QSPRPredScorer(Scorer):
     def handle_app_domain(self, scores, app):
         """Handle the applicability domain scores."""
         if self.app_domain == 'invalid':
+            # flatten app to 1D array and convert to boolean
+            app = np.array(app).flatten().astype(bool)
             # Set the scores of invalid molecules to the invalidsScore
             scores[~app] = self.invalidsScore
         else:
