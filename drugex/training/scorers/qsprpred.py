@@ -74,6 +74,8 @@ class QSPRPredScorer(Scorer):
 
         if len(valid_mols) == 0:
             logger.warning("No valid molecules to score. Returning all invalidsScore...")
+            if self.nTasks == 1:
+                return scores.flatten()
             return scores
 
         valid_scores = self._get_predictions(valid_mols)
