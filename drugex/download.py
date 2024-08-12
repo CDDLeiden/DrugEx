@@ -57,11 +57,10 @@ def DownloadTutorial(args):
                   pretrained_models_path_qsar)
 
     # Download data files
-    for acc_keys, name in zip(
-        [
+    for acc_keys, name in [
             (["P29274"], "A2AR_LIGANDS"),
             (["P0DMS8", "P29274", "P29275", "P30542"], "AR_LIGANDS")
-        ]):
+        ]:
         logger.info("Downloading data files from Papyrus database.")
         acc_keys = acc_keys  # Adenosine receptor A2A (https://www.uniprot.org/uniprotkb/P29274/entry)
         dataset_name = name  # name of the file to be generated
