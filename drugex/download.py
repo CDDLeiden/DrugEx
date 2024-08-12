@@ -57,32 +57,37 @@ def DownloadTutorial(args):
                   pretrained_models_path_qsar)
 
     # Download data files
-    logger.info("Downloading data files from Papyrus database.")
-    acc_keys = ["P29274"]  # Adenosine receptor A2A (https://www.uniprot.org/uniprotkb/P29274/entry)
-    dataset_name = "A2AR_LIGANDS"  # name of the file to be generated
-    quality = "high"  # choose minimum quality from {"high", "medium", "low"}
-    papyrus_version = '05.6'  # Papyrus database version
+    for acc_keys, name in zip(
+        [
+            (["P29274"], "A2AR_LIGANDS"),
+            (["P0DMS8", "P29274", "P29275", "P30542"], "AR_LIGANDS")
+        ]):
+        logger.info("Downloading data files from Papyrus database.")
+        acc_keys = acc_keys  # Adenosine receptor A2A (https://www.uniprot.org/uniprotkb/P29274/entry)
+        dataset_name = name  # name of the file to be generated
+        quality = "high"  # choose minimum quality from {"high", "medium", "low"}
+        papyrus_version = '05.6'  # Papyrus database version
 
-    papyrus = Papyrus(
-        data_dir=os.path.join(args.out_dir, 'data', '.Papyrus'),
-        stereo=False,
-        version=papyrus_version,
-        descriptors=None,
-        plus_only=True
+        papyrus = Papyrus(
+            data_dir=os.path.join(args.out_dir, 'data', '.Papyrus'),
+            stereo=False,
+            version=papyrus_version,
+            descriptors=None,
+            plus_only=True
 
-    )
+        )
 
-    datasets_dir = os.path.join(args.out_dir, 'data')
-    os.makedirs(datasets_dir, exist_ok=True)
-    dataset = papyrus.getData(
-        dataset_name,
-        acc_keys,
-        quality,
-        output_dir=datasets_dir,
-        use_existing=True
-    )
+        datasets_dir = os.path.join(args.out_dir, 'data')
+        os.makedirs(datasets_dir, exist_ok=True)
+        dataset = papyrus.getData(
+            dataset_name,
+            acc_keys,
+            quality,
+            output_dir=datasets_dir,
+            use_existing=True
+        )
 
-    print(f"Tutorial data for accession keys '{acc_keys}' was loaded. Molecules in total: {len(dataset.getDF())}")
+        print(f"Tutorial data for accession keys '{acc_keys}' was loaded. Molecules in total: {len(dataset.getDF())}")
 
     with open(os.path.join(args.out_dir, 'data', 'xanthine.tsv'), 'w') as f:
         f.write('SMILES\nc1[nH]c2c(n1)nc(nc2O)O')
