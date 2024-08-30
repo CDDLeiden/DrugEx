@@ -10,8 +10,8 @@ class QSPRPredScorer(Scorer):
         self,
         model,
         use_probas=True,
-        multi_task=None,
-        multi_class=None,
+        tasks=None,
+        classes=None,
         app_domain=False,
         invalids_score=0.0,
         modifier=None,
@@ -23,9 +23,9 @@ class QSPRPredScorer(Scorer):
         Args:
             model (QSPRpredModel): QSPRpred predictor model.
             use_probas (bool, optional): Whether to use the probabilities instead of the predictions. Defaults to True.
-            multi_task (list[str], optional): If the model is a multitask model, a list of tasks to use. Defaults to None (use all tasks).
-            if multi_task is None, all tasks will be used.
-            multi_class (list[int], optional): Which classes to use for multi-class models.
+            tasks (list[str], optional): If the model is a multitask model, a list of tasks to use. Defaults to None (use all tasks).
+            if tasks is None, all model tasks will be used.
+            classes (list[int], optional): Which classes to use for multi-class models.
                 If use_probas, the different classes will be returned as separate tasks, with their own
                 key (task name with suffix "_{class number}". If single-class, the
                 probabilities of the positive class will be returned. Defaults to None.
@@ -42,13 +42,13 @@ class QSPRPredScorer(Scorer):
         super(QSPRPredScorer, self).__init__(modifier)
         self.model = model
         self.use_probas = use_probas
-        self.multi_task = multi_task
+        self.tasks = tasks
         self.app_domain = app_domain
         assert self.app_domain in [True, False, 'invalid'], "app_domain must be a boolean or 'invalid'"
-        if multi_task is not None:
-            assert all(task in TargetProperty.getNames(model.targetProperties) for task in multi_task), \
-            f"Tasks {multi_task} not found in model tasks {model.targetProperties}"
-        self.multi_class = multi_class
+        if tasks is not None:
+            assert all(task in TargetProperty.getNames(model.targetProperties) for task in tasks), \
+            f"Tasks {tasks} not found in model tasks {model.targetProperties}"
+        self.classes = classes
         self.invalidsScore = invalids_score
         if isinstance(invalids_score, list):
             assert len(invalids_score) == self.nTasks, \
@@ -137,10 +137,10 @@ class QSPRPredScorer(Scorer):
     
     def handle_regression_task(self, scores):
         """Handle the regression or non-probabilistic classification scores."""
-        if self.model.isMultiTask and self.multi_task is not None:
+        if self.model.isMultiTask and self.tasks is not None:
             # take the column of the predictions where task is in multi_task
             target_props = TargetProperty.getNames(self.model.targetProperties)
-            column_idx = [target_props.index(task) for task in self.multi_task]
+            column_idx = [target_props.index(task) for task in self.tasks]
             scores = scores[:, column_idx]
         return scores
     
@@ -150,15 +150,15 @@ class QSPRPredScorer(Scorer):
             if scores_per_task.shape[1] == 2:
                 # Take the probabilities of the positive class if binary
                 scores[i] = scores_per_task[:, 1].reshape(-1, 1)
-            elif self.multi_class is not None:
+            elif self.classes is not None:
                 # Take the probabilities of the selected classes if multi-class
-                scores[i] = scores_per_task[:, self.multi_class]
+                scores[i] = scores_per_task[:, self.classes]
         
-        if self.model.isMultiTask and self.multi_task is not None:
+        if self.model.isMultiTask and self.tasks is not None:
             # take the list items where task is in multi_task
             target_props = TargetProperty.getNames(self.model.targetProperties)
-            if self.multi_task is not None:
-                scores = [scores[target_props.index(task)] for task in self.multi_task]
+            if self.tasks is not None:
+                scores = [scores[target_props.index(task)] for task in self.tasks]
                 
         # Concatenate the scores list into a single 2D array
         if isinstance(scores, list):
@@ -183,8 +183,8 @@ class QSPRPredScorer(Scorer):
         for target_prop in self.model.targetProperties:
             # add the task name to the key if a multi-task model
             if self.model.isMultiTask:
-                if ((self.multi_task is not None and target_prop.name in self.multi_task)
-                    or self.multi_task is None):
+                if ((self.tasks is not None and target_prop.name in self.tasks)
+                    or self.tasks is None):
                     task_key = f"{base_key}_{target_prop.name}"
                 else:
                     continue
@@ -193,7 +193,7 @@ class QSPRPredScorer(Scorer):
                 
             # if multiclass probabilities, include the classes as separate tasks
             if target_prop.task == TargetTasks.MULTICLASS and self.use_probas:
-                idx = self.multi_class if self.multi_class is not None else range(target_prop.nClasses)
+                idx = self.classes if self.classes is not None else range(target_prop.nClasses)
                 for i in idx:
                     keys.append(f"{task_key}_{i}")
             else:
