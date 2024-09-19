@@ -215,7 +215,7 @@ class TestScorer(TestCase):
         self.getScores_test(scorer)
         
         # test with selected classes
-        scorer = getPredictor(path, multi_class=[0, 1])
+        scorer = getPredictor(path, classes=[0, 1])
         self.getScores_test(scorer)
         
         ## test with predictions
@@ -230,7 +230,7 @@ class TestScorer(TestCase):
         self.getScores_test(scorer)
         
         # test with selected tasks
-        scorer = getPredictor(path, multi_task=["P29274", "P30542"])
+        scorer = getPredictor(path, tasks=["P29274", "P30542"])
         self.getScores_test(scorer)
         
     def test_multi_task_cls_scorer(self):
@@ -294,7 +294,7 @@ class TrainingTestCase(TestCase):
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        getPredictor(path, multi_task=["P29274", "P30542"])
+        getPredictor(path, tasks=["P29274", "P30542"])
     ]
     thresholds = [0.5, 0.99, 0.99]
 
