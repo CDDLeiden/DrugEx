@@ -139,30 +139,42 @@ class MockScorer(Scorer):
 
     def getKey(self):
         return "MockScorer"
+    
+class MultiTaskMockScorer(Scorer):
+    
+        def getScores(self, mols, frags=None):
+            return np.random.random((len(mols), 2))
+    
+        def getKey(self):
+            return ["MockScorer_Task1", "MockScorer_Task2"]
 
 
-def getPredictor():
+def getPredictor(path, **kwargs):
     try:
         from drugex.training.scorers.qsprpred import QSPRPredScorer
-        from qsprpred.models.models import QSPRModel
+        from qsprpred.models import QSPRModel
         model = QSPRModel.fromFile(
-            os.path.join(os.path.dirname(__file__),
-            "test_data/A2AR_RandomForestClassifier/A2AR_RandomForestClassifier_meta.json")
+            os.path.join(os.path.dirname(__file__), "test_data", path),
         )
-        ret = QSPRPredScorer(model)
+        ret = QSPRPredScorer(model, **kwargs)
     except ImportError:
         logging.warning("QSPRPred not installed. Using mock scorer.")
         ret = MockScorer()
     return ret
+        
 
 class TestScorer(TestCase):
 
-    def test_getScores(self):
-        scorer = getPredictor()
+    def getScores_test(self, scorer):
         # test with invalid
         mols = ["CCO", "XXXX"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
+        # check shape (should be 1D or 2D array depending on the number of tasks)
+        if isinstance(scorer.getKey(), list):
+            self.assertEqual(scores.shape, (len(mols), len(scorer.getKey())))
+        else:
+            self.assertEqual(scores.shape, (len(mols),))
         # test with empty
         mols = []
         scores = scorer.getScores(mols)
@@ -171,13 +183,95 @@ class TestScorer(TestCase):
         mols = ["CCO", "CC"]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+        self.assertTrue(all([isinstance(score, float) for score in scores.flatten()]))
         # test directly with RDKit mols
         mols = [Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CC")]
         scores = scorer.getScores(mols)
         self.assertEqual(len(scores), len(mols))
-        self.assertTrue(all([isinstance(score, float) and score > 0 for score in scores]))
+        self.assertTrue(all([isinstance(score, float) for score in scores.flatten()]))
+        
+    def test_reg_scorer(self):
+        path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+    def test_single_class_scorer(self):
+        path = "A2AR_RF_cls/A2AR_RF_cls_meta.json"
+        
+        # test with probabilities
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_multi_class_scorer(self):
+        path = "A2AR_RF_multicls/A2AR_RF_multicls_meta.json"
+        
+        ## test with probabilities
+        # test with all classes
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with selected classes
+        scorer = getPredictor(path, classes=[0, 1])
+        self.getScores_test(scorer)
+        
+        ## test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_multi_task_reg_scorer(self):
+        path = "AR_RF_reg/AR_RF_reg_meta.json"
+        
+        # test with all tasks
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with selected tasks
+        scorer = getPredictor(path, tasks=["P29274", "P30542"])
+        self.getScores_test(scorer)
+        
+    def test_multi_task_cls_scorer(self):
+        path = "AR_RF_cls/AR_RF_cls_meta.json"
+        
+        # test with probabilities
+        scorer = getPredictor(path)
+        self.getScores_test(scorer)
+        
+        # test with predictions
+        scorer = getPredictor(path, use_probas=False)
+        self.getScores_test(scorer)
+        
+    def test_invalids_score(self):    
+        path = "AR_RF_reg/AR_RF_reg_meta.json"
 
+        # test with list of invalidscores
+        # check that with incorrect number of invalid scores, an assertion error is raised
+        with self.assertRaises(AssertionError):
+            scorer = getPredictor(path, invalids_score=[-1, -2])
+        
+        scorer = getPredictor(path, invalids_score=[-1., -2., -3., -4.])
+        self.getScores_test(scorer)
+
+    def test_with_app(self):
+        class dummyAD():            
+            # returns half of the molecules as outliers
+            def contains(self, mols):
+                return pd.DataFrame(np.array([0 if i % 2 == 0 else 1 for i in range(len(mols))]).reshape(-1, 1))
+        
+        dummy_ad = dummyAD()
+        
+        path = "A2AR_RF_reg/A2AR_RF_reg_meta.json"
+        scorer = getPredictor(path, app_domain=True)
+        scorer.model.applicabilityDomain = dummy_ad
+        self.getScores_test(scorer)
+
+        scorer = getPredictor(path, app_domain='invalid')
+        scorer.model.applicabilityDomain = dummy_ad
+        self.getScores_test(scorer)
+        
 
 class TrainingTestCase(TestCase):
 
@@ -194,14 +288,15 @@ class TrainingTestCase(TestCase):
     BATCH_SIZE = 8
 
     # environment objectives (TODO: we should test more options and combinations here)
+    path = "AR_RF_reg/AR_RF_reg_meta.json"
     scorers = [
         Property(
             "MW",
             modifier=ClippedScore(lower_x=1000, upper_x=500)
         ),
-        getPredictor()
+        getPredictor(path, tasks=["P29274", "P30542"])
     ]
-    thresholds = [0.5, 0.99]
+    thresholds = [0.5, 0.99, 0.99]
 
     def setUp(self):
         self.monitor = TestModelMonitor()

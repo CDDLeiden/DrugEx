@@ -25,8 +25,7 @@ class SmilesChecker:
         """
         
         scores = pd.DataFrame()
-        
-        #valids = np.zeros(shape)
+         
         if no_multifrag_smiles:
             # Check if SMILES is not fragmented
             smiles = [smi if smi.count('.') == 0 else None for smi in smiles]
@@ -35,7 +34,7 @@ class SmilesChecker:
             # 1. Check if SMILES can be parsed by rdkit
             try:
                 mol = Chem.MolFromSmiles(smile)
-                if not smile:
+                if not smile or smiles == '':
                     mol = None
                 scores.loc[j, 'Valid'] = 0 if mol is None else 1
             except:
