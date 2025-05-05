@@ -15,12 +15,18 @@
 # liable for any damages or liability in connection with the Sample Code
 # or its use.
 
+"""
+'Minimal' ROCS scorer implementation using OpenEye tools.
 
+Key features:
+"""
 
 import numpy as np
 import pandas as pd
 import os
 import tempfile
+import gc
+from pathlib import Path
 from openeye import oechem, oeomega
 try:
     from openeye import oeshape, oefastrocs
@@ -30,7 +36,7 @@ except ImportError:
 
 from drugex.training.scorers.interfaces import Scorer
 
-def OMEGA(input_file, experiment_name):
+def OMEGA(input_file, experiment_name, max_confs=10):
     """
     Generate conformers using OMEGA.
     
@@ -40,6 +46,8 @@ def OMEGA(input_file, experiment_name):
         Path to the input file with molecules.
     experiment_name : str
         Name of the experiment for output file naming.
+    max_confs : int, optional
+        Maximum number of conformers to generate per molecule (default: 10).
         
     Returns
     -------
@@ -52,7 +60,7 @@ def OMEGA(input_file, experiment_name):
     
     # Set up OMEGA options
     omegaOpts = oeomega.OEOmegaOptions()
-    omegaOpts.SetMaxConfs(10)  # Increased from 1 for better conformational sampling
+    omegaOpts.SetMaxConfs(max_confs)  # Use configurable value
     omegaOpts.SetStrictStereo(False)  # Don't enforce stereo constraints
     
     # Create omega
@@ -86,7 +94,7 @@ def OMEGA(input_file, experiment_name):
     
     return dbname
 
-def ROCS(dbname, query_files, experiment_name, use_gpu):
+def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
     """
     Run FastROCS shape comparison on a database of molecules.
     
@@ -100,6 +108,8 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
         Name of the experiment for output file naming.
     use_gpu : bool
         Whether to use GPU acceleration if available.
+    threads : int, optional
+        Number of CPU threads to use when use_gpu is False.
         
     Returns
     -------
@@ -110,29 +120,36 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
     temp_dir = tempfile.gettempdir()
     outfname = os.path.join(temp_dir, f"{experiment_name}_results.csv")
     
-    # Create molecule database
-    mdb = oechem.OEMolDatabase()
-    if not mdb.Open(dbname):
-        raise ValueError(f"Cannot open database: {dbname}")
-    
-    # Set up shape database
-    db = oefastrocs.OEShapeDatabase()
-    if use_gpu:
-        db.SetNumOpenThreads(1)
-        opts = oefastrocs.OEShapeDatabaseOptions()
-        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
-    else:
-        # Use multiple threads but keep some cores free for system
-        db.SetNumOpenThreads(max(1, min(os.cpu_count() - 2, 4)))
-        opts = oefastrocs.OEShapeDatabaseOptions()
-        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
-    
-    # Open the database with the molecule database
     try:
+        # Create molecule database
+        mdb = oechem.OEMolDatabase()
+        if not mdb.Open(dbname):
+            raise ValueError(f"Cannot open database: {dbname}")
+        
+        # Set up shape database
+        db = oefastrocs.OEShapeDatabase()
+        if use_gpu:
+            # GPU mode settings
+            db.SetNumOpenThreads(1)  # Single thread for GPU mode
+            opts = oefastrocs.OEShapeDatabaseOptions()
+            opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
+        else:
+            # CPU mode settings with controlled thread count
+            if threads is None:
+                # Default to 2 threads if not specified, leaving some cores for system
+                threads = min(2, max(1, os.cpu_count() - 2)) if os.cpu_count() else 2
+            db.SetNumOpenThreads(threads)
+            opts = oefastrocs.OEShapeDatabaseOptions()
+            opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)  # Explicitly set ROCS mode for CPU
+        
+        # Open the database with the molecule database
         if not db.Open(mdb):
             raise ValueError(f"Failed to open shape database")
     except oechem.OELicenseError as e:
         print(f"OpenEye license error: {e}")
+        raise
+    except Exception as e:
+        print(f"Error initializing database: {e}")
         raise
     
     # Create a single output file for all queries
@@ -169,6 +186,14 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
             raise
         except Exception as e:
             print(f"Error in ROCS scoring: {e}")
+            
+    # Clean up to reduce memory usage
+    # mdb.Close()  # OEMolDatabase doesn't have a Close() method in this version
+    # db.Close()   # OEShapeDatabase doesn't have a Close() method in this version
+    # Release references to allow garbage collection instead
+    db = None
+    mdb = None
+    gc.collect()
     
     return outfname
 
@@ -179,8 +204,8 @@ class RocsScorer(Scorer):
     """
     
     def __init__(self, sq_model_path=None, query_file=None, experiment_name="rocs_experiment", 
-                 score_type="TanimotoCombo", use_gpu=False, max_isomers=4, max_rot_bonds=10, 
-                 max_heavy_atoms=30, cpu_processes=None):
+                 score_type="TanimotoCombo", use_gpu=False, max_isomers=4, max_rot_bonds=15, 
+                 max_heavy_atoms=45, max_conformers=10, cpu_processes=None):
         """
         Initialize the ROCS Scorer.
 
@@ -199,14 +224,22 @@ class RocsScorer(Scorer):
         max_isomers : int, optional
             Maximum number of isomers to enumerate per molecule (default: 4).
         max_rot_bonds : int, optional
-            Maximum number of rotatable bonds to consider (default: 10).
+            Maximum number of rotatable bonds to consider (default: 15).
         max_heavy_atoms : int, optional
-            Maximum number of heavy atoms to process (default: 30).
+            Maximum number of heavy atoms to process (default: 45).
+        max_conformers : int, optional
+            Maximum number of conformers to generate per molecule (default: 10).
         cpu_processes : int, optional
             Number of CPU processes to use if not using GPU. If None, will automatically
             determine based on system resources.
         """
         super().__init__()
+        # Initialize OpenEye memory management
+        try:
+            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
+        except Exception as e:
+            print(f"Warning: Could not set memory pool mode: {e}")
+            
         # Handle both parameter options for the query file
         self.query_file = sq_model_path if sq_model_path is not None else query_file
         self.experiment_name = experiment_name
@@ -218,10 +251,12 @@ class RocsScorer(Scorer):
         self.max_isomers = max_isomers
         self.max_rot_bonds = max_rot_bonds
         self.max_heavy_atoms = max_heavy_atoms
+        self.max_conformers = max_conformers
         
         # Automatically determine CPU processes if not specified
         if cpu_processes is None:
-            self.cpu_processes = max(1, min(os.cpu_count() - 2, 4))
+            # Conservative default to avoid resource exhaustion
+            self.cpu_processes = min(2, max(1, os.cpu_count() - 2)) if os.cpu_count() else 2
         else:
             self.cpu_processes = cpu_processes
             
@@ -279,18 +314,22 @@ class RocsScorer(Scorer):
                 break
                 
         if import_rdkit:
-            from rdkit import Chem
-            smiles = []
-            for mol in mols:
-                if mol is None:
-                    smiles.append(None)
-                else:
-                    try:
-                        smi = Chem.MolToSmiles(mol)
-                        smiles.append(smi)
-                    except:
+            try:
+                from rdkit import Chem
+                smiles = []
+                for mol in mols:
+                    if mol is None:
                         smiles.append(None)
-            mols = smiles
+                    else:
+                        try:
+                            smi = Chem.MolToSmiles(mol)
+                            smiles.append(smi)
+                        except:
+                            smiles.append(None)
+                mols = smiles
+            except ImportError:
+                print("Warning: RDKit not available. Can only process SMILES inputs.")
+                return np.zeros(len(mols))
 
         # Initial filtering to skip invalid molecules
         filtered_mols = []
@@ -313,74 +352,73 @@ class RocsScorer(Scorer):
         if not filtered_mols:
             return np.zeros(len(mols))
 
-        # Generate isomers using OEFlipper
-        isomers_list = []
-        flipper_opts = oeomega.OEFlipperOptions()
-        flipper_opts.SetMaxCenters(min(4, self.max_isomers))
-        
-        # Process molecules in batches for memory efficiency
-        batch_size = 50
-        for batch_start in range(0, len(filtered_mols), batch_size):
-            batch_end = min(batch_start + batch_size, len(filtered_mols))
-            batch = filtered_mols[batch_start:batch_end]
-            
-            for orig_idx, smi in batch:
-                mol = oechem.OEMol()
-                oechem.OESmilesToMol(mol, str(smi))
-                mi = f"molecule_{orig_idx}"
-                mol.SetTitle(mi)
-                
-                isomer_count = 0
-                try:
-                    for iso in oeomega.OEFlipper(mol, flipper_opts):
-                        if isomer_count >= self.max_isomers:
-                            break
-                        iso_smi = oechem.OEMolToSmiles(iso)
-                        msid = f"{mi}+{isomer_count}"
-                        isomers_list.append((iso_smi, msid))
-                        isomer_count += 1
-                except Exception as e:
-                    print(f"Error generating isomer for {smi}: {e}")
-
-        if not isomers_list:
-            return np.zeros(len(mols))
-
         # Create temporary directory for all files
         temp_dir = tempfile.mkdtemp(prefix="rocs_")
         
         try:
             # Create isomers file
             isomers_file = os.path.join(temp_dir, "isomers.smi")
+            
+            # Generate isomers using OEFlipper
+            flipper_opts = oeomega.OEFlipperOptions()
+            flipper_opts.SetMaxCenters(min(4, self.max_isomers))
+            
+            # Write isomers to file
             with open(isomers_file, 'w') as f:
-                for smi, cid in isomers_list:
-                    f.write(f"{smi}\t{cid}\n")
+                isomer_count = 0
+                
+                for orig_idx, smi in filtered_mols:
+                    mol = oechem.OEMol()
+                    oechem.OESmilesToMol(mol, str(smi))
+                    mi = f"molecule_{orig_idx}"
+                    mol.SetTitle(mi)
+                    
+                    try:
+                        mol_isomer_count = 0
+                        for iso in oeomega.OEFlipper(mol, flipper_opts):
+                            if mol_isomer_count >= self.max_isomers:
+                                break
+                            iso_smi = oechem.OEMolToSmiles(iso)
+                            msid = f"{mi}+{mol_isomer_count}"
+                            f.write(f"{iso_smi}\t{msid}\n")
+                            isomer_count += 1
+                            mol_isomer_count += 1
+                    except Exception as e:
+                        print(f"Error generating isomer for {smi}: {e}")
+            
+            if isomer_count == 0:
+                return np.zeros(len(mols))
 
             # Generate conformers using OMEGA
-            dbname = OMEGA(isomers_file, self.experiment_name)
+            dbname = OMEGA(isomers_file, self.experiment_name, self.max_conformers)
 
-            # Run ROCS
-            ofname = ROCS(dbname, self.qfnames, self.experiment_name, self.use_gpu)
+            # Run ROCS with appropriate thread count
+            ofname = ROCS(dbname, self.qfnames, self.experiment_name, self.use_gpu, self.cpu_processes)
 
             # Process the output CSV more efficiently
-            data = pd.read_csv(ofname)
-            
-            # Extract original molecule index from title
-            data['MolID'] = data['TITLE'].apply(lambda x: x.split('+')[0])
-            
-            # Create result array with zeros
-            result = np.zeros(len(mols))
-            
-            # More efficient groupby to get max scores
-            if self.score_type in data.columns:
-                max_scores = data.groupby('MolID')[self.score_type].max()
+            try:
+                data = pd.read_csv(ofname)
                 
-                # Update result array directly without concat
-                for mol_id, score in max_scores.items():
-                    if mol_id.startswith('molecule_'):
-                        idx = int(mol_id.split('_')[1])
-                        result[idx] = score
-            
-            return result
+                # Extract original molecule index from title
+                data['MolID'] = data['TITLE'].apply(lambda x: x.split('+')[0])
+                
+                # Create result array with zeros
+                result = np.zeros(len(mols))
+                
+                # More efficient groupby to get max scores
+                if self.score_type in data.columns:
+                    max_scores = data.groupby('MolID')[self.score_type].max()
+                    
+                    # Update result array directly without concat
+                    for mol_id, score in max_scores.items():
+                        if mol_id.startswith('molecule_'):
+                            idx = int(mol_id.split('_')[1])
+                            result[idx] = score
+                
+                return result
+            except Exception as e:
+                print(f"Error processing ROCS results: {e}")
+                return np.zeros(len(mols))
             
         except Exception as e:
             print(f"Error in ROCS scoring: {e}")
@@ -401,7 +439,6 @@ class RocsScorer(Scorer):
                 print(f"Error removing directory {temp_dir}: {e}")
                 
             # Force cleanup
-            import gc
             gc.collect()
 
     def getKey(self):
