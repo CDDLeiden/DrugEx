@@ -46,11 +46,13 @@ def OMEGA(input_file, experiment_name):
     str
         Path to the generated conformer database.
     """
-    dbname = f"./{experiment_name}_conformers.oeb.gz"
+    # Use temporary directory for output files
+    temp_dir = tempfile.gettempdir()
+    dbname = os.path.join(temp_dir, f"{experiment_name}_conformers.oeb.gz")
     
     # Set up OMEGA options
     omegaOpts = oeomega.OEOmegaOptions()
-    omegaOpts.SetMaxConfs(1)  # Only need 1 conformer for shape screening
+    omegaOpts.SetMaxConfs(10)  # Increased from 1 for better conformational sampling
     omegaOpts.SetStrictStereo(False)  # Don't enforce stereo constraints
     
     # Create omega
@@ -70,8 +72,14 @@ def OMEGA(input_file, experiment_name):
     for mol_iter in ifs.GetOEMols():
         # Create a copy of the molecule for conformer generation
         mol = oechem.OEMol(mol_iter)
-        if omega(mol):  # Correct calling pattern for omega
-            oechem.OEWriteMolecule(ofs, mol)
+        try:
+            if omega(mol):  # Correct calling pattern for omega
+                oechem.OEWriteMolecule(ofs, mol)
+        except oechem.OELicenseError as e:
+            print(f"OpenEye license error in OMEGA: {e}")
+            raise
+        except Exception as e:
+            print(f"Error generating conformers: {e}")
     
     ifs.close()
     ofs.close()
@@ -98,18 +106,14 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
     str
         Path to the output CSV file with results.
     """
-    outfname = f"./{experiment_name}_results.csv"
+    # Use temporary directory for output files
+    temp_dir = tempfile.gettempdir()
+    outfname = os.path.join(temp_dir, f"{experiment_name}_results.csv")
     
     # Create molecule database
     mdb = oechem.OEMolDatabase()
     if not mdb.Open(dbname):
         raise ValueError(f"Cannot open database: {dbname}")
-    
-    # Create output file
-    ofs = oechem.oemolostream()
-    if not ofs.open(outfname):
-        raise ValueError(f"Cannot create output file: {outfname}")
-    ofs.close()
     
     # Set up shape database
     db = oefastrocs.OEShapeDatabase()
@@ -118,13 +122,23 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
         opts = oefastrocs.OEShapeDatabaseOptions()
         opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
     else:
-        db.SetNumOpenThreads(max(1, os.cpu_count() or 2))
+        # Use multiple threads but keep some cores free for system
+        db.SetNumOpenThreads(max(1, min(os.cpu_count() - 2, 4)))
         opts = oefastrocs.OEShapeDatabaseOptions()
         opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
     
     # Open the database with the molecule database
-    if not db.Open(mdb):
-        raise ValueError(f"Failed to open shape database")
+    try:
+        if not db.Open(mdb):
+            raise ValueError(f"Failed to open shape database")
+    except oechem.OELicenseError as e:
+        print(f"OpenEye license error: {e}")
+        raise
+    
+    # Create a single output file for all queries
+    with open(outfname, 'w') as f:
+        # Write header
+        f.write("TITLE,QueryFile,TanimotoCombo,ShapeTanimoto,ColorTanimoto\n")
     
     # Process each query file
     for qfname in query_files:
@@ -133,24 +147,28 @@ def ROCS(dbname, query_files, experiment_name, use_gpu):
         if not oeshape.OEReadShapeQuery(qfname, query):
             raise ValueError(f"Cannot read query file: {qfname}")
         
-        # Get scores and write to file
-        with open(outfname, 'w') as f:
-            # Write header
-            f.write("TITLE,TanimotoCombo,ShapeTanimoto,ColorTanimoto\n")
-            
-            # Process each score
-            for score in db.GetSortedScores(query, opts):
-                mol_idx = score.GetMolIdx()
-                mol = oechem.OEGraphMol()
-                
-                if mdb.GetMolecule(mol, mol_idx):
-                    title = mol.GetTitle()
-                    tanimoto_combo = score.GetTanimotoCombo()
-                    shape_tanimoto = score.GetShapeTanimoto()
-                    color_tanimoto = score.GetColorTanimoto()
+        try:
+            # Append to existing file instead of overwriting
+            with open(outfname, 'a') as f:
+                # Process each score
+                for score in db.GetSortedScores(query, opts):
+                    mol_idx = score.GetMolIdx()
+                    mol = oechem.OEGraphMol()
                     
-                    # Write score to file
-                    f.write(f"{title},{tanimoto_combo},{shape_tanimoto},{color_tanimoto}\n")
+                    if mdb.GetMolecule(mol, mol_idx):
+                        title = mol.GetTitle()
+                        tanimoto_combo = score.GetTanimotoCombo()
+                        shape_tanimoto = score.GetShapeTanimoto()
+                        color_tanimoto = score.GetColorTanimoto()
+                        
+                        # Write score to file with query file name
+                        query_name = os.path.basename(qfname)
+                        f.write(f"{title},{query_name},{tanimoto_combo},{shape_tanimoto},{color_tanimoto}\n")
+        except oechem.OELicenseError as e:
+            print(f"OpenEye license error in ROCS scoring: {e}")
+            raise
+        except Exception as e:
+            print(f"Error in ROCS scoring: {e}")
     
     return outfname
 
@@ -162,7 +180,7 @@ class RocsScorer(Scorer):
     
     def __init__(self, sq_model_path=None, query_file=None, experiment_name="rocs_experiment", 
                  score_type="TanimotoCombo", use_gpu=False, max_isomers=4, max_rot_bonds=10, 
-                 max_heavy_atoms=30, cpu_processes=1):
+                 max_heavy_atoms=30, cpu_processes=None):
         """
         Initialize the ROCS Scorer.
 
@@ -185,7 +203,8 @@ class RocsScorer(Scorer):
         max_heavy_atoms : int, optional
             Maximum number of heavy atoms to process (default: 30).
         cpu_processes : int, optional
-            Number of CPU processes to use if not using GPU (default: 1).
+            Number of CPU processes to use if not using GPU. If None, will automatically
+            determine based on system resources.
         """
         super().__init__()
         # Handle both parameter options for the query file
@@ -199,11 +218,39 @@ class RocsScorer(Scorer):
         self.max_isomers = max_isomers
         self.max_rot_bonds = max_rot_bonds
         self.max_heavy_atoms = max_heavy_atoms
-        self.cpu_processes = cpu_processes
         
-        # Check that the query file exists
+        # Automatically determine CPU processes if not specified
+        if cpu_processes is None:
+            self.cpu_processes = max(1, min(os.cpu_count() - 2, 4))
+        else:
+            self.cpu_processes = cpu_processes
+            
+        # Set up cache directory
+        self._cache_dir = os.path.join(tempfile.gettempdir(), "rocs_scorer_cache")
+        os.makedirs(self._cache_dir, exist_ok=True)
+        
+        # Check that the query file exists and is valid
         if not os.path.exists(self.query_file):
             raise FileNotFoundError(f"Query file not found: {self.query_file}")
+            
+        # Set up OpenEye
+        os.environ["OE_SILENT"] = "true"
+        
+        # Log configuration
+        gpu_str = "GPU" if self.use_gpu else f"CPU ({self.cpu_processes} processes)"
+        print(f"ROCS scorer initialized using {gpu_str} mode")
+        
+        # Validate the query file
+        try:
+            query = oeshape.OEShapeQuery()
+            if not oeshape.OEReadShapeQuery(self.query_file, query):
+                raise ValueError(f"Invalid shape query file: {self.query_file}")
+        except oechem.OELicenseError as e:
+            print(f"OpenEye license error: {e}")
+            raise
+        except Exception as e:
+            print(f"Error validating query file: {e}")
+            raise
 
     def getScores(self, mols, frags=None):
         """
@@ -245,99 +292,117 @@ class RocsScorer(Scorer):
                         smiles.append(None)
             mols = smiles
 
-        mol_ids = [f"molecule_{i}" for i in range(len(mols))]
-
-        # Generate isomers using OEFlipper, adapted from the complex code
-        isomers_list = []
-        flipper_opts = oeomega.OEFlipperOptions()
-        flipper_opts.SetMaxCenters(min(4, self.max_isomers))  # Use parameter for max centers
+        # Initial filtering to skip invalid molecules
+        filtered_mols = []
+        mol_ids = []
         
-        for mi, smi in zip(mol_ids, mols):
+        for i, smi in enumerate(mols):
             # Skip missing or empty entries
             if not smi:
                 continue
-
-            # Make sure it's a Python str, not numpy.str_ or bytes
-            smi_str = str(smi)
-
-            mol = oechem.OEMol()
-            # Now pass in a real str, so the C++ wrapper can convert it
-            if not oechem.OESmilesToMol(mol, smi_str):
-                continue
                 
-            # Skip molecules that exceed the max heavy atom limit
-            if mol.NumAtoms() > self.max_heavy_atoms:
-                continue
+            # Basic filtering for problematic molecules
+            if isinstance(smi, str) and len(smi) > 0:
+                mol = oechem.OEMol()
+                if oechem.OESmilesToMol(mol, str(smi)):
+                    # Check heavy atom count
+                    if oechem.OECount(mol, oechem.OEIsHeavy()) <= self.max_heavy_atoms:
+                        filtered_mols.append((i, smi))
+                        mol_ids.append(f"molecule_{i}")
+        
+        if not filtered_mols:
+            return np.zeros(len(mols))
+
+        # Generate isomers using OEFlipper
+        isomers_list = []
+        flipper_opts = oeomega.OEFlipperOptions()
+        flipper_opts.SetMaxCenters(min(4, self.max_isomers))
+        
+        # Process molecules in batches for memory efficiency
+        batch_size = 50
+        for batch_start in range(0, len(filtered_mols), batch_size):
+            batch_end = min(batch_start + batch_size, len(filtered_mols))
+            batch = filtered_mols[batch_start:batch_end]
+            
+            for orig_idx, smi in batch:
+                mol = oechem.OEMol()
+                oechem.OESmilesToMol(mol, str(smi))
+                mi = f"molecule_{orig_idx}"
+                mol.SetTitle(mi)
                 
-            mol.SetTitle(mi)  # Set title for tracking
-            isomer_count = 0
-            for iso in oeomega.OEFlipper(mol, flipper_opts):
-                if isomer_count >= self.max_isomers:  # Use parameter for max isomers
-                    break
-                iso_smi = oechem.OEMolToSmiles(iso)
-                msid = f"{mi}+{isomer_count}"
-                isomers_list.append((iso_smi, msid))
-                isomer_count += 1
+                isomer_count = 0
+                try:
+                    for iso in oeomega.OEFlipper(mol, flipper_opts):
+                        if isomer_count >= self.max_isomers:
+                            break
+                        iso_smi = oechem.OEMolToSmiles(iso)
+                        msid = f"{mi}+{isomer_count}"
+                        isomers_list.append((iso_smi, msid))
+                        isomer_count += 1
+                except Exception as e:
+                    print(f"Error generating isomer for {smi}: {e}")
 
         if not isomers_list:
             return np.zeros(len(mols))
 
-        # Create temporary files with unique names
-        with tempfile.NamedTemporaryFile(suffix='.smi', delete=False) as tmp_file:
-            isomers_file = tmp_file.name
-            
-        df_isomers = pd.DataFrame(isomers_list, columns=['Isomers', 'CID'])
-        df_isomers.to_csv(isomers_file, sep='\t', index=False, header=False)
-
+        # Create temporary directory for all files
+        temp_dir = tempfile.mkdtemp(prefix="rocs_")
+        
         try:
+            # Create isomers file
+            isomers_file = os.path.join(temp_dir, "isomers.smi")
+            with open(isomers_file, 'w') as f:
+                for smi, cid in isomers_list:
+                    f.write(f"{smi}\t{cid}\n")
+
             # Generate conformers using OMEGA
             dbname = OMEGA(isomers_file, self.experiment_name)
 
             # Run ROCS
             ofname = ROCS(dbname, self.qfnames, self.experiment_name, self.use_gpu)
 
-            # Process the output CSV
+            # Process the output CSV more efficiently
             data = pd.read_csv(ofname)
-            data['MolID'] = data['TITLE'].apply(lambda x: x.split('+')[0])
-
-            # Handle missing molecules
-            all_mol_ids = set(mol_ids)
-            present_mol_ids = set(data['MolID'])
-            missing_mol_ids = all_mol_ids - present_mol_ids
-            if missing_mol_ids:
-                missing_data = pd.DataFrame({
-                    "MolID": list(missing_mol_ids),
-                    self.score_type: 0.0
-                })
-                data = pd.concat([data, missing_data])
-
-            # Group by MolID and take max score
-            grouped_max = data.groupby('MolID', as_index=False)[self.score_type].max()
-            grouped_max['MolIdx'] = grouped_max['MolID'].apply(lambda x: int(x.split('_')[1]))
-            grouped_max.sort_values('MolIdx', inplace=True)
-            scores = grouped_max[self.score_type].tolist()
             
-            # Clean up temporary files
-            for file in [isomers_file, dbname, ofname]:
-                if os.path.exists(file):
-                    try:
-                        os.remove(file)
-                    except:
-                        pass
-                        
-            return np.array(scores)
+            # Extract original molecule index from title
+            data['MolID'] = data['TITLE'].apply(lambda x: x.split('+')[0])
+            
+            # Create result array with zeros
+            result = np.zeros(len(mols))
+            
+            # More efficient groupby to get max scores
+            if self.score_type in data.columns:
+                max_scores = data.groupby('MolID')[self.score_type].max()
+                
+                # Update result array directly without concat
+                for mol_id, score in max_scores.items():
+                    if mol_id.startswith('molecule_'):
+                        idx = int(mol_id.split('_')[1])
+                        result[idx] = score
+            
+            return result
             
         except Exception as e:
-            # Clean up temporary files in case of error
-            for file in [isomers_file]:
-                if os.path.exists(file):
-                    try:
-                        os.remove(file)
-                    except:
-                        pass
-            # Return zeros if something failed
             print(f"Error in ROCS scoring: {e}")
             return np.zeros(len(mols))
+            
+        finally:
+            # Clean up all temporary files
+            for file_path in [os.path.join(temp_dir, f) for f in os.listdir(temp_dir)]:
+                try:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                except Exception as e:
+                    print(f"Error removing file {file_path}: {e}")
+            
+            try:
+                os.rmdir(temp_dir)
+            except Exception as e:
+                print(f"Error removing directory {temp_dir}: {e}")
+                
+            # Force cleanup
+            import gc
+            gc.collect()
 
     def getKey(self):
         """
