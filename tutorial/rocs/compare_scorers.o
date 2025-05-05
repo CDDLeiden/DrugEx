@@ -1,0 +1,233 @@
+OpenEye memory pool initialized in ez_rocs module
+System: Linux 6.11.0-25-generic
+Python: 3.10.16
+
+Benchmark Configuration:
+Testing CPU Mode: Yes
+Testing GPU Mode: Yes
+Testing ez_rocs: Yes
+Testing fastrocs: Yes
+Molecules per test: 300
+Batch size: 30
+CPU processes: 2
+------------------------------------------------------------
+
+============================================================
+========= ez_rocs.RocsScorer GPU Performance Test ==========
+============================================================
+
+Implementation : ez_rocs.RocsScorer
+Mode          : GPU
+Batch size    : 30
+Test molecules: 300
+Generated 300 test molecules
+Initializing ez_rocs.RocsScorer scorer...
+ROCS scorer initialized using GPU mode
+Initialization time: 0.06 seconds
+Running warm-up batch...
+Running 10 batches (batch size: 30)...
+Batch 1/10: 30 molecules, 30 valid, 0.72 seconds
+Batch 2/10: 30 molecules, 30 valid, 0.85 seconds
+Batch 3/10: 30 molecules, 30 valid, 0.83 seconds
+Batch 4/10: 30 molecules, 30 valid, 0.84 seconds
+Batch 5/10: 30 molecules, 30 valid, 0.79 seconds
+Batch 6/10: 30 molecules, 30 valid, 0.70 seconds
+Batch 7/10: 30 molecules, 30 valid, 0.72 seconds
+Batch 8/10: 30 molecules, 30 valid, 0.71 seconds
+Batch 9/10: 30 molecules, 30 valid, 0.69 seconds
+Batch 10/10: 30 molecules, 30 valid, 0.67 seconds
+
+Benchmark Results:
+Total time          : 10.21 seconds
+Processing rate     : 29.38 molecules/second
+Average batch time  : 0.75 seconds
+Median batch time   : 0.72 seconds
+Max batch time      : 0.85 seconds
+
+============================================================
+========= ez_rocs.RocsScorer CPU Performance Test ==========
+============================================================
+
+Implementation : ez_rocs.RocsScorer
+Mode          : CPU
+Batch size    : 30
+Test molecules: 300
+CPU processes : 2
+Generated 300 test molecules
+Initializing ez_rocs.RocsScorer scorer...
+ROCS scorer initialized using CPU (2 processes) mode
+Initialization time: 0.06 seconds
+Running warm-up batch...
+Running 10 batches (batch size: 30)...
+Batch 1/10: 30 molecules, 30 valid, 0.70 seconds
+Batch 2/10: 30 molecules, 30 valid, 0.68 seconds
+Batch 3/10: 30 molecules, 30 valid, 0.82 seconds
+Batch 4/10: 30 molecules, 30 valid, 0.81 seconds
+Batch 5/10: 30 molecules, 30 valid, 0.74 seconds
+Batch 6/10: 30 molecules, 30 valid, 0.69 seconds
+Batch 7/10: 30 molecules, 30 valid, 0.67 seconds
+Batch 8/10: 30 molecules, 30 valid, 0.69 seconds
+Batch 9/10: 30 molecules, 30 valid, 0.68 seconds
+Batch 10/10: 30 molecules, 30 valid, 0.82 seconds
+
+Benchmark Results:
+Total time          : 12.16 seconds
+Processing rate     : 24.68 molecules/second
+Average batch time  : 0.73 seconds
+Median batch time   : 0.70 seconds
+Max batch time      : 0.82 seconds
+
+============================================================
+======= fastrocs.OpenEyeScorer GPU Performance Test ========
+============================================================
+
+Implementation : fastrocs.OpenEyeScorer
+Mode          : GPU
+Batch size    : 30
+Test molecules: 300
+Generated 300 test molecules
+Initializing fastrocs.OpenEyeScorer scorer...
+FastROCS GPU mode   : ON  (single process)
+Initialization time: 0.07 seconds
+Running warm-up batch...
+Omega GPU mode enabled for conformer generation
+FastROCS GPU mode enabled for shape queries
+Preparing 96 molecules for GPU processing...
+Successfully prepared 96/96 molecules for GPU
+Running 10 batches (batch size: 30)...
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 1/10: 30 molecules, 30 valid, 0.84 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 2/10: 30 molecules, 30 valid, 0.81 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 3/10: 30 molecules, 30 valid, 0.83 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 4/10: 30 molecules, 30 valid, 0.78 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 5/10: 30 molecules, 30 valid, 0.93 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 6/10: 30 molecules, 30 valid, 0.88 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 7/10: 30 molecules, 30 valid, 0.90 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 8/10: 30 molecules, 30 valid, 0.86 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 9/10: 30 molecules, 30 valid, 0.98 seconds
+Preparing 288 molecules for GPU processing...
+Successfully prepared 288/288 molecules for GPU
+Batch 10/10: 30 molecules, 30 valid, 0.90 seconds
+
+Benchmark Results:
+Total time          : 11.41 seconds
+Processing rate     : 26.29 molecules/second
+Average batch time  : 0.87 seconds
+Median batch time   : 0.87 seconds
+Max batch time      : 0.98 seconds
+
+============================================================
+======= fastrocs.OpenEyeScorer CPU Performance Test ========
+============================================================
+
+Implementation : fastrocs.OpenEyeScorer
+Mode          : CPU
+Batch size    : 30
+Test molecules: 300
+CPU processes : 2
+Adjusted batch size to 15 for CPU mode stability
+Generated 300 test molecules
+Initializing fastrocs.OpenEyeScorer scorer...
+FastROCS CPU mode   : 2 fork‑server workers
+Initialization time: 0.07 seconds
+Running warm-up batch...
+Preparing 72 molecules for CPU processing...
+Running 20 batches (batch size: 15)...
+Preparing 104 molecules for CPU processing...
+Batch 1/20: 15 molecules, 13 valid, 0.70 seconds
+Preparing 112 molecules for CPU processing...
+Batch 2/20: 15 molecules, 14 valid, 0.70 seconds
+Preparing 104 molecules for CPU processing...
+Batch 3/20: 15 molecules, 13 valid, 0.79 seconds
+Preparing 112 molecules for CPU processing...
+Batch 4/20: 15 molecules, 14 valid, 0.65 seconds
+Preparing 104 molecules for CPU processing...
+Batch 5/20: 15 molecules, 13 valid, 0.63 seconds
+Preparing 112 molecules for CPU processing...
+Batch 6/20: 15 molecules, 14 valid, 0.64 seconds
+Preparing 104 molecules for CPU processing...
+Batch 7/20: 15 molecules, 13 valid, 0.63 seconds
+Preparing 112 molecules for CPU processing...
+Batch 8/20: 15 molecules, 14 valid, 0.63 seconds
+Preparing 104 molecules for CPU processing...
+Batch 9/20: 15 molecules, 13 valid, 0.62 seconds
+Preparing 112 molecules for CPU processing...
+Batch 10/20: 15 molecules, 14 valid, 0.63 seconds
+Preparing 104 molecules for CPU processing...
+Batch 11/20: 15 molecules, 13 valid, 0.63 seconds
+Preparing 112 molecules for CPU processing...
+Batch 12/20: 15 molecules, 14 valid, 0.63 seconds
+Preparing 104 molecules for CPU processing...
+Batch 13/20: 15 molecules, 13 valid, 0.62 seconds
+Preparing 112 molecules for CPU processing...
+Batch 14/20: 15 molecules, 14 valid, 0.63 seconds
+Preparing 104 molecules for CPU processing...
+Batch 15/20: 15 molecules, 13 valid, 0.63 seconds
+Preparing 112 molecules for CPU processing...
+Batch 16/20: 15 molecules, 14 valid, 0.63 seconds
+Preparing 104 molecules for CPU processing...
+Batch 17/20: 15 molecules, 13 valid, 0.66 seconds
+Preparing 112 molecules for CPU processing...
+Batch 18/20: 15 molecules, 14 valid, 0.62 seconds
+Preparing 104 molecules for CPU processing...
+Batch 19/20: 15 molecules, 13 valid, 0.62 seconds
+Preparing 112 molecules for CPU processing...
+Batch 20/20: 15 molecules, 14 valid, 0.68 seconds
+
+Benchmark Results:
+Total time          : 23.10 seconds
+Processing rate     : 12.99 molecules/second
+Average batch time  : 0.65 seconds
+Median batch time   : 0.63 seconds
+Max batch time      : 0.79 seconds
+
+============================================================
+============== Performance Comparison Summary ==============
+============================================================
+
++------------------------+--------+--------------------+------------------+
+| Implementation         | Mode   |   Molecules/second |   Total time (s) |
++========================+========+====================+==================+
+| ez_rocs.RocsScorer     | GPU    |              29.38 |            10.21 |
++------------------------+--------+--------------------+------------------+
+| ez_rocs.RocsScorer     | CPU    |              24.68 |            12.16 |
++------------------------+--------+--------------------+------------------+
+| fastrocs.OpenEyeScorer | GPU    |              26.29 |            11.41 |
++------------------------+--------+--------------------+------------------+
+| fastrocs.OpenEyeScorer | CPU    |              12.99 |            23.1  |
++------------------------+--------+--------------------+------------------+
+
+Speed Comparisons:
++-------------------------+---------------------+--------------------------+
+| Comparison              | Implementations     | Performance Difference   |
++=========================+=====================+==========================+
+| CPU mode comparison     | fastrocs vs ez_rocs | 0.53x slower             |
++-------------------------+---------------------+--------------------------+
+| GPU mode comparison     | fastrocs vs ez_rocs | 0.89x slower             |
++-------------------------+---------------------+--------------------------+
+| ez_rocs implementation  | GPU vs CPU          | 1.19x faster             |
++-------------------------+---------------------+--------------------------+
+| fastrocs implementation | GPU vs CPU          | 2.02x faster             |
++-------------------------+---------------------+--------------------------+
+
+Recommendations:
+- For CPU-only environments: Use ez_rocs.RocsScorer
+- For GPU-enabled environments: Use ez_rocs.RocsScorer
+- Best overall performance: ez_rocs.RocsScorer in GPU mode
