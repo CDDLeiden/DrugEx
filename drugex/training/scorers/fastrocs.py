@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+# (C) 2022 Cadence Design Systems, Inc. (Cadence) 
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED.  OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+
 """
 FastROCS‑based scorer used by DrugEx‑ROCS.
 
@@ -559,6 +576,26 @@ class OpenEyeScorer(Scorer):
                  max_rot_bonds: int = 10,
                  max_heavy_atoms: int = 30,
                  cpu_processes: int | None = None):
+        """
+        Initialize the OpenEye FastROCS scorer.
+
+        Parameters
+        ----------
+        sq_model_path : str
+            Path to the ROCS query file (.sq file)
+        use_gpu : bool, optional
+            Whether to use GPU acceleration if available (default: True)
+        max_isomers : int, optional
+            Maximum number of isomers to enumerate per molecule (default: 4)
+        max_rot_bonds : int, optional
+            Maximum number of rotatable bonds to consider (default: 10)
+        max_heavy_atoms : int, optional
+            Maximum number of heavy atoms to process (default: 30)
+        cpu_processes : int | None, optional
+            Number of CPU processes to use if not using GPU. If None, will use
+            available CPU cores minus 2 (to leave resources for the system).
+            Ignored when GPU mode is active.
+        """
         if not os.path.isfile(sq_model_path):
             raise FileNotFoundError(sq_model_path)
 
