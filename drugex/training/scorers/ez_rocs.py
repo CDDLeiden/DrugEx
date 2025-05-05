@@ -1,3 +1,22 @@
+# (C) 2022 Cadence Design Systems, Inc. (Cadence) 
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED.  OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+
+
+
 import numpy as np
 import pandas as pd
 import os
@@ -59,7 +78,7 @@ def OMEGA(input_file, experiment_name):
     
     return dbname
 
-def ROCS(dbname, query_files, experiment_name):
+def ROCS(dbname, query_files, experiment_name, use_gpu):
     """
     Run FastROCS shape comparison on a database of molecules.
     
@@ -71,6 +90,8 @@ def ROCS(dbname, query_files, experiment_name):
         List of query file paths.
     experiment_name : str
         Name of the experiment for output file naming.
+    use_gpu : bool
+        Whether to use GPU acceleration if available.
         
     Returns
     -------
@@ -92,7 +113,14 @@ def ROCS(dbname, query_files, experiment_name):
     
     # Set up shape database
     db = oefastrocs.OEShapeDatabase()
-    db.SetNumOpenThreads(1)  # Single thread is better for GPU
+    if use_gpu:
+        db.SetNumOpenThreads(1)
+        opts = oefastrocs.OEShapeDatabaseOptions()
+        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
+    else:
+        db.SetNumOpenThreads(max(1, os.cpu_count() or 2))
+        opts = oefastrocs.OEShapeDatabaseOptions()
+        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
     
     # Open the database with the molecule database
     if not db.Open(mdb):
@@ -104,10 +132,6 @@ def ROCS(dbname, query_files, experiment_name):
         query = oeshape.OEShapeQuery()
         if not oeshape.OEReadShapeQuery(qfname, query):
             raise ValueError(f"Cannot read query file: {qfname}")
-        
-        # Set options
-        opts = oefastrocs.OEShapeDatabaseOptions()
-        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)  # Use ROCS mode for compatibility
         
         # Get scores and write to file
         with open(outfname, 'w') as f:
@@ -187,8 +211,8 @@ class RocsScorer(Scorer):
 
         Parameters
         ----------
-        mols : List[str]
-            A list of SMILES strings representing molecules.
+        mols : List[str] or List[RDKit.Mol]
+            A list of SMILES strings or RDKit molecule objects representing molecules.
         frags : List[str], optional
             A list of fragments (not used in this scorer).
 
@@ -200,6 +224,27 @@ class RocsScorer(Scorer):
         if not mols:
             return np.array([])
 
+        # Check if input contains RDKit molecules and convert to SMILES if needed
+        import_rdkit = False
+        for mol in mols:
+            if mol is not None and not isinstance(mol, str):
+                import_rdkit = True
+                break
+                
+        if import_rdkit:
+            from rdkit import Chem
+            smiles = []
+            for mol in mols:
+                if mol is None:
+                    smiles.append(None)
+                else:
+                    try:
+                        smi = Chem.MolToSmiles(mol)
+                        smiles.append(smi)
+                    except:
+                        smiles.append(None)
+            mols = smiles
+
         mol_ids = [f"molecule_{i}" for i in range(len(mols))]
 
         # Generate isomers using OEFlipper, adapted from the complex code
@@ -208,10 +253,16 @@ class RocsScorer(Scorer):
         flipper_opts.SetMaxCenters(min(4, self.max_isomers))  # Use parameter for max centers
         
         for mi, smi in zip(mol_ids, mols):
-            if smi is None or not smi:
+            # Skip missing or empty entries
+            if not smi:
                 continue
+
+            # Make sure it's a Python str, not numpy.str_ or bytes
+            smi_str = str(smi)
+
             mol = oechem.OEMol()
-            if not oechem.OESmilesToMol(mol, smi):
+            # Now pass in a real str, so the C++ wrapper can convert it
+            if not oechem.OESmilesToMol(mol, smi_str):
                 continue
                 
             # Skip molecules that exceed the max heavy atom limit
@@ -243,7 +294,7 @@ class RocsScorer(Scorer):
             dbname = OMEGA(isomers_file, self.experiment_name)
 
             # Run ROCS
-            ofname = ROCS(dbname, self.qfnames, self.experiment_name)
+            ofname = ROCS(dbname, self.qfnames, self.experiment_name, self.use_gpu)
 
             # Process the output CSV
             data = pd.read_csv(ofname)
