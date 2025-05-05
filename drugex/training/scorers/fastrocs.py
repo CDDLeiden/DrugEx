@@ -102,8 +102,8 @@ def _calculate_optimal_workers(suggested_workers=None):
         # Calculate workers based on memory constraints
         memory_workers = max(1, int(usable_memory / _TARGET_MEMORY_PER_WORKER))
         
-        # Calculate workers based on CPU - leave at least 1 core free
-        cpu_workers = max(1, cpu_count - 1)
+        # Calculate workers based on CPU - leave at least 2 cores free
+        cpu_workers = max(1, cpu_count - 2)
         
         # Use the minimum of memory-based and CPU-based calculations
         optimal = min(memory_workers, cpu_workers)
@@ -115,20 +115,20 @@ def _calculate_optimal_workers(suggested_workers=None):
     else:
         # Fallback without psutil
         cpu_count = os.cpu_count() or 4
-        return suggested_workers if suggested_workers is not None else max(1, cpu_count - 1)
+        return suggested_workers if suggested_workers is not None else max(1, cpu_count - 2)
 
 # Global flag to track memory pool initialization
 _OE_MEMORY_POOL_INITIALIZED = False
 
 def _init_worker(worker_id=None):
     """Enhanced initializer for fork‑server workers."""
-    global _OE_MEMORY_POOL_INITIALIZED
-    
-    # Configure OpenEye - only initialize memory pool if not done already
-    if not _OE_MEMORY_POOL_INITIALIZED and 'OE_MEMORY_POOL_SET' not in os.environ:
-        oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
-        _OE_MEMORY_POOL_INITIALIZED = True
-        os.environ['OE_MEMORY_POOL_SET'] = '1'
+    # Configure OpenEye - use environment variable to track initialization
+    if 'OE_MEMORY_POOL_SET' not in os.environ:
+        try:
+            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
+            os.environ['OE_MEMORY_POOL_SET'] = '1'
+        except Exception as e:
+            print(f"Warning: Failed to set memory pool mode: {e}")
     
     os.environ["OE_SILENT"] = "true"
     oechem.OEThrow.SetLevel(oechem.OEErrorLevel_Error)
@@ -149,7 +149,8 @@ def _init_worker(worker_id=None):
                 # Simple round-robin assignment of cores
                 cpu_id = worker_id % cpu_count
                 process.cpu_affinity([cpu_id])
-        except Exception:
+        except Exception as e:
+            print(f"Warning: Failed to set CPU affinity: {e}")
             pass  # Skip if not supported or failed
 
 
@@ -178,12 +179,20 @@ def _tmpdir(prefix="fastrocs_", use_cache=False, cache_key=None):
         try:
             yield path
         finally:  # best‑effort cleanup
-            for root, _, files in os.walk(path, topdown=False):
-                for f in files:
-                    try: os.remove(os.path.join(root, f))
-                    except Exception: pass
-            try: os.rmdir(path)
-            except Exception: pass
+            if os.path.exists(path):
+                for root, _, files in os.walk(path, topdown=False):
+                    for f in files:
+                        try: 
+                            file_path = os.path.join(root, f)
+                            if os.path.isfile(file_path):
+                                os.remove(file_path)
+                        except (OSError, IOError) as e: 
+                            # Just log errors but don't raise
+                            print(f"Warning: Failed to remove temp file {f}: {e}")
+                try: 
+                    os.rmdir(path)
+                except (OSError, IOError) as e:
+                    print(f"Warning: Failed to remove temp directory {path}: {e}")
 
 
 # ------------------------------------------------------------------------------
@@ -480,6 +489,9 @@ def _score_molecules_with_database(isomers: List[oechem.OEMol], title2parent: Di
     try:
         db, query, opts = _SHAPE_DB_CACHE.get_or_create_database(sq_model, use_gpu)
         # We don't need to check validity - OEReadShapeQuery already does that during creation
+    except oechem.OELicenseError as e:
+        print(f"OpenEye license error: {e}")
+        return {}
     except Exception as e:
         print(f"Error creating shape database: {e}")
         return {}
@@ -498,6 +510,7 @@ def _score_molecules_with_database(isomers: List[oechem.OEMol], title2parent: Di
         # Create molecule database
         mdb = oechem.OEMolDatabase()
         if not mdb.Open(sdf):
+            print(f"Error: Could not open molecule database from {sdf}")
             return {}
         
         # Create a fresh database for each batch to avoid the "already contains data" error
@@ -507,18 +520,24 @@ def _score_molecules_with_database(isomers: List[oechem.OEMol], title2parent: Di
         
         # Open shape database with molecule database
         if not fresh_db.Open(mdb):
+            print("Error: Could not open shape database with molecule database")
             return {}
         
-        # Process scores in batches for memory efficiency
-        # Use the fresh database with the cached query and options
-        for sc in fresh_db.GetSortedScores(query, opts):
-            mol_idx = sc.GetMolIdx()
-            dbmol = oechem.OEMol()
-            if mdb.GetMolecule(dbmol, mol_idx):
-                parent = title2parent.get(dbmol.GetTitle())
-                if parent is not None:
-                    tc = sc.GetTanimotoCombo()
-                    scores[parent] = max(tc, scores.get(parent, 0.0))
+        try:
+            # Process scores in batches for memory efficiency
+            # Use the fresh database with the cached query and options
+            for sc in fresh_db.GetSortedScores(query, opts):
+                mol_idx = sc.GetMolIdx()
+                dbmol = oechem.OEMol()
+                if mdb.GetMolecule(dbmol, mol_idx):
+                    parent = title2parent.get(dbmol.GetTitle())
+                    if parent is not None:
+                        tc = sc.GetTanimotoCombo()
+                        scores[parent] = max(tc, scores.get(parent, 0.0))
+        except oechem.OELicenseError as e:
+            print(f"OpenEye license error during scoring: {e}")
+        except Exception as e:
+            print(f"Error during molecule scoring: {e}")
         
     return scores
 
@@ -669,8 +688,12 @@ class OpenEyeScorer(Scorer):
             if sample_size > 0:
                 complex_mol_ratio = 1.0 - (valid_count / sample_size)
             
-            # Reduce batch size for complex molecules that have high memory requirements
-            complexity_factor = 1.0 + (complex_mol_ratio * 2.0)  # Scale from 1.0 to 3.0
+            # Enhanced calculation for extremely complex molecules
+            avg_mol_len = sum(len(s) for s in sample_smiles) / max(1, len(sample_smiles))
+            complexity_score = complex_mol_ratio * 2.0 + (avg_mol_len / 100.0)
+            
+            # Reduce batch size more aggressively for complex molecules
+            complexity_factor = 1.0 + min(5.0, complexity_score)  # Scale from 1.0 to 6.0
             adjusted_batch_size = max(_MIN_BATCH_SIZE, int(base_batch_size / complexity_factor))
         else:
             # Default to conservative batch size if we can't measure system resources
@@ -683,6 +706,9 @@ class OpenEyeScorer(Scorer):
             end_idx = min(i + adjusted_batch_size, len(smiles))
             batches.append((smiles[i:end_idx], idxs[i:end_idx]))
             
+        # Standardize logging interval for both GPU and CPU modes
+        logging_interval = 5
+        
         # For GPU mode: use single-process scoring with optimized memory handling
         if self.use_gpu:
             results = {}
@@ -703,7 +729,7 @@ class OpenEyeScorer(Scorer):
                     
                 # Log progress for long-running jobs
                 batch_time = time.time() - batch_start
-                if i % 5 == 0 and i > 0:
+                if i % logging_interval == 0 and i > 0:
                     print(f"GPU processed {i}/{len(batches)} batches, " 
                           f"avg time: {(time.time() - start_time) / i:.2f}s per batch")
                 
@@ -738,7 +764,7 @@ class OpenEyeScorer(Scorer):
                         results.update(batch_results)
                         
                         # Log progress for long-running jobs
-                        if i % 10 == 0 and i > 0:
+                        if i % logging_interval == 0 and i > 0:
                             print(f"CPU processed {i}/{len(futures)} batches")
                     except Exception as e:
                         print(f"Error in worker process: {e}")
