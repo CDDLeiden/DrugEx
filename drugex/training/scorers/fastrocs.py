@@ -870,7 +870,9 @@ def _prepare_molecule_database(molecules: List[oechem.OEMol], output_path: str, 
                 oechem.OEWriteMolecule(ofs, mol)
     
     if use_gpu and processed_count > 0:
-        print(f"Successfully prepared {processed_count}/{len(molecules)} molecules for GPU")
+        # Less verbose message, only log if there's a significant discrepancy
+        if processed_count < len(molecules) * 0.9:  # Only log if more than 10% failed
+            print(f"GPU preparation: {processed_count}/{len(molecules)} molecules processed")
     
     # Create and open the molecule database
     mdb = oechem.OEMolDatabase()
