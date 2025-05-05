@@ -19,6 +19,16 @@
 'Minimal' ROCS scorer implementation using OpenEye tools.
 
 Key features:
+- Simplified implementation suitable for basic usage and learning
+- Easy to understand with minimal dependencies
+- Compatible with both CPU and GPU modes (via FastROCS)
+- Works well for small to medium molecule sets
+- Lower memory footprint than more complex implementations
+- Ideal for initial benchmarking and testing
+
+This implementation prioritizes simplicity over performance and is
+recommended for development environments, educational purposes,
+or when processing modest numbers of molecules.
 """
 
 import numpy as np
@@ -35,6 +45,28 @@ except ImportError:
     FASTROCS_AVAILABLE = False
 
 from drugex.training.scorers.interfaces import Scorer
+
+# Initialize OpenEye memory pool just once at module import time
+_OE_MEMORY_POOL_INITIALIZED = False
+def _initialize_oe_memory_pool():
+    global _OE_MEMORY_POOL_INITIALIZED
+    
+    # Check if already initialized in this process via environment variable
+    if os.environ.get("OE_MEMORY_POOL_INITIALIZED") == "true":
+        _OE_MEMORY_POOL_INITIALIZED = True
+        return
+        
+    if not _OE_MEMORY_POOL_INITIALIZED:
+        try:
+            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
+            _OE_MEMORY_POOL_INITIALIZED = True
+            os.environ["OE_MEMORY_POOL_INITIALIZED"] = "true"
+            print("OpenEye memory pool initialized in ez_rocs module")
+        except Exception as e:
+            print(f"Warning: Could not set memory pool mode: {e}")
+
+# Initialize at module import
+_initialize_oe_memory_pool()
 
 def OMEGA(input_file, experiment_name, max_confs=10):
     """
@@ -234,12 +266,6 @@ class RocsScorer(Scorer):
             determine based on system resources.
         """
         super().__init__()
-        # Initialize OpenEye memory management
-        try:
-            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
-        except Exception as e:
-            print(f"Warning: Could not set memory pool mode: {e}")
-            
         # Handle both parameter options for the query file
         self.query_file = sq_model_path if sq_model_path is not None else query_file
         self.experiment_name = experiment_name
