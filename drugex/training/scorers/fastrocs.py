@@ -11,14 +11,16 @@ Key points
 """
 
 from __future__ import annotations
-import os, gc, time, tempfile, multiprocessing as mp
+import os, tempfile, multiprocessing as mp
+import sys
 from functools import partial
 from contextlib import contextmanager
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict, List, Tuple
+import warnings
 
 import numpy as np
-from openeye import oechem, oeomega, oeshape, oefastrocs
+from openeye import oechem, oeomega, oeshape, oefastrocs, oeff
 from drugex.training.scorers.interfaces import Scorer
 
 try:
@@ -27,6 +29,7 @@ try:
 except ImportError:
     RDKIT_AVAILABLE = False
 
+warnings.filterwarnings('ignore')
 
 # ------------------------------------------------------------------------------
 #  Generic helpers
@@ -58,6 +61,79 @@ def _tmpdir(prefix="fastrocs_"):
 
 _BAD_ATOMS = {'Au','Ag','Al','As','Be','Bi','Ce','Dy','Eu'}
 
+def filter_molecules(smiles_list: List[str], max_rot: int = 10, max_heavy: int = 30) -> List[Tuple[str, bool]]:
+    """
+    Filter molecules for FastROCS processing, returning list of (smiles, is_valid) tuples.
+    Performs comprehensive checks for problematic molecules in one pass.
+    """
+    results = []
+    
+    # Define SMARTS patterns for problematic structures
+    problem_patterns = [
+        '[S+]', '[n+]', '[N+](=[O-])', '[#7,#16]~[#7,#16]',
+        '[C,c]#[C,c]', '[#6]=[#6]=[#6]', '[r3]'
+    ]
+    
+    # Compile SMARTS patterns
+    compiled_patterns = []
+    for pattern in problem_patterns:
+        pat = oechem.OESubSearch()
+        if pat.Init(pattern):
+            compiled_patterns.append(pat)
+    
+    for smi in smiles_list:
+        if not smi or not isinstance(smi, str):
+            results.append((smi, False))
+            continue
+            
+        mol = oechem.OEMol()
+        if not oechem.OESmilesToMol(mol, smi):
+            results.append((smi, False))
+            continue
+        
+        # Quick check for problematic atoms
+        if any(oechem.OEGetAtomicSymbol(a.GetAtomicNum()) in _BAD_ATOMS for a in mol.GetAtoms()):
+            results.append((smi, False))
+            continue
+            
+        # Check rotatable bonds and heavy atoms
+        if (oechem.OECount(mol, oechem.OEIsRotor()) > max_rot or
+            oechem.OECount(mol, oechem.OEIsHeavy()) > max_heavy):
+            results.append((smi, False))
+            continue
+            
+        # Check against all patterns
+        atom_count = mol.NumAtoms()
+        if (any(pat.SingleMatch(mol) for pat in compiled_patterns) or
+            atom_count > 100 or atom_count < 3):
+            results.append((smi, False))
+            continue
+        
+        # Check connectivity - a molecule should be a single connected component
+        visited = [False] * mol.NumAtoms()
+        components = 0
+        
+        def dfs(atom_idx):
+            visited[atom_idx] = True
+            for bond in mol.GetAtom(oechem.OEHasAtomIdx(atom_idx)).GetBonds():
+                next_atom_idx = bond.GetNbr(mol.GetAtom(oechem.OEHasAtomIdx(atom_idx))).GetIdx()
+                if not visited[next_atom_idx]:
+                    dfs(next_atom_idx)
+        
+        for i in range(mol.NumAtoms()):
+            if not visited[i]:
+                components += 1
+                dfs(i)
+                if components > 1:
+                    break
+        
+        if components > 1:
+            results.append((smi, False))  # Multiple components
+        else:
+            results.append((smi, True))   # Valid molecule
+            
+    return results
+
 def _enumerate_isomers(mol: oechem.OEMol, max_centers=4, max_iso=4):
     opts = oeomega.OEFlipperOptions()
     opts.SetMaxCenters(max_centers)
@@ -73,28 +149,53 @@ def _score_batch(batch: Tuple[List[str], List[int]],
                  sq_model: str,
                  max_iso: int,
                  max_rot: int,
-                 max_heavy: int) -> Dict[int, float]:
+                 max_heavy: int,
+                 use_gpu: bool = True) -> Dict[int, float]:
+    """
+    Process and score a batch of molecules.
+    Combines filtering, conformer generation, and scoring in one efficient function.
+    """
     smiles, idxs = batch
-    title2parent: Dict[str,int] = {}
+    
+    # Apply unified filtering to all molecules in batch
+    filtered_data = []
+    filter_results = filter_molecules(smiles, max_rot, max_heavy)
+    
+    for (smi, is_valid), idx in zip(filter_results, idxs):
+        if is_valid:
+            filtered_data.append((smi, idx))
+    
+    if not filtered_data:
+        return {}
+    
+    title2parent: Dict[str, int] = {}
     isomers: List[oechem.OEMol] = []
 
-    # ---------- build conformers ---------------------------------------------
-    # use Omega to generate 3D conformers for each stereoisomer
+    # Configure conformer generation once for all molecules
     omega = oeomega.OEOmega()
+    omegaOpts = oeomega.OEOmegaOptions()
+    omegaOpts.GetTorDriveOptions().SetUseGPU(use_gpu)
+    try:
+        omegaOpts.GetTorDriveOptions().SetForceField(oeff.OEMMFFSheffieldFFType_MMFF94s)
+    except:
+        pass
+    
+    omegaOpts.SetStrictStereo(False)
+    omegaOpts.SetFromCT(True)
+    
+    builder_opts = omegaOpts.GetMolBuilderOptions()
+    builder_opts.SetSampleHydrogens(False)
+    
+    omega.SetOptions(omegaOpts)
     omega.SetMaxConfs(10)
-    omega.SetStrictStereo(False)
-    for s, idx in zip(smiles, idxs):
+    
+    # Generate conformers for all filtered molecules
+    for s, idx in filtered_data:
         mol = oechem.OEMol()
-        if not oechem.OESmilesToMol(mol, s):
-            continue
-        if (any(oechem.OEGetAtomicSymbol(a.GetAtomicNum()) in _BAD_ATOMS for a in mol.GetAtoms()) or
-            oechem.OECount(mol, oechem.OEIsRotor()) > max_rot or
-            oechem.OECount(mol, oechem.OEIsHeavy()) > max_heavy):
-            continue
+        oechem.OESmilesToMol(mol, s)
         mol.SetTitle(str(idx))
+        
         for iso in _enumerate_isomers(mol, max_iso):
-            # add hydrogens and generate conformers
-            # oechem.OEAddExplicitHydrogens(iso)
             omega(iso)
             for conf in iso.GetConfs():
                 confmol = oechem.OEMol(conf)
@@ -104,16 +205,19 @@ def _score_batch(batch: Tuple[List[str], List[int]],
     if not isomers:
         return {}
 
+    # Score molecules using FastROCS
+    scores: Dict[int, float] = {}
     with _tmpdir() as td:
         sdf = os.path.join(td, "confs.sdf")
         with oechem.oemolostream(sdf) as ofs:
             for m in isomers:
                 oechem.OEWriteMolecule(ofs, m)
 
-        # create shape DB
+        # Create shape DB and query
         mdb = oechem.OEMolDatabase()
         if not mdb.Open(sdf):
             return {}
+            
         db = oefastrocs.OEShapeDatabase()
         db.SetNumOpenThreads(1)
         if not db.Open(mdb):
@@ -123,19 +227,17 @@ def _score_batch(batch: Tuple[List[str], List[int]],
         if not oeshape.OEReadShapeQuery(sq_model, query):
             return {}
 
+        # Get scores
         opts = oefastrocs.OEShapeDatabaseOptions()
-        # limit to number of available conformers to prevent warnings
-        # opts.SetLimit(len(isomers))
-
-        out: Dict[int,float] = {}
         for sc in db.GetSortedScores(query, opts):
             dbmol = oechem.OEMol()
             mdb.GetMolecule(dbmol, sc.GetMolIdx())
             parent = title2parent.get(dbmol.GetTitle())
             if parent is not None:
                 tc = sc.GetTanimotoCombo()
-                out[parent] = max(tc, out.get(parent, 0.0))
-        return out
+                scores[parent] = max(tc, scores.get(parent, 0.0))
+    
+    return scores
 
 
 # ------------------------------------------------------------------------------
@@ -204,44 +306,48 @@ class OpenEyeScorer(Scorer):
     #  Internal dispatch
     # ------------------------------------------------------------------
     def _score(self, smiles: List[str]) -> np.ndarray:
+        """Unified scoring method for both GPU and CPU modes."""
         if not smiles:
             return np.zeros(0)
 
-        if self.use_gpu:
-            return self._score_gpu(smiles)
-        else:
-            return self._score_cpu(smiles)
-
-    def _score_gpu(self, smiles: List[str]) -> np.ndarray:
-        batch = (smiles, list(range(len(smiles))))
-        res = _score_batch(batch, self.sq_model,
-                           self.max_iso, self.max_rot, self.max_heavy)
-        out = np.zeros(len(smiles))
-        for k,v in res.items():
-            out[k] = v
-        return out
-
-    def _score_cpu(self, smiles: List[str]) -> np.ndarray:
+        # Process in batches
         idxs = list(range(len(smiles)))
-        batch_size = 30
+        batch_size = 30  # Fixed reasonable batch size
         batches = [(smiles[i:i+batch_size], idxs[i:i+batch_size])
-                   for i in range(0, len(smiles), batch_size)]
-
-        ctx = mp.get_context("forkserver")
-        with ProcessPoolExecutor(max_workers=self.cpu_procs,
-                                 mp_context=ctx,
-                                 initializer=_init_worker) as pool:
-            fn = partial(_score_batch,
-                         sq_model=self.sq_model,
-                         max_iso=self.max_iso,
-                         max_rot=self.max_rot,
-                         max_heavy=self.max_heavy)
-            results = list(pool.map(fn, batches))
-
+                  for i in range(0, len(smiles), batch_size)]
+        
+        # GPU mode uses simple single-process scoring
+        if self.use_gpu:
+            results = {}
+            for batch in batches:
+                batch_results = _score_batch(
+                    batch, self.sq_model, self.max_iso, 
+                    self.max_rot, self.max_heavy, True
+                )
+                results.update(batch_results)
+        # CPU mode uses multiprocessing
+        else:
+            ctx = mp.get_context("forkserver")
+            with ProcessPoolExecutor(max_workers=self.cpu_procs,
+                                    mp_context=ctx,
+                                    initializer=_init_worker) as pool:
+                fn = partial(_score_batch,
+                            sq_model=self.sq_model,
+                            max_iso=self.max_iso,
+                            max_rot=self.max_rot,
+                            max_heavy=self.max_heavy,
+                            use_gpu=False)  # Always false in workers
+                batch_results = list(pool.map(fn, batches))
+                
+                # Combine results
+                results = {}
+                for d in batch_results:
+                    results.update(d)
+        
+        # Convert dictionary to array
         out = np.zeros(len(smiles))
-        for d in results:
-            for k,v in d.items():
-                out[k] = v
+        for k, v in results.items():
+            out[k] = v
         return out
 
     # ------------------------------------------------------------------
