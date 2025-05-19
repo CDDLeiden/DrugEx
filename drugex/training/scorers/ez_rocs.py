@@ -68,6 +68,100 @@ def _initialize_oe_memory_pool():
 # Initialize at module import
 _initialize_oe_memory_pool()
 
+# ------------------------------------------------------------------------------
+#  Adaptive model selection
+# ------------------------------------------------------------------------------
+
+class AdaptiveModelSelector:
+    """
+    Class to adaptively select top-performing shape models during training.
+    Tracks model performance and provides a mechanism to focus on the best models.
+    """
+    
+    def __init__(self, model_paths):
+        """
+        Initialize the adaptive model selector with a list of model paths.
+        
+        Parameters
+        ----------
+        model_paths : List[str]
+            List of paths to shape query (.sq) files
+        """
+        self.model_paths = model_paths
+        self.model_scores = {model: 0.0 for model in model_paths}
+        self.usage_counts = {model: 0 for model in model_paths}
+        self.history = []  # Track score history for trending
+    
+    def update_model_scores(self, new_scores):
+        """
+        Update model scores with new data using exponential moving average.
+        
+        Parameters
+        ----------
+        new_scores : Dict[str, float]
+            Dictionary mapping model paths to their average scores
+        """
+        alpha = 0.3  # Smoothing factor - higher means more weight on recent scores
+        
+        for model, score in new_scores.items():
+            if model in self.model_scores:
+                # Update with exponential moving average
+                old_score = self.model_scores[model]
+                self.model_scores[model] = alpha * score + (1 - alpha) * old_score
+                # Increment usage counter
+                self.usage_counts[model] += 1
+        
+        # Store history for potential analysis
+        self.history.append(self.model_scores.copy())
+        
+        # Keep history size manageable
+        if len(self.history) > 20:
+            self.history.pop(0)
+    
+    def get_active_models(self, top_n=None):
+        """
+        Get the top N performing models based on current scores.
+        
+        Parameters
+        ----------
+        top_n : int, optional
+            Number of top models to return. If None, returns all models.
+            
+        Returns
+        -------
+        List[str]
+            List of model paths for the top performing models
+        """
+        if top_n is None or top_n >= len(self.model_paths):
+            return self.model_paths
+            
+        # Sort models by score (descending)
+        sorted_models = sorted(
+            self.model_paths,
+            key=lambda model: self.model_scores.get(model, 0.0),
+            reverse=True
+        )
+        
+        return sorted_models[:top_n]
+    
+    def get_model_stats(self):
+        """
+        Get statistics about model performance.
+        
+        Returns
+        -------
+        Dict[str, Dict[str, float]]
+            Dictionary with model paths as keys and performance stats as values
+        """
+        stats = {}
+        for model in self.model_paths:
+            stats[model] = {
+                'score': self.model_scores.get(model, 0.0),
+                'usage': self.usage_counts.get(model, 0),
+                'relative_score': self.model_scores.get(model, 0.0) / max(max(self.model_scores.values()), 0.001)
+            }
+        return stats
+
 def OMEGA(input_file, experiment_name, max_confs=10):
     """
     Generate conformers using OMEGA.
@@ -191,10 +285,18 @@ def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
     
     # Process each query file
     for qfname in query_files:
+        # Ensure qfname is a string, not a list
+        if isinstance(qfname, (list, tuple)):
+            current_file = qfname[0]
+            print(f"Warning: Expected string path, got list. Using first: {current_file}")
+        else:
+            current_file = qfname
+            
         # Read query
         query = oeshape.OEShapeQuery()
-        if not oeshape.OEReadShapeQuery(qfname, query):
-            raise ValueError(f"Cannot read query file: {qfname}")
+        if not oeshape.OEReadShapeQuery(current_file, query):
+            print(f"Warning: Cannot read query file: {current_file}")
+            continue
         
         try:
             # Append to existing file instead of overwriting
@@ -211,7 +313,7 @@ def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
                         color_tanimoto = score.GetColorTanimoto()
                         
                         # Write score to file with query file name
-                        query_name = os.path.basename(qfname)
+                        query_name = os.path.basename(current_file)
                         f.write(f"{title},{query_name},{tanimoto_combo},{shape_tanimoto},{color_tanimoto}\n")
         except oechem.OELicenseError as e:
             print(f"OpenEye license error in ROCS scoring: {e}")
@@ -233,7 +335,6 @@ class RocsScorer(Scorer):
     """
     A minimal viable scorer for ROCS that computes shape similarity scores 
     for a list of molecules against a query molecule using OEFlipper for isomer enumeration.
-    Supports multiple query files for multi-model scoring.
     """
     
     def __init__(self, sq_model_path=None, query_file=None, experiment_name="rocs_experiment", 
@@ -245,12 +346,10 @@ class RocsScorer(Scorer):
 
         Parameters
         ----------
-        sq_model_path : str or list, optional
-            Path to the ROCS query file (e.g., .sq file) or list of query files.
-            Alternative to query_file.
-        query_file : str or list, optional
-            Path to the ROCS query file (e.g., .sq or molecule file) or list of files.
-            Alternative to sq_model_path.
+        sq_model_path : str or List[str], optional
+            Path to the ROCS query file(s) (.sq file). Alternative to query_file.
+        query_file : str or List[str], optional
+            Path to the ROCS query file(s) (.sq or molecule file). Alternative to sq_model_path.
         experiment_name : str, optional
             Name of the experiment for file naming (default: "rocs_experiment").
         score_type : str, optional
@@ -269,18 +368,16 @@ class RocsScorer(Scorer):
             Number of CPU processes to use if not using GPU. If None, will automatically
             determine based on system resources.
         top_n_models : int, optional
-            If specified, after sufficient iterations, only the top N models will be used
-            for scoring. Useful for focusing on best-performing models.
+            If specified and using multiple models, only use the top N performing models.
         parallel_execution : bool, optional
             Whether to use parallel execution for multiple models (default: True).
         """
         super().__init__()
         
-        # Handle both parameter options for the query file
-        # Support for both single files and lists of files
+        # Handle both parameter options for the query files
         if sq_model_path is not None:
             if isinstance(sq_model_path, (list, tuple)):
-                self.qfnames = list(sq_model_path) 
+                self.qfnames = list(sq_model_path)
             else:
                 self.qfnames = [sq_model_path]
         elif query_file is not None:
@@ -290,27 +387,25 @@ class RocsScorer(Scorer):
                 self.qfnames = [query_file]
         else:
             raise ValueError("Either sq_model_path or query_file must be provided")
+            
+        # Store a single query file for backward compatibility
+        self.query_file = self.qfnames[0]
         
-        # Store experiment configuration
+        # Initialize other parameters
         self.experiment_name = experiment_name
         self.score_type = score_type
-        
-        # Store molecule processing parameters
         self.use_gpu = use_gpu and FASTROCS_AVAILABLE
         self.max_isomers = max_isomers
         self.max_rot_bonds = max_rot_bonds
         self.max_heavy_atoms = max_heavy_atoms
         self.max_conformers = max_conformers
-        
-        # Store multi-model configuration
         self.top_n_models = top_n_models
         self.parallel_execution = parallel_execution
         
-        # Track model performance for adaptive selection
-        self.model_performance = {model: 0.0 for model in self.qfnames}
-        self.model_usage_count = {model: 0 for model in self.qfnames}
-        self.scoring_iterations = 0
-        self.adaptation_threshold = 5  # Number of iterations before model selection
+        # Set up adaptive model selection if needed
+        self.model_selector = None
+        if top_n_models is not None and len(self.qfnames) > 1:
+            self.model_selector = AdaptiveModelSelector(self.qfnames)
         
         # Automatically determine CPU processes if not specified
         if cpu_processes is None:
@@ -318,45 +413,58 @@ class RocsScorer(Scorer):
             self.cpu_processes = min(2, max(1, os.cpu_count() - 2)) if os.cpu_count() else 2
         else:
             self.cpu_processes = cpu_processes
-        
-        # Determine max thread workers for parallel model scoring
-        self.max_model_workers = min(len(self.qfnames), os.cpu_count() or 4)
-        if self.use_gpu:
-            # For GPU mode, use single worker to avoid contention
-            self.max_model_workers = 1
             
         # Set up cache directory
         self._cache_dir = os.path.join(tempfile.gettempdir(), "rocs_scorer_cache")
         os.makedirs(self._cache_dir, exist_ok=True)
         
-        # Check that all query files exist and are valid
+        # Validate all query files individually
+        valid_models = []
         for qfname in self.qfnames:
             if not os.path.exists(qfname):
-                raise FileNotFoundError(f"Query file not found: {qfname}")
+                print(f"Warning: Query file not found: {qfname}")
+                continue
                 
-            # Validate query file
+            # Validate the query file one at a time
             try:
                 query = oeshape.OEShapeQuery()
-                if not oeshape.OEReadShapeQuery(qfname, query):
-                    raise ValueError(f"Invalid shape query file: {qfname}")
+                # Ensure qfname is a string, not a list
+                if isinstance(qfname, (list, tuple)):
+                    current_file = qfname[0]
+                    print(f"Warning: Expected string path, got list. Using first: {current_file}")
+                else:
+                    current_file = qfname
+                    
+                if not oeshape.OEReadShapeQuery(current_file, query):
+                    print(f"Warning: Invalid shape query file: {current_file}")
+                    continue
+                    
+                valid_models.append(current_file)
             except oechem.OELicenseError as e:
                 print(f"OpenEye license error: {e}")
                 raise
             except Exception as e:
                 print(f"Error validating query file {qfname}: {e}")
-                raise
+                continue
+                
+        if not valid_models:
+            raise ValueError("No valid query files found. Please provide at least one valid .sq file.")
             
+        # Update qfnames to contain only valid models
+        self.qfnames = valid_models
+        self.query_file = self.qfnames[0]  # Update primary query file
+                
         # Set up OpenEye
         os.environ["OE_SILENT"] = "true"
         
         # Log configuration
         gpu_str = "GPU" if self.use_gpu else f"CPU ({self.cpu_processes} processes)"
-        print(f"ROCS scorer initialized using {gpu_str} mode with {len(self.qfnames)} models")
+        model_str = f"{len(self.qfnames)} shape query files"
+        print(f"ROCS scorer initialized using {gpu_str} mode with {model_str}")
 
     def getScores(self, mols, frags=None):
         """
         Compute ROCS similarity scores for a list of molecules.
-        With multiple models, returns the maximum score across all models.
 
         Parameters
         ----------
@@ -369,6 +477,97 @@ class RocsScorer(Scorer):
         -------
         scores : np.ndarray
             An array of similarity scores for the input molecules.
+        """
+        if not mols:
+            return np.array([])
+            
+        # Get active models to use for scoring
+        active_models = self.qfnames
+        if self.model_selector and self.top_n_models:
+            active_models = self.model_selector.get_active_models(self.top_n_models)
+            
+        # If we only have one model, use the original scoring path
+        if len(active_models) == 1:
+            return self._score_with_single_model(mols, active_models[0])
+        
+        # For multiple models, take the maximum score across all models
+        if self.parallel_execution and len(active_models) > 1:
+            max_scores = self._score_parallel_models(mols, active_models)
+        else:
+            max_scores = self._score_sequential_models(mols, active_models)
+            
+        # Update model performance metrics if we're using adaptive selection
+        if self.model_selector:
+            # Use a small subset of molecules for performance tracking
+            sample_size = min(50, len(mols))
+            if sample_size > 0:
+                sample_mols = mols[:sample_size]
+                model_scores = {}
+                
+                # Score each model on the sample to track performance
+                for model in active_models:
+                    model_scores[model] = float(np.mean(self._score_with_single_model(sample_mols, model)))
+                
+                # Update model selector with new performance data
+                self.model_selector.update_model_scores(model_scores)
+                
+        return max_scores
+    
+    def _score_parallel_models(self, mols, models):
+        """Score molecules with multiple models in parallel, taking the maximum score."""
+        from concurrent.futures import ThreadPoolExecutor
+        
+        # Initialize with zeros - we'll take max scores across models
+        max_scores = np.zeros(len(mols))
+        
+        # Use smaller subset of threads for model parallelism
+        max_model_workers = min(len(models), os.cpu_count() or 4) 
+        if self.use_gpu:
+            # For GPU, avoid oversubscription - use single worker
+            max_model_workers = 1
+            
+        # Create a thread pool to process models in parallel
+        with ThreadPoolExecutor(max_workers=max_model_workers) as executor:
+            future_to_model = {
+                executor.submit(self._score_with_single_model, mols, model): model 
+                for model in models
+            }
+            
+            # Process results as they complete
+            for future in future_to_model:
+                try:
+                    model_scores = future.result()
+                    # Take element-wise maximum
+                    max_scores = np.maximum(max_scores, model_scores)
+                except Exception as e:
+                    model = future_to_model[future]
+                    print(f"Error with model {model}: {e}")
+                    
+        return max_scores
+    
+    def _score_sequential_models(self, mols, models):
+        """Score molecules with multiple models sequentially, taking the maximum score."""
+        # Initialize with zeros - we'll take max scores across models
+        max_scores = np.zeros(len(mols))
+        
+        # Process each model sequentially
+        for model in models:
+            try:
+                current_scores = self._score_with_single_model(mols, model)
+                # Take element-wise maximum
+                max_scores = np.maximum(max_scores, current_scores)
+            except Exception as e:
+                print(f"Error with model {model}: {e}")
+            
+            # Force garbage collection between models to free memory
+            gc.collect()
+            
+        return max_scores
+        
+    def _score_with_single_model(self, mols, model_path):
+        """
+        Compute ROCS similarity scores for a list of molecules using a single model.
+        This is the original implementation refactored to support multi-model scoring.
         """
         if not mols:
             return np.array([])
@@ -397,127 +596,7 @@ class RocsScorer(Scorer):
             except ImportError:
                 print("Warning: RDKit not available. Can only process SMILES inputs.")
                 return np.zeros(len(mols))
-        
-        # Get active query models for this scoring run
-        active_models = self._get_active_models()
-        
-        # For a single model, use the original scoring method
-        if len(active_models) == 1:
-            return self._get_scores_for_query(mols, active_models[0])
-        
-        # For multiple models, choose between parallel or sequential execution
-        if self.parallel_execution:
-            scores = self._score_parallel(mols, active_models)
-        else:
-            scores = self._score_sequential(mols, active_models)
-        
-        # Update model performance metrics
-        self._update_model_performance(mols, active_models)
-        self.scoring_iterations += 1
-        
-        return scores
-    
-    def _get_active_models(self):
-        """
-        Get the set of active models to use for scoring.
-        If top_n_models is specified and we've passed the adaptation threshold,
-        only return the top performing models.
-        """
-        # If top_n_models not specified or not enough iterations, use all models
-        if (self.top_n_models is None or 
-            self.top_n_models >= len(self.qfnames) or 
-            self.scoring_iterations < self.adaptation_threshold):
-            return self.qfnames
-            
-        # Sort models by performance and return top N
-        sorted_models = sorted(
-            self.model_performance.items(), 
-            key=lambda x: x[1], 
-            reverse=True
-        )
-        return [model for model, _ in sorted_models[:self.top_n_models]]
-    
-    def _update_model_performance(self, mols, models):
-        """
-        Update performance metrics for each model based on a small sample of molecules.
-        Uses exponential moving average to track model performance over time.
-        """
-        if len(mols) < 5:
-            return  # Skip if too few molecules
-            
-        # Take a small sample for performance evaluation
-        sample_size = min(20, len(mols))
-        indices = list(range(len(mols)))
-        sample_indices = np.random.choice(indices, sample_size, replace=False) if len(indices) > sample_size else indices
-        sample_mols = [mols[i] for i in sample_indices]
-        
-        # Score the sample with each model
-        for model in models:
-            try:
-                scores = self._get_scores_for_query(sample_mols, model)
-                avg_score = np.mean(scores) if len(scores) > 0 else 0.0
-                
-                # Update performance with exponential moving average
-                self.model_performance[model] = (
-                    0.8 * self.model_performance[model] + 0.2 * avg_score
-                )
-                self.model_usage_count[model] += 1
-            except Exception as e:
-                print(f"Error evaluating model {model}: {e}")
-    
-    def _score_parallel(self, mols, models):
-        """
-        Score molecules with multiple models in parallel using ThreadPoolExecutor.
-        Takes the maximum score across all models for each molecule.
-        """
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        
-        max_scores = np.zeros(len(mols))
-        
-        with ThreadPoolExecutor(max_workers=self.max_model_workers) as executor:
-            # Submit scoring jobs for each model
-            future_to_model = {
-                executor.submit(self._get_scores_for_query, mols, model): model 
-                for model in models
-            }
-            
-            # Process results as they complete
-            for future in as_completed(future_to_model):
-                model = future_to_model[future]
-                try:
-                    model_scores = future.result()
-                    # Update with maximum scores
-                    max_scores = np.maximum(max_scores, model_scores)
-                except Exception as e:
-                    print(f"Error scoring with model {model}: {e}")
-        
-        return max_scores
-    
-    def _score_sequential(self, mols, models):
-        """
-        Score molecules with multiple models sequentially.
-        Takes the maximum score across all models for each molecule.
-        """
-        max_scores = np.zeros(len(mols))
-        
-        for model in models:
-            try:
-                model_scores = self._get_scores_for_query(mols, model)
-                # Update with maximum scores
-                max_scores = np.maximum(max_scores, model_scores)
-            except Exception as e:
-                print(f"Error scoring with model {model}: {e}")
-            
-            # Force garbage collection between models
-            gc.collect()
-        
-        return max_scores
-    
-    def _get_scores_for_query(self, mols, qfname):
-        """
-        Score molecules against a single query model.
-        Adapts the original scoring method for use with a specific model.
-        """
+
         # Initial filtering to skip invalid molecules
         filtered_mols = []
         mol_ids = []
@@ -539,7 +618,7 @@ class RocsScorer(Scorer):
         if not filtered_mols:
             return np.zeros(len(mols))
 
-        # Create temporary directory
+        # Create temporary directory for all files
         temp_dir = tempfile.mkdtemp(prefix="rocs_")
         
         try:
@@ -579,10 +658,10 @@ class RocsScorer(Scorer):
             # Generate conformers using OMEGA
             dbname = OMEGA(isomers_file, self.experiment_name, self.max_conformers)
 
-            # Run ROCS with the specified query file
-            ofname = ROCS(dbname, [qfname], self.experiment_name, self.use_gpu, self.cpu_processes)
+            # Run ROCS with appropriate thread count and only the specific model
+            ofname = ROCS(dbname, [model_path], self.experiment_name, self.use_gpu, self.cpu_processes)
 
-            # Process the output CSV
+            # Process the output CSV more efficiently
             try:
                 data = pd.read_csv(ofname)
                 
@@ -596,7 +675,7 @@ class RocsScorer(Scorer):
                 if self.score_type in data.columns:
                     max_scores = data.groupby('MolID')[self.score_type].max()
                     
-                    # Update result array directly
+                    # Update result array directly without concat
                     for mol_id, score in max_scores.items():
                         if mol_id.startswith('molecule_'):
                             idx = int(mol_id.split('_')[1])
