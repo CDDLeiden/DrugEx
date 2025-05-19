@@ -327,8 +327,16 @@ class ShapeDatabaseCache:
             
             # Create query first - needed for database preparation
             query = oeshape.OEShapeQuery()
-            if not oeshape.OEReadShapeQuery(sq_model_path, query):
-                raise ValueError(f"Invalid shape query file: {sq_model_path}")
+            # Ensure sq_model_path is a single file path string, not a list
+            if isinstance(sq_model_path, (list, tuple)):
+                # This should never happen, but just in case
+                model_path = sq_model_path[0]
+                print(f"Warning: Expected single query file, got list. Using first: {model_path}")
+            else:
+                model_path = sq_model_path
+                
+            if not oeshape.OEReadShapeQuery(model_path, query):
+                raise ValueError(f"Invalid shape query file: {model_path}")
             
             # Create options with correct mode setting
             opts = oefastrocs.OEShapeDatabaseOptions()   # https://docs.eyesopen.com/toolkits/python/fastrocstk/OEFastROCSClasses/OEShapeDatabaseOptions.html
@@ -547,6 +555,100 @@ def _score_batch(batch: Tuple[List[str], List[int]],
 
 
 # ------------------------------------------------------------------------------
+#  Adaptive model selection
+# ------------------------------------------------------------------------------
+
+class AdaptiveModelSelector:
+    """
+    Class to adaptively select top-performing shape models during training.
+    Tracks model performance and provides a mechanism to focus on the best models.
+    """
+    
+    def __init__(self, model_paths: List[str]):
+        """
+        Initialize the adaptive model selector with a list of model paths.
+        
+        Parameters
+        ----------
+        model_paths : List[str]
+            List of paths to shape query (.sq) files
+        """
+        self.model_paths = model_paths
+        self.model_scores = {model: 0.0 for model in model_paths}
+        self.usage_counts = {model: 0 for model in model_paths}
+        self.history = []  # Track score history for trending
+    
+    def update_model_scores(self, new_scores: Dict[str, float]):
+        """
+        Update model scores with new data using exponential moving average.
+        
+        Parameters
+        ----------
+        new_scores : Dict[str, float]
+            Dictionary mapping model paths to their average scores
+        """
+        alpha = 0.3  # Smoothing factor - higher means more weight on recent scores
+        
+        for model, score in new_scores.items():
+            if model in self.model_scores:
+                # Update with exponential moving average
+                old_score = self.model_scores[model]
+                self.model_scores[model] = alpha * score + (1 - alpha) * old_score
+                # Increment usage counter
+                self.usage_counts[model] += 1
+        
+        # Store history for potential analysis
+        self.history.append(self.model_scores.copy())
+        
+        # Keep history size manageable
+        if len(self.history) > 20:
+            self.history.pop(0)
+    
+    def get_active_models(self, top_n: int = None) -> List[str]:
+        """
+        Get the top N performing models based on current scores.
+        
+        Parameters
+        ----------
+        top_n : int, optional
+            Number of top models to return. If None, returns all models.
+            
+        Returns
+        -------
+        List[str]
+            List of model paths for the top performing models
+        """
+        if top_n is None or top_n >= len(self.model_paths):
+            return self.model_paths
+            
+        # Sort models by score (descending)
+        sorted_models = sorted(
+            self.model_paths,
+            key=lambda model: self.model_scores.get(model, 0.0),
+            reverse=True
+        )
+        
+        return sorted_models[:top_n]
+    
+    def get_model_stats(self) -> Dict[str, Dict[str, float]]:
+        """
+        Get statistics about model performance.
+        
+        Returns
+        -------
+        Dict[str, Dict[str, float]]
+            Dictionary with model paths as keys and performance stats as values
+        """
+        stats = {}
+        for model in self.model_paths:
+            stats[model] = {
+                'score': self.model_scores.get(model, 0.0),
+                'usage': self.usage_counts.get(model, 0),
+                'relative_score': self.model_scores.get(model, 0.0) / max(max(self.model_scores.values()), 0.001)
+            }
+        return stats
+
+# ------------------------------------------------------------------------------
 #  Scorer class
 # ------------------------------------------------------------------------------
 
@@ -557,20 +659,22 @@ class OpenEyeScorer(Scorer):
     """
 
     def __init__(self,
-                sq_model_path: str,
+                sq_model_path: str | List[str],
                 use_gpu: bool = True,
                 max_isomers: int = 4,
                 max_rot_bonds: int = 10,
                 max_heavy_atoms: int = 30,
                 max_conformers: int = 10,
-                cpu_processes: int | None = None):
+                cpu_processes: int | None = None,
+                top_n_models: int | None = None,
+                parallel_execution: bool = True):
         """
         Initialize the OpenEye FastROCS scorer.
 
         Parameters
         ----------
-        sq_model_path : str
-            Path to the ROCS query file (.sq file)
+        sq_model_path : str or List[str]
+            Path to the ROCS query file (.sq file) or list of paths for multiple models
         use_gpu : bool, optional
             Whether to use GPU acceleration if available (default: True)
         max_isomers : int, optional
@@ -585,14 +689,47 @@ class OpenEyeScorer(Scorer):
             Number of CPU processes to use if not using GPU. If None, will use
             available CPU cores minus 2 (to leave resources for the system).
             Ignored when GPU mode is active.
+        top_n_models : int | None, optional
+            If specified and using multiple models, only use the top N performing models
+        parallel_execution : bool, optional
+            Whether to use parallel execution for multiple models (default: True)
         """
-        if not os.path.isfile(sq_model_path):
-            raise FileNotFoundError(sq_model_path)
+        # Handle both single model or list of models
+        if isinstance(sq_model_path, (list, tuple)):
+            self.sq_models = list(sq_model_path)
+        else:
+            self.sq_models = [sq_model_path]
+            
+        # Validate all model files
+        for sq_path in self.sq_models:
+            if not os.path.isfile(sq_path):
+                raise FileNotFoundError(sq_path)
+                
+            # Validate each shape query file
+            try:
+                query = oeshape.OEShapeQuery()
+                if not oeshape.OEReadShapeQuery(sq_path, query):
+                    raise ValueError(f"Invalid shape query file: {sq_path}")
+            except Exception as e:
+                print(f"Warning: Error validating query file {sq_path}: {e}")
+                # Continue with other files even if one fails
 
         # Memory pool initialization is now handled at the module level
         # to prevent duplicate calls across different parts of the program
 
-        self.sq_model = sq_model_path
+        # Set up model selection
+        self.top_n_models = top_n_models
+        self.parallel_execution = parallel_execution
+        self.model_selector = None
+        
+        # Initialize adaptive model selector if using multiple models and top_n_models is specified
+        if len(self.sq_models) > 1 and top_n_models is not None:
+            self.model_selector = AdaptiveModelSelector(self.sq_models)
+            
+        # Store the primary model for compatibility with older code
+        self.sq_model = self.sq_models[0]
+        
+        # Store other parameters
         self.max_iso = max_isomers
         self.max_rot = max_rot_bonds
         self.max_heavy = max_heavy_atoms
@@ -623,18 +760,19 @@ class OpenEyeScorer(Scorer):
                 self.cpu_procs = _calculate_optimal_workers()
             print(f"FastROCS CPU mode   : {self.cpu_procs} spawn workers")
 
-        # Validate the query file and prepare
+        # Validate each query file and prepare
         try:
-            query = oeshape.OEShapeQuery()  # https://docs.eyesopen.com/toolkits/python/shapetk/OEShapeClasses/OEShapeQuery.html
-            if not oeshape.OEReadShapeQuery(sq_model_path, query):   # https://docs.eyesopen.com/toolkits/python/shapetk/shape_examples.html#overlap-with-shape-query
-                raise ValueError(f"Invalid shape query file: {sq_model_path}")
-                
             # Create database options with correct mode
             opts = oefastrocs.OEShapeDatabaseOptions()
             if self.use_gpu:
                 opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
             else:
                 opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
+                
+            # Validate the primary model used for compatibility with older code
+            primary_query = oeshape.OEShapeQuery()  # https://docs.eyesopen.com/toolkits/python/shapetk/OEShapeClasses/OEShapeQuery.html
+            if not oeshape.OEReadShapeQuery(self.sq_model, primary_query):   # https://docs.eyesopen.com/toolkits/python/shapetk/shape_examples.html#overlap-with-shape-query
+                raise ValueError(f"Invalid shape query file: {self.sq_model}")
         except Exception as e:
             print(f"Warning: Error initializing query: {e}")
 
@@ -680,6 +818,96 @@ class OpenEyeScorer(Scorer):
         """
         Unified scoring method for both GPU and CPU modes.
         Optimized with better resource utilization.
+        Handles multiple models by taking the maximum score per molecule.
+        """
+        if not smiles:
+            return np.zeros(0)
+            
+        # Get active models to use for scoring
+        active_models = self.sq_models
+        if self.model_selector and self.top_n_models:
+            active_models = self.model_selector.get_active_models(self.top_n_models)
+            
+        # If we only have one model, use the original optimal scoring path
+        if len(active_models) == 1:
+            return self._score_with_single_model(smiles, active_models[0])
+            
+        # For multiple models, we'll take the maximum score across all models
+        if self.parallel_execution and len(active_models) > 1:
+            max_scores = self._score_parallel_models(smiles, active_models)
+        else:
+            max_scores = self._score_sequential_models(smiles, active_models)
+            
+        # Update model performance metrics if we're using adaptive selection
+        if self.model_selector:
+            # Use a small subset of molecules for performance tracking
+            sample_size = min(50, len(smiles))
+            if sample_size > 0:
+                sample_smiles = smiles[:sample_size]
+                model_scores = {}
+                
+                # Score each model on the sample to track performance
+                for model in active_models:
+                    model_scores[model] = float(np.mean(self._score_with_single_model(sample_smiles, model)))
+                
+                # Update model selector with new performance data
+                self.model_selector.update_model_scores(model_scores)
+            
+        return max_scores
+        
+    def _score_parallel_models(self, smiles: List[str], models: List[str]) -> np.ndarray:
+        """Score molecules with multiple models in parallel, taking the maximum score."""
+        # Initialize with zeros - we'll take max scores across models
+        max_scores = np.zeros(len(smiles))
+        
+        # Use smaller subset of threads than we would for batch processing
+        max_model_workers = min(len(models), os.cpu_count() or 4) 
+        if self.use_gpu:
+            # For GPU, avoid oversubscription - use single worker
+            max_model_workers = 1
+            
+        # Create a thread pool to process models in parallel
+        with ThreadPoolExecutor(max_workers=max_model_workers) as executor:
+            future_to_model = {
+                executor.submit(self._score_with_single_model, smiles, model): model 
+                for model in models
+            }
+            
+            # Process results as they complete
+            for future in future_to_model:
+                try:
+                    model_scores = future.result()
+                    # Take element-wise maximum
+                    max_scores = np.maximum(max_scores, model_scores)
+                except Exception as e:
+                    model = future_to_model[future]
+                    print(f"Error with model {model}: {e}")
+                    
+        return max_scores
+    
+    def _score_sequential_models(self, smiles: List[str], models: List[str]) -> np.ndarray:
+        """Score molecules with multiple models sequentially, taking the maximum score."""
+        # Initialize with zeros - we'll take max scores across models
+        max_scores = np.zeros(len(smiles))
+        
+        # Process each model sequentially
+        for model in models:
+            try:
+                current_scores = self._score_with_single_model(smiles, model)
+                # Take element-wise maximum
+                max_scores = np.maximum(max_scores, current_scores)
+            except Exception as e:
+                print(f"Error with model {model}: {e}")
+            
+            # Force garbage collection between models to free memory
+            gc.collect()
+            
+        return max_scores
+        
+    def _score_with_single_model(self, smiles: List[str], sq_model: str) -> np.ndarray:
+        """
+        Score molecules with a single model.
+        Optimized with better resource utilization.
         """
         if not smiles:
             return np.zeros(0)
@@ -710,7 +938,7 @@ class OpenEyeScorer(Scorer):
             for i, batch in enumerate(batches):
                 try:
                     batch_results = _score_batch(
-                        batch, self.sq_model, self.max_iso, 
+                        batch, sq_model, self.max_iso, 
                         self.max_rot, self.max_heavy, True, self.max_confs
                     )
                     results.update(batch_results)
@@ -731,7 +959,7 @@ class OpenEyeScorer(Scorer):
                 for batch in batches:
                     try:
                         batch_results = _score_batch(
-                            batch, self.sq_model, self.max_iso, 
+                            batch, sq_model, self.max_iso, 
                             self.max_rot, self.max_heavy, False, self.max_confs
                         )
                         results.update(batch_results)
@@ -752,7 +980,7 @@ class OpenEyeScorer(Scorer):
                         futures.append(pool.submit(
                             _score_batch,
                             batch=batch,
-                            sq_model=self.sq_model,
+                            sq_model=sq_model,
                             max_iso=self.max_iso,
                             max_rot=self.max_rot,
                             max_heavy=self.max_heavy,
