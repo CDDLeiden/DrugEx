@@ -76,6 +76,17 @@ class AdaptiveModelSelector:
     """
     Class to adaptively select top-performing shape models during training.
     Tracks model performance and provides a mechanism to focus on the best models.
+    
+    https://www.nature.com/articles/s41598-019-41594-3
+    
+    Uses Exponential Moving Average (EMA) to balance between recent performance 
+    and historical data, allowing the system to adapt to changing molecular distributions
+    while maintaining stability in model selection.
+    
+    TODO:
+    - Tune alpha (EMA smoothing) and top_n_models for your dataset via validation.
+    - Add a warm-up period (e.g., use all models for first 5–10 batches).
+    - Periodically review model selection stats for stability and diversity.
     """
     
     def __init__(self, model_paths):
@@ -94,7 +105,14 @@ class AdaptiveModelSelector:
     
     def update_model_scores(self, new_scores):
         """
-        Update model scores with new data using exponential moving average.
+        Update model scores with new data using exponential moving average (EMA).
+        
+        EMA gives more weight to recent scores while maintaining influence from historical
+        performance. This creates a balance between stability and adaptability in model selection,
+        helping to identify consistently high-performing models over time while remaining
+        responsive to recent improvements.
+        
+        Formula: EMA = α * current_score + (1-α) * previous_EMA
         
         Parameters
         ----------
@@ -106,6 +124,8 @@ class AdaptiveModelSelector:
         for model, score in new_scores.items():
             if model in self.model_scores:
                 # Update with exponential moving average
+                # EMA calculation gives 30% weight to new scores and 70% to historical performance
+                # This balances responsiveness to new data with stability in model selection
                 old_score = self.model_scores[model]
                 self.model_scores[model] = alpha * score + (1 - alpha) * old_score
                 # Increment usage counter
