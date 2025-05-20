@@ -77,6 +77,8 @@ class AdaptiveModelSelector:
     Class to adaptively select top-performing shape models during training.
     Tracks model performance and provides a mechanism to focus on the best models.
     
+    https://openreview.net/forum?id=2M9CUnYnBA
+    
     https://www.nature.com/articles/s41598-019-41594-3
     
     Uses Exponential Moving Average (EMA) to balance between recent performance 
