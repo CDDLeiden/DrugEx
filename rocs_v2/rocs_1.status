@@ -1,0 +1,11 @@
+Run time(sec)         : 4.0
+Percent complete      : 100.0
+Molecules read        : 49
+Molecules/sec         : 12.2
+Hitlist size          : 0
+Current worst score   : -1.00
+Average conf/sec      : 2267.2
+
+Molecule read failures: 0
+#warnings             : 0
+#errors               : 0
