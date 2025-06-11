@@ -37,7 +37,7 @@ import os
 import tempfile
 import gc
 from pathlib import Path
-from openeye import oechem, oeomega
+from openeye import oechem, oeomega, oeff
 try:
     from openeye import oeshape, oefastrocs
     FASTROCS_AVAILABLE = True
@@ -48,6 +48,7 @@ from drugex.training.scorers.interfaces import Scorer
 
 # Initialize OpenEye memory pool just once at module import time
 _OE_MEMORY_POOL_INITIALIZED = False
+
 def _initialize_oe_memory_pool():
     global _OE_MEMORY_POOL_INITIALIZED
     
@@ -73,231 +74,187 @@ _initialize_oe_memory_pool()
 # ------------------------------------------------------------------------------
 
 class AdaptiveModelSelector:
-    """
-    Class to adaptively select top-performing shape models during training.
-    Tracks model performance and provides a mechanism to focus on the best models.
-    
-    https://openreview.net/forum?id=2M9CUnYnBA
-    
-    https://www.nature.com/articles/s41598-019-41594-3
-    
-    Uses Exponential Moving Average (EMA) to balance between recent performance 
-    and historical data, allowing the system to adapt to changing molecular distributions
-    while maintaining stability in model selection.
-    
-    TODO:
-    - Tune alpha (EMA smoothing) and top_n_models for your dataset via validation.
-    - Add a warm-up period (e.g., use all models for first 5–10 batches).
-    - Periodically review model selection stats for stability and diversity.
-    """
+    """Adaptive model selection for multi-model ROCS scoring."""
     
     def __init__(self, model_paths):
-        """
-        Initialize the adaptive model selector with a list of model paths.
-        
-        Parameters
-        ----------
-        model_paths : List[str]
-            List of paths to shape query (.sq) files
-        """
         self.model_paths = model_paths
-        self.model_scores = {model: 0.0 for model in model_paths}
-        self.usage_counts = {model: 0 for model in model_paths}
-        self.history = []  # Track score history for trending
-    
-    def update_model_scores(self, new_scores):
-        """
-        Update model scores with new data using exponential moving average (EMA).
+        self.model_scores = {}
+        self.selection_count = 0
         
-        EMA gives more weight to recent scores while maintaining influence from historical
-        performance. This creates a balance between stability and adaptability in model selection,
-        helping to identify consistently high-performing models over time while remaining
-        responsive to recent improvements.
-        
-        Formula: EMA = α * current_score + (1-α) * previous_EMA
-        
-        Parameters
-        ----------
-        new_scores : Dict[str, float]
-            Dictionary mapping model paths to their average scores
-        """
-        alpha = 0.3  # Smoothing factor - higher means more weight on recent scores
-        
-        for model, score in new_scores.items():
-            if model in self.model_scores:
-                # Update with exponential moving average
-                # EMA calculation gives 30% weight to new scores and 70% to historical performance
-                # This balances responsiveness to new data with stability in model selection
-                old_score = self.model_scores[model]
-                self.model_scores[model] = alpha * score + (1 - alpha) * old_score
-                # Increment usage counter
-                self.usage_counts[model] += 1
-        
-        # Store history for potential analysis
-        self.history.append(self.model_scores.copy())
-        
-        # Keep history size manageable
-        if len(self.history) > 20:
-            self.history.pop(0)
-    
-    def get_active_models(self, top_n=None):
-        """
-        Get the top N performing models based on current scores.
-        
-        Parameters
-        ----------
-        top_n : int, optional
-            Number of top models to return. If None, returns all models.
-            
-        Returns
-        -------
-        List[str]
-            List of model paths for the top performing models
-        """
-        if top_n is None or top_n >= len(self.model_paths):
+    def select_models(self, max_models=None):
+        """Select best performing models based on historical data."""
+        if max_models is None or max_models >= len(self.model_paths):
             return self.model_paths
             
-        # Sort models by score (descending)
+        # Sort by average score (descending)
         sorted_models = sorted(
             self.model_paths,
-            key=lambda model: self.model_scores.get(model, 0.0),
+            key=lambda x: self.model_scores.get(x, 0.0),
             reverse=True
         )
         
-        return sorted_models[:top_n]
+        return sorted_models[:max_models]
     
-    def get_model_stats(self):
-        """
-        Get statistics about model performance.
-        
-        Returns
-        -------
-        Dict[str, Dict[str, float]]
-            Dictionary with model paths as keys and performance stats as values
-        """
-        stats = {}
-        for model in self.model_paths:
-            stats[model] = {
-                'score': self.model_scores.get(model, 0.0),
-                'usage': self.usage_counts.get(model, 0),
-                'relative_score': self.model_scores.get(model, 0.0) / max(max(self.model_scores.values()), 0.001)
-            }
-        return stats
+    def update_scores(self, model_path, scores):
+        """Update model performance tracking."""
+        avg_score = np.mean(scores) if len(scores) > 0 else 0.0
+        if model_path in self.model_scores:
+            # Rolling average
+            self.model_scores[model_path] = (self.model_scores[model_path] + avg_score) / 2
+        else:
+            self.model_scores[model_path] = avg_score
 
-def OMEGA(input_file, experiment_name, max_confs=10):
+# ------------------------------------------------------------------------------
+#  Helper functions
+# ------------------------------------------------------------------------------
+
+def _has_valid_3d_conformers(mol):
     """
-    Generate conformers using OMEGA.
+    Simple check if an OEMol object has valid 3D conformers.
     
     Parameters
     ----------
-    input_file : str
-        Path to the input file with molecules.
-    experiment_name : str
-        Name of the experiment for output file naming.
-    max_confs : int, optional
-        Maximum number of conformers to generate per molecule (default: 10).
+    mol : OEMol
+        OpenEye molecule object to check
         
     Returns
     -------
-    str
-        Path to the generated conformer database.
+    bool
+        True if molecule has at least one conformer with 3D coordinates
     """
-    # Use temporary directory for output files
-    temp_dir = tempfile.gettempdir()
-    dbname = os.path.join(temp_dir, f"{experiment_name}_conformers.oeb.gz")
+    if not hasattr(mol, 'NumConfs'):
+        return False
+        
+    if mol.NumConfs() == 0:
+        return False
+        
+    # Check if at least one conformer has 3D coordinates (non-zero Z values)
+    for conf in mol.GetConfs():
+        coords = oechem.OEFloatArray(mol.GetMaxAtomIdx() * 3)
+        conf.GetCoords(coords)
+        
+        # Check if we have non-zero Z coordinates (indicating 3D structure)
+        for i in range(2, len(coords), 3):  # Check every Z coordinate
+            if abs(coords[i]) > 1e-6:  # Small threshold for floating point comparison
+                return True
+                
+    return False
+
+def OMEGA(input_file, experiment_name, max_confs=200, use_existing_conformers_always=True):
+    """Generate conformers using OMEGA with aligned parameters, optionally skipping molecules with existing conformers."""
+    output_file = f"{experiment_name}_conformers.oeb.gz"
     
-    # Set up OMEGA options
+    # Set up OMEGA with EXACT alignment to base_rocs.py CLI behavior
     omegaOpts = oeomega.OEOmegaOptions()
-    omegaOpts.SetMaxConfs(max_confs)  # Use configurable value
-    omegaOpts.SetStrictStereo(False)  # Don't enforce stereo constraints
+    omegaOpts.SetMaxConfs(max_confs)  # Aligned with base_rocs.py: 200 conformers
+    omegaOpts.SetStrictStereo(False)
+    omegaOpts.SetFromCT(True)
+    omegaOpts.SetFixRMS(True)
+    omegaOpts.SetRMSThreshold(0.5)
+    omegaOpts.SetEnumRing(True)
+    omegaOpts.SetRotorOffset(False)
     
-    # Create omega
+    # Force GPU settings to match base_rocs.py behavior
+    omegaOpts.GetTorDriveOptions().SetUseGPU(False)  # Force CPU mode for consistency
+    omegaOpts.SetSampleHydrogens(True)
+    
     omega = oeomega.OEOmega(omegaOpts)
     
-    # Read molecules from input file
-    ifs = oechem.oemolistream()
-    if not ifs.open(input_file):
-        raise ValueError(f"Cannot open input file: {input_file}")
-        
-    # Create output file
-    ofs = oechem.oemolostream()
-    if not ofs.open(dbname):
-        raise ValueError(f"Cannot create output file: {dbname}")
+    # Process molecules
+    ifs = oechem.oemolistream(input_file)
+    ofs = oechem.oemolostream(output_file)
     
-    # Generate conformers - fixed to correctly handle OEMol objects for omega
-    for mol_iter in ifs.GetOEMols():
-        # Create a copy of the molecule for conformer generation
-        mol = oechem.OEMol(mol_iter)
-        try:
-            if omega(mol):  # Correct calling pattern for omega
+    mol_count = 0
+    conformer_gen_count = 0
+    existing_conformer_count = 0
+    
+    for mol in ifs.GetOEMols():
+        # Check if molecule already has valid 3D conformers
+        if use_existing_conformers_always and _has_valid_3d_conformers(mol):
+            # Use existing conformers, no need to generate new ones
+            oechem.OEWriteMolecule(ofs, mol)
+            mol_count += 1
+            existing_conformer_count += 1
+        else:
+            # Generate new conformers using OMEGA
+            if omega(mol):
                 oechem.OEWriteMolecule(ofs, mol)
-        except oechem.OELicenseError as e:
-            print(f"OpenEye license error in OMEGA: {e}")
-            raise
-        except Exception as e:
-            print(f"Error generating conformers: {e}")
+                mol_count += 1
+                conformer_gen_count += 1
     
     ifs.close()
     ofs.close()
     
-    return dbname
+    if use_existing_conformers_always and existing_conformer_count > 0:
+        print(f"OMEGA: Used existing conformers for {existing_conformer_count} molecules, "
+              f"generated conformers for {conformer_gen_count} molecules (total: {mol_count})")
+    else:
+        print(f"OMEGA generated conformers for {mol_count} molecules")
+    return output_file
+
 
 def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
-    """
-    Run FastROCS shape comparison on a database of molecules.
+    """Run ROCS scoring with aligned parameters to match base_rocs.py CLI behavior."""
+    if not FASTROCS_AVAILABLE:
+        raise ImportError("FastROCS not available")
     
-    Parameters
-    ----------
-    dbname : str
-        Path to the conformer database.
-    query_files : list
-        List of query file paths.
-    experiment_name : str
-        Name of the experiment for output file naming.
-    use_gpu : bool
-        Whether to use GPU acceleration if available.
-    threads : int, optional
-        Number of CPU threads to use when use_gpu is False.
-        
-    Returns
-    -------
-    str
-        Path to the output CSV file with results.
-    """
-    # Use temporary directory for output files
-    temp_dir = tempfile.gettempdir()
-    outfname = os.path.join(temp_dir, f"{experiment_name}_results.csv")
+    outfname = f"{experiment_name}_scores.csv"
     
     try:
-        # Create molecule database
-        mdb = oechem.OEMolDatabase()
-        if not mdb.Open(dbname):
-            raise ValueError(f"Cannot open database: {dbname}")
+        # Initialize database with CLI-aligned settings and vROCS compatibility
+        # Create color force field first for vROCS approach
+        color_ff = oeshape.OEColorForceField()
+        color_ff.Init(oeshape.OEColorFFType_ImplicitMillsDeanNoRings)  # Match vROCS reference
         
-        # Set up shape database
-        db = oefastrocs.OEShapeDatabase()
+        # Create database with color force field directly (vROCS approach)
+        try:
+            db = oefastrocs.OEShapeDatabase(color_ff)
+        except:
+            # Fallback to standard database creation
+            db = oefastrocs.OEShapeDatabase()
+        
+        opts = oefastrocs.OEShapeDatabaseOptions()
+        
+        # Force ROCS mode (not FastROCS) to match CLI behavior
+        opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
+        
+        # Configure threading to match CLI behavior
         if use_gpu:
-            # GPU mode settings
-            db.SetNumOpenThreads(1)  # Single thread for GPU mode
-            opts = oefastrocs.OEShapeDatabaseOptions()
-            opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
+            # GPU mode - single thread like CLI
+            db.SetNumOpenThreads(1)
         else:
-            # CPU mode settings with controlled thread count
+            # CPU mode - controlled thread count
             if threads is None:
-                # Default to 2 threads if not specified, leaving some cores for system
                 threads = min(2, max(1, os.cpu_count() - 2)) if os.cpu_count() else 2
             db.SetNumOpenThreads(threads)
-            opts = oefastrocs.OEShapeDatabaseOptions()
-            opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)  # Explicitly set ROCS mode for CPU
+            
+        # Apply CLI-equivalent database options with vROCS compatibility
+        try:
+            # Match CLI settings: -cutoff -1.0, -besthits 1, -tanimoto_cutoff 0.0
+            opts.SetScoreCutoff(-1.0)  # Return all scores (no cutoff)
+            opts.SetLimit(1)  # Return only best hit per molecule (matches -besthits 1)
+            # Create proper OEColorForceField object with vROCS-compatible enum
+            color_ff = oeshape.OEColorForceField()
+            color_ff.Init(oeshape.OEColorFFType_ImplicitMillsDeanNoRings)  # Match vROCS reference
+            opts.SetColorForceField(color_ff)  # Match CLI -chemff parameter
+            # Enable color optimization for better scoring
+            opts.SetColorOptimization(True)
+        except AttributeError:
+            # Some options may not be available in all FastROCS versions
+            pass
         
         # Open the database with the molecule database
+        mdb = oechem.OEMolDatabase()
+        if not mdb.Open(dbname):
+            raise ValueError(f"Failed to open molecule database: {dbname}")
+        
         if not db.Open(mdb):
             raise ValueError(f"Failed to open shape database")
-    except oechem.OELicenseError as e:
-        print(f"OpenEye license error: {e}")
-        raise
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        if "license" in str(e).lower():
+            print(f"OpenEye license error: {e}")
+        else:
+            print(f"Error initializing database: {e}")
         raise
     
     # Create a single output file for all queries
@@ -317,31 +274,38 @@ def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
         # Read query
         query = oeshape.OEShapeQuery()
         if not oeshape.OEReadShapeQuery(current_file, query):
-            print(f"Warning: Cannot read query file: {current_file}")
+            print(f"Warning: Could not read shape query: {current_file}")
             continue
+            
+        query_name = os.path.basename(current_file)
         
         try:
-            # Append to existing file instead of overwriting
+            # Score all molecules
+            score_count = 0
             with open(outfname, 'a') as f:
-                # Process each score
+                print(f"Scoring with query: {query_name}")
                 for score in db.GetSortedScores(query, opts):
                     mol_idx = score.GetMolIdx()
-                    mol = oechem.OEGraphMol()
+                    tanimoto_combo = score.GetTanimotoCombo()
+                    shape_tanimoto = score.GetShapeTanimoto()
+                    color_tanimoto = score.GetColorTanimoto()
                     
-                    if mdb.GetMolecule(mol, mol_idx):
-                        title = mol.GetTitle()
-                        tanimoto_combo = score.GetTanimotoCombo()
-                        shape_tanimoto = score.GetShapeTanimoto()
-                        color_tanimoto = score.GetColorTanimoto()
-                        
-                        # Write score to file with query file name
-                        query_name = os.path.basename(current_file)
-                        f.write(f"{title},{query_name},{tanimoto_combo},{shape_tanimoto},{color_tanimoto}\n")
-        except oechem.OELicenseError as e:
-            print(f"OpenEye license error in ROCS scoring: {e}")
-            raise
+                    # Get molecule title - correct API usage
+                    mol = oechem.OEGraphMol()
+                    mdb.GetMolecule(mol, mol_idx)
+                    title = mol.GetTitle()
+                    
+                    # Write results
+                    f.write(f"{title},{query_name},{tanimoto_combo},{shape_tanimoto},{color_tanimoto}\n")
+                    score_count += 1
+                    
+                print(f"Wrote {score_count} scores for query {query_name}")
         except Exception as e:
-            print(f"Error in ROCS scoring: {e}")
+            if "license" in str(e).lower():
+                print(f"OpenEye license error in ROCS scoring: {e}")
+                raise
+            else:
+                print(f"Error in ROCS scoring: {e}")
             
     # Clean up to reduce memory usage
     # mdb.Close()  # OEMolDatabase doesn't have a Close() method in this version
@@ -353,50 +317,56 @@ def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
     
     return outfname
 
+
+# ------------------------------------------------------------------------------
+#  Main scorer class
+# ------------------------------------------------------------------------------
+
 class RocsScorer(Scorer):
     """
-    A minimal viable scorer for ROCS that computes shape similarity scores 
-    for a list of molecules against a query molecule using OEFlipper for isomer enumeration.
+    Simplified ROCS scorer implementation for basic usage and educational purposes.
+    
+    This implementation prioritizes clarity and ease of use over performance.
+    Suitable for small to medium molecule sets and development environments.
     """
     
     def __init__(self, sq_model_path=None, query_file=None, experiment_name="rocs_experiment", 
                  score_type="TanimotoCombo", use_gpu=False, max_isomers=4, max_rot_bonds=15, 
-                 max_heavy_atoms=45, max_conformers=10, cpu_processes=None,
-                 top_n_models=None, parallel_execution=True):
+                 max_heavy_atoms=35, max_conformers=200, cpu_processes=None,
+                 top_n_models=None, parallel_execution=True, use_existing_conformers_always=True):
         """
-        Initialize the ROCS Scorer.
-
+        Initialize the RocsScorer.
+        
         Parameters
         ----------
-        sq_model_path : str or List[str], optional
-            Path to the ROCS query file(s) (.sq file). Alternative to query_file.
-        query_file : str or List[str], optional
-            Path to the ROCS query file(s) (.sq or molecule file). Alternative to sq_model_path.
+        sq_model_path : str or list, optional
+            Path to ROCS query file(s) (.sq format)
+        query_file : str or list, optional  
+            Alternative parameter name for sq_model_path
         experiment_name : str, optional
-            Name of the experiment for file naming (default: "rocs_experiment").
+            Name for temporary files and experiment tracking
         score_type : str, optional
-            Type of score to extract (e.g., "ShapeTanimoto", "ColorTanimoto", "TanimotoCombo").
+            Type of score to extract ("TanimotoCombo", "ShapeTanimoto", "ColorTanimoto")
         use_gpu : bool, optional
-            Whether to use GPU acceleration if available (default: False).
+            Whether to use GPU acceleration if available
         max_isomers : int, optional
-            Maximum number of isomers to enumerate per molecule (default: 4).
+            Maximum number of isomers to enumerate per molecule (aligned with base_rocs.py)
         max_rot_bonds : int, optional
-            Maximum number of rotatable bonds to consider (default: 15).
+            Maximum rotatable bonds threshold (aligned with base_rocs.py)
         max_heavy_atoms : int, optional
-            Maximum number of heavy atoms to process (default: 45).
+            Maximum heavy atoms threshold (aligned with base_rocs.py)
         max_conformers : int, optional
-            Maximum number of conformers to generate per molecule (default: 10).
+            Maximum conformers per molecule (aligned with base_rocs.py CLI default: 200)
         cpu_processes : int, optional
-            Number of CPU processes to use if not using GPU. If None, will automatically
-            determine based on system resources.
+            Number of CPU processes to use
         top_n_models : int, optional
-            If specified and using multiple models, only use the top N performing models.
+            Use only top N performing models (for multi-model setups)
         parallel_execution : bool, optional
-            Whether to use parallel execution for multiple models (default: True).
+            Whether to enable parallel processing
+        use_existing_conformers_always : bool, optional
+            Whether to use existing 3D conformers when available instead of generating new ones (default: True)
         """
-        super().__init__()
-        
-        # Handle both parameter options for the query files
+        # Handle both sq_model_path and query_file parameters for compatibility
         if sq_model_path is not None:
             if isinstance(sq_model_path, (list, tuple)):
                 self.qfnames = list(sq_model_path)
@@ -423,6 +393,7 @@ class RocsScorer(Scorer):
         self.max_conformers = max_conformers
         self.top_n_models = top_n_models
         self.parallel_execution = parallel_execution
+        self.use_existing_conformers_always = use_existing_conformers_always
         
         # Set up adaptive model selection if needed
         self.model_selector = None
@@ -462,12 +433,13 @@ class RocsScorer(Scorer):
                     continue
                     
                 valid_models.append(current_file)
-            except oechem.OELicenseError as e:
-                print(f"OpenEye license error: {e}")
-                raise
             except Exception as e:
-                print(f"Error validating query file {qfname}: {e}")
-                continue
+                if "license" in str(e).lower():
+                    print(f"OpenEye license error: {e}")
+                    raise
+                else:
+                    print(f"Error validating query file {qfname}: {e}")
+                    continue
                 
         if not valid_models:
             raise ValueError("No valid query files found. Please provide at least one valid .sq file.")
@@ -484,226 +456,253 @@ class RocsScorer(Scorer):
         model_str = f"{len(self.qfnames)} shape query files"
         print(f"ROCS scorer initialized using {gpu_str} mode with {model_str}")
 
-    def getScores(self, mols, frags=None):
+    def getScores(self, mols):
         """
-        Compute ROCS similarity scores for a list of molecules.
-
+        Score molecules using ROCS.
+        
         Parameters
         ----------
-        mols : List[str] or List[RDKit.Mol]
-            A list of SMILES strings or RDKit molecule objects representing molecules.
-        frags : List[str], optional
-            A list of fragments (not used in this scorer).
-
+        mols : list
+            List of molecules (SMILES strings or OEMol objects)
+            
         Returns
         -------
-        scores : np.ndarray
-            An array of similarity scores for the input molecules.
+        np.ndarray
+            Array of ROCS scores
         """
         if not mols:
-            return np.array([])
+            return np.zeros(0)
             
-        # Get active models to use for scoring
-        active_models = self.qfnames
-        if self.model_selector and self.top_n_models:
-            active_models = self.model_selector.get_active_models(self.top_n_models)
+        # Ensure consistent molecule naming for input
+        if any(hasattr(mol, 'GetTitle') for mol in mols):
+            mols = self._ensure_consistent_molecule_naming(mols)
             
-        # If we only have one model, use the original scoring path
-        if len(active_models) == 1:
-            return self._score_with_single_model(mols, active_models[0])
-        
-        # For multiple models, take the maximum score across all models
-        if self.parallel_execution and len(active_models) > 1:
-            max_scores = self._score_parallel_models(mols, active_models)
-        else:
-            max_scores = self._score_sequential_models(mols, active_models)
-            
-        # Update model performance metrics if we're using adaptive selection
-        if self.model_selector:
-            # Use a small subset of molecules for performance tracking
-            sample_size = min(50, len(mols))
-            if sample_size > 0:
-                sample_mols = mols[:sample_size]
-                model_scores = {}
-                
-                # Score each model on the sample to track performance
-                for model in active_models:
-                    model_scores[model] = float(np.mean(self._score_with_single_model(sample_mols, model)))
-                
-                # Update model selector with new performance data
-                self.model_selector.update_model_scores(model_scores)
-                
-        return max_scores
-    
-    def _score_parallel_models(self, mols, models):
-        """Score molecules with multiple models in parallel, taking the maximum score."""
-        from concurrent.futures import ThreadPoolExecutor
-        
-        # Initialize with zeros - we'll take max scores across models
-        max_scores = np.zeros(len(mols))
-        
-        # Use smaller subset of threads for model parallelism
-        max_model_workers = min(len(models), os.cpu_count() or 4) 
-        if self.use_gpu:
-            # For GPU, avoid oversubscription - use single worker
-            max_model_workers = 1
-            
-        # Create a thread pool to process models in parallel
-        with ThreadPoolExecutor(max_workers=max_model_workers) as executor:
-            future_to_model = {
-                executor.submit(self._score_with_single_model, mols, model): model 
-                for model in models
-            }
-            
-            # Process results as they complete
-            for future in future_to_model:
-                try:
-                    model_scores = future.result()
-                    # Take element-wise maximum
-                    max_scores = np.maximum(max_scores, model_scores)
-                except Exception as e:
-                    model = future_to_model[future]
-                    print(f"Error with model {model}: {e}")
-                    
-        return max_scores
-    
-    def _score_sequential_models(self, mols, models):
-        """Score molecules with multiple models sequentially, taking the maximum score."""
-        # Initialize with zeros - we'll take max scores across models
-        max_scores = np.zeros(len(mols))
-        
-        # Process each model sequentially
-        for model in models:
-            try:
-                current_scores = self._score_with_single_model(mols, model)
-                # Take element-wise maximum
-                max_scores = np.maximum(max_scores, current_scores)
-            except Exception as e:
-                print(f"Error with model {model}: {e}")
-            
-            # Force garbage collection between models to free memory
-            gc.collect()
-            
-        return max_scores
-        
-    def _score_with_single_model(self, mols, model_path):
-        """
-        Compute ROCS similarity scores for a list of molecules using a single model.
-        This is the original implementation refactored to support multi-model scoring.
-        """
-        if not mols:
-            return np.array([])
-
-        # Check if input contains RDKit molecules and convert to SMILES if needed
-        import_rdkit = False
+        # Keep original molecules for conformer detection
+        # Convert SMILES to a consistent format but preserve OEMol objects with conformers
+        processed_mols = []
         for mol in mols:
-            if mol is not None and not isinstance(mol, str):
-                import_rdkit = True
-                break
-                
-        if import_rdkit:
-            try:
-                from rdkit import Chem
-                smiles = []
-                for mol in mols:
-                    if mol is None:
-                        smiles.append(None)
-                    else:
-                        try:
-                            smi = Chem.MolToSmiles(mol)
-                            smiles.append(smi)
-                        except:
-                            smiles.append(None)
-                mols = smiles
-            except ImportError:
-                print("Warning: RDKit not available. Can only process SMILES inputs.")
-                return np.zeros(len(mols))
-
-        # Initial filtering to skip invalid molecules
-        filtered_mols = []
-        mol_ids = []
+            if isinstance(mol, str):
+                processed_mols.append(mol)
+            elif hasattr(mol, 'GetTitle'):  # OEMol object
+                # Check if this OEMol has conformers and we want to use them
+                if self.use_existing_conformers_always and _has_valid_3d_conformers(mol):
+                    processed_mols.append(mol)  # Keep the OEMol object
+                else:
+                    # Convert to SMILES for standard processing
+                    smi = oechem.OECreateSmiString(mol)
+                    processed_mols.append(smi)
+            else:
+                print(f"Warning: Unsupported molecule type: {type(mol)}")
+                processed_mols.append("")
         
-        for i, smi in enumerate(mols):
-            # Skip missing or empty entries
-            if not smi:
-                continue
+        # Use multiple models if available
+        if len(self.qfnames) > 1:
+            all_scores = []
+            active_models = self.qfnames
+            
+            # Use adaptive model selection if configured
+            if self.model_selector and self.top_n_models:
+                active_models = self.model_selector.select_models(self.top_n_models)
+            
+            for model_path in active_models:
+                model_scores = self._score_with_single_model(processed_mols, model_path)
+                all_scores.append(model_scores)
                 
-            # Basic filtering for problematic molecules
-            if isinstance(smi, str) and len(smi) > 0:
-                mol = oechem.OEMol()
-                if oechem.OESmilesToMol(mol, str(smi)):
-                    # Check heavy atom count
-                    if oechem.OECount(mol, oechem.OEIsHeavy()) <= self.max_heavy_atoms:
-                        filtered_mols.append((i, smi))
-                        mol_ids.append(f"molecule_{i}")
-        
-        if not filtered_mols:
-            return np.zeros(len(mols))
+                # Update model selector if available
+                if self.model_selector:
+                    self.model_selector.update_scores(model_path, model_scores)
+            
+            # Take maximum score across all models for each molecule
+            if all_scores:
+                combined_scores = np.maximum.reduce(all_scores)
+                return combined_scores
+            else:
+                return np.zeros(len(processed_mols))
+        else:
+            # Single model scoring
+            return self._score_with_single_model(processed_mols, self.qfnames[0])
 
-        # Create temporary directory for all files
-        temp_dir = tempfile.mkdtemp(prefix="rocs_")
+    def _score_with_single_model(self, mols, model_path):
+        """Score molecules with a single ROCS model."""
+        if not mols:
+            return np.zeros(0)
+            
+        # Create temporary directory for this scoring run
+        temp_dir = tempfile.mkdtemp(prefix="ez_rocs_")
         
         try:
-            # Create isomers file
-            isomers_file = os.path.join(temp_dir, "isomers.smi")
+            # Separate molecules with conformers from those without
+            molecules_with_conformers = []
+            molecules_without_conformers = []
+            mol_indices = []  # Track original indices
             
-            # Generate isomers using OEFlipper
-            flipper_opts = oeomega.OEFlipperOptions()
-            flipper_opts.SetMaxCenters(min(4, self.max_isomers))
+            for i, mol in enumerate(mols):
+                if isinstance(mol, str):
+                    # SMILES string
+                    molecules_without_conformers.append((i, mol))
+                elif hasattr(mol, 'GetTitle') and _has_valid_3d_conformers(mol):
+                    # OEMol with conformers
+                    molecules_with_conformers.append((i, mol))
+                elif hasattr(mol, 'GetTitle'):
+                    # OEMol without conformers - convert to SMILES
+                    smi = oechem.OECreateSmiString(mol)
+                    molecules_without_conformers.append((i, smi))
+                else:
+                    print(f"Warning: Unsupported molecule type at index {i}: {type(mol)}")
+                    molecules_without_conformers.append((i, ""))
             
-            # Write isomers to file
-            with open(isomers_file, 'w') as f:
-                isomer_count = 0
-                
-                for orig_idx, smi in filtered_mols:
-                    mol = oechem.OEMol()
-                    oechem.OESmilesToMol(mol, str(smi))
-                    mi = f"molecule_{orig_idx}"
-                    mol.SetTitle(mi)
-                    
+            # Create molecular database file
+            mol_db_file = os.path.join(temp_dir, "molecules.oeb.gz")
+            ofs = oechem.oemolostream(mol_db_file)
+            
+            mol_index_map = {}  # Map from molecule DB index to original index
+            current_db_index = 0
+            
+            # Process molecules with existing conformers
+            if molecules_with_conformers and self.use_existing_conformers_always:
+                print(f"Processing {len(molecules_with_conformers)} molecules with existing conformers")
+                for orig_idx, mol in molecules_with_conformers:
+                    # Apply molecular filters
                     try:
-                        mol_isomer_count = 0
-                        for iso in oeomega.OEFlipper(mol, flipper_opts):
-                            if mol_isomer_count >= self.max_isomers:
-                                break
-                            iso_smi = oechem.OEMolToSmiles(iso)
-                            msid = f"{mi}+{mol_isomer_count}"
-                            f.write(f"{iso_smi}\t{msid}\n")
-                            isomer_count += 1
-                            mol_isomer_count += 1
+                        heavy_count = oechem.OECount(mol, oechem.OEIsHeavy())
+                        if heavy_count > self.max_heavy_atoms:
+                            continue
+                            
+                        rot_bonds = oechem.OECount(mol, oechem.OEIsRotor())
+                        if rot_bonds > self.max_rot_bonds:
+                            continue
+                        
+                        # Set title for tracking
+                        mol.SetTitle(f"conf_{current_db_index}")
+                        mol_index_map[current_db_index] = orig_idx
+                        
+                        # Write molecule with existing conformers
+                        oechem.OEWriteMolecule(ofs, mol)
+                        current_db_index += 1
+                        
                     except Exception as e:
-                        print(f"Error generating isomer for {smi}: {e}")
+                        print(f"Error processing molecule with conformers at index {orig_idx}: {e}")
+                        continue
             
-            if isomer_count == 0:
+            # Process molecules without conformers (SMILES or OEMol without conformers)
+            isomer_count = 0
+            if molecules_without_conformers:
+                # Create isomers file for OMEGA processing
+                isomers_file = os.path.join(temp_dir, "isomers.smi")
+                
+                # Apply molecular filters and generate isomers
+                valid_molecules = []
+                with open(isomers_file, 'w') as f:
+                    for orig_idx, smi in molecules_without_conformers:
+                        if not smi or not smi.strip():
+                            continue
+                            
+                        try:
+                            mol = oechem.OEGraphMol()
+                            if not oechem.OESmilesToMol(mol, smi.strip()):
+                                continue
+                                
+                            # Apply filtering thresholds
+                            heavy_count = oechem.OECount(mol, oechem.OEIsHeavy())
+                            if heavy_count > self.max_heavy_atoms:
+                                continue
+                                
+                            rot_bonds = oechem.OECount(mol, oechem.OEIsRotor())
+                            if rot_bonds > self.max_rot_bonds:
+                                continue
+                                
+                            valid_molecules.append((orig_idx, smi.strip()))
+                            
+                        except Exception as e:
+                            print(f"Error processing molecule {smi}: {e}")
+                            continue
+                
+                # Generate isomers and write to file
+                with open(isomers_file, 'w') as f:
+                    for mi, (orig_idx, smi) in enumerate(valid_molecules):
+                        try:
+                            mol = oechem.OEGraphMol()
+                            if not oechem.OESmilesToMol(mol, smi):
+                                continue
+                                
+                            # Generate isomers
+                            flipper_opts = oeomega.OEFlipperOptions()
+                            mol_isomer_count = 0
+                            
+                            for iso in oeomega.OEFlipper(mol, flipper_opts):
+                                if mol_isomer_count >= self.max_isomers:
+                                    break
+                                iso_smi = oechem.OEMolToSmiles(iso)
+                                # Use a unique identifier that includes the current_db_index
+                                msid = f"smi_{current_db_index + mi}+{mol_isomer_count}"
+                                f.write(f"{iso_smi}\t{msid}\n")
+                                isomer_count += 1
+                                mol_isomer_count += 1
+                                
+                                # Map the database index to original index (for first isomer)
+                                if mol_isomer_count == 1:
+                                    mol_index_map[current_db_index + mi] = orig_idx
+                                    
+                        except Exception as e:
+                            print(f"Error generating isomer for {smi}: {e}")
+                
+                if isomer_count > 0:
+                    # Generate conformers using OMEGA and append to the molecular database
+                    conformer_file = OMEGA(isomers_file, self.experiment_name, self.max_conformers, False)  # Don't skip conformers for these
+                    
+                    # Append the conformers to the existing molecular database
+                    ifs_conf = oechem.oemolistream(conformer_file)
+                    for mol in ifs_conf.GetOEMols():
+                        oechem.OEWriteMolecule(ofs, mol)
+                    ifs_conf.close()
+                    
+                    # Clean up conformer file
+                    try:
+                        os.remove(conformer_file)
+                    except:
+                        pass
+            
+            ofs.close()
+            
+            # Check if we have any molecules to score
+            if current_db_index == 0 and (not molecules_without_conformers or isomer_count == 0):
                 return np.zeros(len(mols))
 
-            # Generate conformers using OMEGA
-            dbname = OMEGA(isomers_file, self.experiment_name, self.max_conformers)
-
-            # Run ROCS with appropriate thread count and only the specific model
-            ofname = ROCS(dbname, [model_path], self.experiment_name, self.use_gpu, self.cpu_processes)
-
-            # Process the output CSV more efficiently
+            # Run ROCS with the combined molecular database
+            threads = None if self.use_gpu else self.cpu_processes
+            rocs_output = ROCS(mol_db_file, [model_path], self.experiment_name, self.use_gpu, threads)
+            
+            # Parse results
             try:
-                data = pd.read_csv(ofname)
+                df = pd.read_csv(rocs_output)
+                scores = np.zeros(len(mols))
                 
-                # Extract original molecule index from title
-                data['MolID'] = data['TITLE'].apply(lambda x: x.split('+')[0])
+                if not df.empty:
+                    # Extract scores by molecule index - simplified since FastROCS returns only best hit per molecule
+                    for _, row in df.iterrows():
+                        title = str(row['TITLE'])
+                        
+                        try:
+                            if title.startswith('conf_'):
+                                # Molecule with existing conformers
+                                db_idx = int(title.split('_')[1])
+                            elif title.startswith('smi_') and '+' in title:
+                                # Molecule processed through OMEGA
+                                db_idx_str = title.split('+')[0].replace('smi_', '')
+                                db_idx = int(db_idx_str)
+                            else:
+                                continue
+                                
+                            if db_idx in mol_index_map:
+                                orig_idx = mol_index_map[db_idx]
+                                score_value = float(row[self.score_type])
+                                scores[orig_idx] = score_value  # Direct assignment since we get only best score
+                                
+                        except (ValueError, IndexError, KeyError) as e:
+                            continue
                 
-                # Create result array with zeros
-                result = np.zeros(len(mols))
+                return scores
                 
-                # More efficient groupby to get max scores
-                if self.score_type in data.columns:
-                    max_scores = data.groupby('MolID')[self.score_type].max()
-                    
-                    # Update result array directly without concat
-                    for mol_id, score in max_scores.items():
-                        if mol_id.startswith('molecule_'):
-                            idx = int(mol_id.split('_')[1])
-                            result[idx] = score
-                
-                return result
             except Exception as e:
                 print(f"Error processing ROCS results: {e}")
                 return np.zeros(len(mols))
@@ -730,12 +729,49 @@ class RocsScorer(Scorer):
             gc.collect()
 
     def getKey(self):
-        """
-        Return the identifier key for this scorer.
-
-        Returns
-        -------
-        str
-            The key identifier "ROCS".
-        """
+        """Return scorer identifier."""
         return "ROCS"
+    
+    def _extract_base_molecule_name(self, full_name: str) -> str:
+        """
+        Extract base molecule name from conformer-specific names.
+        This should match the implementation in BaseROCSScorer for consistency.
+        """
+        if not full_name:
+            return full_name
+            
+        # Remove common conformer suffixes
+        base_name = full_name
+        
+        # Pattern 1: name_conf_number
+        if '_conf_' in base_name:
+            base_name = base_name.split('_conf_')[0]
+        
+        # Pattern 2: name+isomer_conf_number  
+        if '+' in base_name and '_conf_' in full_name:
+            base_name = base_name.split('+')[0]
+            
+        # Pattern 3: Remove trailing _number if it looks like a conformer ID
+        import re
+        if re.match(r'.*_\d+$', base_name) and not base_name.startswith('conf_'):
+            # Only remove if the number part is likely a conformer ID (not part of the name)
+            parts = base_name.rsplit('_', 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                base_name = parts[0]
+        
+        return base_name
+
+    def _ensure_consistent_molecule_naming(self, mols):
+        """
+        Ensure consistent molecule naming for input molecules.
+        This method sets consistent base names for molecules before processing.
+        """
+        for i, mol in enumerate(mols):
+            if hasattr(mol, 'GetTitle') and hasattr(mol, 'SetTitle'):
+                current_title = mol.GetTitle()
+                if current_title:
+                    base_name = self._extract_base_molecule_name(current_title)
+                    mol.SetTitle(base_name)
+                else:
+                    mol.SetTitle(f"mol_{i}")
+        return mols

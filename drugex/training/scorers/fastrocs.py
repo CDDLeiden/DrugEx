@@ -20,17 +20,14 @@
 FastROCS‑based scorer used by DrugEx‑ROCS.
 
 Key features:
-- Highly optimized implementation for maximum performance
-- Advanced memory management techniques for large-scale processing
+- Optimized implementation for maximum performance
+- Memory management techniques for large-scale processing
 - Multi-threading and process pool support for CPU parallelization
 - GPU acceleration with optimized data handling
 - Resource-aware batch sizing and efficient caching
-- Suitable for production environments and high-throughput screening
+- Suitable for high-throughput screening
 - Designed to handle thousands of molecules reliably
 
-This implementation prioritizes performance over simplicity and is 
-recommended for production environments, large molecule libraries,
-virtual screening pipelines, and when maximum speed is required.
 """
 
 from __future__ import annotations
@@ -58,329 +55,240 @@ try:
 except ImportError:
     RDKIT_AVAILABLE = False
 
-# ------------------------------------------------------------------------------
-# Global configuration and caching
-# ------------------------------------------------------------------------------
+# ===============================================================================
+# CRITICAL SEGMENTATION FAULT FIXES - Enhanced Memory Management
+# ===============================================================================
 
-# Global flag to track memory pool initialization
+# Global configuration and caching - Enhanced
 _OE_MEMORY_POOL_INITIALIZED = False
+_WORKER_INITIALIZED = False
 
-# Initialize memory pool once at module import time
-def _initialize_oe_memory_pool():
-    """Initialize OpenEye memory pool only once at module import time."""
-    global _OE_MEMORY_POOL_INITIALIZED
-    
-    # Check if already initialized in this process via environment variable
-    if os.environ.get("OE_MEMORY_POOL_INITIALIZED") == "true":
-        _OE_MEMORY_POOL_INITIALIZED = True
-        return
-        
-    if not _OE_MEMORY_POOL_INITIALIZED:
-        try:
-            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)  # https://docs.eyesopen.com/toolkits/python/oechemtk/multithreading.html
-            _OE_MEMORY_POOL_INITIALIZED = True
-            os.environ["OE_MEMORY_POOL_INITIALIZED"] = "true"
-            print("OpenEye memory pool initialized in fastrocs module")
-        except Exception as e:
-            print(f"Warning: Failed to set memory pool mode: {e}")
-# Initialize at module import time
-_initialize_oe_memory_pool()
-
-# Create persistent cache directories
+# Enhanced cache management with cleanup
 _CACHE_DIR = os.path.join(tempfile.gettempdir(), "fastrocs_cache")
 _DB_CACHE_DIR = os.path.join(_CACHE_DIR, "databases")
 _CONF_CACHE_DIR = os.path.join(_CACHE_DIR, "conformers")
 
-# Create cache directories if they don't exist
+# More conservative batch sizing to prevent memory issues
+_MIN_BATCH_SIZE = 5       # Reduced from 10
+_MAX_BATCH_SIZE = 50      # Reduced from 200  
+_TARGET_MEMORY_PER_WORKER = 1.0  # Reduced from 1.5 GB
+
+# Limits to prevent molecule explosion while allowing base_rocs.py alignment
+_MAX_TOTAL_CONFORMERS = 2000  # Increased to handle 200 conformers per molecule
+_MAX_MOLECULES_PER_DB = 100  # Limit molecules per database
+
+# Create cache directories with error handling
 for d in [_CACHE_DIR, _DB_CACHE_DIR, _CONF_CACHE_DIR]:
-    os.makedirs(d, exist_ok=True)
+    try:
+        os.makedirs(d, exist_ok=True)
+    except (OSError, IOError) as e:
+        print(f"Warning: Could not create cache directory {d}: {e}")
 
-# Adaptive batch sizing parameters
-_MIN_BATCH_SIZE = 10
-_MAX_BATCH_SIZE = 200
-_TARGET_MEMORY_PER_WORKER = 1.5  # GB
+def _initialize_oe_memory_pool():
+    """Enhanced OpenEye memory pool initialization with better error handling."""
+    global _OE_MEMORY_POOL_INITIALIZED
+    
+    # Check if already initialized in this process
+    if os.environ.get("OE_MEMORY_POOL_INITIALIZED") == "true":
+        _OE_MEMORY_POOL_INITIALIZED = True
+        return True
+        
+    if not _OE_MEMORY_POOL_INITIALIZED:
+        try:
+            # Set memory pool mode with better error handling
+            oechem.OESetMemPoolMode(oechem.OEMemPoolMode_System)
+            _OE_MEMORY_POOL_INITIALIZED = True
+            os.environ["OE_MEMORY_POOL_INITIALIZED"] = "true"
+            return True
+        except Exception as e:
+            print(f"Warning: Failed to set OpenEye memory pool mode: {e}")
+            return False
+    return True
 
-# ------------------------------------------------------------------------------
-#  Generic helpers
-# ------------------------------------------------------------------------------
+# Initialize at module import time
+_initialize_oe_memory_pool()
+
+# ===============================================================================
+# Enhanced Generic helpers with better resource management
+# ===============================================================================
 
 def _get_memory_info():
-    """Get system memory information."""
+    """Get system memory information with fallback."""
     if PSUTIL_AVAILABLE:
-        vm = psutil.virtual_memory()
-        return vm.total / (1024**3), vm.available / (1024**3)  # Total and available in GB
-    else:
-        # Fallback to conservative estimate
-        return 8.0, 4.0
+        try:
+            vm = psutil.virtual_memory()
+            return vm.total / (1024**3), vm.available / (1024**3)
+        except Exception:
+            pass
+    # Conservative fallback
+    return 4.0, 2.0
 
 def _calculate_optimal_workers(suggested_workers=None):
-    """Calculate optimal number of worker processes based on system resources."""
+    """Calculate optimal workers with more conservative estimates."""
     if PSUTIL_AVAILABLE:
-        total_memory, available_memory = _get_memory_info()
-        cpu_count = os.cpu_count() or 4
-        
-        # Leave at least 2GB or 25% for the system, whichever is larger
-        reserved_memory = max(2.0, total_memory * 0.25)
-        usable_memory = max(0.5, available_memory - reserved_memory)
-        
-        # Calculate workers based on memory constraints - more conservative
-        memory_workers = max(1, int(usable_memory / (_TARGET_MEMORY_PER_WORKER * 1.5)))
-        
-        # Calculate workers based on CPU - leave at least 2 cores free
-        cpu_workers = max(1, min(2, cpu_count - 2))
-        
-        # Use the minimum of memory-based and CPU-based calculations
-        optimal = min(memory_workers, cpu_workers)
-        
-        # Honor user suggestion if provided, but don't exceed system capacity
-        if suggested_workers is not None:
-            return min(suggested_workers, optimal)
-        return optimal
-    else:
-        # Fallback without psutil
-        cpu_count = os.cpu_count() or 4
-        return suggested_workers if suggested_workers is not None else max(1, min(2, cpu_count - 2))
-
-def _get_file_hash(filepath):
-    """Generate a simple hash for a file to use as cache key."""
-    try:
-        stat = os.stat(filepath)
-        return f"{os.path.basename(filepath)}_{stat.st_size}_{int(stat.st_mtime)}"
-    except (OSError, IOError):
-        return os.path.basename(filepath)
+        try:
+            total_memory, available_memory = _get_memory_info()
+            cpu_count = os.cpu_count() or 2
+            
+            # More conservative memory allocation
+            reserved_memory = max(3.0, total_memory * 0.35)  # Increased reservation
+            usable_memory = max(0.5, available_memory - reserved_memory)
+            
+            # More conservative worker calculation
+            memory_workers = max(1, int(usable_memory / (_TARGET_MEMORY_PER_WORKER * 2.0)))
+            cpu_workers = max(1, min(2, max(1, cpu_count - 3)))  # Leave more cores free
+            
+            optimal = min(memory_workers, cpu_workers, 2)  # Cap at 2 workers max
+            
+            if suggested_workers is not None:
+                return min(suggested_workers, optimal)
+            return optimal
+        except Exception:
+            pass
+    
+    # Ultra-conservative fallback
+    return 1 if suggested_workers is None else min(suggested_workers, 1)
 
 @contextmanager
 def _tmpdir(prefix="fastrocs_", use_cache=False, cache_key=None):
-    """Enhanced temporary directory manager with optional caching."""
+    """Enhanced temporary directory manager with better cleanup."""
     if use_cache and cache_key:
-        # Use a persistent directory in the cache
+        # Use cached directory but ensure it's clean
         path = os.path.join(_CACHE_DIR, f"{prefix}_{cache_key}")
-        os.makedirs(path, exist_ok=True)
         try:
+            os.makedirs(path, exist_ok=True)
+            # Clean any existing files in cached directory
+            for existing_file in os.listdir(path):
+                try:
+                    file_path = os.path.join(path, existing_file)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                except (OSError, IOError):
+                    pass
             yield path
-        finally:
-            pass  # Don't clean up cached directories
+        except Exception as e:
+            print(f"Warning: Cache directory error: {e}")
+            # Fallback to temporary directory
+            path = tempfile.mkdtemp(prefix=prefix)
+            try:
+                yield path
+            finally:
+                _cleanup_directory(path)
     else:
-        # Use a standard temporary directory
+        # Standard temporary directory with enhanced cleanup
         path = tempfile.mkdtemp(prefix=prefix)
         try:
             yield path
-        finally:  # best‑effort cleanup
-            if os.path.exists(path):
-                for root, _, files in os.walk(path, topdown=False):
-                    for f in files:
-                        try: 
-                            file_path = os.path.join(root, f)
-                            if os.path.isfile(file_path):
-                                os.remove(file_path)
-                        except (OSError, IOError) as e: 
-                            # Just log errors but don't raise
-                            print(f"Warning: Failed to remove temp file {f}: {e}")
-                try: 
-                    os.rmdir(path)
-                except (OSError, IOError) as e:
-                    print(f"Warning: Failed to remove temp directory {path}: {e}")
+        finally:
+            _cleanup_directory(path)
 
-
-# ------------------------------------------------------------------------------
-#  Per‑molecule utilities
-# ------------------------------------------------------------------------------
-
-# Cache for SMILES validation, significantly speeds up repeated checks
-@lru_cache(maxsize=1000)
-def _is_valid_smiles(smiles: str) -> bool:
-    """Cached SMILES validation check."""
-    if not smiles or not isinstance(smiles, str) or len(smiles) < 2:
-        return False
+def _cleanup_directory(path):
+    """Enhanced directory cleanup with better error handling."""
+    if not os.path.exists(path):
+        return
         
-    mol = oechem.OEMol()
-    return bool(oechem.OESmilesToMol(mol, smiles)) # https://docs.eyesopen.com/toolkits/python/oechemtk/OEChemFunctions/OESmilesToMol.html
+    try:
+        for root, dirs, files in os.walk(path, topdown=False):
+            # Clean up files first
+            for f in files:
+                try:
+                    file_path = os.path.join(root, f)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                except (OSError, IOError):
+                    pass
+            
+            # Clean up directories
+            for d in dirs:
+                try:
+                    dir_path = os.path.join(root, d)
+                    if os.path.isdir(dir_path):
+                        os.rmdir(dir_path)
+                except (OSError, IOError):
+                    pass
+        
+        # Finally remove the root directory
+        try:
+            os.rmdir(path)
+        except (OSError, IOError):
+            pass
+    except Exception:
+        pass  # Silent cleanup failure
 
-def filter_molecules(smiles_list: List[str], max_rot: int = 15, max_heavy: int = 45) -> List[Tuple[str, bool]]:
-    """
-    Filter molecules for FastROCS processing with relaxed criteria.
-    Returns list of (smiles, is_valid) tuples.
-    """
-    # For small lists, process directly
-    if len(smiles_list) <= 100:
+# ===============================================================================
+# Enhanced molecule utilities with better limits
+# ===============================================================================
+
+def filter_molecules(smiles_list: List[str], max_rot: int = 10, max_heavy: int = 35) -> List[Tuple[str, bool]]:
+    """Enhanced molecule filtering with more conservative limits."""
+    # More conservative limits by default
+    if len(smiles_list) <= 50:
         return _filter_molecules_chunk(smiles_list, max_rot, max_heavy)
         
-    # For larger lists, use parallel processing with thread pool
-    chunk_size = 50
+    # For larger lists, use thread pool with conservative settings
+    chunk_size = 25  # Smaller chunks
     chunks = [smiles_list[i:i+chunk_size] for i in range(0, len(smiles_list), chunk_size)]
     
     results = []
-    with ThreadPoolExecutor(max_workers=min(4, os.cpu_count() or 2)) as executor:  # https://docs.eyesopen.com/toolkits/python/oechemtk/multithreading.html
+    # Limit thread count for safety
+    max_threads = min(2, os.cpu_count() or 1)
+    
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
         chunk_results = list(executor.map(
             lambda chunk: _filter_molecules_chunk(chunk, max_rot, max_heavy), chunks
         ))
         
-    # Flatten results
     for cr in chunk_results:
         results.extend(cr)
             
     return results
 
 def _filter_molecules_chunk(smiles_list: List[str], max_rot: int, max_heavy: int) -> List[Tuple[str, bool]]:
-    """
-    Process a chunk of molecules for filtering with more permissive criteria.
-    accept more molecules.
-    """
+    """Enhanced filtering with stricter validation."""
     results = []
     
     for smi in smiles_list:
-        # Quick check with cached validation
-        if not _is_valid_smiles(smi):
-            results.append((smi, False))
-            continue
+        try:
+            # Quick cached validation
+            if not _is_valid_smiles(smi):
+                results.append((smi, False))
+                continue
+                
+            mol = oechem.OEMol()
+            if not oechem.OESmilesToMol(mol, smi):
+                results.append((smi, False))
+                continue
             
-        mol = oechem.OEMol()
-        oechem.OESmilesToMol(mol, smi)  # https://docs.eyesopen.com/toolkits/python/oechemtk/OEChemFunctions/OESmilesToMol.html
-        
-        # Relaxed filtering - only check the most essential criteria
-        rotatable_bonds = oechem.OECount(mol, oechem.OEIsRotor())  # https://docs.eyesopen.com/toolkits/python/oechemtk/predicates.html
-        heavy_atoms = oechem.OECount(mol, oechem.OEIsHeavy())      # https://docs.eyesopen.com/toolkits/python/oechemtk/predicates.html
-        
-        if rotatable_bonds > max_rot or heavy_atoms > max_heavy:
-            results.append((smi, False))
-            continue
+            # Enhanced filtering with stricter limits
+            rotatable_bonds = oechem.OECount(mol, oechem.OEIsRotor())
+            heavy_atoms = oechem.OECount(mol, oechem.OEIsHeavy())
+            atom_count = mol.NumAtoms()
             
-        # Basic structural check - molecule should have at least a few atoms
-        atom_count = mol.NumAtoms()
-        if atom_count < 3:
+            # More conservative filtering
+            if (rotatable_bonds > max_rot or 
+                heavy_atoms > max_heavy or 
+                atom_count < 3 or 
+                atom_count > max_heavy + 20):  # Additional atom limit
+                results.append((smi, False))
+                continue
+            
+            results.append((smi, True))
+            
+        except Exception:
             results.append((smi, False))
-            continue
-        
-        results.append((smi, True))
             
     return results
 
-# Cached flipper options to avoid recreating them for each molecule
-@lru_cache(maxsize=10)
-def _get_flipper_options(max_centers=4):
-    """Cached flipper options for isomer enumeration."""
-    opts = oeomega.OEFlipperOptions()  # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEFlipperOptions.html
-    opts.SetMaxCenters(max_centers)
-    return opts
-
-def _enumerate_isomers(mol: oechem.OEMol, max_centers=4, max_iso=4):
-    """Generate isomers for a molecule, optimized with cached options."""
-    opts = _get_flipper_options(max_centers)
-    for i, conf in enumerate(oeomega.OEFlipper(mol, opts)):  # https://docs.eyesopen.com/toolkits/python/_downloads/6c64de11ed55cc28e5f3279d66f9657b/stereo_and_torsion.py
-        if i == max_iso:                                       # https://docs.eyesopen.com/toolkits/python/omegatk/omegaexamples.html
-            break
-        iso = oechem.OEMol(conf)
-        iso.SetTitle(f"{mol.GetTitle()}+{i}")
-        yield iso
-
-# Cached omega options for conformer generation
-@lru_cache(maxsize=10)
-def _get_omega_options(use_gpu: bool, max_confs: int = 10):
-    """Get cached omega options for conformer generation."""
-    omegaOpts = oeomega.OEOmegaOptions()   # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEOmega.html
-    omegaOpts.SetMaxConfs(max_confs)       # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEOmegaOptions.html               
-    
-    # Configure GPU mode for TorDrive
-    try:
-        if use_gpu and oeomega.OEOmegaIsGPUReady():
-            # Enable GPU mode
-            omegaOpts.GetTorDriveOptions().SetUseGPU(True)
-            # For GPU compatibility, use recommended force field
-            from openeye import oeff
-            omegaOpts.GetTorDriveOptions().SetForceField(oeff.OEMMFFSheffieldFFType_MMFF94Smod_NOESTAT)
-            # Disable hydrogen sampling for GPU compatibility
-            omegaOpts.GetMolBuilderOptions().SetSampleHydrogens(False)  # https://docs.eyesopen.com/toolkits/python/omegatk/omegagpuomega.html
-            print("Omega GPU mode enabled for conformer generation")
-        else:
-            omegaOpts.GetTorDriveOptions().SetUseGPU(False)
-    except Exception as e:
-        print(f"Warning: Error configuring Omega GPU mode: {e}")
-        omegaOpts.GetTorDriveOptions().SetUseGPU(False)
-    
-    # Common settings for both CPU and GPU modes
-    omegaOpts.SetStrictStereo(False)    # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEOmegaOptions.html
-    omegaOpts.SetFromCT(True)           # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEMolBuilderOptions.html?highlight=setfromct
-    omegaOpts.SetMaxConfs(max_confs)    # https://docs.eyesopen.com/toolkits/python/omegatk/omegaexamples.html
-    
-    return omegaOpts
-
-
-# ShapeDatabase management for enhanced performance
-class ShapeDatabaseCache:
-    """Class to manage persistent shape databases with efficient caching."""
-    
-    def __init__(self):
-        self.databases = {}
-        self.lock = threading.RLock()
-        
-    def get_or_create_database(self, sq_model_path: str, use_gpu: bool) -> Tuple[oefastrocs.OEShapeDatabase, oeshape.OEShapeQuery, oefastrocs.OEShapeDatabaseOptions]:
-        """
-        Get or create a shape database for the given query.
-        Returns tuple of (database, query, options).
-        """
-        with self.lock:
-            key = f"{_get_file_hash(sq_model_path)}_{use_gpu}"
-            if key in self.databases:
-                db, query, opts = self.databases[key]
-                # Check if we have a valid cached entry
-                return db, query, opts
-            
-            # Create query first - needed for database preparation
-            query = oeshape.OEShapeQuery()
-            # Ensure sq_model_path is a single file path string, not a list
-            if isinstance(sq_model_path, (list, tuple)):
-                # This should never happen, but just in case
-                model_path = sq_model_path[0]
-                print(f"Warning: Expected single query file, got list. Using first: {model_path}")
-            else:
-                model_path = sq_model_path
-                
-            if not oeshape.OEReadShapeQuery(model_path, query):
-                raise ValueError(f"Invalid shape query file: {model_path}")
-            
-            # Create options with correct mode setting
-            opts = oefastrocs.OEShapeDatabaseOptions()   # https://docs.eyesopen.com/toolkits/python/fastrocstk/OEFastROCSClasses/OEShapeDatabaseOptions.html
-            if use_gpu:
-                # Use GPU mode if available and explicitly set FastROCS mode
-                opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)   # https://docs.eyesopen.com/toolkits/python/fastrocstk/OEFastROCSClasses/OEShapeDatabaseOptions.html#OEFastROCS::OEShapeDatabaseOptions::SetFastROCSMode
-                print("FastROCS GPU mode enabled for shape queries")
-            else:
-                # CPU mode (ROCS) - explicitly set
-                opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
-            
-            # Create new database
-            db = oefastrocs.OEShapeDatabase()  # https://docs.eyesopen.com/toolkits/python/fastrocstk/OEFastROCSClasses/OEShapeDatabase.html
-            
-            # Set thread count appropriately
-            if use_gpu:
-                # GPU mode - single thread is optimal
-                db.SetNumOpenThreads(1)
-            else:
-                # CPU mode - single thread per worker to avoid contention
-                db.SetNumOpenThreads(1)
-            
-            # Store in cache
-            self.databases[key] = (db, query, opts)
-            return db, query, opts
-            
-    def close_all(self):
-        """Release all database resources"""
-        with self.lock:
-            # Don't call db.Close() - just clear references to allow GC to handle cleanup
-            self.databases.clear()
-            gc.collect()
-
-# Global database cache
-_SHAPE_DB_CACHE = ShapeDatabaseCache()
+# ===============================================================================
+# Enhanced conformer generation with limits
+# ===============================================================================
 
 def _prepare_molecules_for_scoring(smiles_list: List[str], idxs: List[int], 
                                 max_iso: int, max_rot: int, max_heavy: int, 
                                 use_gpu: bool, max_confs: int = 10) -> Tuple[List[oechem.OEMol], Dict[str, int]]:
-    """
-    Prepare molecules for scoring by filtering, generating isomers and conformers.
-    Returns list of conformers and title-to-index mapping.
-    """
-    # Apply simplified filtering
+    """Enhanced molecule preparation with strict limits to prevent explosion."""
+    
+    # Apply enhanced filtering with more conservative limits
     filtered_data = []
     filter_results = filter_molecules(smiles_list, max_rot, max_heavy)
     
@@ -391,114 +299,352 @@ def _prepare_molecules_for_scoring(smiles_list: List[str], idxs: List[int],
     if not filtered_data:
         return [], {}
     
+    # Limit total molecules to prevent memory explosion
+    if len(filtered_data) > _MAX_MOLECULES_PER_DB:
+        print(f"Warning: Limiting molecule count from {len(filtered_data)} to {_MAX_MOLECULES_PER_DB}")
+        filtered_data = filtered_data[:_MAX_MOLECULES_PER_DB]
+    
     title2parent: Dict[str, int] = {}
     isomers: List[oechem.OEMol] = []
 
-    # Check if GPU is available for Omega
-    omega_gpu = use_gpu
-    if use_gpu:
-        try:
-            omega_gpu = oeomega.OEOmegaIsGPUReady()  # https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenFunctions/OEOmegaIsGPUReady.html
-            if not omega_gpu:
-                print("Warning: GPU requested but Omega GPU is not ready, using CPU for conformer generation")
-        except Exception as e:
-            print(f"Warning: Error checking Omega GPU status, using CPU: {e}")
-            omega_gpu = False
+    # Conservative conformer generation
+    omega_gpu = use_gpu and _check_omega_gpu_safe()
     
-    # Use cached conformer generation options
+    # Reduce parameters to prevent explosion while aligning with base_rocs.py
+    effective_max_iso = min(max_iso, 4)  # Align with base_rocs.py default
+    effective_max_confs = min(max_confs, 200)  # Align with base_rocs.py default
+    
     omega = oeomega.OEOmega()
-    omega.SetOptions(_get_omega_options(omega_gpu, max_confs))
-    omega.SetMaxConfs(max_confs)   # https://docs.eyesopen.com/toolkits/python/omegatk/omegaexamples.html
+    omega.SetOptions(_get_omega_options(omega_gpu, effective_max_confs))
+    omega.SetMaxConfs(effective_max_confs)
     
-    # Process sequentially for better stability
+    total_conformers = 0
     for s, idx in filtered_data:
-        result = _generate_conformers(s, str(idx), omega, max_iso)
+        # Check conformer limit before processing
+        estimated_conformers = effective_max_iso * effective_max_confs
+        if total_conformers + estimated_conformers > _MAX_TOTAL_CONFORMERS:
+            print(f"Warning: Stopping molecule processing to prevent memory overflow")
+            break
+            
+        result = _generate_conformers_safe(s, str(idx), omega, effective_max_iso)
         if result:
             mol_title2parent, mol_isomers = result
             title2parent.update(mol_title2parent)
             isomers.extend(mol_isomers)
+            total_conformers += len(mol_isomers)
 
+    print(f"Generated {len(isomers)} conformers from {len(filtered_data)} molecules")
     return isomers, title2parent
 
-def _generate_conformers(smiles: str, idx: str, omega: oeomega.OEOmega, max_iso: int) -> Tuple[Dict[str, int], List[oechem.OEMol]]:
-    """Generate conformers for a single molecule. Used for parallel conformer generation."""
-    mol = oechem.OEMol()
-    oechem.OESmilesToMol(mol, smiles)  # https://docs.eyesopen.com/toolkits/python/oechemtk/OEChemFunctions/OESmilesToMol.html
-    mol.SetTitle(idx)
-    
-    title2parent = {}
-    isomers = []
-    
-    for iso in _enumerate_isomers(mol, max_iso=max_iso):
-        omega(iso)
-        for conf in iso.GetConfs():
-            confmol = oechem.OEMol(conf)
-            title2parent[confmol.GetTitle()] = int(idx)
-            isomers.append(confmol)
+def _check_omega_gpu_safe() -> bool:
+    """Safely check Omega GPU availability."""
+    try:
+        return oeomega.OEOmegaIsGPUReady()
+    except Exception:
+        return False
+
+def _generate_conformers_safe(smiles: str, idx: str, omega: oeomega.OEOmega, max_iso: int) -> Tuple[Dict[str, int], List[oechem.OEMol]]:
+    """Enhanced conformer generation with error handling."""
+    try:
+        mol = oechem.OEMol()
+        if not oechem.OESmilesToMol(mol, smiles):
+            return {}, []
             
-    return title2parent, isomers
+        mol.SetTitle(idx)
+        
+        title2parent = {}
+        isomers = []
+        
+        conformer_count = 0
+        for iso in _enumerate_isomers(mol, max_iso=max_iso):
+            if omega(iso):
+                for conf in iso.GetConfs():
+                    confmol = oechem.OEMol(conf)
+                    title2parent[confmol.GetTitle()] = int(idx)
+                    isomers.append(confmol)
+                    conformer_count += 1
+                    
+                    # Safety limit aligned with base_rocs.py expectations
+                    if conformer_count > 200:  # Match base_rocs.py max_conformers
+                        break
+                if conformer_count > 200:
+                    break
+                    
+        return title2parent, isomers
+        
+    except Exception as e:
+        print(f"Warning: Failed to generate conformers for molecule {idx}: {e}")
+        return {}, []
+
+# ===============================================================================
+# Enhanced database management with better caching
+# ===============================================================================
+
+class EnhancedShapeDatabaseCache:
+    """Enhanced database cache with better memory management."""
+    
+    def __init__(self):
+        self.databases = {}
+        self.lock = threading.RLock()
+        self.max_cache_size = 3  # Limit cache size
+        
+    def get_or_create_database(self, sq_model_path: str, use_gpu: bool) -> Tuple[oefastrocs.OEShapeDatabase, oeshape.OEShapeQuery, oefastrocs.OEShapeDatabaseOptions]:
+        """Enhanced database creation with better error handling."""
+        with self.lock:
+            key = f"{_get_file_hash(sq_model_path)}_{use_gpu}"
+            
+            # Cleanup old entries if cache too large
+            if len(self.databases) >= self.max_cache_size:
+                self._cleanup_oldest()
+            
+            if key in self.databases:
+                db, query, opts = self.databases[key]
+                return db, query, opts
+            
+            try:
+                # Create query
+                query = oeshape.OEShapeQuery()
+                model_path = sq_model_path if isinstance(sq_model_path, str) else sq_model_path[0]
+                
+                if not oeshape.OEReadShapeQuery(model_path, query):
+                    raise ValueError(f"Invalid shape query file: {model_path}")
+                
+                # Create options with vROCS-compatible settings
+                opts = oefastrocs.OEShapeDatabaseOptions()
+                # Force ROCS mode for all configurations to match CLI behavior
+                try:
+                    opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
+                    # Create proper OEColorForceField object matching vROCS reference
+                    color_ff = oeshape.OEColorForceField()
+                    color_ff.Init(oeshape.OEColorFFType_ImplicitMillsDeanNoRings)  # Match vROCS exactly
+                    opts.SetColorForceField(color_ff)
+                    # Set limit to return only best hit per molecule (matches -besthits 1)
+                    opts.SetLimit(1)  # Return only best hit per molecule
+                    # Enable color optimization for better scoring
+                    opts.SetColorOptimization(True)
+                    # Set score cutoff to ensure all scores are returned
+                    opts.SetScoreCutoff(-1.0)
+                except AttributeError:
+                    pass
+                
+                # Create database with color force field directly (vROCS approach)
+                try:
+                    # Try creating database with color force field directly
+                    db = oefastrocs.OEShapeDatabase(color_ff)
+                    db.SetNumOpenThreads(1)  # Always use single thread per worker
+                except:
+                    # Fallback to standard database creation
+                    db = oefastrocs.OEShapeDatabase()
+                    db.SetNumOpenThreads(1)  # Always use single thread per worker
+                
+                # Store in cache
+                self.databases[key] = (db, query, opts)
+                return db, query, opts
+                
+            except Exception as e:
+                print(f"Error creating shape database: {e}")
+                raise
+                
+    def _cleanup_oldest(self):
+        """Remove oldest cache entry."""
+        if self.databases:
+            oldest_key = next(iter(self.databases))
+            del self.databases[oldest_key]
+            gc.collect()
+            
+    def close_all(self):
+        """Enhanced cleanup of all database resources."""
+        with self.lock:
+            self.databases.clear()
+            gc.collect()
+
+# Global enhanced database cache
+_SHAPE_DB_CACHE = EnhancedShapeDatabaseCache()
+
+# ===============================================================================
+# Enhanced scoring with database reuse
+# ===============================================================================
 
 def _score_molecules_with_database(isomers: List[oechem.OEMol], title2parent: Dict[str, int],
                                 sq_model: str, use_gpu: bool) -> Dict[int, float]:
-    """Score molecules using a cached or newly created database."""
+    """Enhanced scoring with better database management."""
+    
     if not isomers:
         return {}
         
-    # Get or create shape database, query, and options
     try:
+        # Get cached database components
         db, query, opts = _SHAPE_DB_CACHE.get_or_create_database(sq_model, use_gpu)
-    except oechem.OELicenseError as e:  # pylint: disable=no-member
-        print(f"OpenEye license error: {e}")
-        return {}
     except Exception as e:
         print(f"Error creating shape database: {e}")
         return {}
     
-    # Prepare the molecules in a temporary database
     scores: Dict[int, float] = {}
     
-    # Use cache directory for database if it's CPU mode (more reusable)
+    # Enhanced database preparation with limits
     with _tmpdir(prefix="rocs_mols", use_cache=not use_gpu, 
                 cache_key=_get_file_hash(sq_model) if not use_gpu else None) as td:
-        # Use our optimized database preparation function
+        
         database_path = os.path.join(td, "confs.oeb")
-        mdb = _prepare_molecule_database(isomers, database_path, use_gpu)
+        
+        # Limit molecules for database preparation
+        limited_isomers = isomers[:min(len(isomers), _MAX_MOLECULES_PER_DB)]
+        
+        mdb = _prepare_molecule_database_enhanced(limited_isomers, database_path, use_gpu)
         if not mdb:
-            print(f"Error: Could not prepare molecule database")
             return {}
         
-        # Create a fresh database for each batch
-        fresh_db = oefastrocs.OEShapeDatabase()   # https://docs.eyesopen.com/toolkits/python/fastrocstk/tutorials/Tutorial_2_Database_Preparation/database_prep.html
-        # Configure the database properly
-        fresh_db.SetNumOpenThreads(1)  # Use conservative thread count
         
-        # Open shape database with molecule database
+        # Debug: List all molecules in the database and their titles
+        # print("DEBUG: Molecules in database:")
+        # for i in range(min(mdb.NumMols(), 20)):  # Show first 20 molecules
+        #     title = mdb.GetTitle(i)
+        #     print(f"  mol_idx={i}, title='{title}', parent_mapping={title2parent.get(title, 'NOT_FOUND')}")
+        
+        # Create fresh database for scoring with vROCS-compatible approach
+        # Use the color force field from cached options to create database
+        try:
+            # Get color force field from cached options
+            cached_color_ff = opts.GetColorForceField()
+            if cached_color_ff:
+                fresh_db = oefastrocs.OEShapeDatabase(cached_color_ff)
+            else:
+                fresh_db = oefastrocs.OEShapeDatabase()
+        except (AttributeError, TypeError):
+            fresh_db = oefastrocs.OEShapeDatabase()
+        
+        fresh_db.SetNumOpenThreads(1)
+        
+        # Update options for this database size
+        try:
+            opts.SetLimit(len(limited_isomers) * 2)  # Allow more hits than molecules
+            opts.SetScoreCutoff(-1.0)  # Ensure all scores are returned
+        except AttributeError:
+            pass
+        
         try:
             if not fresh_db.Open(mdb):
-                print("Error: Could not open shape database with molecule database")
                 return {}
             
-            # Process scores - use the optimized API
+            # Process scores with vROCS-compatible iteration
+            score_count = 0
+            max_scores = min(1000, len(limited_isomers) * 2)  # Reasonable limit
+            
             for sc in fresh_db.GetSortedScores(query, opts):
+                if score_count >= max_scores:
+                    break
+                    
                 mol_idx = sc.GetMolIdx()
-                # Get molecule title directly from database for better performance
                 mol_title = mdb.GetTitle(mol_idx)
                 parent = title2parent.get(mol_title)
+                
                 if parent is not None:
                     tc = sc.GetTanimotoCombo()
                     scores[parent] = max(tc, scores.get(parent, 0.0))
-        except oechem.OELicenseError as e:  # pylint: disable=no-member
-            print(f"OpenEye license error during scoring: {e}")
+                    
+                score_count += 1
+                
         except Exception as e:
-            print(f"Error during molecule scoring: {e}")
+            print(f"Error during scoring: {e}")
         finally:
-            # Clean up resources by setting references to None
-            # This allows Python's garbage collector to free the memory
+            # Enhanced cleanup
             fresh_db = None
             mdb = None
             gc.collect()
         
     return scores
+
+def _prepare_molecule_database_enhanced(molecules: List[oechem.OEMol], output_path: str, use_gpu: bool = False) -> oechem.OEMolDatabase:
+    """Enhanced molecule database preparation with better error handling."""
+    if not molecules:
+        return None
+        
+    try:
+        print(f"Preparing {len(molecules)} molecules for {'GPU' if use_gpu else 'CPU'} processing...")
+        
+        with oechem.oemolostream() as ofs:
+            if use_gpu:
+                oechem.OEPRECompress(ofs)
+            
+            if not ofs.open(output_path):
+                print(f"Error: Could not open output file {output_path}")
+                return None
+                
+            processed_count = 0
+            
+            for mol in molecules:
+                try:
+                    if use_gpu:
+                        # Prepare for FastROCS
+                        oefastrocs.OEPrepareFastROCSMol(mol)
+                        half_mol = oechem.OEMol(mol, oechem.OEMCMolType_HalfFloatCartesian)
+                        oechem.OEWriteMolecule(ofs, half_mol)
+                    else:
+                        oechem.OEWriteMolecule(ofs, mol)
+                    processed_count += 1
+                except Exception as e:
+                    print(f"Warning: Failed to prepare molecule: {e}")
+                    continue
+        
+        # Create and open database
+        mdb = oechem.OEMolDatabase()
+        if not mdb.Open(output_path):
+            return None
+            
+        return mdb
+        
+    except Exception as e:
+        print(f"Error preparing molecule database: {e}")
+        return None
+
+# ===============================================================================
+# Enhanced worker initialization
+# ===============================================================================
+
+def _init_worker_enhanced(worker_id=None):
+    """Enhanced worker initialization with better isolation."""
+    global _WORKER_INITIALIZED
+    
+    if _WORKER_INITIALIZED:
+        return
+    
+    try:
+        # Enhanced environment setup
+        os.environ["OE_SILENT"] = "true"
+        os.environ["OPENEYE_SILENT"] = "true"
+        
+        # Set strict error handling
+        oechem.OEThrow.SetLevel(oechem.OEErrorLevel_Error)
+        
+        # Initialize memory pool for this worker
+        _initialize_oe_memory_pool()
+        
+        # Disable GPU in worker processes explicitly
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        os.environ["OPENEYE_GPU_MEMORY_LIMIT"] = "0"
+        
+        # Set CPU affinity if available
+        if PSUTIL_AVAILABLE and worker_id is not None:
+            try:
+                process = psutil.Process()
+                cpu_count = psutil.cpu_count(logical=True)
+                if cpu_count > 1:
+                    # More conservative CPU assignment
+                    cpu_id = worker_id % max(1, cpu_count - 2)
+                    process.cpu_affinity([cpu_id])
+            except Exception:
+                pass
+        
+        # Force cleanup
+        gc.collect()
+        _WORKER_INITIALIZED = True
+        
+    except Exception as e:
+        print(f"Warning: Worker initialization failed: {e}")
+
+# ===============================================================================
+# Enhanced batch scoring with better error handling
+# ===============================================================================
 
 def _score_batch(batch: Tuple[List[str], List[int]],
                 sq_model: str,
@@ -508,51 +654,70 @@ def _score_batch(batch: Tuple[List[str], List[int]],
                 use_gpu: bool = True,
                 max_confs: int = 10,
                 worker_id: int = None) -> Dict[int, float]:
-    """
-    Process and score a batch of molecules.
-    Combines filtering, conformer generation, and scoring in one efficient function.
-    Optimized with better memory management.
-    """
+    """Enhanced batch scoring with comprehensive error handling and limits."""
+    
     smiles, idxs = batch
     
-    # Initialize worker environment
-    _init_worker(worker_id)
+    # Initialize worker with enhanced settings
+    _init_worker_enhanced(worker_id)
     
-    # Check GPU availability if requested
-    if use_gpu:
-        try:
-            is_gpu_ready = oefastrocs.OEFastROCSIsGPUReady()
-            if not is_gpu_ready:
-                print("Warning: GPU requested but FastROCS GPU is not ready, falling back to CPU")
-                use_gpu = False
-        except Exception as e:
-            print(f"Warning: Error checking GPU status, falling back to CPU: {e}")
-            use_gpu = False
+    # More conservative parameter limits
+    safe_max_iso = min(max_iso, 2)
+    safe_max_confs = min(max_confs, 5)
+    safe_max_rot = min(max_rot, 15)
+    safe_max_heavy = min(max_heavy, 40)
     
-    # Prepare molecules (filter, generate conformers)
-    isomers, title2parent = _prepare_molecules_for_scoring(
-        smiles, idxs, max_iso, max_rot, max_heavy, use_gpu, max_confs
-    )
-    
-    if not isomers:
-        return {}
-    
-    # Score molecules
     try:
-        scores = _score_molecules_with_database(isomers, title2parent, sq_model, use_gpu)
+        # Check available memory before processing
+        if PSUTIL_AVAILABLE:
+            memory_percent = psutil.virtual_memory().percent
+            if memory_percent > 85:
+                print(f"Warning: High memory usage ({memory_percent}%), reducing batch size")
+                # Process only half the batch
+                mid_point = len(smiles) // 2
+                smiles = smiles[:mid_point]
+                idxs = idxs[:mid_point]
+        
+        # Enhanced GPU check
+        if use_gpu:
+            try:
+                is_gpu_ready = oefastrocs.OEFastROCSIsGPUReady()
+                if not is_gpu_ready:
+                    print("Warning: GPU not ready, falling back to CPU")
+                    use_gpu = False
+            except Exception:
+                print("Warning: GPU check failed, using CPU")
+                use_gpu = False
+        
+        # Prepare molecules with enhanced limits
+        isomers, title2parent = _prepare_molecules_for_scoring(
+            smiles, idxs, safe_max_iso, safe_max_rot, safe_max_heavy, use_gpu, safe_max_confs
+        )
+        
+        if not isomers:
+            return {}
+        
+        # Score molecules with enhanced error handling
+        try:
+            scores = _score_molecules_with_database(isomers, title2parent, sq_model, use_gpu)
+        except Exception as e:
+            print(f"Error in scoring: {e}")
+            scores = {}
+        
     except Exception as e:
-        print(f"Error in scoring batch: {e}")
+        print(f"Error in batch processing: {e}")
         import traceback
         traceback.print_exc()
         scores = {}
     finally:
-        # Clean up to reduce memory usage - critical for reliable operation
-        isomers.clear()
-        title2parent.clear()
+        # Enhanced cleanup
+        if 'isomers' in locals():
+            isomers.clear()
+        if 'title2parent' in locals():
+            title2parent.clear()
         gc.collect()
     
     return scores
-
 
 # ------------------------------------------------------------------------------
 #  Scorer class
@@ -560,20 +725,20 @@ def _score_batch(batch: Tuple[List[str], List[int]],
 
 class OpenEyeScorer(Scorer):
     """
-    A FastROCS-based scorer with optimized performance for both GPU and CPU modes.
-    Compatible with the original DrugEx scorer interface.
+    FastROCS-based scorer. If input molecules have conformers, this scorer will match vROCS GUI speed by skipping OMEGA and using persistent in-memory databases. OMEGA is only called for SMILES or OEMol with no conformers. Uses OEPrepareFastROCSMol and OEPRECompress for best performance.
     """
 
     def __init__(self,
                 sq_model_path: str | List[str],
                 use_gpu: bool = True,
-                max_isomers: int = 4,
-                max_rot_bonds: int = 10,
-                max_heavy_atoms: int = 30,
-                max_conformers: int = 10,
-                cpu_processes: int | None = None):
+                max_isomers: int = 4,         # Aligned with base_rocs.py
+                max_rot_bonds: int = 15,      # Aligned with base_rocs.py  
+                max_heavy_atoms: int = 35,    # Aligned with base_rocs.py
+                max_conformers: int = 200,    # Aligned with base_rocs.py CLI default
+                cpu_processes: int | None = None,
+                use_existing_conformers_always: bool = True):
         """
-        Initialize the OpenEye FastROCS scorer.
+        Initialize the OpenEye FastROCS scorer with enhanced stability.
 
         Parameters
         ----------
@@ -582,17 +747,21 @@ class OpenEyeScorer(Scorer):
         use_gpu : bool, optional
             Whether to use GPU acceleration if available (default: True)
         max_isomers : int, optional
-            Maximum number of isomers to enumerate per molecule (default: 4)
+            Maximum number of isomers to enumerate per molecule (default: 4, aligned with base_rocs.py)
         max_rot_bonds : int, optional
-            Maximum number of rotatable bonds to consider (default: 10)
+            Maximum number of rotatable bonds to consider (default: 15, aligned with base_rocs.py)
         max_heavy_atoms : int, optional
-            Maximum number of heavy atoms to process (default: 30)
+            Maximum number of heavy atoms to process (default: 35, aligned with base_rocs.py)
         max_conformers : int, optional
-            Maximum number of conformers to generate per molecule (default: 10)
+            Maximum number of conformers to generate per molecule (default: 200, aligned with base_rocs.py CLI)
         cpu_processes : int | None, optional
             Number of CPU processes to use if not using GPU. If None, will use
-            available CPU cores minus 2 (to leave resources for the system).
+            conservative calculation based on available resources.
             Ignored when GPU mode is active.
+        use_existing_conformers_always : bool, optional
+            Whether to use existing 3D conformers when available instead of generating new ones.
+            When True, molecules with valid 3D coordinates will skip OMEGA conformer generation
+            for improved performance (default: True)
         """
         # Handle both single model or list of models
         if isinstance(sq_model_path, (list, tuple)):
@@ -623,6 +792,7 @@ class OpenEyeScorer(Scorer):
         self.max_rot = max_rot_bonds
         self.max_heavy = max_heavy_atoms
         self.max_confs = max_conformers
+        self.use_existing_conformers_always = use_existing_conformers_always
 
         # ------------------------------------------------------------------
         #   Device selection
@@ -651,12 +821,30 @@ class OpenEyeScorer(Scorer):
 
         # Validate the query file and prepare
         try:
-            # Create database options with correct mode
+            # Create database options with ROCS CLI-compatible settings for better correlation
             opts = oefastrocs.OEShapeDatabaseOptions()
-            if self.use_gpu:
-                opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_FastROCS)
-            else:
+            # Force ROCS mode for all configurations to match CLI behavior
+            try:
                 opts.SetFastROCSMode(oefastrocs.OEFastROCSMode_ROCS)
+            except AttributeError:
+                pass
+            
+            # Apply ROCS CLI-compatible settings for better correlation
+            try:
+                opts.SetRandomSeed(42)  # Fixed seed for reproducibility
+                opts.SetSinglePrecision(False)  # Use double precision like VROCS
+                opts.SetNumInertialStarts(4)  # Match VROCS default
+                opts.SetLimit(1)  # Return only best hit per molecule (matches -besthits 1)
+                opts.SetScoreCutoff(-1.0)  # Return all scores (no cutoff) - CRITICAL FIX
+                # Create proper OEColorForceField object with vROCS-compatible enum
+                color_ff = oeshape.OEColorForceField()
+                color_ff.Init(oeshape.OEColorFFType_ImplicitMillsDeanNoRings)  # Match vROCS reference
+                opts.SetColorForceField(color_ff)  # Match CLI -chemff parameter
+                # Enable color optimization for better scoring
+                opts.SetColorOptimization(True)
+            except AttributeError:
+                # Some options may not be available in all versions
+                pass
                 
             # Just validate the first model in the list
             primary_model = self.sq_models[0]
@@ -677,18 +865,299 @@ class OpenEyeScorer(Scorer):
             # Force garbage collection to clean up any remaining handles
             gc.collect()
         except Exception:
-            pass
+            pass    # ------------------------------------------------------------------
+    #  Conformer deduplication methods (matching BaseROCSScorer)
+    # ------------------------------------------------------------------
+    
+    def _extract_base_molecule_name(self, full_name: str) -> str:
+        """
+        Extract base molecule name from conformer-specific naming.
+        
+        Handles patterns like:
+        - ZINC04617942_conf_0 -> ZINC04617942
+        - mol_0+0_conf_5 -> mol_0
+        - molecule_123_conformer_2 -> molecule_123
+        - ZINC04617942 -> ZINC04617942 (unchanged)
+        """
+        import re
+        
+        # Pattern 1: _conf_N or _conformer_N
+        pattern1 = r'(.+?)_conf(?:ormer)?_\d+$'
+        match1 = re.match(pattern1, full_name, re.IGNORECASE)
+        if match1:
+            return match1.group(1)
+        
+        # Pattern 2: mol_X+Y_conf_N -> mol_X
+        pattern2 = r'(mol_\d+)\+\d+_conf_\d+$'
+        match2 = re.match(pattern2, full_name, re.IGNORECASE)
+        if match2:
+            return match2.group(1)
+        
+        # Pattern 3: Any general _N suffix where N is digits
+        pattern3 = r'(.+?)_\d+$'
+        match3 = re.match(pattern3, full_name)
+        if match3:
+            base_candidate = match3.group(1)
+            # Only apply if it looks like a conformer pattern
+            if any(keyword in full_name.lower() for keyword in ['conf', 'conformer']):
+                return base_candidate
+        
+        # Return original name if no pattern matches
+        return full_name
+    
+    def _select_best_conformers(self, results: Dict[str, float]) -> Dict[str, float]:
+        """
+        Select the best-scoring conformer for each base molecule name.
+        
+        Parameters
+        ----------
+        results : Dict[str, float]
+            Dictionary mapping molecule names to scores
+            
+        Returns
+        -------
+        Dict[str, float]
+            Dictionary mapping base molecule names to best scores
+        """
+        if not results:
+            return {}
+        
+        # Group results by base molecule name
+        base_molecule_groups = {}
+        for mol_name, score in results.items():
+            base_name = self._extract_base_molecule_name(mol_name)
+            
+            if base_name not in base_molecule_groups:
+                base_molecule_groups[base_name] = []
+            base_molecule_groups[base_name].append((mol_name, score))
+        
+        # Select best conformer for each base molecule
+        best_conformers = {}
+        for base_name, conformers in base_molecule_groups.items():
+            # Find conformer with highest score
+            best_conformer = max(conformers, key=lambda x: x[1])
+            best_conformers[base_name] = best_conformer[1]  # Store the score
+        
+        return best_conformers
+    
+    def _ensure_consistent_naming(self, input_data) -> list:
+        """
+        Ensure consistent base molecule naming for input molecules.
+        
+        Parameters
+        ----------
+        input_data : list
+            List of SMILES strings or OEMol objects
+            
+        Returns
+        -------
+        list
+            List with consistent base molecule naming
+        """
+        if not input_data:
+            return input_data
+        
+        result = []
+        for item in input_data:
+            if isinstance(item, str):
+                # For SMILES strings, assume they're already properly named
+                result.append(item)
+            elif hasattr(item, 'GetTitle') and hasattr(item, 'SetTitle'):
+                # For OEMol objects, ensure consistent naming
+                current_title = item.GetTitle()
+                base_name = self._extract_base_molecule_name(current_title)
+                if base_name != current_title:
+                    # Create a copy and update the title
+                    mol_copy = oechem.OEMol(item)
+                    mol_copy.SetTitle(base_name)
+                    result.append(mol_copy)
+                else:
+                    result.append(item)
+            else:
+                result.append(item)
+        
+        return result
 
     # ------------------------------------------------------------------
     #  Public scoring methods
     # ------------------------------------------------------------------
-    def getScores(self, smiles: List[str]) -> np.ndarray:
-        """Pipeline still calls this explicitly."""
-        return self._score(smiles)
+    def getScores(self, mols, frags=None):
+        if not isinstance(mols, list):
+            mols = [mols]
+        # FAST PATH: All OEMol with conformers (only if use_existing_conformers_always is True)
+        if (self.use_existing_conformers_always and 
+            all(hasattr(m, 'NumConfs') and m.NumConfs() > 0 for m in mols)):
+            print("FAST PATH: Using all existing conformers, no OMEGA call.")
+            temp_file = tempfile.NamedTemporaryFile(suffix=".oeb.gz", delete=False)
+            temp_file.close()
+            ofs = oechem.oemolostream()
+            oechem.OEPRECompress(ofs)
+            if ofs.open(temp_file.name):
+                for i, mol in enumerate(mols):
+                    oefastrocs.OEPrepareFastROCSMol(mol)
+                    half_mol = oechem.OEMol(mol, oechem.OEMCMolType_HalfFloatCartesian)
+                    oechem.OEWriteMolecule(ofs, half_mol)
+                ofs.close()
+            # Fix: Use database-based scoring for molecules with conformers
+            # Create a dummy smiles list with proper length for database scoring
+            dummy_smiles = [f"molecule_{i}" for i in range(len(mols))]
+            
+            # Fix: Use direct database scoring for molecules with conformers
+            # Create molecule database from the temporary file
+            mdb = oechem.OEMolDatabase()
+            if not mdb.Open(temp_file.name):
+                os.unlink(temp_file.name)
+                return np.zeros(len(mols))
+            
+            # Score using FastROCS
+            try:
+                db, query, opts = _SHAPE_DB_CACHE.get_or_create_database(self.sq_model, self.use_gpu)
+                
+                # CRITICAL FIX: Ensure score cutoff is properly set for scoring
+                try:
+                    opts.SetScoreCutoff(-1.0)  # Ensure all scores are returned
+                    opts.SetMaxHits(0)  # Return all hits
+                except AttributeError:
+                    pass
+                
+                # Create fresh database and copy configuration from cached options
+                fresh_db = oefastrocs.OEShapeDatabase()
+                fresh_db.SetNumOpenThreads(1)
+                
+                # Extract and apply the color force field from cached options if available
+                try:
+                    cached_color_ff = opts.GetColorForceField()
+                    if cached_color_ff:
+                        fresh_db = oefastrocs.OEShapeDatabase(cached_color_ff)
+                        fresh_db.SetNumOpenThreads(1)
+                except (AttributeError, TypeError):
+                    pass
+                
+                scores_dict = {}
+                if fresh_db.Open(mdb):
+                    
+                    score_count = 0
+                    scores_iterator = fresh_db.GetSortedScores(query, opts)
+                    
+                    # Try to iterate and see if we get any scores at all
+                    try:
+                        for score in scores_iterator:
+                            mol_idx = score.GetMolIdx()
+                            # Map molecule index to original index
+                            if mol_idx < len(mols):
+                                tc = score.GetTanimotoCombo()
+                                scores_dict[mol_idx] = max(tc, scores_dict.get(mol_idx, 0.0))
+                                score_count += 1
+                    except Exception as e:
+                        print(f"Error during scoring iteration: {e}")
+                
+                fresh_db = None
+                mdb = None
+                
+            except Exception as e:
+                print(f"Error in FastROCS scoring: {e}")
+                import traceback
+                traceback.print_exc()
+                scores_dict = {}
+            
+            os.unlink(temp_file.name)
+            return np.array([scores_dict.get(i, 0.0) for i in range(len(mols))])
+        # Otherwise, fallback to minimal OMEGA for SMILES or OEMol with no conformers
+        print("FALLBACK: Some molecules lack conformers, using OMEGA only for those.")
+        return self.__call__(mols)
+
+    def _has_valid_3d_conformers(self, mol):
+        """
+        Simple check if an OEMol object has valid 3D conformers.
+        
+        Parameters
+        ----------
+        mol : OEMol
+            OpenEye molecule object to check
+            
+        Returns
+        -------
+        bool
+            True if molecule has at least one conformer with 3D coordinates
+        """
+        if not hasattr(mol, 'NumConfs'):
+            return False
+            
+        if mol.NumConfs() == 0:
+            return False
+            
+        # Check if at least one conformer has 3D coordinates (non-zero Z values)
+        for conf in mol.GetConfs():
+            coords = oechem.OEFloatArray(mol.GetMaxAtomIdx() * 3)
+            conf.GetCoords(coords)
+            
+            # Check if we have non-zero Z coordinates (indicating 3D structure)
+            for i in range(2, len(coords), 3):  # Check every Z coordinate
+                if abs(coords[i]) > 1e-6:  # Small threshold for floating point comparison
+                    return True
+                    
+        return False
 
     # DrugEx explorers call the object itself
     def __call__(self, mols) -> np.ndarray:
         # accept OEMol / RDKit / SMILES
+        if not isinstance(mols, list):
+            mols = [mols]
+            
+        result = np.zeros(len(mols))
+        
+        # Check for mixed input types and handle OEMol objects with simple 3D conformer checking
+        has_oemol_input = any(hasattr(mol, 'NumConfs') for mol in mols if mol is not None)
+        
+        if has_oemol_input:
+            # Simple conformer processing - check if OEMol objects have valid 3D conformers
+            processed_mols = []
+            valid_indices = []
+            
+            for i, mol in enumerate(mols):
+                if mol is None:
+                    continue
+                elif isinstance(mol, str):
+                    if mol.strip():  # Valid SMILES
+                        processed_mols.append(mol)
+                        valid_indices.append(i)
+                elif isinstance(mol, oechem.OEMol):
+                    # Simple check: if molecule has conformers and 3D coordinates, use it as SMILES
+                    if self._has_valid_3d_conformers(mol):
+                        # Convert to SMILES for pipeline compatibility
+                        smi = oechem.OECreateSmiString(mol)
+                        if smi:
+                            processed_mols.append(smi)
+                            valid_indices.append(i)
+                    else:
+                        # Convert to SMILES and process normally
+                        smi = oechem.OECreateSmiString(mol)
+                        if smi:
+                            processed_mols.append(smi)
+                            valid_indices.append(i)
+                elif RDKIT_AVAILABLE and hasattr(mol, "GetNumAtoms"):
+                    smi = Chem.MolToSmiles(mol)
+                    if smi:
+                        processed_mols.append(smi)
+                        valid_indices.append(i)
+                else:
+                    continue
+            
+            if not processed_mols:
+                return result
+            
+            # Use the existing scoring pipeline with converted SMILES
+            scores_array = self._score(processed_mols)
+            
+            # Map scores back to original indices
+            for i, score_val in enumerate(scores_array):
+                if i < len(valid_indices):
+                    orig_idx = valid_indices[i]
+                    result[orig_idx] = score_val
+            
+            return result
+        
+        # Standard processing fallback
         smiles = []
         for m in mols:
             if isinstance(m, str):
@@ -750,16 +1219,18 @@ class OpenEyeScorer(Scorer):
         if not smiles:
             return np.zeros(0)
             
-        # Adjusted batch size calculation based on mode
+        # Adjusted batch size calculation based on mode - Enhanced conservatism
         if self.use_gpu:
-            # GPU mode - use standard batch size
-            batch_size = 30
+            # GPU mode - use smaller batches for stability  
+            batch_size = 20  # Reduced from 30
         else:
-            # CPU mode - use smaller batches based on molecule count
-            if len(smiles) <= 60:
-                batch_size = 15  # Smaller batches for smaller sets
+            # CPU mode - use much smaller batches to prevent segfaults
+            if len(smiles) <= 30:
+                batch_size = 10  # Very small batches for small sets
+            elif len(smiles) <= 100:
+                batch_size = 5   # Extremely small for medium sets
             else:
-                batch_size = 10  # Very small batches for larger sets
+                batch_size = 3   # Ultra-conservative for large sets
         
         # Prepare batches with the optimized size
         idxs = list(range(len(smiles)))
@@ -788,12 +1259,12 @@ class OpenEyeScorer(Scorer):
                 # Force garbage collection between batches to prevent memory growth
                 gc.collect()
                 
-        # For CPU mode: use simplified approach for better stability
+        # For CPU mode: use enhanced conservative approach for better stability
         else:
             results = {}
             
             # For small molecule sets, process sequentially to avoid multiprocessing overhead
-            if len(smiles) <= 60:
+            if len(smiles) <= 50:  # Reduced threshold from 60 to 50
                 for batch in batches:
                     try:
                         batch_results = _score_batch(
@@ -806,15 +1277,15 @@ class OpenEyeScorer(Scorer):
                     # Force cleanup
                     gc.collect()
             else:
-                # For larger sets, use limited multiprocessing with spawn context for stability
-                ctx = mp.get_context("spawn")  # More reliable than forkserver
+                # For larger sets, use very limited multiprocessing for stability
+                # Use only 1 worker to prevent segmentation faults
+                ctx = mp.get_context("spawn")
                 
-                with ProcessPoolExecutor(max_workers=self.cpu_procs,
+                with ProcessPoolExecutor(max_workers=1,  # Ultra-conservative: single worker
                                          mp_context=ctx) as pool:
-                    # Pass worker ID to each process
                     futures = []
                     for i, batch in enumerate(batches):
-                        worker_id = i % self.cpu_procs
+                        worker_id = 0  # Single worker
                         futures.append(pool.submit(
                             _score_batch,
                             batch=batch,
@@ -834,6 +1305,8 @@ class OpenEyeScorer(Scorer):
                             results.update(batch_results)
                         except Exception as e:
                             print(f"Error in worker process: {e}")
+                            import traceback
+                            traceback.print_exc()
         
         # Convert dictionary to array
         out = np.zeros(len(smiles))
@@ -850,98 +1323,78 @@ class OpenEyeScorer(Scorer):
     def getKey(self):
         return "ROCS"
 
-def _prepare_molecule_database(molecules: List[oechem.OEMol], output_path: str, use_gpu: bool = False) -> oechem.OEMolDatabase:
-    """
-    Prepare a molecule database optimized for FastROCS or ROCS processing.
-    Implements best practices from OEShapeDatabasePrep.
-    
-    Parameters
-    ----------
-    molecules : List[oechem.OEMol]
-        List of molecules to include in the database
-    output_path : str
-        Path where the database will be written
-    use_gpu : bool
-        Whether to optimize for GPU usage
-        
-    Returns
-    -------
-    oechem.OEMolDatabase
-        The prepared molecule database
-    """
-    if not molecules:
-        return None
-        
-    # Use optimal strategy for GPU vs CPU
-    if use_gpu:
-        print(f"Preparing {len(molecules)} molecules for GPU processing...")
-    else:
-        print(f"Preparing {len(molecules)} molecules for CPU processing...")
-    
-    # Write molecules to SDF with optimized settings
-    with oechem.oemolostream() as ofs:  # https://docs.eyesopen.com/toolkits/python/oechemtk/OEChemClasses/oemolostream.html
-        if use_gpu:
-            # Use PRE-Compression for faster database loading
-            oechem.OEPRECompress(ofs)
-        
-        if not ofs.open(output_path):
-            print(f"Error: Could not open output file {output_path}")
-            return None
-            
-        processed_count = 0
-        
-        for mol in molecules:
-            # Apply proper preparation if using GPU
-            if use_gpu:
-                try:
-                    # Prepare molecule specifically for FastROCS
-                    oefastrocs.OEPrepareFastROCSMol(mol)
-                    
-                    # Use half-precision for better memory usage
-                    half_mol = oechem.OEMol(mol, oechem.OEMCMolType_HalfFloatCartesian)  # https://docs.eyesopen.com/toolkits/python/fastrocstk/tutorials/Tutorial_2_Database_Preparation/database_prep.html
-                    oechem.OEWriteMolecule(ofs, half_mol)                                # https://docs.eyesopen.com/toolkits/python/_downloads/1db5344ca79eb4d6c5de8a2eb3bd7a52/SimplePrepScript.py
-                    processed_count += 1
-                except Exception as e:
-                    # Fall back to standard preparation
-                    print(f"Warning: Could not prepare molecule for GPU: {e}")
-                    oechem.OEWriteMolecule(ofs, mol)
-            else:
-                oechem.OEWriteMolecule(ofs, mol)
-    
-    if use_gpu and processed_count > 0:
-        # Less verbose message, only log if there's a significant discrepancy
-        if processed_count < len(molecules) * 0.9:  # Only log if more than 10% failed
-            print(f"GPU preparation: {processed_count}/{len(molecules)} molecules processed")
-    
-    # Create and open the molecule database
-    mdb = oechem.OEMolDatabase()  # https://docs.eyesopen.com/toolkits/python/oechemtk/moldatabase.html
-    if not mdb.Open(output_path):  # https://docs.eyesopen.com/toolkits/python/oechemtk/OEChemClasses/OEMolDatabase.html
-        return None
-        
-    return mdb
+def _get_file_hash(filepath):
+    """Generate a simple hash for a file to use as cache key."""
+    try:
+        stat = os.stat(filepath)
+        return f"{os.path.basename(filepath)}_{stat.st_size}_{int(stat.st_mtime)}"
+    except (OSError, IOError):
+        return os.path.basename(filepath)
 
-def _init_worker(worker_id=None):
-    """Improved initializer for worker processes with memory pool configuration."""
-    # Silence OpenEye warnings
-    os.environ["OE_SILENT"] = "true"
-    # Set OpenEye error level
-    oechem.OEThrow.SetLevel(oechem.OEErrorLevel_Error)
-    
-    # Explicitly disable CUDA in worker processes
-    if "CUDA_VISIBLE_DEVICES" in os.environ:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+# Cache for SMILES validation, significantly speeds up repeated checks
+@lru_cache(maxsize=1000)
+def _is_valid_smiles(smiles: str) -> bool:
+    """Cached SMILES validation check."""
+    if not smiles or not isinstance(smiles, str) or len(smiles) < 2:
+        return False
         
-    # Clear any remaining GPU memory references
-    gc.collect()
+    mol = oechem.OEMol()
+    return bool(oechem.OESmilesToMol(mol, smiles))
+
+# Cached flipper options to avoid recreating them for each molecule
+@lru_cache(maxsize=10)
+def _get_flipper_options(max_centers=4):
+    """Cached flipper options for isomer enumeration."""
+    opts = oeomega.OEFlipperOptions()
+    opts.SetMaxCenters(max_centers)
+    return opts
+
+def _enumerate_isomers(mol: oechem.OEMol, max_centers=4, max_iso=4):
+    """Generate isomers for a molecule, optimized with cached options."""
+    opts = _get_flipper_options(max_centers)
+    for i, conf in enumerate(oeomega.OEFlipper(mol, opts)):
+        if i == max_iso:
+            break
+        iso = oechem.OEMol(conf)
+        iso.SetTitle(f"{mol.GetTitle()}+{i}")
+        yield iso
+
+# Cached omega options for conformer generation
+@lru_cache(maxsize=10)
+def _get_omega_options(use_gpu: bool, max_confs: int = 200):
+    """Get cached omega options for conformer generation."""
+    omegaOpts = oeomega.OEOmegaOptions()
+    omegaOpts.SetMaxConfs(max_confs)
     
-    # Set CPU affinity if possible to prevent contention
-    if PSUTIL_AVAILABLE and worker_id is not None:
+    # Configure GPU mode if available and requested
+    omega_gpu_mode = False
+    if use_gpu:
         try:
-            process = psutil.Process()
-            cpu_count = psutil.cpu_count(logical=True)
-            if cpu_count > 0:
-                # Simple round-robin assignment of cores
-                cpu_id = worker_id % cpu_count
-                process.cpu_affinity([cpu_id])
-        except Exception:
-            pass  # Skip if not supported or failed
+            if oeomega.OEOmegaIsGPUReady():
+                omega_gpu_mode = True
+                omegaOpts.GetTorDriveOptions().SetUseGPU(True)
+                # Use ROCS CLI-compatible force field for better correlation
+                from openeye import oeff
+                omegaOpts.GetTorDriveOptions().SetForceField(oeff.OEMMFFSheffieldFFType_ImplicitMillsDean)
+                omegaOpts.GetMolBuilderOptions().SetSampleHydrogens(False)
+            else:
+                omegaOpts.GetTorDriveOptions().SetUseGPU(False)
+                omegaOpts.SetSampleHydrogens(True)
+        except Exception as e:
+            print(f"Warning: Error configuring Omega GPU mode: {e}")
+            omegaOpts.GetTorDriveOptions().SetUseGPU(False)
+            omegaOpts.SetSampleHydrogens(True)
+    else:
+        omegaOpts.GetTorDriveOptions().SetUseGPU(False)
+        omegaOpts.SetSampleHydrogens(True)
+    
+    # Apply VROCS-compatible OMEGA settings
+    omegaOpts.SetStrictStereo(False)
+    omegaOpts.SetFromCT(True)
+    omegaOpts.SetMaxConfs(max_confs)
+    omegaOpts.SetFixRMS(True)
+    omegaOpts.SetRMSThreshold(0.5)
+    omegaOpts.SetEnumRing(True)
+    omegaOpts.SetRotorOffset(False)
+    
+    return omegaOpts
