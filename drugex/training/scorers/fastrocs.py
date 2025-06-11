@@ -19,15 +19,6 @@
 """
 FastROCS‑based scorer used by DrugEx‑ROCS.
 
-Key features:
-- Optimized implementation for maximum performance
-- Memory management techniques for large-scale processing
-- Multi-threading and process pool support for CPU parallelization
-- GPU acceleration with optimized data handling
-- Resource-aware batch sizing and efficient caching
-- Suitable for high-throughput screening
-- Designed to handle thousands of molecules reliably
-
 """
 
 from __future__ import annotations
@@ -55,25 +46,22 @@ try:
 except ImportError:
     RDKIT_AVAILABLE = False
 
-# ===============================================================================
-# CRITICAL SEGMENTATION FAULT FIXES - Enhanced Memory Management
-# ===============================================================================
 
-# Global configuration and caching - Enhanced
+# Global configuration and caching
 _OE_MEMORY_POOL_INITIALIZED = False
 _WORKER_INITIALIZED = False
 
-# Enhanced cache management with cleanup
+# Cache management with cleanup
 _CACHE_DIR = os.path.join(tempfile.gettempdir(), "fastrocs_cache")
 _DB_CACHE_DIR = os.path.join(_CACHE_DIR, "databases")
 _CONF_CACHE_DIR = os.path.join(_CACHE_DIR, "conformers")
 
-# More conservative batch sizing to prevent memory issues
+# Batch sizing to prevent memory issues
 _MIN_BATCH_SIZE = 5       # Reduced from 10
 _MAX_BATCH_SIZE = 50      # Reduced from 200  
 _TARGET_MEMORY_PER_WORKER = 1.0  # Reduced from 1.5 GB
 
-# Limits to prevent molecule explosion while allowing base_rocs.py alignment
+# Limits to prevent molecule explosion
 _MAX_TOTAL_CONFORMERS = 2000  # Increased to handle 200 conformers per molecule
 _MAX_MOLECULES_PER_DB = 100  # Limit molecules per database
 
@@ -109,7 +97,7 @@ def _initialize_oe_memory_pool():
 _initialize_oe_memory_pool()
 
 # ===============================================================================
-# Enhanced Generic helpers with better resource management
+# Generic helpers with better resource management
 # ===============================================================================
 
 def _get_memory_info():
@@ -216,7 +204,7 @@ def _cleanup_directory(path):
         pass  # Silent cleanup failure
 
 # ===============================================================================
-# Enhanced molecule utilities with better limits
+# Molecule utilities with better limits
 # ===============================================================================
 
 def filter_molecules(smiles_list: List[str], max_rot: int = 10, max_heavy: int = 35) -> List[Tuple[str, bool]]:
@@ -280,7 +268,7 @@ def _filter_molecules_chunk(smiles_list: List[str], max_rot: int, max_heavy: int
     return results
 
 # ===============================================================================
-# Enhanced conformer generation with limits
+# Conformer generation with limits
 # ===============================================================================
 
 def _prepare_molecules_for_scoring(smiles_list: List[str], idxs: List[int], 
@@ -377,10 +365,10 @@ def _generate_conformers_safe(smiles: str, idx: str, omega: oeomega.OEOmega, max
         return {}, []
 
 # ===============================================================================
-# Enhanced database management with better caching
+# Database management with better caching
 # ===============================================================================
 
-class EnhancedShapeDatabaseCache:
+class ShapeDatabaseCache:
     """Enhanced database cache with better memory management."""
     
     def __init__(self):
@@ -458,11 +446,11 @@ class EnhancedShapeDatabaseCache:
             self.databases.clear()
             gc.collect()
 
-# Global enhanced database cache
-_SHAPE_DB_CACHE = EnhancedShapeDatabaseCache()
+# Global database cache
+_SHAPE_DB_CACHE = ShapeDatabaseCache()
 
 # ===============================================================================
-# Enhanced scoring with database reuse
+# Scoring with database reuse
 # ===============================================================================
 
 def _score_molecules_with_database(isomers: List[oechem.OEMol], title2parent: Dict[str, int],
@@ -598,7 +586,7 @@ def _prepare_molecule_database_enhanced(molecules: List[oechem.OEMol], output_pa
         return None
 
 # ===============================================================================
-# Enhanced worker initialization
+# Worker initialization
 # ===============================================================================
 
 def _init_worker_enhanced(worker_id=None):
@@ -643,7 +631,7 @@ def _init_worker_enhanced(worker_id=None):
         print(f"Warning: Worker initialization failed: {e}")
 
 # ===============================================================================
-# Enhanced batch scoring with better error handling
+# Batch scoring with better error handling
 # ===============================================================================
 
 def _score_batch(batch: Tuple[List[str], List[int]],

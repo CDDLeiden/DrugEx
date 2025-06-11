@@ -17,18 +17,6 @@
 
 """
 'Minimal' ROCS scorer implementation using OpenEye tools.
-
-Key features:
-- Simplified implementation suitable for basic usage and learning
-- Easy to understand with minimal dependencies
-- Compatible with both CPU and GPU modes (via FastROCS)
-- Works well for small to medium molecule sets
-- Lower memory footprint than more complex implementations
-- Ideal for initial benchmarking and testing
-
-This implementation prioritizes simplicity over performance and is
-recommended for development environments, educational purposes,
-or when processing modest numbers of molecules.
 """
 
 import numpy as np
