@@ -128,9 +128,29 @@ def _has_valid_3d_conformers(mol):
                 
     return False
 
-def OMEGA(input_file, experiment_name, max_confs=200, use_existing_conformers_always=True):
-    """Generate conformers using OMEGA with aligned parameters, optionally skipping molecules with existing conformers."""
-    output_file = f"{experiment_name}_conformers.oeb.gz"
+def OMEGA(input_file, save_dir, experiment_name, max_confs=200, use_existing_conformers_always=True):
+    """
+    Generate conformers using OMEGA.
+    
+    Parameters
+    ----------
+    input_file : str
+        Path to the input file with molecules.
+    save_dir : str
+        Directory to save the output conformer database.
+    experiment_name : str
+        Name of the experiment for output file naming.
+    max_confs : int, optional
+        Maximum number of conformers to generate per molecule (default: 200).
+    use_existing_conformers_always : bool, optional
+        Whether to use existing conformers when available (default: True).
+        
+    Returns
+    -------
+    str
+        Path to the generated conformer database.
+    """
+    output_file = os.path.join(save_dir, f"{experiment_name}_conformers.oeb.gz")
     
     # Set up OMEGA with EXACT alignment to base_rocs.py CLI behavior
     omegaOpts = oeomega.OEOmegaOptions()
@@ -181,12 +201,34 @@ def OMEGA(input_file, experiment_name, max_confs=200, use_existing_conformers_al
     return output_file
 
 
-def ROCS(dbname, query_files, experiment_name, use_gpu, threads=None):
-    """Run ROCS scoring with aligned parameters to match base_rocs.py CLI behavior."""
+def ROCS(dbname, query_files, save_dir, experiment_name, use_gpu, threads=None):
+    """
+    Run FastROCS shape comparison on a database of molecules.
+    
+    Parameters
+    ----------
+    dbname : str
+        Path to the conformer database.
+    query_files : list
+        List of query file paths.
+    save_dir : str
+        Directory to save the output CSV file.
+    experiment_name : str
+        Name of the experiment for output file naming.
+    use_gpu : bool
+        Whether to use GPU acceleration.
+    threads : int, optional
+        Number of threads to use for CPU mode.
+        
+    Returns
+    -------
+    str
+        Path to the output CSV file with results.
+    """
     if not FASTROCS_AVAILABLE:
         raise ImportError("FastROCS not available")
     
-    outfname = f"{experiment_name}_scores.csv"
+    outfname = os.path.join(save_dir, f"{experiment_name}_scores.csv")
     
     try:
         # Initialize database with CLI-aligned settings and vROCS compatibility
@@ -321,7 +363,7 @@ class RocsScorer(Scorer):
     def __init__(self, sq_model_path=None, query_file=None, experiment_name="rocs_experiment", 
                  score_type="TanimotoCombo", use_gpu=False, max_isomers=4, max_rot_bonds=15, 
                  max_heavy_atoms=35, max_conformers=200, cpu_processes=None,
-                 top_n_models=None, parallel_execution=True, use_existing_conformers_always=True):
+                 top_n_models=None, parallel_execution=True, use_existing_conformers_always=True, save_conformers=None):
         """
         Initialize the RocsScorer.
         
@@ -353,6 +395,8 @@ class RocsScorer(Scorer):
             Whether to enable parallel processing
         use_existing_conformers_always : bool, optional
             Whether to use existing 3D conformers when available instead of generating new ones (default: True)
+        save_conformers : str, optional
+            Directory to save generated conformers (default: None, no saving).
         """
         # Handle both sq_model_path and query_file parameters for compatibility
         if sq_model_path is not None:
@@ -382,6 +426,7 @@ class RocsScorer(Scorer):
         self.top_n_models = top_n_models
         self.parallel_execution = parallel_execution
         self.use_existing_conformers_always = use_existing_conformers_always
+        self.save_conformers = save_conformers
         
         # Set up adaptive model selection if needed
         self.model_selector = None
@@ -515,8 +560,13 @@ class RocsScorer(Scorer):
         if not mols:
             return np.zeros(0)
             
-        # Create temporary directory for this scoring run
-        temp_dir = tempfile.mkdtemp(prefix="ez_rocs_")
+        # Create directory for this scoring run
+        if self.save_conformers is None:
+            # Create temporary directory for all files
+            conf_dir = tempfile.mkdtemp(prefix="ez_rocs_")
+        else:
+            conf_dir = self.save_conformers
+            os.makedirs(conf_dir, exist_ok=True)
         
         try:
             # Separate molecules with conformers from those without
@@ -540,7 +590,7 @@ class RocsScorer(Scorer):
                     molecules_without_conformers.append((i, ""))
             
             # Create molecular database file
-            mol_db_file = os.path.join(temp_dir, "molecules.oeb.gz")
+            mol_db_file = os.path.join(conf_dir, "molecules.oeb.gz")
             ofs = oechem.oemolostream(mol_db_file)
             
             mol_index_map = {}  # Map from molecule DB index to original index
@@ -576,7 +626,7 @@ class RocsScorer(Scorer):
             isomer_count = 0
             if molecules_without_conformers:
                 # Create isomers file for OMEGA processing
-                isomers_file = os.path.join(temp_dir, "isomers.smi")
+                isomers_file = os.path.join(conf_dir, "isomers.smi")
                 
                 # Apply molecular filters and generate isomers
                 valid_molecules = []
@@ -636,7 +686,7 @@ class RocsScorer(Scorer):
                 
                 if isomer_count > 0:
                     # Generate conformers using OMEGA and append to the molecular database
-                    conformer_file = OMEGA(isomers_file, self.experiment_name, self.max_conformers, False)  # Don't skip conformers for these
+                    conformer_file = OMEGA(isomers_file, conf_dir, self.experiment_name, self.max_conformers, False)  # Don't skip conformers for these
                     
                     # Append the conformers to the existing molecular database
                     ifs_conf = oechem.oemolistream(conformer_file)
@@ -658,7 +708,7 @@ class RocsScorer(Scorer):
 
             # Run ROCS with the combined molecular database
             threads = None if self.use_gpu else self.cpu_processes
-            rocs_output = ROCS(mol_db_file, [model_path], self.experiment_name, self.use_gpu, threads)
+            rocs_output = ROCS(mol_db_file, [model_path], conf_dir, self.experiment_name, self.use_gpu, threads)
             
             # Parse results
             try:
@@ -700,18 +750,19 @@ class RocsScorer(Scorer):
             return np.zeros(len(mols))
             
         finally:
-            # Clean up all temporary files
-            for file_path in [os.path.join(temp_dir, f) for f in os.listdir(temp_dir)]:
+            if self.save_conformers is None:
+                # Clean up all temporary files
+                for file_path in [os.path.join(conf_dir, f) for f in os.listdir(conf_dir)]:
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                    except Exception as e:
+                        print(f"Error removing file {file_path}: {e}")
+                
                 try:
-                    if os.path.isfile(file_path):
-                        os.remove(file_path)
+                    os.rmdir(conf_dir)
                 except Exception as e:
-                    print(f"Error removing file {file_path}: {e}")
-            
-            try:
-                os.rmdir(temp_dir)
-            except Exception as e:
-                print(f"Error removing directory {temp_dir}: {e}")
+                    print(f"Error removing directory {conf_dir}: {e}")
                 
             # Force cleanup
             gc.collect()
