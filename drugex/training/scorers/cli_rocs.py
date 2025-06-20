@@ -216,8 +216,12 @@ class CLIROCSScorer(Scorer):
         opts.SetRotorOffset(False)
 
         # Force CPU mode to reduce memory pressure
-        opts.GetTorDriveOptions().SetUseGPU(False)
-        opts.SetSampleHydrogens(True)
+        if self.use_gpu and oeomega.OEOmegaIsGPUReady():
+            opts.GetTorDriveOptions().SetUseGPU(True)
+            opts.SetSampleHydrogens(False)
+        else:
+            opts.GetTorDriveOptions().SetUseGPU(False)
+            opts.SetSampleHydrogens(True)
 
         return oeomega.OEOmega(opts)
 
@@ -332,8 +336,8 @@ class CLIROCSScorer(Scorer):
                         % (smi, iso.GetTitle(), oeomega.OEGetOmegaError(ret_code))
                     )
 
-                if dots:
-                    dots.Update()
+            if dots:
+                dots.Update()
 
         if dots:
             dots.Total()
