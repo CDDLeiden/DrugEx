@@ -33,7 +33,7 @@ from drugex.training.scorers.interfaces import Scorer
 class ROCSPerformanceConfig:
     """Configuration for ROCS performance tuning"""
 
-    memory_pressure_threshold: float = 0.8  # 0.8 %
+    memory_pressure_threshold: float = 0.8
 
 
 # Global configuration instance
@@ -67,16 +67,6 @@ class MemoryManager:
             return False
 
         return info["used_percent"] > PERF_CONFIG.memory_pressure_threshold
-
-    @staticmethod
-    def force_cleanup():
-        """Aggressive memory cleanup"""
-        gc.collect()
-        try:
-            if hasattr(oechem, "OEClearMemory"):
-                oechem.OEClearMemory()  # FIXME: This does not exist!?
-        except:
-            pass
 
     @staticmethod
     def log_memory_usage(context: str = ""):
@@ -344,7 +334,7 @@ class CLIROCSScorer(Scorer):
 
         ofs.close()
         omega = None
-        MemoryManager.force_cleanup()
+        gc.collect()
 
         return output_file
 
@@ -404,7 +394,7 @@ class CLIROCSScorer(Scorer):
         """Score molecules with ROCS"""
         # Check memory before each attempt
         if MemoryManager.check_memory_pressure():
-            MemoryManager.force_cleanup()
+            gc.collect()
             time.sleep(1)  # Brief pause for system recovery
 
         # Multi-query scoring
