@@ -7,22 +7,23 @@ Smart CLI ROCS Scorer with Multi-Query Support
 - Returns numpy arrays for DrugEx compatibility
 """
 
-import os
-import tempfile
-import subprocess
-import shutil
-import numpy as np
 import gc
-import time
-import multiprocessing as mp
-from typing import Union, List, Dict, Optional, Tuple, Any
-from contextlib import contextmanager
-from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
 import hashlib
+import multiprocessing as mp
+import os
+import shutil
+import subprocess
+import tempfile
 import threading
-from dataclasses import dataclass, field
+import time
 from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 try:
     import psutil
@@ -71,7 +72,7 @@ class ROCSPerformanceConfig:
     max_retry_attempts: int = 3
     
     # Debug settings (disabled for production)
-    enable_performance_logging: bool = False
+    enable_performance_logging: bool = True
     enable_memory_logging: bool = False
 
 # Global configuration instance
@@ -270,8 +271,19 @@ def _isolated_scoring_worker(args_tuple):
         # Create temporary scorer with limited parameters
         scorer = SmartCLIROCSScorer(
             query_files=query_files,
+            score_type=config_dict.get('score_type', 'TanimotoCombo'),
             max_conformers=config_dict.get('max_conformers', 50),
             max_isomers=config_dict.get('max_isomers', 2),
+            max_heavy_atoms=config_dict.get('max_heavy_atoms', 35),
+            max_rotatable_bonds=config_dict.get('max_rotatable_bonds', 15),
+            shape_only=config_dict.get('shape_only', False),
+            optimize=config_dict.get('optimize', True),
+            color_optimize=config_dict.get('color_optimize', True),
+            color_force_field=config_dict.get('color_force_field', 'ImplicitMillsDean'),
+            use_gpu=False,
+            rocs_binary=config_dict.get('rocs_binary', 'rocs'),
+            binary_path=config_dict.get('binary_path', None),
+            output_file=config_dict.get('output_file', None), 
             batch_size_limit=min(50, len(smiles_chunk)),
             show_progress=False,
             enable_caching=False  # No caching in workers
@@ -442,9 +454,11 @@ class SmartCLIROCSScorer(Scorer):
                  batch_size_limit: int = None,  # Now auto-determined
                  show_progress: bool = False,
                  enable_caching: bool = True,    # NEW: Enable conformer caching
-                 performance_config: Optional[ROCSPerformanceConfig] = None):
+                 performance_config: Optional[ROCSPerformanceConfig] = None,
+                 name_suffix: str | None = None):
         
         super().__init__()
+        
         if not OE_AVAILABLE:
             raise ImportError("OpenEye toolkits required")
         
@@ -481,6 +495,7 @@ class SmartCLIROCSScorer(Scorer):
         self.rocs_binary = rocs_binary  # Keep for backward compatibility
         self.max_retry_attempts = max_retry_attempts
         self.show_progress = show_progress
+        self.name_suffix = name_suffix
         self.batch_size_limit = batch_size_limit
         
         self._validate_query_files()
@@ -494,6 +509,7 @@ class SmartCLIROCSScorer(Scorer):
         valid_files = []
         for qf in self.query_files:
             if not os.path.exists(qf):
+                print(f"Query file not found: {qf}")
                 continue
                 
             try:
@@ -562,8 +578,18 @@ class SmartCLIROCSScorer(Scorer):
             # Check if we should use process isolation
             if ProcessIsolationManager.should_use_isolation(num_input_mols):
                 config_dict = {
+                    'score_type': self.score_type,
                     'max_conformers': self.max_conformers,
                     'max_isomers': self.max_isomers,
+                    'max_heavy_atoms': self.max_heavy_atoms,
+                    'max_rotatable_bonds': self.max_rotatable_bonds,
+                    'shape_only': self.shape_only,
+                    'optimize': self.optimize,
+                    'color_optimize': self.color_optimize,
+                    'color_force_field': self.color_force_field,
+                    'rocs_binary': self.rocs_binary,
+                    'binary_path': self.binary_path,
+                    'output_file': self.output_file,
                     'enable_caching': False  # No caching in isolated processes
                 }
                 result_scores = ProcessIsolationManager.score_with_isolation(
@@ -641,6 +667,7 @@ class SmartCLIROCSScorer(Scorer):
                   f"(hit rate: {hit_rate:.1%})")
         
         if not processed_mols:
+            print("No valid molecules after processing")
             return result_scores
             
         # Score the processed molecules
@@ -658,6 +685,7 @@ class SmartCLIROCSScorer(Scorer):
                     continue
                     
         except Exception:
+            print("No scores returned from ROCS")
             return result_scores
             
         return result_scores
@@ -871,6 +899,7 @@ class SmartCLIROCSScorer(Scorer):
     def _score_single_query(self, processed_mols, query_file: str) -> dict:
         """Score molecules against a single query file and return as dict"""
         if not processed_mols:
+            print("No valid molecules to score")
             return {}
             
         scores = {}
@@ -880,11 +909,12 @@ class SmartCLIROCSScorer(Scorer):
                 # Write molecules to temporary file
                 input_file = self._write_molecules(processed_mols, tmpdir)
                 if not input_file:
+                    print("No valid molecules written to input file")
                     return scores
-                    
                 # Execute ROCS
                 output_file = self._execute_rocs(query_file, input_file, tmpdir)
                 if not output_file:
+                    print("ROCS execution failed or output file not created")
                     return scores
                     
                 # Parse results and return as dictionary
@@ -955,13 +985,15 @@ class SmartCLIROCSScorer(Scorer):
             
             if result.returncode != 0:
                 raise RuntimeError(f"ROCS failed with return code {result.returncode}")
-                
+            
             if not os.path.exists(output_file):
                 raise RuntimeError(f"ROCS output file not created: {output_file}")
-                
+            
             if os.path.getsize(output_file) == 0:
                 raise RuntimeError(f"ROCS output file is empty: {output_file}")
-                
+            
+        except RuntimeError as e:
+            raise RuntimeError(e)
         except subprocess.TimeoutExpired:
             raise RuntimeError(f"ROCS execution timed out")
         except Exception as e:
@@ -1011,6 +1043,7 @@ class SmartCLIROCSScorer(Scorer):
         scores = np.zeros(num_mols)
         
         if not os.path.exists(output_file):
+            print(f"Output file not found: {output_file}")
             return scores
             
         try:
@@ -1018,6 +1051,7 @@ class SmartCLIROCSScorer(Scorer):
             df = pd.read_csv(output_file, sep='\t')
             
             if df.empty or 'Name' not in df.columns or self.score_type not in df.columns:
+                print("ROCS output file is empty or missing required columns")
                 return scores
             
             for _, row in df.iterrows():
@@ -1031,14 +1065,18 @@ class SmartCLIROCSScorer(Scorer):
                     except (ValueError, IndexError):
                         continue
                         
-        except Exception:
+        except Exception as e:
+            print(f"Error parsing ROCS output: {e}")
             pass
             
         return scores
         
     def getKey(self) -> str:
         """Return scorer identifier"""
-        return "ROCS"
+        if self.name_suffix:
+            return f"ROCS_{self.name_suffix}"
+        else:
+            return "ROCS"
 
     def __del__(self):
         """Proper cleanup when scorer is destroyed."""
@@ -1133,6 +1171,7 @@ class SmartCLIROCSScorer(Scorer):
         """Score chunk with cleanup or process isolation."""
         # Use process isolation if memory pressure is high or chunk is large
         if len(chunk) > 100 or _check_memory_pressure():
+            print(len(chunk), _check_memory_pressure())
             return self._score_chunk_isolated(chunk)
         else:
             return self._score_chunk_directly(chunk)
@@ -1213,6 +1252,8 @@ class SmartCLIROCSScorer(Scorer):
                 _force_cleanup()
                 if attempt < self.max_retry_attempts:
                     time.sleep(1)  # Brief pause
+                else:
+                    print(f"ROCS scoring failed after {self.max_retry_attempts} attempts")
             finally:
                 # Always cleanup after each attempt
                 _force_cleanup()
