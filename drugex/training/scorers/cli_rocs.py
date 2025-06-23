@@ -97,7 +97,11 @@ class CLIROCSScorer(Scorer):
     - Batch processing for large datasets
 
     Attributes:
-        - query_files: List of .sq files for ROCS queries
+        - query_files: dict of .sq files for ROCS queries.
+            Keys are query names, values are query file paths or lists of file paths.
+            For each key, one score is returned per molecule. If a list of files is
+            provided for a single key, the highest score across all queries
+            is returned for that key.
         - score_type: Type of scoring to use (e.g., TanimotoCombo)
         - max_conformers: Maximum conformers per molecule (note. max 200)
         - max_isomers: Maximum isomers per molecule
@@ -118,7 +122,7 @@ class CLIROCSScorer(Scorer):
 
     def __init__(
         self,
-        query_files: Union[str, List[str]],
+        query_files: dict[str, List[str] | str],
         score_type: str = "TanimotoCombo",
         max_conformers: int = 10,
         max_isomers: int = 4,
@@ -133,7 +137,6 @@ class CLIROCSScorer(Scorer):
         binary_path: str | None = None,
         output_file: str | None = None,
         show_progress: bool = False,
-        name_suffix: str | None = None,
     ):
 
         super().__init__()
@@ -142,9 +145,10 @@ class CLIROCSScorer(Scorer):
             raise ImportError("OpenEye toolkits required")
 
         # Convert to list and validate
-        self.query_files = (
-            [query_files] if isinstance(query_files, str) else list(query_files)
-        )
+        self.queries = query_files
+        print(f"Initializing CLIROCSScorer with queries: {self.queries}")
+        self._validate_query_files()
+        print("Query files validated successfully:", self.queries)
 
         self.score_type = score_type
         self.optimize = optimize
@@ -168,30 +172,31 @@ class CLIROCSScorer(Scorer):
         self.shape_only = shape_only
         self.rocs_binary = rocs_binary
         self.show_progress = show_progress
-        self.name_suffix = name_suffix
-        self._validate_query_files()
 
         if not shutil.which(self.binary_path):
             raise FileNotFoundError(f"ROCS binary not found: {self.binary_path}")
 
     def _validate_query_files(self):
         """Validate all .sq files exist and are readable"""
-        valid_files = []
-        for qf in self.query_files:
-            if not os.path.exists(qf):
-                print(f"Query file not found: {qf}")
-                continue
+        assert isinstance(self.queries, dict), (
+            "query_files must be a dictionary with keys as query names and values"
+            "as file paths"
+        )
+        
+        for name, list_of_qf in self.queries.items():
+            if isinstance(list_of_qf, str):
+                list_of_qf = [list_of_qf]
+                self.queries[name] = list_of_qf
 
-            try:
+            for qf in list_of_qf:
+                if not os.path.exists(qf):
+                    raise FileNotFoundError(f"Query file not found: {qf}")
+
                 query = oeshape.OEShapeQuery()
-                if oeshape.OEReadShapeQuery(qf, query):
-                    valid_files.append(os.path.abspath(qf))
-            except Exception:
-                continue
-
-        if not valid_files:
-            raise ValueError("No valid query files found")
-        self.query_files = valid_files
+                if not oeshape.OEReadShapeQuery(qf, query):
+                    raise ValueError(
+                        f"Invalid query file: {qf}"
+                    )
 
     def _create_fresh_omega(self):
         """Create a fresh Omega instance with proven parameters"""
@@ -255,8 +260,9 @@ class CLIROCSScorer(Scorer):
             # Score using OpenEye ROCS
             scores_dict = self._score(conf_file)
 
-        result_scores = np.zeros(num_input_mols, dtype=np.float32)
-        result_scores[list(scores_dict.keys())] = list(scores_dict.values())
+        result_scores = np.zeros((num_input_mols, len(self.queries)), dtype=np.float32)
+        for i, scores in enumerate(scores_dict.values()):
+            result_scores[list(scores.keys()), i] = list(scores.values())
 
         if self.show_progress:
             if timer and timer.Elapsed() > 2.0:
@@ -391,25 +397,31 @@ class CLIROCSScorer(Scorer):
         return cmd
 
     def _score(self, conf_file) -> dict:
-        """Score molecules with ROCS"""
+        """Score molecules with ROCS
+        
+        Returns:
+            dict: Dictionary with query names as keys and scores as values.
+        """
         # Check memory before each attempt
         if MemoryManager.check_memory_pressure():
             gc.collect()
             time.sleep(1)  # Brief pause for system recovery
 
         # Multi-query scoring
-        if len(self.query_files) == 1:
-            scores_dict = self._score_single_query(conf_file, self.query_files[0])
-        else:
-            scores_dict = self._score_multi_query(conf_file)
+        scores_dict = {}
+        for name, query_files in self.queries.items():
+            if len(self.queries) == 1:
+                scores_dict[name] = self._score_single_query(conf_file, query_files[0])
+            else:
+                scores_dict[name] = self._score_multi_query(conf_file, query_files)
 
         return scores_dict
 
-    def _score_multi_query(self, conf_file) -> dict:
+    def _score_multi_query(self, conf_file, query_files) -> dict:
         """Score against multiple queries, return best scores as dict"""
         best_scores = {}
 
-        for query_file in self.query_files:
+        for query_file in query_files:
             query_scores = self._score_single_query(conf_file, query_file)
 
             # Take maximum score for each molecule
@@ -441,6 +453,7 @@ class CLIROCSScorer(Scorer):
     def _score_single_query(self, conf_file, query_file: str) -> dict:
         """Score molecules against a single query file and return as dict"""
         scores = {}
+        print("Scoring with query file:", query_file)
 
         with _managed_tmpdir() as tmpdir:
             if not conf_file:
@@ -485,7 +498,9 @@ class CLIROCSScorer(Scorer):
                 print(f"  ROCS execution: {rocs_timer.Elapsed():.1f}s")
 
             if result.returncode != 0:
-                raise RuntimeError(f"ROCS failed with return code {result.returncode}")
+                raise RuntimeError(
+                    f"ROCS failed with return code {result.returncode}:\n{result.stderr}"
+                )
 
             if not os.path.exists(output_file):
                 raise RuntimeError(f"ROCS output file not created: {output_file}")
@@ -533,9 +548,6 @@ class CLIROCSScorer(Scorer):
 
         return scores
 
-    def getKey(self) -> str:
+    def getKey(self) -> List[str]:
         """Return scorer identifier"""
-        if self.name_suffix:
-            return f"ROCS_{self.name_suffix}"
-        else:
-            return "ROCS"
+        return [f"ROCS_{name}" for name in self.queries.keys()]
