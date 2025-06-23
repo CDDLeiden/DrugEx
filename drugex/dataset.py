@@ -25,9 +25,9 @@ def DatasetArgParser():
     parser.add_argument('-b', '--base_dir', type=str, default='.',
                         help="Base directory which contains a folder 'data' with input files")
     parser.add_argument('-i', '--input', type=str, default='LIGAND_RAW.tsv',
-                        help="Input file containing raw data. tsv or sdf.gz format")  
+                        help="Input file containing raw data as (compressed) tsv or csv file.") 
     parser.add_argument('-mc', '--molecule_column', type=str, default='SMILES',
-                        help="Name of the column in CSV files that contains molecules.") 
+                        help="Name of the column in input file that contains molecules.") 
     parser.add_argument('-vf', '--voc_file', type=str, default=None,
                         help="Name of voc file molecules should adhere to (i.e. prior_smiles_voc), if molecule contains tokens not in voc it is discarded (only works is --mol_type is 'smiles')")
     parser.add_argument('-o', '--output', type=str, default='ligand',
@@ -76,13 +76,18 @@ def load_molecules(base_dir, input_file):
     Loads raw SMILES from input file and transform to rdkit molecule
     Arguments:
         base_dir (str)            : base directory, needs to contain a folder data with input file
-        input_file  (str)         : file containing SMILES, can be 'sdf.gz' or (compressed) 'tsv' or 'csv' file
+        input_file  (str)         : file containing SMILES, can be '(compressed) 'tsv' or 'csv' file
     Returns:
         mols (list)                : list of SMILES extracted from input_file
     """
     
     print('Loading molecules...')
-    df = pd.read_csv(base_dir + '/data/' + input_file, sep="\t", header=0, na_values=('nan', 'NA', 'NaN', '')).dropna(subset=[args.molecule_column])
+    df = pd.read_csv(
+        base_dir + '/data/' + input_file,
+        header=0,
+        sep=('\t' if ".tsv" in input_file else ','),
+        na_values=('nan', 'NA', 'NaN', '')
+    ).dropna(subset=[args.molecule_column])
     return df[args.molecule_column].tolist()
 
 class Dataset():

@@ -138,6 +138,8 @@ class SequenceExplorer(Explorer):
             ignored, for compatibility with `FragExplorer`
         epochs : int
             Number of epochs to train for
+        monitor : Monitor
+            Monitor to use for logging and saving model
         patience : int
             Number of epochs to wait for improvement before early stopping
         reload_interval : int
@@ -146,8 +148,6 @@ class SequenceExplorer(Explorer):
             Criteria to use for early stopping: 'desired_ratio', 'avg_amean' or 'avg_gmean'
         min_epochs : int
             Minimum number of epochs to train for
-        monitor : Monitor
-            Monitor to use for logging and saving model
         """
         
         self.monitor = monitor if monitor else NullMonitor()

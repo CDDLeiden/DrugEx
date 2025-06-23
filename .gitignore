@@ -5,6 +5,8 @@
 /build/
 /base_test/
 /drugex/_version.py
+/drugex/training/test_data/A2A_LIGANDS.tsv
+/drugex/training/test_data/AR_LIGANDS.tsv
 /tutorial/data
 /tutorial/advanced/data
 /tutorial/CLI/examples

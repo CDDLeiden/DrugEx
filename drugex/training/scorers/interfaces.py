@@ -33,7 +33,7 @@ class Scorer(ABC):
 
         Parameters
         ----------
-        modifier : ScoreModifier, optional
+        modifier : ScoreModifier or list of scoreModifiers, optional
             A `ScoreModifier` object to modify the scores, by default None.
         """
         self.modifier = modifier
@@ -91,8 +91,14 @@ class Scorer(ABC):
             The modified scores.
         """
 
-        if self.modifier:
-            return self.modifier(scores)
+        if self.modifier is not None:
+            if isinstance(self.modifier, list):
+                # Apply modifier to each score, in multi-task case
+                for i, modifier in enumerate(self.modifier):
+                    scores[:, i] = modifier(scores[:, i])
+                return scores
+            else:
+                return self.modifier(scores)
         else:
             return scores
 
