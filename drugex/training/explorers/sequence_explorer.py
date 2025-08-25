@@ -167,6 +167,11 @@ class SequenceExplorer(Explorer):
 
             smiles, seqs = self.forward()
             train_loss = self.policy_gradient(smiles, seqs, epoch=epoch, epochs=epochs)
+            
+            # Evaluate the model on a validation set, which is 10% of the size of training set
+            smiles = self.agent.sample(int(np.round(self.nSamples)/10))
+            scores = self.agent.evaluate(smiles, evaluator=self.env, no_multifrag_smiles=self.no_multifrag_smiles)
+            scores['SMILES'] =  smiles
 
             # Compute metrics
             metrics = self.getNovelMoleculeMetrics(scores)       
