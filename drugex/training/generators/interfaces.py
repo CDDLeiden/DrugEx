@@ -182,7 +182,7 @@ class Generator(Model, ABC):
         self.monitor.endStep(None, epoch)
 
 
-    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True, loss_tolerance=None):
         """
         Fit the generator.
 
