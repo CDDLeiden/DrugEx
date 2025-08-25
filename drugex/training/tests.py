@@ -416,7 +416,7 @@ class TrainingTestCase(TestCase):
         """
         return tempfile.NamedTemporaryFile().name
 
-    def fitTestModel(self, model, train_loader, test_loader):
+    def fitTestModel(self, model, train_loader, test_loader, loss_tolerance=None):
         """
         Fit a model and return the best model.
 
@@ -436,7 +436,7 @@ class TrainingTestCase(TestCase):
         """
 
         monitor = TestModelMonitor()
-        model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor)
+        model.fit(train_loader, test_loader, epochs=self.N_EPOCHS, monitor=monitor, loss_tolerance=loss_tolerance)
         pr_model = monitor.getModel()
         
         self.assertTrue(type(pr_model) == collections.OrderedDict)
@@ -486,6 +486,7 @@ class TrainingTestCase(TestCase):
         finetuned = SequenceRNN(vocabulary, is_lstm=True)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test, loss_tolerance=0.01)
 
         # RL
         environment = self.getTestEnvironment()
@@ -546,6 +547,7 @@ class TrainingTestCase(TestCase):
         finetuned = GraphTransformer(vocabulary)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test, loss_tolerance=0.01)
 
         # reinforcement learning
         environment = self.getTestEnvironment()
@@ -628,6 +630,7 @@ class TrainingTestCase(TestCase):
         finetuned = SequenceTransformer(vocab_gpt)
         finetuned.loadStates(pretrained.getModel())
         finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test)
+        finetuned, monitor = self.fitTestModel(finetuned, ft_loader_train, ft_loader_test, loss_tolerance=0.01)
 
         # RL
         environment = self.getTestEnvironment()
