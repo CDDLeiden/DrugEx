@@ -168,6 +168,9 @@ class SequenceExplorer(Explorer):
             smiles, seqs = self.forward()
             train_loss = self.policy_gradient(smiles, seqs, epoch=epoch, epochs=epochs)
 
+            scores = self.env.scores
+            scores['SMILES'] = smiles
+
             # Compute metrics
             metrics = self.getNovelMoleculeMetrics(scores)       
             metrics['loss_train'] = train_loss
@@ -183,8 +186,16 @@ class SequenceExplorer(Explorer):
                 monitor.saveModel(self, epoch if save_model_option in ('all', 'improvement') else None)
                 logger.info(f"Model saved at epoch {epoch}")
 
+            # randomly sample 10% of the generated SMILES for logging
+            ix = np.random.choice(
+                len(smiles), size=int(len(smiles) * 0.1), replace=False
+            )
+            smiles_sample = smiles[ix]
+
             # Log performance and generated compounds
-            self.logPerformanceAndCompounds(epoch, metrics, scores)
+            self.logPerformanceAndCompounds(
+                epoch, metrics, scores.loc[scores.SMILES.isin(smiles_sample)].copy()
+            )
  
             if epoch % reload_interval == 0 and epoch != 0:
                 # Every nth epoch reset the agent and the crover networks to the best state
