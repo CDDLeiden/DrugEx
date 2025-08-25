@@ -100,6 +100,7 @@ class Explorer(Model, ABC):
         dict
             The metrics:
                 - valid_ratio (float): ratio of valid molecules
+                - accurate_ratio (float, opt): the ratio of SMILES that are valid and have the desired fragments
                 - unique_ratio (float): ratio of valid and unique molecules
                 - desired_ratio (float): ratio of valid, unique and desired molecules
                 - avg_amean (float): average arithmetic mean score of valid and unique molecules

@@ -318,7 +318,7 @@ class Model(nn.Module, ModelProvider, ABC):
             The path to the file containing the model states.
         """
 
-        self.loadStates(torch.load(path, map_location=self.device))
+        self.loadStates(torch.load(path, map_location=self.device, weights_only=True))
 
 
     def loadStates(self, state_dict, strict=True):
