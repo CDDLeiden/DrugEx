@@ -135,7 +135,6 @@ class CLIROCSScorer(Scorer):
         use_gpu: bool = False,
         rocs_binary: str = "rocs",
         binary_path: str | None = None,
-        output_file: str | None = None,
         show_progress: bool = False,
     ):
 
@@ -146,16 +145,13 @@ class CLIROCSScorer(Scorer):
 
         # Convert to list and validate
         self.queries = query_files
-        print(f"Initializing CLIROCSScorer with queries: {self.queries}")
         self._validate_query_files()
-        print("Query files validated successfully:", self.queries)
 
         self.score_type = score_type
         self.optimize = optimize
         self.color_optimize = color_optimize
         self.color_force_field = color_force_field
         self.binary_path = binary_path or rocs_binary
-        self.output_file = output_file
 
         self.max_conformers = max_conformers
         if self.max_conformers > 200:
@@ -182,7 +178,7 @@ class CLIROCSScorer(Scorer):
             "query_files must be a dictionary with keys as query names and values"
             "as file paths"
         )
-        
+
         for name, list_of_qf in self.queries.items():
             if isinstance(list_of_qf, str):
                 list_of_qf = [list_of_qf]
@@ -191,12 +187,18 @@ class CLIROCSScorer(Scorer):
             for qf in list_of_qf:
                 if not os.path.exists(qf):
                     raise FileNotFoundError(f"Query file not found: {qf}")
-
-                query = oeshape.OEShapeQuery()
-                if not oeshape.OEReadShapeQuery(qf, query):
-                    raise ValueError(
-                        f"Invalid query file: {qf}"
-                    )
+                ext = oechem.OEGetFileExtension(qf)
+                if ext == "sq":
+                    query = oeshape.OEShapeQuery()
+                    if not oeshape.OEReadShapeQuery(qf, query):
+                        raise ValueError(f"Invalid query file: {qf}")
+                else:
+                    qfs = oechem.oemolistream()
+                    if not qfs.open(qf):
+                        oechem.OEThrow.Fatal("Unable to open '%s'" % qf)
+                    query = oechem.OEGraphMol()
+                    if not oechem.OEReadMolecule(qfs, query):
+                        oechem.OEThrow.Fatal("Unable to read query from '%s'" % qf)
 
     def _create_fresh_omega(self):
         """Create a fresh Omega instance with proven parameters"""
@@ -398,7 +400,7 @@ class CLIROCSScorer(Scorer):
 
     def _score(self, conf_file) -> dict:
         """Score molecules with ROCS
-        
+
         Returns:
             dict: Dictionary with query names as keys and scores as values.
         """
@@ -429,26 +431,6 @@ class CLIROCSScorer(Scorer):
                 best_scores[mol_title] = max(score, best_scores.get(mol_title, 0.0))
 
         return best_scores
-
-    def _write_molecules(self, mols, tmpdir) -> str:
-        """Write molecules to OEB file"""
-        input_file = os.path.join(tmpdir, "input.oeb")
-        ofs = oechem.oemolostream()
-
-        if not ofs.open(input_file):
-            raise IOError(f"Cannot create input file: {input_file}")
-
-        written_count = 0
-        for mol in mols:
-            if mol and mol.NumAtoms() > 0:
-                oechem.OEWriteMolecule(ofs, mol)
-                written_count += 1
-        ofs.close()
-
-        if written_count == 0:
-            raise RuntimeError("No valid molecules were written to input file")
-
-        return input_file
 
     def _score_single_query(self, conf_file, query_file: str) -> dict:
         """Score molecules against a single query file and return as dict"""
