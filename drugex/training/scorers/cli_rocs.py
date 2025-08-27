@@ -29,51 +29,6 @@ except ImportError:
 from drugex.training.scorers.interfaces import Scorer
 
 
-@dataclass
-class ROCSPerformanceConfig:
-    """Configuration for ROCS performance tuning"""
-
-    memory_pressure_threshold: float = 0.8
-
-
-# Global configuration instance
-PERF_CONFIG = ROCSPerformanceConfig()
-
-
-class MemoryManager:
-    """Advanced memory monitoring and management"""
-
-    @staticmethod
-    def get_memory_info() -> str | Dict[str, float]:
-        """Get current memory usage information"""
-        if not PSUTIL_AVAILABLE:
-            return "Unable to retrieve memory info, psutil not installed"
-
-        memory = psutil.virtual_memory()
-        return {
-            "total_gb": memory.total / (1024**3),
-            "available_gb": memory.available / (1024**3),
-            "used_gb": memory.used / (1024**3),
-            "used_percent": memory.percent,
-            "free_gb": memory.free / (1024**3),
-        }
-
-    @staticmethod
-    def check_memory_pressure() -> bool:
-        """Check if memory pressure is high"""
-        info = MemoryManager.get_memory_info()
-
-        if not PSUTIL_AVAILABLE:
-            return False
-
-        return info["used_percent"] > PERF_CONFIG.memory_pressure_threshold
-
-    @staticmethod
-    def log_memory_usage(context: str = ""):
-        """Log current memory usage (silent in production)"""
-        print(f"Memory usage {context}: {MemoryManager.get_memory_info()}")
-
-
 @contextmanager
 def _managed_tmpdir():
     """Managed temporary directory with guaranteed cleanup."""
@@ -250,7 +205,6 @@ class CLIROCSScorer(Scorer):
 
         if self.show_progress:
             print(f"Starting ROCS scoring for {num_input_mols} molecules...")
-            MemoryManager.log_memory_usage("before scoring")
 
         # Convert to SMILES list for uniform processing
         smiles_list = self._convert_to_smiles(mols)
@@ -269,7 +223,6 @@ class CLIROCSScorer(Scorer):
         if self.show_progress:
             if timer and timer.Elapsed() > 2.0:
                 print(f"ROCS scoring completed in {timer.Elapsed():.1f}s")
-            MemoryManager.log_memory_usage("after scoring")
 
         return result_scores
 
@@ -404,11 +357,6 @@ class CLIROCSScorer(Scorer):
         Returns:
             dict: Dictionary with query names as keys and scores as values.
         """
-        # Check memory before each attempt
-        if MemoryManager.check_memory_pressure():
-            gc.collect()
-            time.sleep(1)  # Brief pause for system recovery
-
         # Multi-query scoring
         scores_dict = {}
         for name, query_files in self.queries.items():
