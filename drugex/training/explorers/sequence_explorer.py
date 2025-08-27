@@ -85,7 +85,7 @@ class SequenceExplorer(Explorer):
         seqs = seqs[torch.LongTensor(ix).to(self.device)]
         return smiles, seqs
    
-    def policy_gradient(self, smiles=None, seqs=None):
+    def policy_gradient(self, smiles=None, seqs=None, epoch=None, epochs=None):
         """
         Policy gradient training.
  
@@ -98,6 +98,10 @@ class SequenceExplorer(Explorer):
             The generated SMILES.
         seqs : torch.Tensor
             The generated encoded sequences. 
+        epoch : int, optional
+            The current epoch number, used for logging.
+        epochs : int, optional
+            The total number of epochs to train, used for logging.
 
         Returns
         -------
@@ -122,7 +126,9 @@ class SequenceExplorer(Explorer):
             loss.backward()
             self.optim.step()
             
-            self.monitor.saveProgress(self, step_idx, None, total_steps, None, loss=loss.item())
+            self.monitor.saveProgress(
+                self, step_idx, epoch, total_steps, epochs, loss=loss.item()
+            )
         
         return loss.item()
  
@@ -160,7 +166,7 @@ class SequenceExplorer(Explorer):
             is_best = False
 
             smiles, seqs = self.forward()
-            train_loss = self.policy_gradient(smiles, seqs)
+            train_loss = self.policy_gradient(smiles, seqs, epoch=epoch, epochs=epochs)
 
             # Evaluate the model on a validation set, which is 10% of the size of training set
             smiles = self.agent.sample(int(np.round(self.nSamples)/10))
