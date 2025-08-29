@@ -3,30 +3,21 @@ import os
 import shutil
 import subprocess
 import tempfile
-import time
 from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import Dict, List, Union
+from typing import List
 
 import numpy as np
 import pandas as pd
 from rdkit import Chem
 
 try:
-    import psutil
-
-    PSUTIL_AVAILABLE = True
-except ImportError:
-    PSUTIL_AVAILABLE = False
-
-try:
-    from openeye import oechem, oeomega, oeshape
+    from openeye import oechem, oemolprop, oeomega, oeshape
 
     OE_AVAILABLE = True
 except ImportError:
     OE_AVAILABLE = False
 
-from drugex.training.scorers.interfaces import Scorer
+from drugex.training.scorers.interfaces import ConformerGenerator, Scorer
 
 
 @contextmanager
@@ -41,6 +32,143 @@ def _managed_tmpdir():
         except Exception as e:
             print(f"Error cleaning up temporary directory {path}: {e}")
 
+class OmegaConformerGenerator(ConformerGenerator):
+    def __init__(
+        self,
+        max_conformers: int = 10,
+        max_isomers: int = 4,
+        max_heavy_atoms: int = 35,
+        max_rotatable_bonds: int = 15,
+        blockbuster_filter: bool = True,
+        use_gpu: bool = False,
+        show_progress: bool = False,
+    ):
+        if max_conformers > 200:
+            print(
+                "Warning: max_conformers > 200 may cause memory issues "
+                "Setting to 200."
+            )
+            self.max_conformers = 200
+        else:
+            self.max_conformers = max_conformers
+        self.max_isomers = max_isomers
+        self.max_heavy_atoms = max_heavy_atoms
+        self.max_rotatable_bonds = max_rotatable_bonds
+        self.blockbuster_filter = blockbuster_filter
+        self.use_gpu = use_gpu
+        self.show_progress = show_progress
+
+    def _create_fresh_omega(self):
+        """Create a fresh Omega instance with proven parameters"""
+        opts = oeomega.OEOmegaOptions()
+        # Use conservative conformer limits
+        opts.SetMaxConfs(self.max_conformers)
+        opts.SetStrictStereo(False)
+        opts.SetFromCT(True)
+        opts.SetFixRMS(True)
+        opts.SetRMSThreshold(0.5)
+        opts.SetEnumRing(True)
+        opts.SetRotorOffset(False)
+
+        # Force CPU mode to reduce memory pressure
+        if self.use_gpu and oeomega.OEOmegaIsGPUReady():
+            opts.GetTorDriveOptions().SetUseGPU(True)
+            opts.SetSampleHydrogens(False)
+        else:
+            opts.GetTorDriveOptions().SetUseGPU(False)
+            opts.SetSampleHydrogens(True)
+
+        return oeomega.OEOmega(opts)
+    
+    def _filter_mol(self, smi, mol) -> bool:
+        """Filter molecules based on heavy atoms and rotatable bonds"""
+
+        # filter based on heavy atoms and rotatable bonds
+        if oechem.OECount(mol, oechem.OEIsHeavy()) > self.max_heavy_atoms:
+            oechem.OEThrow.Warning(
+                f"Skipping {smi} with > {self.max_heavy_atoms} heavy atoms"
+            )
+            return True
+
+        if oechem.OECount(mol, oechem.OEIsRotor()) > self.max_rotatable_bonds:
+            oechem.OEThrow.Warning(
+                f"Skipping {smi} with > {self.max_rotatable_bonds} rotatable bonds"
+            )
+            return True
+
+        if self.blockbuster_filter:
+            ifs = oechem.oeifstream(
+                "/zfsdata/data/helle/01_MainProjects/06_antibiotics/Data/pharmacophores/filter_blockbuster_modified.txt"
+            )
+            filt = oemolprop.OEFilter(ifs)  # oemolprop.OEFilterType_BlockBuster)
+            filt.SetMMFFTypeCheck(True)
+            if not filt(mol):
+                oechem.OEThrow.Warning(f"Skipping {smi} due to: {filt.GetMessage(mol)}")
+                return True
+        return False
+
+    def _get_isomers(self, mol):
+        """Generate isomers for a molecule using OMEGA"""
+        opts = oeomega.OEFlipperOptions()
+        opts.SetMaxCenters(self.max_isomers)
+        for conf in oeomega.OEFlipper(mol, opts):
+            iso = oechem.OEMol(conf)
+            yield iso
+            
+    def genConformers(self, smiles_list, tmp_dir) -> str:
+        """Generate conformers using Openeye Omega
+
+        Returns:
+            str: Path to the output conformers file (oeb.gz)
+        """
+        tmp_outfile = os.path.join(tmp_dir, f"conformers.oeb.gz")
+        ofs = oechem.oemolostream()
+        if not ofs.open(tmp_outfile):
+            oechem.OEThrow.Fatal(
+                "Unable to open %s for writing conformers" % tmp_outfile
+            )
+
+        omega = self._create_fresh_omega()
+
+        # Progress tracking for conformer generation
+        dots = None
+        if self.show_progress and len(smiles_list) > 50:
+            print("Generating conformers...")
+            dots = oechem.OEThreadedDots(100, 50, "molecules")
+
+        for i, smi in enumerate(smiles_list):
+            mol = oechem.OEMol()
+            title = f"mol_{i}"
+            mol.SetTitle(title)
+
+            if smi is None or not oechem.OESmilesToMol(mol, smi):
+                continue
+
+            if self._filter_mol(smi, mol):
+                continue
+
+            for j, iso in enumerate(self._get_isomers(mol)):
+                iso.SetTitle(f"{title}+{j}")
+                ret_code = omega.Build(iso)
+                if ret_code == oeomega.OEOmegaReturnCode_Success:
+                    oechem.OEWriteMolecule(ofs, iso)
+                else:
+                    oechem.OEThrow.Warning(
+                        "%s: %s %s"
+                        % (smi, iso.GetTitle(), oeomega.OEGetOmegaError(ret_code))
+                    )
+
+            if dots:
+                dots.Update()
+
+        if dots:
+            dots.Total()
+
+        ofs.close()
+        omega = None
+        gc.collect()
+        return tmp_outfile
+
 
 class CLIROCSScorer(Scorer):
     """CLI ROCS scorer with multi-query support
@@ -49,7 +177,6 @@ class CLIROCSScorer(Scorer):
     - Multiple .sq query file support
     - Best score selection across queries
     - RDKit molecule support
-    - Batch processing for large datasets
 
     Attributes:
         - query_files: dict of .sq files for ROCS queries.
@@ -77,26 +204,24 @@ class CLIROCSScorer(Scorer):
 
     def __init__(
         self,
+        conformer_generator: ConformerGenerator,
         query_files: dict[str, List[str] | str],
         score_type: str = "TanimotoCombo",
-        max_conformers: int = 10,
-        max_isomers: int = 4,
-        max_heavy_atoms: int = 35,
-        max_rotatable_bonds: int = 15,
+
         shape_only: bool = False,
         optimize: bool = True,
         color_optimize: bool = True,
         color_force_field: str = "ImplicitMillsDean",
-        use_gpu: bool = False,
         rocs_binary: str = "rocs",
         binary_path: str | None = None,
-        show_progress: bool = False,
     ):
 
         super().__init__()
 
         if not OE_AVAILABLE:
             raise ImportError("OpenEye toolkits required")
+
+        self.conformer_generator = conformer_generator
 
         # Convert to list and validate
         self.queries = query_files
@@ -108,18 +233,7 @@ class CLIROCSScorer(Scorer):
         self.color_force_field = color_force_field
         self.binary_path = binary_path or rocs_binary
 
-        self.max_conformers = max_conformers
-        if self.max_conformers > 200:
-            print(
-                "Warning: max_conformers > 200 may cause memory issues "
-                "Setting to 200."
-            )
-            self.max_conformers = 200
-        self.max_isomers = max_isomers
-        self.max_heavy_atoms = max_heavy_atoms
-        self.max_rotatable_bonds = max_rotatable_bonds
 
-        self.use_gpu = use_gpu
         self.shape_only = shape_only
         self.rocs_binary = rocs_binary
         self.show_progress = show_progress
@@ -155,28 +269,6 @@ class CLIROCSScorer(Scorer):
                     if not oechem.OEReadMolecule(qfs, query):
                         oechem.OEThrow.Fatal("Unable to read query from '%s'" % qf)
 
-    def _create_fresh_omega(self):
-        """Create a fresh Omega instance with proven parameters"""
-        opts = oeomega.OEOmegaOptions()
-        # Use conservative conformer limits
-        opts.SetMaxConfs(self.max_conformers)
-        opts.SetStrictStereo(False)
-        opts.SetFromCT(True)
-        opts.SetFixRMS(True)
-        opts.SetRMSThreshold(0.5)
-        opts.SetEnumRing(True)
-        opts.SetRotorOffset(False)
-
-        # Force CPU mode to reduce memory pressure
-        if self.use_gpu and oeomega.OEOmegaIsGPUReady():
-            opts.GetTorDriveOptions().SetUseGPU(True)
-            opts.SetSampleHydrogens(False)
-        else:
-            opts.GetTorDriveOptions().SetUseGPU(False)
-            opts.SetSampleHydrogens(True)
-
-        return oeomega.OEOmega(opts)
-
     def _convert_to_smiles(self, mols) -> List[str | None]:
         """Convert various molecule types to SMILES"""
         smiles_list = []
@@ -211,7 +303,7 @@ class CLIROCSScorer(Scorer):
 
         # Prepare conformers
         with _managed_tmpdir() as tmpdir:
-            conf_file = self._prepare_molecules_for_cli(smiles_list, tmpdir)
+            conf_file = self.conformer_generator.genConformers(smiles_list, tmpdir)
 
             # Score using OpenEye ROCS
             scores_dict = self._score(conf_file)
@@ -225,79 +317,6 @@ class CLIROCSScorer(Scorer):
                 print(f"ROCS scoring completed in {timer.Elapsed():.1f}s")
 
         return result_scores
-
-    def _filter_mol(self, smi, mol) -> bool:
-        """Filter molecules based on heavy atoms and rotatable bonds"""
-
-        # filter based on heavy atoms and rotatable bonds
-        if oechem.OECount(mol, oechem.OEIsHeavy()) > self.max_heavy_atoms:
-            oechem.OEThrow.Warning(
-                f"Skipping {smi} with > {self.max_heavy_atoms} heavy atoms"
-            )
-            return True
-
-        if oechem.OECount(mol, oechem.OEIsRotor()) > self.max_rotatable_bonds:
-            oechem.OEThrow.Warning(
-                f"Skipping {smi} with > {self.max_rotatable_bonds} rotatable bonds"
-            )
-            return True
-        return False
-
-    def _get_isomers(self, mol):
-        """Generate isomers for a molecule using OMEGA"""
-        opts = oeomega.OEFlipperOptions()
-        opts.SetMaxCenters(self.max_isomers)
-        for conf in oeomega.OEFlipper(mol, opts):
-            iso = oechem.OEMol(conf)
-            yield iso
-
-    def _prepare_molecules_for_cli(self, smiles_list, temp_dir) -> str:
-        """Prepare molecules with conformers for CLI scoring"""
-        output_file = os.path.join(temp_dir, f"conformers.oeb.gz")
-        ofs = oechem.oemolostream()
-        if not ofs.open(output_file):
-            oechem.OEThrow.Fatal(
-                "Unable to open %s for writing conformers" % output_file
-            )
-
-        omega = self._create_fresh_omega()
-
-        # Progress tracking for conformer generation
-        dots = None
-        if self.show_progress and len(smiles_list) > 50:
-            print("Generating conformers...")
-            dots = oechem.OEThreadedDots(100, 50, "molecules")
-
-        for i, smi in enumerate(smiles_list):
-            mol = oechem.OEMol()
-            title = f"mol_{i}"
-            mol.SetTitle(title)
-
-            if smi is None or not oechem.OESmilesToMol(mol, smi):
-                continue
-
-            for j, iso in enumerate(self._get_isomers(mol)):
-                iso.SetTitle(f"{title}+{j}")
-                ret_code = omega.Build(iso)
-                if ret_code == oeomega.OEOmegaReturnCode_Success:
-                    oechem.OEWriteMolecule(ofs, iso)
-                else:
-                    oechem.OEThrow.Warning(
-                        "%s: %s %s"
-                        % (smi, iso.GetTitle(), oeomega.OEGetOmegaError(ret_code))
-                    )
-
-            if dots:
-                dots.Update()
-
-        if dots:
-            dots.Total()
-
-        ofs.close()
-        omega = None
-        gc.collect()
-
-        return output_file
 
     def _build_rocs_command(
         self, query_file: str, input_file: str, output_file: str
@@ -335,6 +354,7 @@ class CLIROCSScorer(Scorer):
             "-stats",
             "best",
             "-nostructs",
+            "-scdbase",  # Don't combine contiguous conformers
         ]
 
         # Add shapeonly explicitly (with true/false value) instead of conditionally
