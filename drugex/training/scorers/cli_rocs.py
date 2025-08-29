@@ -47,18 +47,12 @@ class CLIROCSScorer(Scorer):
             provided for a single key, the highest score across all queries
             is returned for that key.
         - score_type: Type of scoring to use (e.g., TanimotoCombo)
-        - max_conformers: Maximum conformers per molecule (note. max 200)
-        - max_isomers: Maximum isomers per molecule
-        - max_heavy_atoms: Maximum heavy atoms per molecule
-        - max_rotatable_bonds: Maximum rotatable bonds per molecule
         - shape_only: If True, only shape scoring is performed
         - optimize: If True,
         - color_optimize: If True, color optimization is performed
         - color_force_field: Force field to use for color optimization
-        - use_gpu: If True, GPU acceleration is used (if available)
         - rocs_binary: Name of the ROCS binary to use
         - binary_path: Path to the ROCS binary (if not in PATH)
-        - output_file: Output file for ROCS results
         - show_progress: If True, progress is shown during scoring
         - name_suffix: Optional suffix for the scorer name (important if multiple
            CLIROCSScorer scorers are used in the same environment)
