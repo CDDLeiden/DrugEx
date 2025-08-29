@@ -117,11 +117,11 @@ class ConformerGenerator(ABC):
     """Class to generate conformers for ROCS"""
     
     @abstractmethod
-    def genConformers(self, smiles_list, tmp_dir) -> str:
+    def genConformers(self, smiles_list, out_dir) -> str:
         """Generate conformers for a list of SMILES
         
            Args:
                 smiles_list (list[str]): List of SMILES strings to generate conformers for.
-                tmp_dir (str): Path to the temporary directory for intermediate files.
+                out_dir (str): Path to the output directory for the generated conformers.
         """
         pass

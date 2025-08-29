@@ -1,4 +1,3 @@
-import gc
 import os
 import shutil
 import subprocess
@@ -11,7 +10,7 @@ import pandas as pd
 from rdkit import Chem
 
 try:
-    from openeye import oechem, oemolprop, oeomega, oeshape
+    from openeye import oechem, oeshape
 
     OE_AVAILABLE = True
 except ImportError:
@@ -31,143 +30,6 @@ def _managed_tmpdir():
             shutil.rmtree(path, ignore_errors=True)
         except Exception as e:
             print(f"Error cleaning up temporary directory {path}: {e}")
-
-class OmegaConformerGenerator(ConformerGenerator):
-    def __init__(
-        self,
-        max_conformers: int = 10,
-        max_isomers: int = 4,
-        max_heavy_atoms: int = 35,
-        max_rotatable_bonds: int = 15,
-        blockbuster_filter: bool = True,
-        use_gpu: bool = False,
-        show_progress: bool = False,
-    ):
-        if max_conformers > 200:
-            print(
-                "Warning: max_conformers > 200 may cause memory issues "
-                "Setting to 200."
-            )
-            self.max_conformers = 200
-        else:
-            self.max_conformers = max_conformers
-        self.max_isomers = max_isomers
-        self.max_heavy_atoms = max_heavy_atoms
-        self.max_rotatable_bonds = max_rotatable_bonds
-        self.blockbuster_filter = blockbuster_filter
-        self.use_gpu = use_gpu
-        self.show_progress = show_progress
-
-    def _create_fresh_omega(self):
-        """Create a fresh Omega instance with proven parameters"""
-        opts = oeomega.OEOmegaOptions()
-        # Use conservative conformer limits
-        opts.SetMaxConfs(self.max_conformers)
-        opts.SetStrictStereo(False)
-        opts.SetFromCT(True)
-        opts.SetFixRMS(True)
-        opts.SetRMSThreshold(0.5)
-        opts.SetEnumRing(True)
-        opts.SetRotorOffset(False)
-
-        # Force CPU mode to reduce memory pressure
-        if self.use_gpu and oeomega.OEOmegaIsGPUReady():
-            opts.GetTorDriveOptions().SetUseGPU(True)
-            opts.SetSampleHydrogens(False)
-        else:
-            opts.GetTorDriveOptions().SetUseGPU(False)
-            opts.SetSampleHydrogens(True)
-
-        return oeomega.OEOmega(opts)
-    
-    def _filter_mol(self, smi, mol) -> bool:
-        """Filter molecules based on heavy atoms and rotatable bonds"""
-
-        # filter based on heavy atoms and rotatable bonds
-        if oechem.OECount(mol, oechem.OEIsHeavy()) > self.max_heavy_atoms:
-            oechem.OEThrow.Warning(
-                f"Skipping {smi} with > {self.max_heavy_atoms} heavy atoms"
-            )
-            return True
-
-        if oechem.OECount(mol, oechem.OEIsRotor()) > self.max_rotatable_bonds:
-            oechem.OEThrow.Warning(
-                f"Skipping {smi} with > {self.max_rotatable_bonds} rotatable bonds"
-            )
-            return True
-
-        if self.blockbuster_filter:
-            ifs = oechem.oeifstream(
-                "/zfsdata/data/helle/01_MainProjects/06_antibiotics/Data/pharmacophores/filter_blockbuster_modified.txt"
-            )
-            filt = oemolprop.OEFilter(ifs)  # oemolprop.OEFilterType_BlockBuster)
-            filt.SetMMFFTypeCheck(True)
-            if not filt(mol):
-                oechem.OEThrow.Warning(f"Skipping {smi} due to: {filt.GetMessage(mol)}")
-                return True
-        return False
-
-    def _get_isomers(self, mol):
-        """Generate isomers for a molecule using OMEGA"""
-        opts = oeomega.OEFlipperOptions()
-        opts.SetMaxCenters(self.max_isomers)
-        for conf in oeomega.OEFlipper(mol, opts):
-            iso = oechem.OEMol(conf)
-            yield iso
-            
-    def genConformers(self, smiles_list, tmp_dir) -> str:
-        """Generate conformers using Openeye Omega
-
-        Returns:
-            str: Path to the output conformers file (oeb.gz)
-        """
-        tmp_outfile = os.path.join(tmp_dir, f"conformers.oeb.gz")
-        ofs = oechem.oemolostream()
-        if not ofs.open(tmp_outfile):
-            oechem.OEThrow.Fatal(
-                "Unable to open %s for writing conformers" % tmp_outfile
-            )
-
-        omega = self._create_fresh_omega()
-
-        # Progress tracking for conformer generation
-        dots = None
-        if self.show_progress and len(smiles_list) > 50:
-            print("Generating conformers...")
-            dots = oechem.OEThreadedDots(100, 50, "molecules")
-
-        for i, smi in enumerate(smiles_list):
-            mol = oechem.OEMol()
-            title = f"mol_{i}"
-            mol.SetTitle(title)
-
-            if smi is None or not oechem.OESmilesToMol(mol, smi):
-                continue
-
-            if self._filter_mol(smi, mol):
-                continue
-
-            for j, iso in enumerate(self._get_isomers(mol)):
-                iso.SetTitle(f"{title}+{j}")
-                ret_code = omega.Build(iso)
-                if ret_code == oeomega.OEOmegaReturnCode_Success:
-                    oechem.OEWriteMolecule(ofs, iso)
-                else:
-                    oechem.OEThrow.Warning(
-                        "%s: %s %s"
-                        % (smi, iso.GetTitle(), oeomega.OEGetOmegaError(ret_code))
-                    )
-
-            if dots:
-                dots.Update()
-
-        if dots:
-            dots.Total()
-
-        ofs.close()
-        omega = None
-        gc.collect()
-        return tmp_outfile
 
 
 class CLIROCSScorer(Scorer):
@@ -207,13 +69,13 @@ class CLIROCSScorer(Scorer):
         conformer_generator: ConformerGenerator,
         query_files: dict[str, List[str] | str],
         score_type: str = "TanimotoCombo",
-
         shape_only: bool = False,
         optimize: bool = True,
         color_optimize: bool = True,
         color_force_field: str = "ImplicitMillsDean",
         rocs_binary: str = "rocs",
         binary_path: str | None = None,
+        show_progress: bool = True,
     ):
 
         super().__init__()
