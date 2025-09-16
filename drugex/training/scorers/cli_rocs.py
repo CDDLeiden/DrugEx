@@ -194,9 +194,7 @@ class CLIROCSScorer(Scorer):
             "-prefix",
             "rocs",
             "-outputdir",
-            output_dir,  # Add output directory
-            "-maxconfs",
-            str(self.max_conformers),
+            output_dir,  # Add output directorys
             "-rankby",
             self.score_type,
             "-chemff",

@@ -14,6 +14,7 @@ from typing import Callable
 
 from drugex.training.scorers.interfaces import ConformerGenerator
 from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.EnumerateStereoisomers import (EnumerateStereoisomers,
                                                StereoEnumerationOptions)
 
@@ -37,7 +38,7 @@ class OmegaConformerGenerator(ConformerGenerator):
         max_centers: int = 4,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
-        filter: oemolprop.OEFilterType_BlockBuster | int | str | None = None,
+        filter: oemolprop.OEFilter | int | str | None = None,
         use_gpu: bool = False,
         show_progress: bool = False,
     ):
@@ -226,13 +227,13 @@ class SchrodingerConformerGenerator(ConformerGenerator):
             return True
 
         # filter based on heavy atoms and rotatable bonds
-        if Chem.rdMolDescriptors.CalcNumHeavyAtoms(mol) > self.max_heavy_atoms:
+        if rdMolDescriptors.CalcNumHeavyAtoms(mol) > self.max_heavy_atoms:
             print(
                 f"Skipping {Chem.MolToSmiles(mol)} with > {self.max_heavy_atoms} heavy atoms"
             )
             return True
 
-        if Chem.rdMolDescriptors.CalcNumRotatableBonds(mol) > self.max_rotatable_bonds:
+        if rdMolDescriptors.CalcNumRotatableBonds(mol) > self.max_rotatable_bonds:
             print(
                 f"Skipping {Chem.MolToSmiles(mol)} with > {self.max_rotatable_bonds} rotatable bonds"
             )
