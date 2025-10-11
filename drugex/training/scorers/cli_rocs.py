@@ -36,12 +36,12 @@ class CLIROCSScorer(Scorer):
     """CLI ROCS scorer with multi-query support
 
     Features:
-    - Multiple .sq query file support
+    - Multiple query file support (.sq or molecule files)
     - Best score selection across queries
     - RDKit molecule support
 
     Attributes:
-        - query_files: dict of .sq files for ROCS queries.
+        - query_files: dict of query files for ROCS queries (.sq or molecule files).
             Keys are query names, values are query file paths or lists of file paths.
             For each key, one score is returned per molecule. If a list of files is
             provided for a single key, the highest score across all queries
@@ -234,7 +234,7 @@ class CLIROCSScorer(Scorer):
         # Multi-query scoring
         scores_dict = {}
         for name, query_files in self.queries.items():
-            if len(self.queries) == 1:
+            if len(query_files) == 1:
                 scores_dict[name] = self._score_single_query(conf_file, query_files[0])
             else:
                 scores_dict[name] = self._score_multi_query(conf_file, query_files)
