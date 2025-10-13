@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
-
-import numpy as np
 from typing import Literal
 
+import numpy as np
 import torch
-from torch import nn
-
-from drugex import DEFAULT_GPUS, DEFAULT_DEVICE
+from drugex import DEFAULT_DEVICE, DEFAULT_GPUS
 from drugex.logs import logger
+from torch import nn
 
 
 class ModelEvaluator(ABC):
@@ -181,6 +179,7 @@ class Environment(ModelEvaluator):
         # Get scores
         scores = self.getScores(smiles, frags=frags)
         scores['SMILES'] = smiles  
+        self.scores = scores
 
         # Initialize rewards to 0
         rewards = np.zeros((len(smiles),1))
@@ -319,7 +318,7 @@ class Model(nn.Module, ModelProvider, ABC):
             The path to the file containing the model states.
         """
 
-        self.loadStates(torch.load(path, map_location=self.device))
+        self.loadStates(torch.load(path, map_location=self.device, weights_only=True))
 
 
     def loadStates(self, state_dict, strict=True):
