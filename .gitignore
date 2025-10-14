@@ -172,13 +172,3 @@ cython_debug/
 /tutorial/rocs/docs
 /drugex_rocs_backup_files
 
-
-tutorial/rocs/test_threshold_estimator.py
-CLAUDE.md
-tutorial/rocs/showcase.py
-tutorial/rocs/DrugEx_ROCS_RNN_Showcase_bak.ipynb
-tutorial/rocs/diagnostic_cdpkit_scoring.py
-tutorial/rocs/rocs_rl_ccr/rl_runs
-tutorial/rocs/rocs_rl_ccr/finetune_runs
-tutorial/rocs/rocs_rl_ccr/encoded_rnn
-drugex/training/scorers/cli_rocs_bak.py
