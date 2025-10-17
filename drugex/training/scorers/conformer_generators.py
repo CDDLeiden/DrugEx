@@ -24,6 +24,7 @@ try:
     import CDPL.ConfGen as CDPLConfGen
     import CDPL.Base as CDPLBase
     import CDPL.MolProp as CDPLMolProp
+    from CDPL.Chem import StereoisomerGenerator
     CDPL_AVAILABLE = True
 except ImportError:
     CDPL_AVAILABLE = False
@@ -555,10 +556,13 @@ class CDPKitConformerGenerator(ConformerGenerator):
 
     CDPKit conformer generation following the official CDPKit examples.
     Based on gen_confs.py from CDPKit GitHub repository.
+    
+    This implementation uses StereoisomerGenerator for explicit stereoisomer enumeration,
+    matching the behavior of RDKit and OpenEye implementations.
 
     Attributes:
-        max_conformers (int): max number of conformers to generate per molecule
-        max_centers (int): maximum number of stereocenters to enumerate
+        max_conformers (int): max number of conformers to generate per stereoisomer
+        max_centers (int): maximum number of stereoisomers to enumerate
         max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
         max_rotatable_bonds (int): drop molecules with more rotatable bonds than max_rotatable_bonds
         timeout (int): timeout for conformer generation in seconds
@@ -581,8 +585,8 @@ class CDPKitConformerGenerator(ConformerGenerator):
         """Initialize the CDPKit conformer generator
 
         Args:
-            max_conformers (int): max number of conformers to generate per molecule
-            max_centers (int): maximum number of stereocenters to enumerate
+            max_conformers (int): max number of conformers to generate per stereoisomer
+            max_centers (int): maximum number of stereoisomers to enumerate
             max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than max_rotatable_bonds
             timeout (int): timeout for conformer generation in seconds
@@ -694,26 +698,71 @@ class CDPKitConformerGenerator(ConformerGenerator):
             return True
 
     def _get_isomers(self, mol):
-        """Yield molecule for conformer generation
+        """Generate stereoisomers for a molecule using CDPKit StereoisomerGenerator
         
-        CDPKit's conformer generation handles stereochemistry internally via
-        prepareForConformerGeneration(), so no manual stereoisomer enumeration
-        is needed. This follows the official CDPKit example pattern.
+        This explicitly enumerates stereoisomers up to max_centers limit,
+        matching the behavior of RDKit and OpenEye implementations.
         
-        See: https://cdpkit.org/cdpl_python_cookbook/confgen/gen_ensemble.html
+        See: https://cdpkit.org/cdpl_api_doc/python_api_doc/classCDPL_1_1Chem_1_1StereoisomerGenerator.html
         
         Args:
             mol: CDPKit molecule object
             
         Yields:
-            CDPKit molecule object
+            CDPKit molecule objects (stereoisomers)
         """
-        yield mol
+        # Create stereoisomer generator
+        stereo_gen = StereoisomerGenerator()
+        
+        # Enable both atom and bond stereochemistry enumeration
+        stereo_gen.enumerateAtomConfig(True)
+        stereo_gen.enumerateBondConfig(True)
+        
+        # Don't include already specified centers (only enumerate unspecified)
+        stereo_gen.includeSpecifiedCenters(False)
+        
+        # Set up the generator with the molecule
+        stereo_gen.setup(mol)
+        
+        # Generate stereoisomers up to max_centers limit
+        count = 0
+        while count < self.max_centers:
+            # Create a copy of the molecule for this stereoisomer
+            iso_mol = CDPLChem.BasicMolecule(mol)
+            
+            # Generate next stereoisomer configuration
+            if not stereo_gen.generate():
+                break
+                
+            # Apply the stereochemistry descriptors to the molecule copy
+            atom_descriptors = stereo_gen.getAtomDescriptors()
+            bond_descriptors = stereo_gen.getBondDescriptors()
+            
+            # Set stereochemistry on the isomer molecule
+            for i, desc in enumerate(atom_descriptors):
+                if i < iso_mol.getNumAtoms():
+                    CDPLChem.setStereoDescriptor(iso_mol.getAtom(i), desc)
+            
+            for i, desc in enumerate(bond_descriptors):
+                if i < iso_mol.getNumBonds():
+                    CDPLChem.setStereoDescriptor(iso_mol.getBond(i), desc)
+            
+            yield iso_mol
+            count += 1
+        
+        # If no stereoisomers were generated, yield the original molecule
+        if count == 0:
+            yield mol
     
     def genConformers(self, smiles_list, out_dir) -> str:
         """Generate conformers for a list of SMILES and save to SDF
         
-        Following the CDPKit gen_confs.py example pattern.
+        For each input SMILES:
+        1. Enumerate up to max_centers stereoisomers using StereoisomerGenerator
+        2. For each stereoisomer, generate up to max_conformers conformations
+        3. Total output: up to (max_centers × max_conformers) structures per molecule
+        
+        This matches the behavior of RDKit and OpenEye implementations.
         
         Args:
             smiles_list (list[str]): List of SMILES strings to generate conformers for
