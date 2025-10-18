@@ -40,18 +40,23 @@ def _cdpkit_worker_init(reference_shapes, group_to_indices, conf_file: str):
 
 
 def _generate_shape_helper(cdpkit_mol):
-    """Generate a GaussianShape for use in multiprocessing."""
+    """Generate Gaussian shape(s) for a molecule.
+
+    Returns a list of shapes to ensure all conformers are considered.
+    If no shapes can be generated, returns an empty list.
+    """
     try:
         CDPLPharm.prepareForPharmacophoreGeneration(cdpkit_mol)
         shape_gen = CDPLShape.GaussianShapeGenerator()
         shape_gen.generatePharmacophoreShape(True)
-        shape_gen.multiConformerMode(False)
+        # Enable multi-conformer mode so every available conformer contributes a shape
+        shape_gen.multiConformerMode(True)
         shape_set = shape_gen.generate(cdpkit_mol)
         if shape_set.getSize() == 0:
-            return None
-        return shape_set.getElement(0)
+            return []
+        return [shape_set.getElement(i) for i in range(shape_set.getSize())]
     except (RuntimeError, ValueError):
-        return None
+        return []
 
 
 def _align_and_score_helper(query_shape, ref_shape):
@@ -99,15 +104,19 @@ def _score_molecule_cdpkit_worker(mol_id: int):
                 continue
             if not name or not name.startswith(target_prefix):
                 continue
-            query_shape = _generate_shape_helper(m)
-            if query_shape is None:
+            # Generate shapes for all conformers of this record and evaluate best
+            query_shapes = _generate_shape_helper(m)
+            if not query_shapes:
                 continue
             for group_idx, ref_indices in enumerate(group_to_indices):
+                best = group_scores[group_idx]
                 for ref_idx in ref_indices:
                     ref_shape = reference_shapes[ref_idx]
-                    score = _align_and_score_helper(query_shape, ref_shape)
-                    if score > group_scores[group_idx]:
-                        group_scores[group_idx] = score
+                    for query_shape in query_shapes:
+                        score = _align_and_score_helper(query_shape, ref_shape)
+                        if score > best:
+                            best = score
+                group_scores[group_idx] = best
     except Exception:
         return mol_id, [0.0] * num_groups
 
