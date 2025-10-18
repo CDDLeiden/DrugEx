@@ -1,6 +1,7 @@
 import gc
 import os
 import logging
+import warnings
 
 try:
     from openeye import oechem, oemolprop, oeomega
@@ -364,7 +365,7 @@ class RDKitConformerGenerator(ConformerGenerator):
 
     Attributes:
         max_conformers (int): max number of conformers to generate
-        max_centers (int): maximum number of stereocenters to enumerate
+        max_isomers (int): maximum number of stereoisomers to enumerate
         max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
         max_rotatable_bonds (int): drop molecules with more rotatable bonds than
             max_rotatable_bonds
@@ -374,7 +375,8 @@ class RDKitConformerGenerator(ConformerGenerator):
     def __init__(
         self,
         max_conformers: int = 10,
-        max_centers: int = 4,
+        max_isomers: int = 4,
+        max_centers: int | None = None,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         show_progress: bool = False,
@@ -383,7 +385,8 @@ class RDKitConformerGenerator(ConformerGenerator):
 
         Args:
             max_conformers (int): max number of conformers to generate
-            max_centers (int): maximum number of stereocenters to enumerate
+            max_isomers (int): maximum number of stereoisomers to enumerate
+            max_centers (int, optional): deprecated alias for ``max_isomers``
             max_heavy_atoms (int): drop molecules with more heavy atoms than
                 max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than
@@ -398,7 +401,15 @@ class RDKitConformerGenerator(ConformerGenerator):
             self.max_conformers = 200
         else:
             self.max_conformers = max_conformers
-        self.max_centers = max_centers
+        if max_centers is not None:
+            warnings.warn(
+                "max_centers is deprecated; use max_isomers instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.max_isomers = max_centers
+        else:
+            self.max_isomers = max_isomers
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.show_progress = show_progress
@@ -436,8 +447,8 @@ class RDKitConformerGenerator(ConformerGenerator):
     def _get_isomers(self, mol):
         """Generate isomers for a molecule using RDKit"""
         opts = StereoEnumerationOptions()
-        opts.maxIsomers = self.max_centers
-        opts.onlyUnassigned = False
+        opts.maxIsomers = self.max_isomers
+        opts.onlyUnassigned = True
         opts.tryEmbedding = False
         opts.rand = 0xc0ffee
         for iso in EnumerateStereoisomers(mol, options=opts):
@@ -562,7 +573,7 @@ class CDPKitConformerGenerator(ConformerGenerator):
 
     Attributes:
         max_conformers (int): max number of conformers to generate per stereoisomer
-        max_centers (int): maximum number of stereoisomers to enumerate
+        max_isomers (int): maximum number of stereoisomers to enumerate
         max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
         max_rotatable_bonds (int): drop molecules with more rotatable bonds than max_rotatable_bonds
         timeout (int): timeout for conformer generation in seconds
@@ -574,7 +585,8 @@ class CDPKitConformerGenerator(ConformerGenerator):
     def __init__(
         self,
         max_conformers: int = 10,
-        max_centers: int = 4,
+        max_isomers: int = 4,
+        max_centers: int | None = None,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         timeout: int = 3600,  # seconds (following CDPKit example)
@@ -586,7 +598,8 @@ class CDPKitConformerGenerator(ConformerGenerator):
 
         Args:
             max_conformers (int): max number of conformers to generate per stereoisomer
-            max_centers (int): maximum number of stereoisomers to enumerate
+            max_isomers (int): maximum number of stereoisomers to enumerate
+            max_centers (int, optional): deprecated alias for ``max_isomers``
             max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than max_rotatable_bonds
             timeout (int): timeout for conformer generation in seconds
@@ -606,7 +619,15 @@ class CDPKitConformerGenerator(ConformerGenerator):
         else:
             self.max_conformers = max_conformers
 
-        self.max_centers = max_centers
+        if max_centers is not None:
+            warnings.warn(
+                "max_centers is deprecated; use max_isomers instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.max_isomers = max_centers
+        else:
+            self.max_isomers = max_isomers
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.timeout = timeout
@@ -692,6 +713,23 @@ class CDPKitConformerGenerator(ConformerGenerator):
                     logger.debug(message)
                 return True
 
+            # Try to filter by rotatable bonds to match RDKit/Omega behaviour
+            try:
+                rot_bonds = CDPLMolProp.getRotatableBondCount(mol)
+                if rot_bonds > self.max_rotatable_bonds:
+                    message = (
+                        f"Skipping {smi} with {rot_bonds} rotatable bonds "
+                        f"(max: {self.max_rotatable_bonds})"
+                    )
+                    if self.show_progress:
+                        logger.warning(message)
+                    else:
+                        logger.debug(message)
+                    return True
+            except Exception:
+                # If not available, don't block processing
+                pass
+
             return False
 
         except Exception:
@@ -700,7 +738,7 @@ class CDPKitConformerGenerator(ConformerGenerator):
     def _get_isomers(self, mol):
         """Generate stereoisomers for a molecule using CDPKit StereoisomerGenerator
         
-        This explicitly enumerates stereoisomers up to max_centers limit,
+        This explicitly enumerates stereoisomers up to the ``max_isomers`` limit,
         matching the behavior of RDKit and OpenEye implementations.
         
         See: https://cdpkit.org/cdpl_api_doc/python_api_doc/classCDPL_1_1Chem_1_1StereoisomerGenerator.html
@@ -724,9 +762,9 @@ class CDPKitConformerGenerator(ConformerGenerator):
         # Set up the generator with the molecule
         stereo_gen.setup(mol)
         
-        # Generate stereoisomers up to max_centers limit
+        # Generate stereoisomers up to max_isomers limit
         count = 0
-        while count < self.max_centers:
+        while count < self.max_isomers:
             # Create a copy of the molecule for this stereoisomer
             iso_mol = CDPLChem.BasicMolecule(mol)
             
@@ -758,9 +796,9 @@ class CDPKitConformerGenerator(ConformerGenerator):
         """Generate conformers for a list of SMILES and save to SDF
         
         For each input SMILES:
-        1. Enumerate up to max_centers stereoisomers using StereoisomerGenerator
+        1. Enumerate up to max_isomers stereoisomers using StereoisomerGenerator
         2. For each stereoisomer, generate up to max_conformers conformations
-        3. Total output: up to (max_centers × max_conformers) structures per molecule
+        3. Total output: up to (max_isomers × max_conformers) structures per molecule
         
         This matches the behavior of RDKit and OpenEye implementations.
         
