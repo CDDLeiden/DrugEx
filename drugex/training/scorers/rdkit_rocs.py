@@ -1,10 +1,9 @@
 """RDKit-based ROCS scorer."""
-
 import os
 import tempfile
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from rdkit import Chem
@@ -58,7 +57,12 @@ def _score_single_reference(
     return best_score
 
 
-def _rdkit_worker_init(reference_mols, group_to_indices, score_type, use_colors):
+def _rdkit_worker_init(
+    reference_mols: List[Chem.Mol],
+    group_to_indices: List[List[int]],
+    score_type: str,
+    use_colors: bool,
+) -> None:
     """Initializer to share immutable worker state."""
     global _RDKIT_WORKER_SETTINGS
     _RDKIT_WORKER_SETTINGS = {
@@ -69,7 +73,7 @@ def _rdkit_worker_init(reference_mols, group_to_indices, score_type, use_colors)
     }
 
 
-def _score_molecule_rdkit_worker(args):
+def _score_molecule_rdkit_worker(args: Tuple[int, List[Chem.Mol]]) -> Tuple[int, List[float]]:
     """Score a molecule in a worker process."""
     mol_id, mol_conformers = args
     settings = _RDKIT_WORKER_SETTINGS
@@ -92,7 +96,9 @@ def _score_molecule_rdkit_worker(args):
                     score = _score_single_reference(conf_mol, ref_mol, score_type, use_colors)
                     if score > group_scores[group_idx]:
                         group_scores[group_idx] = score
-    except Exception:
+    except (RuntimeError, ValueError, AttributeError, TypeError) as exc:
+        import sys
+        print(f"Warning: Error scoring molecule {mol_id}: {exc}", file=sys.stderr)
         return mol_id, [0.0] * num_groups
 
     return mol_id, group_scores
@@ -320,12 +326,11 @@ class RDKitROCSScorer(Scorer):
         for idx, smi in enumerate(smiles_list):
             if smi is None:
                 continue
-            key = smi
-            unique_idx = unique_lookup.get(key)
+            unique_idx = unique_lookup.get(smi)
             if unique_idx is None:
                 unique_idx = len(unique_smiles)
                 unique_smiles.append(smi)
-                unique_lookup[key] = unique_idx
+                unique_lookup[smi] = unique_idx
             unique_to_original[unique_idx].append(idx)
 
         return unique_smiles, unique_to_original
@@ -344,7 +349,47 @@ class RDKitROCSScorer(Scorer):
                     smiles_list.append(None)
         return smiles_list
 
-    def getScores(self, mols: List[Chem.Mol], frags=None) -> np.ndarray:
+    def _score_sequential(
+        self,
+        unique_count: int,
+        conformers_by_mol: Dict[int, List[Chem.Mol]],
+        num_groups: int,
+    ) -> np.ndarray:
+        """Score molecules sequentially without multiprocessing.
+
+        Args:
+            unique_count: Number of unique molecules to score.
+            conformers_by_mol: Dictionary mapping molecule IDs to their conformer lists.
+            num_groups: Number of reference groups.
+
+        Returns:
+            Array of shape (unique_count, num_groups) containing scores.
+        """
+        scores_unique = np.zeros((unique_count, num_groups))
+
+        for mol_id in range(unique_count):
+            mol_conformers = conformers_by_mol.get(mol_id, [])
+            if not mol_conformers:
+                continue
+            group_scores = np.zeros(num_groups)
+            for conf_mol in mol_conformers:
+                for group_idx, ref_indices in enumerate(self.group_to_indices):
+                    for ref_idx in ref_indices:
+                        ref_mol = self.reference_mols[ref_idx]
+                        score = _score_single_reference(
+                            conf_mol, ref_mol, self.score_type, self.use_colors
+                        )
+                        if score > group_scores[group_idx]:
+                            group_scores[group_idx] = score
+            scores_unique[mol_id] = group_scores
+            if self.show_progress and (mol_id + 1) % 100 == 0:
+                print(f"  Scored {mol_id + 1}/{unique_count} unique molecules")
+
+        return scores_unique
+
+    def getScores(
+        self, mols: List[Chem.Mol], frags: Optional[List[Chem.Mol]] = None
+    ) -> np.ndarray:
         num_groups = len(self.group_to_indices)
         if num_groups == 0:
             raise ValueError("No reference groups configured")
@@ -374,41 +419,41 @@ class RDKitROCSScorer(Scorer):
             conformers_by_mol = defaultdict(list)
             try:
                 suppl = Chem.SDMolSupplier(conf_file, removeHs=False)
-                for conf_mol in suppl:
-                    if conf_mol is None:
-                        continue
-                    try:
-                        name = conf_mol.GetProp("_Name")
-                        mol_id = int(name.split("+")[0].split("_")[1])
-                        conformers_by_mol[mol_id].append(conf_mol)
-                    except Exception:
-                        continue
-            except Exception:
+                if suppl is None:
+                    if self.show_progress:
+                        print(f"Warning: Could not open SDF file: {conf_file}")
+                    return scores
+            except Exception as exc:
                 if self.show_progress:
-                    print(f"Warning: failed to load conformers from {conf_file}")
+                    print(f"Warning: Failed to open conformer file {conf_file}: {exc}")
                 return scores
 
+            for conf_mol in suppl:
+                if conf_mol is None:
+                    continue
+                try:
+                    name = conf_mol.GetProp("_Name")
+                    parts = name.split("+")[0].split("_")
+                    if len(parts) < 2:
+                        if self.show_progress:
+                            print(f"Warning: Malformed conformer name: {name}")
+                        continue
+                    mol_id = int(parts[1])
+                    conformers_by_mol[mol_id].append(conf_mol)
+                except (KeyError, ValueError, IndexError) as exc:
+                    if self.show_progress:
+                        print(f"Warning: Could not parse conformer name: {exc}")
+                    continue
+
             unique_count = len(unique_smiles)
+
+            # Initialize score array for all code paths
             scores_unique = np.zeros((unique_count, num_groups))
 
             if self.n_jobs == 1:
-                for mol_id in range(unique_count):
-                    mol_conformers = conformers_by_mol.get(mol_id, [])
-                    if not mol_conformers:
-                        continue
-                    group_scores = np.zeros(num_groups)
-                    for conf_mol in mol_conformers:
-                        for group_idx, ref_indices in enumerate(self.group_to_indices):
-                            for ref_idx in ref_indices:
-                                ref_mol = self.reference_mols[ref_idx]
-                                score = _score_single_reference(
-                                    conf_mol, ref_mol, self.score_type, self.use_colors
-                                )
-                                if score > group_scores[group_idx]:
-                                    group_scores[group_idx] = score
-                    scores_unique[mol_id] = group_scores
-                    if self.show_progress and (mol_id + 1) % 100 == 0:
-                        print(f"  Scored {mol_id + 1}/{unique_count} unique molecules")
+                scores_unique = self._score_sequential(
+                    unique_count, conformers_by_mol, num_groups
+                )
             else:
                 worker_args = [
                     (mol_id, conformers_by_mol.get(mol_id, []))
@@ -468,27 +513,9 @@ class RDKitROCSScorer(Scorer):
                             f"Warning: parallel processing failed ({exc}), "
                             "switching to sequential mode"
                         )
-                    for mol_id in range(unique_count):
-                        mol_conformers = conformers_by_mol.get(mol_id, [])
-                        if not mol_conformers:
-                            continue
-                        group_scores = np.zeros(num_groups)
-                        for conf_mol in mol_conformers:
-                            for group_idx, ref_indices in enumerate(self.group_to_indices):
-                                for ref_idx in ref_indices:
-                                    ref_mol = self.reference_mols[ref_idx]
-                                    score = _score_single_reference(
-                                        conf_mol,
-                                        ref_mol,
-                                        self.score_type,
-                                        self.use_colors,
-                                    )
-                                    if score > group_scores[group_idx]:
-                                        group_scores[group_idx] = score
-                        scores_unique[mol_id] = group_scores
-                finally:
-                    global _RDKIT_WORKER_SETTINGS
-                    _RDKIT_WORKER_SETTINGS = {}
+                    scores_unique = self._score_sequential(
+                        unique_count, conformers_by_mol, num_groups
+                    )
 
         for unique_id, original_indices in unique_to_original.items():
             if unique_id >= scores_unique.shape[0]:
@@ -497,6 +524,13 @@ class RDKitROCSScorer(Scorer):
                 scores[original_idx] = scores_unique[unique_id]
 
         if self.show_progress:
-            print(f"Scoring complete. Average score: {scores.mean():.3f}")
+            non_zero = np.count_nonzero(scores)
+            avg_score = scores.mean()
+            max_score = scores.max() if scores.size > 0 else 0.0
+            print(
+                f"Scoring complete. Average score: {avg_score:.3f}, "
+                f"Max score: {max_score:.3f}, "
+                f"Molecules with score > 0: {non_zero}/{scores.shape[0]}"
+            )
 
         return scores
