@@ -1,6 +1,6 @@
 import gc
-import os
 import logging
+import os
 import warnings
 
 try:
@@ -16,14 +16,14 @@ from typing import Callable, List
 
 from drugex.training.scorers.interfaces import ConformerGenerator
 from rdkit import Chem
-from rdkit.Chem import rdMolDescriptors, AllChem
+from rdkit.Chem import AllChem, rdMolDescriptors
 from rdkit.Chem.EnumerateStereoisomers import (EnumerateStereoisomers,
                                                StereoEnumerationOptions)
 
 try:
+    import CDPL.Base as CDPLBase
     import CDPL.Chem as CDPLChem
     import CDPL.ConfGen as CDPLConfGen
-    import CDPL.Base as CDPLBase
     import CDPL.MolProp as CDPLMolProp
     from CDPL.Chem import StereoisomerGenerator
     CDPL_AVAILABLE = True
@@ -222,6 +222,7 @@ class SchrodingerConformerGenerator(ConformerGenerator):
         max_isomers: int = 4,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
+        optimize: bool = False,
         reactions: list[Callable] | None = None,
     ):
         if "SCHRODINGER" not in os.environ:
@@ -232,6 +233,7 @@ class SchrodingerConformerGenerator(ConformerGenerator):
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.reactions = reactions
+        self.optimize = optimize
 
     def _filter_mol(self, mol) -> bool:
         """Filter molecules based on heavy atoms and rotatable bonds"""
@@ -283,7 +285,7 @@ class SchrodingerConformerGenerator(ConformerGenerator):
         mols = [self.apply_reactions(mol) for mol in mols if mol is not None]
 
         # save rdkit mols to temporary sd file
-        tmp_infile = f"{out_dir}/input_mols.sdf"
+        tmp_infile = "input_mols.sdf"
         with Chem.SDWriter(tmp_infile) as w:
             for i, mol in enumerate(mols):
                 mol.SetProp("_Name", f"mol_{i}")
@@ -305,28 +307,19 @@ class SchrodingerConformerGenerator(ConformerGenerator):
         confgenx_cmd = [
             f"{os.environ['SCHRODINGER']}/confgenx",
             tmp_infile,
-            # "-NSTRUCTS",
             # "50",  # Number of jobs to run in parallel
             # "-WAIT",
             "-NOJOBID",
             "-m",
             str(self.max_conformers),
         ]
+        if self.optimize:
+            confgenx_cmd.append("-optimize")
         print("Running confgenx with command:", " ".join(confgenx_cmd))
         subprocess.run(confgenx_cmd, check=True)
 
-        # multiple processed does not seem to work due to setting maxjobs localhost
-        # wait for confgenx to finish
-        # wait_cmd = [
-        #     f"{os.environ['SCHRODINGER']}/jobcontrol",
-        #     "-wait",
-        #     "active",
-        # ]
-        # print("Waiting for confgenx to finish with command:", " ".join(wait_cmd))
-        # subprocess.run(wait_cmd, check=True)
-
         # convert maegz file to sdf
-        tmp_outfile = f"{out_dir}/output_conformers.sdf"
+        tmp_outfile = f"output_conformers.sdf"
         sdconvert_cmd = [
             f"{os.environ['SCHRODINGER']}/utilities/sdconvert",
             "-imae",
@@ -338,15 +331,15 @@ class SchrodingerConformerGenerator(ConformerGenerator):
 
         # read in sdf file, and add 0.01 to all coordinates
         # this prevents issues with ROCS if all coordinates of a dimension are 0
-        # this happened with 8SKP of which the generated conformer is planar and had
-        # all z-coordinates as 0
+        # this happened with a molecule (ligand of pdb-id 8SKP) of which the generated 
+        # conformer is planar and had all z-coordinates as 0
         suppl = Chem.SDMolSupplier(tmp_outfile, removeHs=False)
         corrected_mols = []
         for mol in suppl:
             if mol is not None:
                 for atom in mol.GetAtoms():
                     pos = mol.GetConformer().GetAtomPosition(atom.GetIdx())
-                    new_pos = (pos.x, pos.y, pos.z + 0.01)
+                    new_pos = (pos.x + 0.01, pos.y + 0.01, pos.z + 0.01)
                     mol.GetConformer().SetAtomPosition(atom.GetIdx(), new_pos)
                 corrected_mols.append(mol)
 
@@ -356,8 +349,10 @@ class SchrodingerConformerGenerator(ConformerGenerator):
                 if mol is not None:
                     w.write(mol)
 
+        os.remove(tmp_infile)
+        os.remove(f"{os.path.basename(tmp_infile).removesuffix('.sdf')}-out.maegz")
         os.chdir(currwd)
-        return tmp_outfile
+        return os.path.join(out_dir, tmp_outfile)
 
 
 class RDKitConformerGenerator(ConformerGenerator):
@@ -530,7 +525,7 @@ class RDKitConformerGenerator(ConformerGenerator):
             out_file: Path to output SDF file
         """
         from rdkit import Chem
-        
+
         # Convert molecules to SMILES
         smiles_list = []
         for i, mol in enumerate(mols):
@@ -950,7 +945,7 @@ class CDPKitConformerGenerator(ConformerGenerator):
             out_file: Path to output SDF file
         """
         from rdkit import Chem
-        
+
         # Convert molecules to SMILES
         smiles_list = []
         for i, mol in enumerate(mols):
