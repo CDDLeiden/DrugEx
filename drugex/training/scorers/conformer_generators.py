@@ -292,7 +292,7 @@ class SchrodingerConformerGenerator(ConformerGenerator):
                 # get isomers
                 opts = StereoEnumerationOptions(
                     tryEmbedding=False,
-                    onlyUnassigned=False,
+                    onlyUnassigned=True,
                     rand=0xF00D,
                     maxIsomers=self.max_isomers,
                 )
