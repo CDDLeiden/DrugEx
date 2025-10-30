@@ -5,7 +5,6 @@ This module provides predefined settings and a setup helper function
 to simplify the quickstart notebook.
 """
 
-import os
 from pathlib import Path
 
 from drugex.data.corpus.vocabulary import VocSmiles
@@ -26,7 +25,7 @@ ROOT = Path.cwd()
 CCR2_SDF = ROOT / 'rocs_rl_ccr/rdkit_cdpkit/CCR2_reference_ligands.sdf'
 MODEL_DIR = ROOT / 'demo_out/models'
 OUTPUT_DIR = ROOT / 'rl_runs_demo/rdkit_rl'
-MODELS_PR_PATH = "../../data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT/"
+MODELS_PR_PATH = str(Path(__file__).parent.parent.parent / 'data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT')
 
 FINETUNE_BASE = MODEL_DIR / 'CCR2_finetuned'
 FINETUNE_CHECKPOINT = Path(f"{FINETUNE_BASE}.pkg")
@@ -43,12 +42,13 @@ RL_N_SAMPLES = 5000
 
 
 # ============================================================================
-# Conformer Generation Parameters
+# Conformer Generation Parameters (Aligned with OpenEye OMEGA)
 # ============================================================================
 
-MAX_CONFORMERS = 20
-MAX_ISOMERS = 2
-MAX_HEAVY_ATOMS = 30
+MAX_CONFORMERS = 50          # Increased from 20 to match OMEGA output
+MAX_ISOMERS = 4              # Increased from 2 to match OpenEye filter
+MAX_HEAVY_ATOMS = 45         # Increased from 30 to match OpenEye filter
+MAX_ROTATABLE_BONDS = 15     # NEW: Match OpenEye filter for flexibility
 
 
 # ============================================================================
@@ -58,12 +58,12 @@ MAX_HEAVY_ATOMS = 30
 # ROCS TanimotoCombo threshold
 # Range: 0-2 (ShapeTanimoto 0-1 + ColorTanimoto 0-1)
 # Molecules with score >= threshold are "Desired"
-ROCS_THRESHOLD = 1.2  # Require decent shape + color match
+ROCS_THRESHOLD = 0.871 # computed using threshold_analysis.py
 
 # SA Score threshold
 # After SmoothClippedScore transformation: 0-1 range
 # Molecules with score >= threshold are "Desired"
-SA_THRESHOLD = 0.5  # Require moderate synthetic accessibility
+SA_THRESHOLD = 0.1  # synthetic accessibility
 
 # Combined thresholds list for DrugExEnvironment
 OBJECTIVE_THRESHOLDS = [ROCS_THRESHOLD, SA_THRESHOLD]
@@ -86,6 +86,7 @@ def create_rdkit_environment():
             max_conformers=MAX_CONFORMERS,
             max_isomers=MAX_ISOMERS,
             max_heavy_atoms=MAX_HEAVY_ATOMS,
+            max_rotatable_bonds=MAX_ROTATABLE_BONDS,
             show_progress=False,
         ),
         references=str(CCR2_SDF),
@@ -145,7 +146,7 @@ def setup_rl_rdkit():
 
     # Initialize agent (pretrained model)
     agent = SequenceRNN(voc, is_lstm=True)
-    agent.loadStatesFromFile(os.path.join(MODELS_PR_PATH, 'Papyrus05.5_smiles_rnn_PT.pkg'))
+    agent.loadStatesFromFile(str(Path(MODELS_PR_PATH) / 'Papyrus05.5_smiles_rnn_PT.pkg'))
     print("Agent loaded from pretrained model")
 
     # Initialize mutate network (fine-tuned model)
