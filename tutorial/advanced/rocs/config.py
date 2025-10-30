@@ -36,9 +36,9 @@ FINETUNE_VOCAB = Path(f"{FINETUNE_BASE}.vocab")
 # RL Training Parameters
 # ============================================================================
 
-RL_EPOCHS = 10
+RL_EPOCHS = 50
 RL_EPSILON = 0.2
-RL_N_SAMPLES = 5000
+RL_N_SAMPLES = 1000
 
 
 # ============================================================================
