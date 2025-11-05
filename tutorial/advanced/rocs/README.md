@@ -136,9 +136,9 @@ Key parameters in `config.py`:
 
 ## Alternative ROCS Backends
 
-**CDPKit (Open Source):** Higher accuracy, supports multi-stereoisomer scoring. Install: `pip install drugex[cdpkit]`, then run `python run_cdpkit_rocs.py`.
+**CDPKit (Open Source):** Open-source. Install: `pip install cdpkit`, then run `python run_cdpkit_rocs.py`.
 
-**OpenEye (Commercial):** Industry standard with GPU acceleration. Requires valid license. Run `python run_openeye_rocs.py --use-gpu`.
+**OpenEye (Commercial):** Requires valid license. Run `python run_openeye_rocs.py --use-gpu`.
 
 ## Troubleshooting
 
