@@ -1,114 +1,169 @@
 # DrugEx ROCS Tutorial: Shape-Based Molecular Generation
 
-Train DrugEx with ROCS (Rapid Overlay of Chemical Structures) shape-based scoring for de novo drug design. Generate novel CCR2 ligand candidates optimized for 3D shape similarity to known actives.
+[← Tutorial Index](../../README.md)
+
+Reinforcement learning tutorial for generating CCR2 ligands optimized for ROCS shape similarity and synthetic accessibility using RDKit.
 
 ## Prerequisites
 
-**Background Knowledge:** Complete basic DrugEx tutorials first:
-- `tutorial/Sequence-RNN.ipynb` - Introduction to molecular generation
-- `tutorial/Graph-Transformer.ipynb` - Advanced model architectures
-- Basic RL tutorials (`tutorial/rl_*.ipynb`) - Reinforcement learning concepts
+**Required:**
+- RDKit (shape-based scoring backend)
+
+**Optional:**
+- CDPKit - Open-source alternative for higher accuracy
+- OpenEye ROCS/VROCS Python toolkit - Commercial implementation with GPU support
 
 ## Quick Start
 
-### Step 1: Fine-Tune Model
-
-Fine-tune pretrained model on CCR2 ligands:
-
+### 1. Fine-Tune Model
 ```bash
 python prepare_models.py
 ```
+**Required first step.** Fine-tunes pretrained model on CCR2 ligand data (default: 100 epochs).
 
-**Options:**
-- `--epochs 50` - Number of epochs (default: 100)
-- `--batch-size 128` - Batch size (default: 256)
-- `--force` - Force retrain
-
-**Output:** `demo_out/models/CCR2_finetuned.pkg`
-
-### Step 2: RL Training
-
-Open the quickstart notebook:
-
+### 2. Run Tutorial Notebook
 ```bash
-jupyter notebook quickstart_rl_rdkit.ipynb
+jupyter notebook rocs_rl_tutorial.ipynb
 ```
 
-This notebook demonstrates the RL training loop with RDKit ROCS scoring. All settings are configured in `config.py` - no additional configuration needed.
-
-
-### Step 3: Generate Molecules
-
-Generate optimized molecules from the trained model:
-
+### 3. Generate Molecules
 ```bash
-# Generate 100 molecules (default)
 python generate_molecules.py
-
-# Custom amount
-python generate_molecules.py --num-samples 500
 ```
 
-**Output:** TSV file with SMILES, scores, and desired flags
+## Notebook Workflow
+
+The `rocs_rl_tutorial.ipynb` notebook walks through the complete RL training pipeline.
+
+### Step 1: Threshold Validation
+
+**Purpose:** Validate the ROCS threshold that determines which molecules receive rewards during RL training.
+
+**What it does:**
+- Compares 75 CCR2 active ligands vs 500 decoys
+- Performs ROC analysis to find optimal threshold
+- Uses Youden's Index to maximize active/decoy separation
+- Validates if `config.py` threshold setting is appropriate
+
+**Why it matters:**
+- Threshold too high → model misses actual actives
+- Threshold too low → model rewards decoy molecules
+- Proper threshold ensures effective RL learning
+
+**Output:** ROC curve plots and optimal threshold recommendation. If optimal differs significantly from config setting, adjust `ROCS_THRESHOLD` in `config.py`.
+
+### Step 2: Setup
+
+Loads pre-trained and fine-tuned models, creates RDKit ROCS environment with configured parameters:
+- Pretrained agent (general chemical space)
+- Fine-tuned mutate network (CCR2-specific)
+- ROCS scorer (shape similarity to reference ligands)
+- SA scorer (synthetic accessibility)
+
+### Step 3: RL Explorer Configuration
+
+Creates explorer with:
+- `epsilon=0.2` - Exploration rate (20% random sampling)
+- `n_samples=1000` - Molecules generated per epoch
+- `epochs=50` - Training iterations
+
+### Step 4: Training Loop
+
+Runs RL training for configured epochs. Each epoch:
+1. Generates molecules from current policy
+2. Scores with ROCS + SA
+3. Calculates rewards (Pareto crowding distance)
+4. Updates model via policy gradient
+
+Monitor: `desired_ratio` (fraction meeting thresholds) should increase over epochs.
+
+### Step 5: Results Analysis
+
+**Training metrics plot:**
+- Desired molecules ratio (target: >0.5 by final epochs)
+- Average score (should increase steadily)
+
+**SA score evolution:**
+- Tracks synthetic accessibility across training
+- Should remain high (easier synthesis) while ROCS improves
+
+**Output files:**
+- `CCR2_rdkit_reinforced.pkg` - Trained model
+- `CCR2_rdkit_reinforced_fit.tsv` - Training metrics
+- `CCR2_rdkit_reinforced_smiles.tsv` - All generated molecules
+
+## Understanding Threshold Analysis
+
+The threshold analysis script (`threshold_analysis.py`) uses ROC methodology:
+
+1. **Score all molecules** - Actives and decoys with same ROCS settings as RL
+2. **Build ROC curve** - True positive rate vs false positive rate
+3. **Find optimal threshold** - Maximize Youden's Index (TPR - FPR)
+4. **Compare to config** - Check if current setting is near-optimal
+
+**When to adjust threshold:**
+- Optimal differs by >0.2 from config value
+- Low desired_ratio during training (<0.3)
+- ROC AUC < 0.8 (poor separation)
+
+Edit `ROCS_THRESHOLD` in `config.py` based on analysis results.
+
+## Configuration
+
+Key parameters in `config.py`:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `RL_EPOCHS` | 50 | Training epochs |
+| `RL_EPSILON` | 0.2 | Exploration rate |
+| `RL_N_SAMPLES` | 1000 | Molecules per epoch |
+| `MAX_CONFORMERS` | 50 | Conformers per molecule |
+| `MAX_ISOMERS` | 4 | Stereoisomers to enumerate |
+| `ROCS_THRESHOLD` | 0.871 | ROCS TanimotoCombo cutoff |
+| `SA_THRESHOLD` | 0.1 | Synthetic accessibility cutoff |
 
 ## File Structure
 
 | File | Purpose |
 |------|---------|
-| `config.py` | Configuration and environment setup |
+| `rocs_rl_tutorial.ipynb` | **Main tutorial** - Complete RL workflow |
+| `config.py` | Configuration and setup functions |
 | `prepare_models.py` | Fine-tune pretrained model on CCR2 data |
-| `quickstart_rl_rdkit.ipynb` | **Main tutorial** - RL training with RDKit ROCS |
+| `threshold_analysis.py` | ROC analysis for threshold optimization |
 | `generate_molecules.py` | Generate molecules from trained model |
-| `run_cdpkit_rocs.py` | Alternative: CDPKit ROCS backend |
-| `run_openeye_rocs.py` | Alternative: OpenEye ROCS backend |
+| `run_cdpkit_rocs.py` | Alternative: CDPKit backend |
+| `run_openeye_rocs.py` | Alternative: OpenEye backend |
 
 ## Alternative ROCS Backends
 
-### CDPKit (Open Source)
+**CDPKit (Open Source):** Higher accuracy, supports multi-stereoisomer scoring. Install: `pip install drugex[cdpkit]`, then run `python run_cdpkit_rocs.py`.
 
-```bash
-python run_cdpkit_rocs.py --epochs 30
-```
-
-Features: Multi-stereoisomer scoring, optimized conformer generation
-
-### OpenEye (Commercial)
-
-```bash
-python run_openeye_rocs.py --epochs 30 --use-gpu
-```
-
-Features: GPU acceleration, industry-standard implementation (requires license)
-
-## Configuration
-
-Edit `config.py` to customize training parameters:
-
-```python
-# RL parameters
-RL_EPOCHS = 50          # Training epochs
-RL_EPSILON = 0.2        # Exploration rate
-RL_N_SAMPLES = 1000     # Molecules per epoch
-
-# Conformer generation
-MAX_CONFORMERS = 50     # Conformers per molecule
-MAX_ISOMERS = 4         # Stereoisomers to enumerate
-
-# Scoring thresholds
-ROCS_THRESHOLD = 0.871  # ROCS TanimotoCombo threshold (0-2 range)
-SA_THRESHOLD = 0.1      # Synthetic accessibility threshold (0-1 range)
-```
+**OpenEye (Commercial):** Industry standard with GPU acceleration. Requires valid license. Run `python run_openeye_rocs.py --use-gpu`.
 
 ## Troubleshooting
 
-**"Fine-tuned model not found"**: Run `python prepare_models.py` first
+**Model not found:**
+```bash
+python prepare_models.py
+```
 
-**Slow performance**: Reduce `MAX_CONFORMERS` and `RL_N_SAMPLES` in `config.py`
+**Slow training:**
+- Reduce `MAX_CONFORMERS` in `config.py` (try 20-30)
+- Reduce `RL_N_SAMPLES` (try 500)
+- Use fewer RL epochs for testing
 
-**CDPKit not available**: Install with `pip install cdpkit`
+**Low desired_ratio:**
+- Check threshold analysis results
+- Adjust `ROCS_THRESHOLD` in `config.py`
+- Verify reference ligands are appropriate
 
-**Model training errors**: Ensure you've completed basic tutorials and understand DrugEx workflow
+**CDPKit installation:**
+```bash
+conda install -c conda-forge cdpkit
+```
 
----
-
-**New to DrugEx?** Start with basic tutorials in `tutorial/` first!
+**OpenEye license:**
+```bash
+export OE_LICENSE=/path/to/oe_license.txt
+python -c "from openeye import oechem; print(oechem.OEChemIsLicensed())"
+```
