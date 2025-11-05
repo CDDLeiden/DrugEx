@@ -229,6 +229,7 @@ def compare_thresholds(
     y_true: np.ndarray,
     y_scores: np.ndarray,
     thresholds_to_test: Optional[List[float]] = None,
+    current_threshold: Optional[float] = None,
 ) -> pd.DataFrame:
     """Compare performance at different threshold values.
 
@@ -236,12 +237,17 @@ def compare_thresholds(
         y_true: True labels (1=active, 0=decoy).
         y_scores: Predicted scores.
         thresholds_to_test: List of thresholds to evaluate.
+        current_threshold: Current threshold value to ensure is included.
 
     Returns:
         DataFrame with threshold metrics.
     """
     if thresholds_to_test is None:
         thresholds_to_test = [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    
+    # Ensure current_threshold is included if provided
+    if current_threshold is not None and current_threshold not in thresholds_to_test:
+        thresholds_to_test = sorted(thresholds_to_test + [current_threshold])
 
     results = []
     for thresh in thresholds_to_test:
@@ -498,16 +504,42 @@ def generate_report(
     )
 
     report.append("\n2. Current Threshold Analysis:")
-    current_metrics = threshold_df[
+    current_filtered = threshold_df[
         threshold_df['Threshold'] == current_threshold
-    ].iloc[0]
-    report.append(f"   - Current ROCS_THRESHOLD: {current_threshold}")
-    report.append(
-        f"   - Sensitivity (TPR): {current_metrics['TPR (Sensitivity)']:.3f}"
-    )
-    report.append(f"   - False Positive Rate: {current_metrics['FPR']:.3f}")
-    report.append(f"   - Precision: {current_metrics['Precision']:.3f}")
-    report.append(f"   - F1-Score: {current_metrics['F1-Score']:.3f}")
+    ]
+    if len(current_filtered) > 0:
+        current_metrics = current_filtered.iloc[0]
+        report.append(f"   - Current ROCS_THRESHOLD: {current_threshold}")
+        report.append(
+            f"   - Sensitivity (TPR): {current_metrics['TPR (Sensitivity)']:.3f}"
+        )
+        report.append(f"   - False Positive Rate: {current_metrics['FPR']:.3f}")
+        report.append(f"   - Precision: {current_metrics['Precision']:.3f}")
+        report.append(f"   - F1-Score: {current_metrics['F1-Score']:.3f}")
+    else:
+        # Fallback: compute metrics on the fly if threshold not in DataFrame
+        predicted_actives = np.concatenate([
+            actives_scores >= current_threshold,
+            decoys_scores >= current_threshold
+        ])
+        y_true = np.concatenate([
+            np.ones(len(actives_scores)),
+            np.zeros(len(decoys_scores))
+        ])
+        tp = np.sum((y_true == 1) & predicted_actives)
+        fp = np.sum((y_true == 0) & predicted_actives)
+        tn = np.sum((y_true == 0) & ~predicted_actives)
+        fn = np.sum((y_true == 1) & ~predicted_actives)
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+        precision_val = tp / (tp + fp) if (tp + fp) > 0 else 0
+        f1 = (2 * precision_val * sensitivity / (precision_val + sensitivity)
+              if (precision_val + sensitivity) > 0 else 0)
+        report.append(f"   - Current ROCS_THRESHOLD: {current_threshold}")
+        report.append(f"   - Sensitivity (TPR): {sensitivity:.3f}")
+        report.append(f"   - False Positive Rate: {1 - specificity:.3f}")
+        report.append(f"   - Precision: {precision_val:.3f}")
+        report.append(f"   - F1-Score: {f1:.3f}")
 
     report.append("\n3. Recommendation:")
     threshold_diff = abs(current_threshold - roc_data['optimal_threshold'])
@@ -709,7 +741,7 @@ def run_threshold_analysis(
     )
 
     threshold_df = compare_thresholds(
-        roc_data['y_true'], roc_data['y_scores']
+        roc_data['y_true'], roc_data['y_scores'], current_threshold=current_threshold
     )
 
     output_path = Path(output_dir)
