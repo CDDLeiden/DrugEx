@@ -111,10 +111,15 @@ class RDKitROCSScorer(Scorer):
     - Accepts references as files or RDKit molecules with conformers.
     - Supports shape-only, color-only, and combo scoring modes.
     - Optional multiprocessing and verbose progress reporting.
+    - Dict-based reference grouping for multi-target optimization.
+    - SMILES deduplication for efficient batch processing.
+    - Auto-conformer generation for 2D reference molecules.
 
     Attributes:
         conformer_generator: Generator used to build query conformers.
         reference_mols: Normalized list of reference molecules.
+        group_to_indices: List mapping group indices to reference indices.
+        group_names: List of reference group names.
         score_type: Requested score mode (`shape`, `color`, or `TanimotoCombo`).
         use_colors: Whether to include pharmacophore colors in alignment.
         show_progress: Enables logging for long runs.

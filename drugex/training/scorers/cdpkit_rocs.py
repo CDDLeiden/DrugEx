@@ -130,12 +130,17 @@ class CDPKitROCSScorer(Scorer):
     - Multi-reference support with automatic Gaussian shape generation.
     - Best-score selection across conformers and reference shapes.
     - Optional progress reporting and multiprocessing.
+    - Dict-based reference grouping for multi-target optimization.
+    - SMILES deduplication for efficient batch processing.
+    - Memory-efficient worker design for scalability.
 
     Attributes:
         conformer_generator: 3D conformer generator used for query molecules.
         reference_mol_files: Normalized list of reference SDF file paths.
         reference_mols: Loaded CDPKit molecules containing reference conformers.
         reference_shapes: Pre-computed Gaussian shapes for all references.
+        group_to_indices: List mapping group indices to reference indices.
+        group_names: List of reference group names.
         show_progress: Whether to print progress and warnings.
         n_jobs: Requested worker count (-1 maps to available CPUs).
         _is_supermol: True when initialized with a single reference file.
