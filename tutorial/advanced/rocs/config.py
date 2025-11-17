@@ -87,6 +87,7 @@ def create_rdkit_environment():
             max_isomers=MAX_ISOMERS,
             max_heavy_atoms=MAX_HEAVY_ATOMS,
             max_rotatable_bonds=MAX_ROTATABLE_BONDS,
+            num_threads=1,  # Avoid CPU oversubscription with n_jobs=-1
             show_progress=False,
         ),
         references=str(CCR2_SDF),

@@ -10,8 +10,9 @@ try:
 except ImportError:
     OE_AVAILABLE = False
 
-import os
+import shutil
 import subprocess
+import tempfile
 from typing import Callable, List
 
 from drugex.training.scorers.interfaces import ConformerGenerator
@@ -305,25 +306,12 @@ class SchrodingerConformerGenerator(ConformerGenerator):
         confgenx_cmd = [
             f"{os.environ['SCHRODINGER']}/confgenx",
             tmp_infile,
-            # "-NSTRUCTS",
-            # "50",  # Number of jobs to run in parallel
-            # "-WAIT",
             "-NOJOBID",
             "-m",
             str(self.max_conformers),
         ]
         print("Running confgenx with command:", " ".join(confgenx_cmd))
         subprocess.run(confgenx_cmd, check=True)
-
-        # multiple processed does not seem to work due to setting maxjobs localhost
-        # wait for confgenx to finish
-        # wait_cmd = [
-        #     f"{os.environ['SCHRODINGER']}/jobcontrol",
-        #     "-wait",
-        #     "active",
-        # ]
-        # print("Waiting for confgenx to finish with command:", " ".join(wait_cmd))
-        # subprocess.run(wait_cmd, check=True)
 
         # convert maegz file to sdf
         tmp_outfile = f"{out_dir}/output_conformers.sdf"
@@ -379,6 +367,7 @@ class RDKitConformerGenerator(ConformerGenerator):
         max_centers: int | None = None,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
+        num_threads: int = 0,
         show_progress: bool = False,
     ):
         """Initialize the conformer generator
@@ -391,6 +380,10 @@ class RDKitConformerGenerator(ConformerGenerator):
                 max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than
                 max_rotatable_bonds
+            num_threads (int): Number of threads for ETKDG conformer generation.
+                0 = use all available CPU cores (default).
+                Set to 1 when using parallel scoring (n_jobs>1) to avoid CPU
+                oversubscription. When n_jobs=1 (sequential), num_threads=0 is optimal.
             show_progress (bool): whether to show progress during conformer generation
         """
         if max_conformers > 200:
@@ -412,13 +405,18 @@ class RDKitConformerGenerator(ConformerGenerator):
             self.max_isomers = max_isomers
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
+        self.num_threads = num_threads
         self.show_progress = show_progress
 
     def _create_fresh_etkdg(self):
-        """Create ETKDGv3 parameters for conformer generation"""
+        """Create ETKDGv3 parameters for conformer generation
+
+        Thread control: Uses self.num_threads for CPU allocation.
+        Set num_threads=1 when using multiprocessing to avoid oversubscription.
+        """
         params = AllChem.ETKDGv3()
         params.randomSeed = 0xc0ffee
-        params.numThreads = 0  # Use all available CPU threads
+        params.numThreads = self.num_threads
         params.pruneRmsThresh = 0.5
         return params
 
@@ -549,16 +547,13 @@ class RDKitConformerGenerator(ConformerGenerator):
             return
 
         # Generate conformers to a temporary directory
-        import tempfile
         temp_dir = tempfile.mkdtemp()
         try:
             sdf_file = self.genConformers(smiles_list, temp_dir)
 
             # Copy the generated SDF to the output location
-            import shutil
             shutil.copy(sdf_file, out_file)
         finally:
-            import shutil
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
@@ -586,7 +581,6 @@ class CDPKitConformerGenerator(ConformerGenerator):
         self,
         max_conformers: int = 10,
         max_isomers: int = 4,
-        max_centers: int | None = None,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         timeout: int = 3600,  # seconds (following CDPKit example)
@@ -599,7 +593,6 @@ class CDPKitConformerGenerator(ConformerGenerator):
         Args:
             max_conformers (int): max number of conformers to generate per stereoisomer
             max_isomers (int): maximum number of stereoisomers to enumerate
-            max_centers (int, optional): deprecated alias for ``max_isomers``
             max_heavy_atoms (int): drop molecules with more heavy atoms than max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than max_rotatable_bonds
             timeout (int): timeout for conformer generation in seconds
@@ -619,15 +612,7 @@ class CDPKitConformerGenerator(ConformerGenerator):
         else:
             self.max_conformers = max_conformers
 
-        if max_centers is not None:
-            warnings.warn(
-                "max_centers is deprecated; use max_isomers instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.max_isomers = max_centers
-        else:
-            self.max_isomers = max_isomers
+        self.max_isomers = max_isomers
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.timeout = timeout
@@ -656,14 +641,14 @@ class CDPKitConformerGenerator(ConformerGenerator):
         Returns:
             tuple: (status, num_conformers)
         """
-        # Prepare the molecule for conformer generation (from CDPKit example line 12)
+        # Prepare the molecule for conformer generation
         CDPLConfGen.prepareForConformerGeneration(mol)
 
-        # Generate the conformer ensemble (from CDPKit example line 15)
+        # Generate the conformer ensemble
         status = conf_gen.generate(mol)
         num_confs = conf_gen.getNumConformers()
 
-        # If successful, set conformers to molecule (from CDPKit example line 20-21)
+        # If successful, set conformers to molecule
         if status == CDPLConfGen.ReturnCode.SUCCESS or status == CDPLConfGen.ReturnCode.TOO_MUCH_SYMMETRY:
             conf_gen.setConformers(mol)
         else:
@@ -969,14 +954,11 @@ class CDPKitConformerGenerator(ConformerGenerator):
             return
 
         # Generate conformers to a temporary directory
-        import tempfile
         temp_dir = tempfile.mkdtemp()
         try:
             sdf_file = self.genConformers(smiles_list, temp_dir)
 
             # Copy the generated SDF to the output location
-            import shutil
             shutil.copy(sdf_file, out_file)
         finally:
-            import shutil
             shutil.rmtree(temp_dir, ignore_errors=True)

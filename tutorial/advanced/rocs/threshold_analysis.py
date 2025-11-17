@@ -125,6 +125,7 @@ def initialize_scorer(
             max_isomers=max_isomers,
             max_heavy_atoms=max_heavy_atoms,
             max_rotatable_bonds=max_rotatable_bonds,
+            num_threads=1,  # Avoid CPU oversubscription with parallel scoring
             show_progress=False,
         ),
         references=str(references_sdf),
