@@ -33,12 +33,19 @@ def _managed_tmpdir():
 
 
 class CLIROCSScorer(Scorer):
-    """CLI ROCS scorer with multi-query support
+    """OpenEye ROCS scorer that shells out to the ROCS command-line binary.
+
+    Uses the OpenEye ROCS CLI via ``subprocess`` for shape-based similarity
+    scoring while relying on the OpenEye Python toolkits for query validation
+    and RDKit for molecule handling. Requires a valid OpenEye license with the
+    ROCS binary available in ``PATH`` (or provided via ``binary_path``). If a
+    future fastROCS implementation is added, this class will remain the CLI
+    variant.
 
     Features:
     - Multiple query file support (.sq or molecule files)
     - Best score selection across queries
-    - RDKit molecule support
+    - Hybrid Python/CLI workflow for flexible integration
 
     Attributes:
         - query_files: dict of query files for ROCS queries (.sq or molecule files).
