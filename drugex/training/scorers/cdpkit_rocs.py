@@ -7,6 +7,7 @@ from multiprocessing import Pool, cpu_count
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from rdkit import Chem
 
 try:
     import CDPL.Chem as CDPLChem
@@ -136,11 +137,13 @@ class CDPKitROCSScorer(Scorer):
 
     Attributes:
         conformer_generator: 3D conformer generator used for query molecules.
-        reference_mol_files: Normalized list of reference SDF file paths.
+        group_definitions: List of (name, paths) tuples defining reference groups.
+        group_names: List of reference group names.
+        shape_generator: CDPKit GaussianShapeGenerator instance.
+        start_generator: CDPKit PrincipalAxesAlignmentStartGenerator instance.
         reference_mols: Loaded CDPKit molecules containing reference conformers.
         reference_shapes: Pre-computed Gaussian shapes for all references.
         group_to_indices: List mapping group indices to reference indices.
-        group_names: List of reference group names.
         show_progress: Whether to print progress and warnings.
         n_jobs: Requested worker count (-1 maps to available CPUs).
         _is_supermol: True when initialized with a single reference file.
@@ -319,14 +322,11 @@ class CDPKitROCSScorer(Scorer):
             return None
 
     def getScores(self, mols, frags=None) -> np.ndarray:
-        global _CDPKIT_WORKER_SETTINGS
         num_groups = len(self.group_to_indices)
         if num_groups == 0:
             raise ValueError("No reference groups configured")
         if not mols:
             return np.zeros((0, num_groups))
-
-        from rdkit import Chem
 
         smiles_list = []
         for mol in mols:
