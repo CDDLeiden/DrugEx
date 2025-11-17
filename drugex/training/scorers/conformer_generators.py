@@ -659,8 +659,11 @@ class CDPKitConformerGenerator(ConformerGenerator):
     def _smiles_to_cdpl_mol(self, smiles: str):
         """Convert SMILES to CDPKit molecule
 
-        Minimal preparation - prepareForConformerGeneration() will handle
-        all necessary molecular property calculations.
+        Initializes basic molecular properties (hydrogen counts, hybridization,
+        ring flags, aromaticity) required for filtering and downstream processing.
+
+        Uses CDPKit's official calcBasicProperties pattern from the cookbook:
+        https://cdpkit.org/cdpl_python_cookbook/descr/fingerprints/ecfp.html
         """
         if not smiles:
             return None
@@ -670,6 +673,10 @@ class CDPKitConformerGenerator(ConformerGenerator):
             if mol is None or mol.getNumAtoms() == 0:
                 return None
 
+            # Initialize basic molecular properties (CDPKit official pattern)
+            # Required for getRotatableBondCount and other molecular descriptors
+            CDPLChem.calcBasicProperties(mol, False)
+
             return mol
         except Exception:
             return None
@@ -677,9 +684,12 @@ class CDPKitConformerGenerator(ConformerGenerator):
     def _filter_mol(self, smi: str, mol) -> bool:
         """Filter molecules based on heavy atoms and rotatable bonds
 
+        Note: Molecule must have basic properties initialized via
+        calcBasicProperties before calling this method (done in _smiles_to_cdpl_mol).
+
         Args:
             smi: SMILES string for error reporting
-            mol: CDPKit molecule object
+            mol: CDPKit molecule object with basic properties initialized
 
         Returns:
             True if molecule should be filtered out (rejected), False otherwise
@@ -698,26 +708,24 @@ class CDPKitConformerGenerator(ConformerGenerator):
                     logger.debug(message)
                 return True
 
-            # Try to filter by rotatable bonds to match RDKit/Omega behaviour
-            try:
-                rot_bonds = CDPLMolProp.getRotatableBondCount(mol)
-                if rot_bonds > self.max_rotatable_bonds:
-                    message = (
-                        f"Skipping {smi} with {rot_bonds} rotatable bonds "
-                        f"(max: {self.max_rotatable_bonds})"
-                    )
-                    if self.show_progress:
-                        logger.warning(message)
-                    else:
-                        logger.debug(message)
-                    return True
-            except Exception:
-                # If not available, don't block processing
-                pass
+            # Filter by rotatable bonds to match RDKit/Omega behaviour
+            # Now works reliably since basic properties are initialized
+            rot_bonds = CDPLMolProp.getRotatableBondCount(mol)
+            if rot_bonds > self.max_rotatable_bonds:
+                message = (
+                    f"Skipping {smi} with {rot_bonds} rotatable bonds "
+                    f"(max: {self.max_rotatable_bonds})"
+                )
+                if self.show_progress:
+                    logger.warning(message)
+                else:
+                    logger.debug(message)
+                return True
 
             return False
 
         except Exception:
+            # Catch any unexpected errors
             return True
 
     def _get_isomers(self, mol):
