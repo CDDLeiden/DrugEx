@@ -2,6 +2,7 @@ import gc
 import os
 import logging
 import warnings
+from pathlib import Path
 
 try:
     from openeye import oechem, oemolprop, oeomega
@@ -12,7 +13,6 @@ except ImportError:
 
 import shutil
 import subprocess
-import tempfile
 from typing import Callable, List
 
 from drugex.training.scorers.interfaces import ConformerGenerator
@@ -546,15 +546,16 @@ class RDKitConformerGenerator(ConformerGenerator):
                 pass
             return
 
-        # Generate conformers to a temporary directory
-        temp_dir = tempfile.mkdtemp()
-        try:
-            sdf_file = self.genConformers(smiles_list, temp_dir)
+        output_path = Path(out_file).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Copy the generated SDF to the output location
-            shutil.copy(sdf_file, out_file)
-        finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        sdf_file = self.genConformers(smiles_list, output_path.parent.as_posix())
+        if not sdf_file or not os.path.exists(sdf_file):
+            output_path.touch()
+            return
+
+        if os.path.abspath(sdf_file) != str(output_path):
+            shutil.move(sdf_file, output_path)
 
 
 class CDPKitConformerGenerator(ConformerGenerator):
@@ -961,12 +962,13 @@ class CDPKitConformerGenerator(ConformerGenerator):
                 pass
             return
 
-        # Generate conformers to a temporary directory
-        temp_dir = tempfile.mkdtemp()
-        try:
-            sdf_file = self.genConformers(smiles_list, temp_dir)
+        output_path = Path(out_file).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Copy the generated SDF to the output location
-            shutil.copy(sdf_file, out_file)
-        finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        sdf_file = self.genConformers(smiles_list, output_path.parent.as_posix())
+        if not sdf_file or not os.path.exists(sdf_file):
+            output_path.touch()
+            return
+
+        if os.path.abspath(sdf_file) != str(output_path):
+            shutil.move(sdf_file, output_path)
