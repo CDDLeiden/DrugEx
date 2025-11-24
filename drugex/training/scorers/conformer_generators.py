@@ -1,7 +1,6 @@
 import gc
 import os
 import logging
-import warnings
 from pathlib import Path
 
 try:
@@ -236,8 +235,6 @@ class SchrodingerConformerGenerator(ConformerGenerator):
 
     def _filter_mol(self, mol) -> bool:
         """Filter molecules based on heavy atoms and rotatable bonds"""
-        from rdkit import Chem
-
         if mol is None:
             return True
 
@@ -364,7 +361,6 @@ class RDKitConformerGenerator(ConformerGenerator):
         self,
         max_conformers: int = 10,
         max_isomers: int = 4,
-        max_centers: int | None = None,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         num_threads: int = 0,
@@ -375,7 +371,6 @@ class RDKitConformerGenerator(ConformerGenerator):
         Args:
             max_conformers (int): max number of conformers to generate
             max_isomers (int): maximum number of stereoisomers to enumerate
-            max_centers (int, optional): deprecated alias for ``max_isomers``
             max_heavy_atoms (int): drop molecules with more heavy atoms than
                 max_heavy_atoms
             max_rotatable_bonds (int): drop molecules with more rotatable bonds than
@@ -394,15 +389,7 @@ class RDKitConformerGenerator(ConformerGenerator):
             self.max_conformers = 200
         else:
             self.max_conformers = max_conformers
-        if max_centers is not None:
-            warnings.warn(
-                "max_centers is deprecated; use max_isomers instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.max_isomers = max_centers
-        else:
-            self.max_isomers = max_isomers
+        self.max_isomers = max_isomers
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.num_threads = num_threads
@@ -527,8 +514,6 @@ class RDKitConformerGenerator(ConformerGenerator):
             mols: List of RDKit molecules
             out_file: Path to output SDF file
         """
-        from rdkit import Chem
-
         # Convert molecules to SMILES
         smiles_list = []
         for i, mol in enumerate(mols):
@@ -642,14 +627,10 @@ class CDPKitConformerGenerator(ConformerGenerator):
         Returns:
             tuple: (status, num_conformers)
         """
-        # Prepare the molecule for conformer generation
         CDPLConfGen.prepareForConformerGeneration(mol)
-
-        # Generate the conformer ensemble
         status = conf_gen.generate(mol)
         num_confs = conf_gen.getNumConformers()
 
-        # If successful, set conformers to molecule
         if status == CDPLConfGen.ReturnCode.SUCCESS or status == CDPLConfGen.ReturnCode.TOO_MUCH_SYMMETRY:
             conf_gen.setConformers(mol)
         else:
@@ -710,7 +691,6 @@ class CDPKitConformerGenerator(ConformerGenerator):
                 return True
 
             # Filter by rotatable bonds to match RDKit/Omega behaviour
-            # Now works reliably since basic properties are initialized
             rot_bonds = CDPLMolProp.getRotatableBondCount(mol)
             if rot_bonds > self.max_rotatable_bonds:
                 message = (
@@ -943,8 +923,6 @@ class CDPKitConformerGenerator(ConformerGenerator):
             mols: List of RDKit molecules
             out_file: Path to output SDF file
         """
-        from rdkit import Chem
-
         # Convert molecules to SMILES
         smiles_list = []
         for i, mol in enumerate(mols):
