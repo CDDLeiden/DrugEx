@@ -95,6 +95,7 @@ def initialize_scorer(
     max_isomers: Optional[int] = None,
     max_heavy_atoms: Optional[int] = None,
     max_rotatable_bonds: Optional[int] = None,
+    num_threads: int = 1,
     n_jobs: int = -1,
 ) -> RDKitROCSScorer:
     """Initialize RDKit ROCS scorer.
@@ -105,7 +106,11 @@ def initialize_scorer(
         max_isomers: Maximum stereoisomers to enumerate.
         max_heavy_atoms: Maximum heavy atoms allowed.
         max_rotatable_bonds: Maximum rotatable bonds allowed.
-        n_jobs: Number of parallel jobs (-1 = all CPUs).
+        num_threads: Number of threads for RDKit conformer generation.
+            1 = single-threaded (default, safe for all scenarios).
+            0 = use all CPU cores (faster but may conflict with n_jobs>1).
+            Set to 0 for maximum speed when using n_jobs=1.
+        n_jobs: Number of parallel jobs for scoring (-1 = all CPUs).
 
     Returns:
         Configured RDKitROCSScorer instance.
@@ -125,7 +130,7 @@ def initialize_scorer(
             max_isomers=max_isomers,
             max_heavy_atoms=max_heavy_atoms,
             max_rotatable_bonds=max_rotatable_bonds,
-            num_threads=1,  # Avoid CPU oversubscription with parallel scoring
+            num_threads=num_threads,
             show_progress=False,
         ),
         references=str(references_sdf),
@@ -681,6 +686,7 @@ def run_threshold_analysis(
     max_isomers: Optional[int] = None,
     max_heavy_atoms: Optional[int] = None,
     max_rotatable_bonds: Optional[int] = None,
+    num_threads: Optional[int] = None,
     n_jobs: int = -1,
     show_plots: bool = True,
     verbose: bool = False
@@ -697,12 +703,33 @@ def run_threshold_analysis(
         max_isomers: Max stereoisomers to enumerate (uses config default).
         max_heavy_atoms: Max heavy atoms allowed (uses config default).
         max_rotatable_bonds: Max rotatable bonds allowed (uses config default).
-        n_jobs: Number of parallel jobs.
+        num_threads: CPU threads for conformer generation (default=None, auto-detect).
+            None = auto-detect based on n_jobs (recommended):
+                - n_jobs=1  → num_threads=1 (respects single-process request)
+                - n_jobs≠1  → num_threads=0 (fast parallel execution)
+            0 = use all CPU cores (fastest).
+            1 = single-threaded (minimal CPU usage).
+        n_jobs: Number of parallel scoring jobs (default=-1, use all CPUs).
         show_plots: Display plots interactively.
         verbose: Print progress messages.
 
     Returns:
         Dictionary with analysis results.
+
+    Performance:
+        Auto (num_threads=None, n_jobs=-1): ~30-40 seconds (RECOMMENDED)
+        Single-core (num_threads=None, n_jobs=1): ~4 minutes (respects resource limit)
+        Override (num_threads=0, n_jobs=1): ~40 seconds (fast single-process)
+
+    Examples:
+        # Default: fast parallel execution (RECOMMENDED)
+        >>> run_threshold_analysis(actives_csv, decoys_csv)
+
+        # Respect resource limits (use only 1 CPU when n_jobs=1)
+        >>> run_threshold_analysis(actives_csv, decoys_csv, n_jobs=1)
+
+        # Override: force multi-threaded even with n_jobs=1
+        >>> run_threshold_analysis(actives_csv, decoys_csv, num_threads=0, n_jobs=1)
     """
     if references_sdf is None:
         if CONFIG_AVAILABLE:
@@ -724,13 +751,19 @@ def run_threshold_analysis(
     if max_rotatable_bonds is None:
         max_rotatable_bonds = MAX_ROTATABLE_BONDS
 
+    # Smart default: auto-detect num_threads based on n_jobs
+    # This ensures that when users set n_jobs=1 (resource limit),
+    # we also use num_threads=1 (respects their intent)
+    if num_threads is None:
+        num_threads = 1 if n_jobs == 1 else 0
+
     actives_smiles, decoys_smiles, ref_mols, ref_smiles = load_datasets(
         actives_csv, decoys_csv, references_sdf
     )
 
     scorer = initialize_scorer(
         references_sdf, max_conformers, max_isomers,
-        max_heavy_atoms, max_rotatable_bonds, n_jobs
+        max_heavy_atoms, max_rotatable_bonds, num_threads, n_jobs
     )
 
     score_data = score_molecules(

@@ -87,14 +87,14 @@ def create_rdkit_environment():
             max_isomers=MAX_ISOMERS,
             max_heavy_atoms=MAX_HEAVY_ATOMS,
             max_rotatable_bonds=MAX_ROTATABLE_BONDS,
-            num_threads=1,  # Avoid CPU oversubscription with n_jobs=-1
+            num_threads=0,  # use all cores for conformer generation
             show_progress=False,
         ),
         references=str(CCR2_SDF),
         score_type='TanimotoCombo',
         use_colors=True,
         show_progress=False,
-        n_jobs=-1,
+        n_jobs=-1, 
     )
 
     # Synthetic accessibility scorer
