@@ -169,8 +169,3 @@ dmypy.json
 cython_debug/
 
 
-# # ROCS tutorial generated outputs
-# /tutorial/advanced/rocs/demo_out/
-# /tutorial/advanced/rocs/rl_runs_demo/
-# /tutorial/advanced/rocs/threshold_analysis_results/
-
