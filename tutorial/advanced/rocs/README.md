@@ -10,8 +10,8 @@ Reinforcement learning tutorial for generating CCR2 ligands optimized for ROCS s
 - RDKit (shape-based scoring backend)
 
 **Optional:**
-- CDPKit - Open-source alternative for higher accuracy
-- OpenEye ROCS/VROCS Python toolkit - Commercial implementation with GPU support
+- CDPKit - Open-source alternative, open-sourced
+- OpenEye ROCS/VROCS(GUI) Python toolkit - Commercial implementation with GPU support
 
 ## Reference Ligand Input Formats
 
@@ -20,13 +20,11 @@ ROCS scorers accept reference ligands in multiple formats:
 | Format | Extension | Description | Backend Support |
 |--------|-----------|-------------|-----------------|
 | **SDF** | `.sdf` | Structure-Data File (standard) | All backends |
-| **MOL2** | `.mol2` | Tripos MOL2 format | All backends |
 | **Shape Query** | `.sq` | OpenEye VROCS Shape Query | OpenEye only |
 
 **Requirements:**
 - Must contain 3D coordinates (not 2D structures)
 - Energy-minimized geometry recommended
-- Appropriate protonation state
 
 **Shape Query (.sq) Files:**
 - Created by OpenEye VROCS GUI tool
@@ -161,7 +159,7 @@ Key parameters in `config.py`:
 | `MAX_CONFORMERS` | 50 | Conformers per molecule |
 | `MAX_ISOMERS` | 4 | Stereoisomers to enumerate |
 | `ROCS_THRESHOLD` | 0.871 | ROCS TanimotoCombo cutoff |
-| `SA_THRESHOLD` | 0.1 | Synthetic accessibility cutoff |
+| `SA_THRESHOLD` | 0.1 | Synthetic accessibility cutoff (soft-clipped) |
 
 ## File Structure
 
@@ -200,7 +198,7 @@ python prepare_models.py
 
 **CDPKit installation:**
 ```bash
-conda install -c conda-forge cdpkit
+pip install cdpkit
 ```
 
 **OpenEye license:**
