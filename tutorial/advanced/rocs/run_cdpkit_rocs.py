@@ -33,7 +33,7 @@ from drugex.training.scorers.properties import Property
 
 try:
     from drugex.training.scorers.conformer_generators import CDPKitConformerGenerator
-    from drugex.training.scorers.cdpkit_rocs import CDPKitROCSScorer
+    from drugex.training.scorers.rocs_cdpkit import CDPKitROCSScorer
     CDPKIT_AVAILABLE = True
 except ImportError:
     print("CDPKit not available. Install with: pip install drugex[cdpkit]")

@@ -36,7 +36,7 @@ from drugex.training.scorers.properties import Property
 
 try:
     from drugex.training.scorers.conformer_generators import OmegaConformerGenerator
-    from drugex.training.scorers.cli_rocs import CLIROCSScorer
+    from drugex.training.scorers.rocs_openeye import OpenEyeROCSScorer
     OPENEYE_AVAILABLE = True
 except ImportError:
     print("OpenEye not available. Install OpenEye toolkit and configure license")
@@ -115,7 +115,7 @@ def create_openeye_environment(
     if not (OPENEYE_AVAILABLE and ROCS_BINARY):
         raise RuntimeError("OpenEye ROCS CLI not available")
 
-    rocs_scorer = CLIROCSScorer(
+    rocs_scorer = OpenEyeROCSScorer(
         conformer_generator=OmegaConformerGenerator(
             max_conformers=max_conformers,
             max_centers=2,
