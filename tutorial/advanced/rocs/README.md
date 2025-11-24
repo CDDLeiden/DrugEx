@@ -13,6 +13,47 @@ Reinforcement learning tutorial for generating CCR2 ligands optimized for ROCS s
 - CDPKit - Open-source alternative for higher accuracy
 - OpenEye ROCS/VROCS Python toolkit - Commercial implementation with GPU support
 
+## Reference Ligand Input Formats
+
+ROCS scorers accept reference ligands in multiple formats:
+
+| Format | Extension | Description | Backend Support |
+|--------|-----------|-------------|-----------------|
+| **SDF** | `.sdf` | Structure-Data File (standard) | All backends |
+| **MOL2** | `.mol2` | Tripos MOL2 format | All backends |
+| **Shape Query** | `.sq` | OpenEye VROCS Shape Query | OpenEye only |
+
+**Requirements:**
+- Must contain 3D coordinates (not 2D structures)
+- Energy-minimized geometry recommended
+- Appropriate protonation state
+
+**Shape Query (.sq) Files:**
+- Created by OpenEye VROCS GUI tool
+- Pre-computed shape/pharmacophore features
+- Faster scoring than on-the-fly SDF conversion
+- Not portable to RDKit/CDPKit backends
+
+**Examples:**
+```python
+# Single reference file
+scorer = RDKitROCSScorer(references="reference.sdf")
+
+# Multiple reference files
+scorer = RDKitROCSScorer(references=["ref1.sdf", "ref2.sdf"])
+
+# Shape Query with OpenEye backend
+scorer = OpenEyeROCSScorer(references="reference.sq")
+
+# Grouped scoring (multiple binding modes)
+scorer = CDPKitROCSScorer(
+    group_definitions=[
+        ("active_site", ["active1.sdf"]),
+        ("allosteric", ["allosteric1.sdf"])
+    ]
+)
+```
+
 ## Quick Start
 
 ### 1. Fine-Tune Model
