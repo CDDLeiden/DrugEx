@@ -168,12 +168,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# rocs
-/tutorial/rocs/docs
-/drugex_rocs_backup_files
 
-# ROCS tutorial generated outputs
-/tutorial/advanced/rocs/demo_out/
-/tutorial/advanced/rocs/rl_runs_demo/
-/tutorial/advanced/rocs/threshold_analysis_results/
+# # ROCS tutorial generated outputs
+# /tutorial/advanced/rocs/demo_out/
+# /tutorial/advanced/rocs/rl_runs_demo/
+# /tutorial/advanced/rocs/threshold_analysis_results/
 
