@@ -4,7 +4,8 @@ import os
 import tempfile
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
-from typing import Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from rdkit import Chem
@@ -26,18 +27,109 @@ from drugex.training.scorers.interfaces import ConformerGenerator, Scorer
 MAX_OPTIMIZATION_ITERATIONS = 20
 OPTIMIZATION_STOP_GRADIENT = 1.0
 
-_CDPKIT_WORKER_SETTINGS: Dict[str, object] = {}
 _DEFAULT_CDPKIT_GROUP_NAME = "_default_group"
 
 
-def _cdpkit_worker_init(reference_shapes, group_to_indices, conf_file: str):
-    """Initializer to avoid sending reference shapes with each task."""
-    global _CDPKIT_WORKER_SETTINGS
-    _CDPKIT_WORKER_SETTINGS = {
-        "reference_shapes": reference_shapes,
-        "group_to_indices": group_to_indices,
-        "conf_file": conf_file,
-    }
+@dataclass
+class CDPKitWorkerContext:
+    """Immutable context for CDPKit scoring workers.
+
+    This dataclass encapsulates all state needed by worker processes,
+    replacing module-level global variables. It is sent once per worker
+    via the Pool initializer, not with each task.
+
+    Attributes:
+        reference_shapes: List of CDPKit GaussianShape objects for alignment.
+        group_to_indices: Mapping from group index to reference shape indices.
+        conf_file: Path to the conformer SDF file to score.
+    """
+
+    reference_shapes: List
+    group_to_indices: List[List[int]]
+    conf_file: str
+
+
+class CDPKitScoringWorker:
+    """Callable worker for scoring molecules in parallel.
+
+    This class encapsulates the worker logic and holds the context
+    that would otherwise be stored in global variables. When used
+    with multiprocessing.Pool, the initializer sets up the context
+    once per worker process.
+
+    Usage with Pool:
+        worker = CDPKitScoringWorker()
+        with Pool(n_workers, initializer=worker.initialize,
+                  initargs=(context,)) as pool:
+            results = pool.map(worker, mol_ids)
+    """
+
+    _context: ClassVar[Optional[CDPKitWorkerContext]] = None
+
+    @staticmethod
+    def initialize(context: CDPKitWorkerContext) -> None:
+        """Initialize worker with shared context.
+
+        Called once per worker process by Pool's initializer.
+        Stores context at class level within the worker process.
+
+        Args:
+            context: The CDPKitWorkerContext containing reference shapes and config.
+        """
+        CDPKitScoringWorker._context = context
+
+    def __call__(self, mol_id: int) -> Tuple[int, List[float]]:
+        """Score a single molecule.
+
+        This method is called by pool.map() for each molecule ID.
+        Accesses the context set up by initialize().
+
+        Args:
+            mol_id: Index of the molecule to score.
+
+        Returns:
+            Tuple of (mol_id, list of scores per group).
+        """
+        ctx = CDPKitScoringWorker._context
+        if ctx is None:
+            return mol_id, []
+
+        num_groups = len(ctx.group_to_indices) if ctx.group_to_indices else 0
+        if not ctx.conf_file or not os.path.exists(ctx.conf_file) or num_groups == 0:
+            return mol_id, [0.0] * num_groups
+
+        group_scores = [0.0] * num_groups
+        try:
+            # Re-read SDF and process only conformers for this mol_id
+            reader = CDPLChem.FileSDFMoleculeReader(ctx.conf_file)
+            target_prefix = f"mol_{mol_id}+"
+            while True:
+                m = CDPLChem.BasicMolecule()
+                if not reader.read(m):
+                    break
+                try:
+                    name = CDPLChem.getName(m)
+                except Exception:
+                    continue
+                if not name or not name.startswith(target_prefix):
+                    continue
+                # Generate shapes for all conformers of this record and evaluate best
+                query_shapes = _generate_shape_helper(m)
+                if not query_shapes:
+                    continue
+                for group_idx, ref_indices in enumerate(ctx.group_to_indices):
+                    best = group_scores[group_idx]
+                    for ref_idx in ref_indices:
+                        ref_shape = ctx.reference_shapes[ref_idx]
+                        for query_shape in query_shapes:
+                            score = _align_and_score_helper(query_shape, ref_shape)
+                            if score > best:
+                                best = score
+                    group_scores[group_idx] = best
+        except Exception:
+            return mol_id, [0.0] * num_groups
+
+        return mol_id, group_scores
 
 
 def _generate_shape_helper(cdpkit_mol):
@@ -79,49 +171,6 @@ def _align_and_score_helper(query_shape, ref_shape):
         return best_score
     except (RuntimeError, ValueError):
         return 0.0
-
-
-def _score_molecule_cdpkit_worker(mol_id: int):
-    """Score a single molecule in a worker process by reloading conformers on demand."""
-    reference_shapes = _CDPKIT_WORKER_SETTINGS.get("reference_shapes", [])
-    group_to_indices = _CDPKIT_WORKER_SETTINGS.get("group_to_indices", [])
-    conf_file = _CDPKIT_WORKER_SETTINGS.get("conf_file", None)
-    num_groups = len(group_to_indices) if group_to_indices else 0
-    if not conf_file or not os.path.exists(conf_file) or num_groups == 0:
-        return mol_id, [0.0] * num_groups
-
-    group_scores = [0.0] * num_groups
-    try:
-        # Re-read SDF and process only conformers for this mol_id
-        reader = CDPLChem.FileSDFMoleculeReader(conf_file)
-        target_prefix = f"mol_{mol_id}+"
-        while True:
-            m = CDPLChem.BasicMolecule()
-            if not reader.read(m):
-                break
-            try:
-                name = CDPLChem.getName(m)
-            except Exception:
-                continue
-            if not name or not name.startswith(target_prefix):
-                continue
-            # Generate shapes for all conformers of this record and evaluate best
-            query_shapes = _generate_shape_helper(m)
-            if not query_shapes:
-                continue
-            for group_idx, ref_indices in enumerate(group_to_indices):
-                best = group_scores[group_idx]
-                for ref_idx in ref_indices:
-                    ref_shape = reference_shapes[ref_idx]
-                    for query_shape in query_shapes:
-                        score = _align_and_score_helper(query_shape, ref_shape)
-                        if score > best:
-                            best = score
-                group_scores[group_idx] = best
-    except Exception:
-        return mol_id, [0.0] * num_groups
-
-    return mol_id, group_scores
 
 
 class CDPKitROCSScorer(Scorer):
@@ -322,6 +371,15 @@ class CDPKitROCSScorer(Scorer):
             return None
 
     def getScores(self, mols, frags=None) -> np.ndarray:
+        """Score molecules using CDPKit Gaussian shape alignment.
+
+        Args:
+            mols: List of molecules (RDKit Mol objects or SMILES strings).
+            frags: Unused, kept for interface compatibility.
+
+        Returns:
+            Array of shape (len(mols), num_groups) with TanimotoCombo scores.
+        """
         num_groups = len(self.group_to_indices)
         if num_groups == 0:
             raise ValueError("No reference groups configured")
@@ -370,28 +428,33 @@ class CDPKitROCSScorer(Scorer):
             num_unique = len(unique_smiles)
             scores_unique = np.zeros((num_unique, num_groups), dtype=np.float32)
 
+            # Create worker context and callable worker instance
+            context = CDPKitWorkerContext(
+                reference_shapes=self.reference_shapes,
+                group_to_indices=self.group_to_indices,
+                conf_file=conf_file,
+            )
+            worker = CDPKitScoringWorker()
+
             if self.n_jobs == 1:
-                # Initialize worker globals for sequential scoring as well
-                _cdpkit_worker_init(
-                    self.reference_shapes, self.group_to_indices, conf_file
-                )
+                # Sequential mode: initialize and call worker directly
+                worker.initialize(context)
                 for mol_id in range(num_unique):
                     if mol_id not in present_ids:
                         continue
-                    _, group_scores = _score_molecule_cdpkit_worker(mol_id)
+                    _, group_scores = worker(mol_id)
                     if len(group_scores) == num_groups:
                         scores_unique[mol_id] = np.asarray(group_scores, dtype=np.float32)
-                # Clear worker settings
-                _CDPKIT_WORKER_SETTINGS = {}
             else:
+                # Parallel mode: use Pool with worker initializer
                 worker_args = [mol_id for mol_id in range(num_unique) if mol_id in present_ids]
                 effective_jobs = max(1, self.n_jobs)
                 chunksize = max(1, len(worker_args) // (effective_jobs * 4))
                 try:
                     with Pool(
                         self.n_jobs,
-                        initializer=_cdpkit_worker_init,
-                        initargs=(self.reference_shapes, self.group_to_indices, conf_file),
+                        initializer=CDPKitScoringWorker.initialize,
+                        initargs=(context,),
                     ) as pool:
                         if self.show_progress:
                             try:
@@ -399,19 +462,19 @@ class CDPKitROCSScorer(Scorer):
 
                                 results = list(
                                     tqdm(
-                                        pool.imap(_score_molecule_cdpkit_worker, worker_args, chunksize=chunksize),
+                                        pool.imap(worker, worker_args, chunksize=chunksize),
                                         total=len(worker_args),
                                         desc=f"Scoring with {self.getKey()}",
                                     )
                                 )
                             except ImportError:
-                                results = pool.map(_score_molecule_cdpkit_worker, worker_args, chunksize=chunksize)
+                                results = pool.map(worker, worker_args, chunksize=chunksize)
                                 print(
                                     f"  Scored {len(worker_args)} molecules "
                                     "(parallel)"
                                 )
                         else:
-                            results = pool.map(_score_molecule_cdpkit_worker, worker_args, chunksize=chunksize)
+                            results = pool.map(worker, worker_args, chunksize=chunksize)
                     for mol_id, group_scores in results:
                         if 0 <= mol_id < num_unique and len(group_scores) == num_groups:
                             scores_unique[mol_id] = np.asarray(group_scores, dtype=np.float32)
@@ -421,14 +484,14 @@ class CDPKitROCSScorer(Scorer):
                             f"Warning: parallel processing failed ({exc}), "
                             "switching to sequential mode"
                         )
+                    # Fallback to sequential: initialize worker and process directly
+                    worker.initialize(context)
                     for mol_id in range(num_unique):
                         if mol_id not in present_ids:
                             continue
-                        _, group_scores = _score_molecule_cdpkit_worker(mol_id)
+                        _, group_scores = worker(mol_id)
                         if len(group_scores) == num_groups:
                             scores_unique[mol_id] = np.asarray(group_scores, dtype=np.float32)
-                finally:
-                    _CDPKIT_WORKER_SETTINGS = {}
 
             scores = np.zeros((len(mols), num_groups), dtype=np.float32)
             for unique_id, original_indices in unique_to_original.items():
