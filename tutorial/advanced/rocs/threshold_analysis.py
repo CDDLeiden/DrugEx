@@ -16,7 +16,7 @@ from rdkit import Chem
 from sklearn.metrics import auc, precision_recall_curve, roc_curve
 
 from drugex.training.scorers.conformer_generators import RDKitConformerGenerator
-from drugex.training.scorers.rdkit_rocs import RDKitROCSScorer
+from drugex.training.scorers.rocs_rdkit import RDKitROCSScorer
 
 warnings.filterwarnings('ignore')
 
@@ -231,6 +231,39 @@ def perform_roc_analysis(
     }
 
 
+def compute_threshold_metrics(
+    y_true: np.ndarray,
+    y_scores: np.ndarray,
+    threshold: float,
+) -> Dict[str, float]:
+    """Compute classification metrics at a specific threshold."""
+    predicted_actives = y_scores >= threshold
+    tp = np.sum((y_true == 1) & predicted_actives)
+    fp = np.sum((y_true == 0) & predicted_actives)
+    tn = np.sum((y_true == 0) & ~predicted_actives)
+    fn = np.sum((y_true == 1) & ~predicted_actives)
+
+    sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+    precision_val = tp / (tp + fp) if (tp + fp) > 0 else 0
+    f1 = (
+        2 * precision_val * sensitivity / (precision_val + sensitivity)
+        if (precision_val + sensitivity) > 0
+        else 0
+    )
+
+    return {
+        'tp': int(tp),
+        'fp': int(fp),
+        'tn': int(tn),
+        'fn': int(fn),
+        'sensitivity': sensitivity,
+        'specificity': specificity,
+        'precision': precision_val,
+        'f1': f1,
+    }
+
+
 def compare_thresholds(
     y_true: np.ndarray,
     y_scores: np.ndarray,
@@ -257,28 +290,18 @@ def compare_thresholds(
 
     results = []
     for thresh in thresholds_to_test:
-        predicted_actives = y_scores >= thresh
-        tp = np.sum((y_true == 1) & predicted_actives)
-        fp = np.sum((y_true == 0) & predicted_actives)
-        tn = np.sum((y_true == 0) & ~predicted_actives)
-        fn = np.sum((y_true == 1) & ~predicted_actives)
-
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        precision_val = tp / (tp + fp) if (tp + fp) > 0 else 0
-        f1 = (2 * precision_val * sensitivity / (precision_val + sensitivity)
-              if (precision_val + sensitivity) > 0 else 0)
+        metrics = compute_threshold_metrics(y_true, y_scores, thresh)
 
         results.append({
             'Threshold': thresh,
-            'TPR (Sensitivity)': sensitivity,
-            'FPR': 1 - specificity,
-            'Precision': precision_val,
-            'F1-Score': f1,
-            'TP': int(tp),
-            'FP': int(fp),
-            'TN': int(tn),
-            'FN': int(fn)
+            'TPR (Sensitivity)': metrics['sensitivity'],
+            'FPR': 1 - metrics['specificity'],
+            'Precision': metrics['precision'],
+            'F1-Score': metrics['f1'],
+            'TP': metrics['tp'],
+            'FP': metrics['fp'],
+            'TN': metrics['tn'],
+            'FN': metrics['fn'],
         })
 
     return pd.DataFrame(results)
@@ -524,28 +547,19 @@ def generate_report(
         report.append(f"   - F1-Score: {current_metrics['F1-Score']:.3f}")
     else:
         # Fallback: compute metrics on the fly if threshold not in DataFrame
-        predicted_actives = np.concatenate([
-            actives_scores >= current_threshold,
-            decoys_scores >= current_threshold
-        ])
         y_true = np.concatenate([
             np.ones(len(actives_scores)),
             np.zeros(len(decoys_scores))
         ])
-        tp = np.sum((y_true == 1) & predicted_actives)
-        fp = np.sum((y_true == 0) & predicted_actives)
-        tn = np.sum((y_true == 0) & ~predicted_actives)
-        fn = np.sum((y_true == 1) & ~predicted_actives)
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        precision_val = tp / (tp + fp) if (tp + fp) > 0 else 0
-        f1 = (2 * precision_val * sensitivity / (precision_val + sensitivity)
-              if (precision_val + sensitivity) > 0 else 0)
+        metrics = compute_threshold_metrics(y_true, np.concatenate([
+            actives_scores,
+            decoys_scores
+        ]), current_threshold)
         report.append(f"   - Current ROCS_THRESHOLD: {current_threshold}")
-        report.append(f"   - Sensitivity (TPR): {sensitivity:.3f}")
-        report.append(f"   - False Positive Rate: {1 - specificity:.3f}")
-        report.append(f"   - Precision: {precision_val:.3f}")
-        report.append(f"   - F1-Score: {f1:.3f}")
+        report.append(f"   - Sensitivity (TPR): {metrics['sensitivity']:.3f}")
+        report.append(f"   - False Positive Rate: {1 - metrics['specificity']:.3f}")
+        report.append(f"   - Precision: {metrics['precision']:.3f}")
+        report.append(f"   - F1-Score: {metrics['f1']:.3f}")
 
     report.append("\n3. Recommendation:")
     threshold_diff = abs(current_threshold - roc_data['optimal_threshold'])
@@ -650,7 +664,6 @@ def save_results(
         report_text: Formatted text report.
     """
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
 
     scores_data = []
     for smi, score in zip(actives_smiles[:len(actives_scores)], actives_scores):
@@ -691,7 +704,7 @@ def run_threshold_analysis(
     show_plots: bool = True,
     verbose: bool = False
 ) -> Dict[str, Any]:
-    """Run complete threshold determination analysis.
+    """Run the ROCS threshold determination workflow.
 
     Args:
         actives_csv: Path to actives CSV file.
@@ -703,33 +716,20 @@ def run_threshold_analysis(
         max_isomers: Max stereoisomers to enumerate (uses config default).
         max_heavy_atoms: Max heavy atoms allowed (uses config default).
         max_rotatable_bonds: Max rotatable bonds allowed (uses config default).
-        num_threads: CPU threads for conformer generation (default=None, auto-detect).
-            None = auto-detect based on n_jobs (recommended):
-                - n_jobs=1  → num_threads=1 (respects single-process request)
-                - n_jobs≠1  → num_threads=0 (fast parallel execution)
-            0 = use all CPU cores (fastest).
-            1 = single-threaded (minimal CPU usage).
+        num_threads: CPU threads for conformer generation. None auto-detects
+            (n_jobs=1 -> num_threads=1, otherwise 0). Use 0 for all cores, 1
+            for single-threaded.
         n_jobs: Number of parallel scoring jobs (default=-1, use all CPUs).
-        show_plots: Display plots interactively.
-        verbose: Print progress messages.
+        show_plots: Whether to display plots.
+        verbose: Whether to print progress messages.
 
     Returns:
         Dictionary with analysis results.
 
-    Performance:
-        Auto (num_threads=None, n_jobs=-1): ~30-40 seconds (RECOMMENDED)
-        Single-core (num_threads=None, n_jobs=1): ~4 minutes (respects resource limit)
-        Override (num_threads=0, n_jobs=1): ~40 seconds (fast single-process)
-
-    Examples:
-        # Default: fast parallel execution (RECOMMENDED)
-        >>> run_threshold_analysis(actives_csv, decoys_csv)
-
-        # Respect resource limits (use only 1 CPU when n_jobs=1)
-        >>> run_threshold_analysis(actives_csv, decoys_csv, n_jobs=1)
-
-        # Override: force multi-threaded even with n_jobs=1
-        >>> run_threshold_analysis(actives_csv, decoys_csv, num_threads=0, n_jobs=1)
+    Example usage:
+        run_threshold_analysis(actives_csv, decoys_csv)
+        run_threshold_analysis(actives_csv, decoys_csv, n_jobs=1)
+        run_threshold_analysis(actives_csv, decoys_csv, num_threads=0, n_jobs=1)
     """
     if references_sdf is None:
         if CONFIG_AVAILABLE:
@@ -741,15 +741,6 @@ def run_threshold_analysis(
 
     if current_threshold is None:
         current_threshold = ROCS_THRESHOLD
-
-    if max_conformers is None:
-        max_conformers = MAX_CONFORMERS
-    if max_isomers is None:
-        max_isomers = MAX_ISOMERS
-    if max_heavy_atoms is None:
-        max_heavy_atoms = MAX_HEAVY_ATOMS
-    if max_rotatable_bonds is None:
-        max_rotatable_bonds = MAX_ROTATABLE_BONDS
 
     # Smart default: auto-detect num_threads based on n_jobs
     # This ensures that when users set n_jobs=1 (resource limit),

@@ -14,7 +14,7 @@ from drugex.training.rewards import ParetoCrowdingDistance
 from drugex.training.scorers.modifiers import SmoothClippedScore
 from drugex.training.scorers.properties import Property
 from drugex.training.scorers.conformer_generators import RDKitConformerGenerator
-from drugex.training.scorers.rdkit_rocs import RDKitROCSScorer
+from drugex.training.scorers.rocs_rdkit import RDKitROCSScorer
 
 
 # ============================================================================
