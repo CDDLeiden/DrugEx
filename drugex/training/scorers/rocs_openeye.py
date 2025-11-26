@@ -48,7 +48,7 @@ class OpenEyeROCSScorer(Scorer):
     - Hybrid Python/CLI workflow for flexible integration
 
     Attributes:
-        - query_files: dict of query files for ROCS queries (.sq or molecule files).
+        - references: dict of query files for ROCS queries (.sq or molecule files).
             Keys are query names, values are query file paths or lists of file paths.
             For each key, one score is returned per molecule. If a list of files is
             provided for a single key, the highest score across all queries
@@ -68,7 +68,7 @@ class OpenEyeROCSScorer(Scorer):
     def __init__(
         self,
         conformer_generator: ConformerGenerator,
-        query_files: dict[str, List[str] | str],
+        references: dict[str, List[str] | str],
         score_type: str = "TanimotoCombo",
         shape_only: bool = False,
         optimize: bool = True,
@@ -87,7 +87,7 @@ class OpenEyeROCSScorer(Scorer):
         self.conformer_generator = conformer_generator
 
         # Convert to list and validate
-        self.queries = query_files
+        self.queries = references
         self._validate_query_files()
 
         self.score_type = score_type

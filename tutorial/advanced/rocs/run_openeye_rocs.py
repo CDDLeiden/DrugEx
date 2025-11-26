@@ -123,7 +123,7 @@ def create_openeye_environment(
             use_gpu=use_gpu,
             show_progress=False,
         ),
-        query_files={'CCR2': str(reference_sdf)},
+        references={'CCR2': str(reference_sdf)},
         score_type='TanimotoCombo',
         shape_only=False,
         optimize=optimize,
