@@ -191,45 +191,26 @@ class OpenEyeROCSScorer(Scorer):
 
         cmd = [
             self.binary_path,
-            "-query",
-            query_file,
-            "-dbase",
-            input_file,
-            "-report",
-            "one",
-            "-reportfile",
-            output_file,
-            "-prefix",
-            "rocs",
-            "-outputdir",
-            output_dir,  # Add output directorys
-            "-rankby",
-            self.score_type,
-            "-chemff",
-            self.color_force_field,
-            "-cutoff",
-            "-1.0",  # Return all molecules (no cutoff)
-            "-maxhits",
-            "0",  # Return all molecules (overrides besthits)
-            "-tanimoto_cutoff",
-            "0.0",
-            "-stats",
-            "best",
-            "-nostructs",
+            "-query", query_file,
+            "-dbase", input_file,
+            "-report", "one",
+            "-reportfile", output_file,
+            "-prefix", "rocs",
+            "-outputdir", output_dir,
+            "-stats", "best", # Include best overlay(s) for each dbase molecule
+            "-nostructs", # Don't save the structures
             "-scdbase",  # Don't combine contiguous conformers
         ]
-
-        # Add shapeonly explicitly (with true/false value) instead of conditionally
-        cmd.extend(["-shapeonly", str(self.shape_only).lower()])
-
-        # Add opt explicitly instead of conditionally
-        cmd.extend(["-opt", str(self.optimize).lower()])
-
-        # Add optchem explicitly with proper condition
-        if not self.shape_only and self.color_optimize:
-            cmd.extend(["-optchem", "true"])
+        
+        if self.shape_only:
+            # sets chemff none, optchem false and rankby tanimoto
+            cmd.extend(["-shapeonly", str(self.shape_only).lower()])
         else:
-            cmd.extend(["-optchem", "false"])
+            cmd.extend(["-rankby", self.score_type])
+            cmd.extend(["-chemff", self.color_force_field])
+            
+        # set optimizer on/off, if off score only
+        cmd.extend(["-opt", str(self.optimize).lower()])
 
         return cmd
 
