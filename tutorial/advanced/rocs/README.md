@@ -66,6 +66,9 @@ jupyter notebook rocs_rl_tutorial.ipynb
 ```
 
 ### 3. Generate Molecules
+
+Generate molecules from the trained model (also demonstrated in the notebook):
+
 ```bash
 python generate_molecules.py
 ```
