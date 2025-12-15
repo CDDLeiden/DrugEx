@@ -49,6 +49,7 @@ class OpenEyeROCSScorer(Scorer):
     - Hybrid Python/CLI workflow for flexible integration
 
     Attributes:
+        - conformer_generator: conformer generator used for generated molecules.
         - references: dict of query files for ROCS queries (.sq or molecule files).
             Keys are query names, values are query file paths or lists of file paths.
             For each key, one score is returned per molecule. If a list of files is
