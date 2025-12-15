@@ -80,7 +80,29 @@ class OpenEyeROCSScorer(Scorer):
         binary_path: str | None = None,
         show_progress: bool = True,
     ):
-
+        """Initialize the OpenEye ROCS scorer.
+        
+        Args:
+            conformer_generator: generator used to produce generated molecule conformers
+            references: dict mapping scorer name to SDF/sq query name(s). If multiple 
+                dict items are specified, the output will be a score per item. It a dict
+                item has multiple paths specified, the molecules will be scored for each 
+                query but only the maximum of the scores will be returned (i.e. the best
+                match).  
+            score_type: Type of scoring to use (e.g., TanimotoCombo), ignored
+                if shape_only
+            shape_only: If True, only shape scoring is performed
+            optimize: turn optimizer on/off, if off score only
+            color_optimize: If True, color optimization is performed
+            color_force_field: : Force field to use for color optimization
+            rocs_binary: Name of the ROCS binary to use
+            binary_path: Path to the ROCS binary (if not in PATH)
+            show_progress: If True, progress is shown during scoring
+        
+        Raises:
+            ImportError: If OpenEye toolkits are not available.
+            FileNotFoundError: If rocs binary not found
+        """
         super().__init__()
 
         if not OE_AVAILABLE:
