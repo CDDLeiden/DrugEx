@@ -37,27 +37,27 @@ class OpenEyeROCSScorer(Scorer):
     """OpenEye ROCS scorer that shells out to the ROCS command-line binary.
 
     Uses the OpenEye ROCS CLI via ``subprocess`` for shape-based similarity
-    scoring while relying on the OpenEye Python toolkits for query validation
+    scoring while relying on the OpenEye Python toolkits for reference validation
     and RDKit for molecule handling. Requires a valid OpenEye license with the
     ROCS binary available in ``PATH`` (or provided via ``binary_path``). If a
     future fastROCS implementation is added, this class will remain the CLI
     variant.
 
     Features:
-    - Multiple query file support (.sq or molecule files)
-    - Best score selection across queries
+    - Multiple reference group support (.sq or molecule files)
+    - Best score selection across reference groups
     - Hybrid Python/CLI workflow for flexible integration
 
     Attributes:
         - conformer_generator: conformer generator used for generated molecules.
-        - references: dict of query files for ROCS queries (.sq or molecule files).
-            Keys are query names, values are query file paths or lists of file paths.
-            For each key, one score is returned per molecule. If a list of files is
-            provided for a single key, the highest score across all queries
-            is returned for that key.
+        - references: dict of reference files for ROCS scoring (.sq or molecule files).
+            Dictionary keys are reference group names, values are file paths or lists
+            of file paths. For each key (group), one score is returned per molecule.
+            If a list of files is provided for a single group, the highest score across
+            all reference files in that group is returned.
         - score_type: Type of scoring to use (e.g., TanimotoCombo)
         - shape_only: If True, only shape scoring is performed
-        - optimize: If True,
+        - optimize: If True, optimization is performed during scoring
         - color_optimize: If True, color optimization is performed
         - color_force_field: Force field to use for color optimization
         - rocs_binary: Name of the ROCS binary to use
@@ -81,24 +81,24 @@ class OpenEyeROCSScorer(Scorer):
         show_progress: bool = True,
     ):
         """Initialize the OpenEye ROCS scorer.
-        
+
         Args:
             conformer_generator: generator used to produce generated molecule conformers
-            references: dict mapping scorer name to SDF/sq query name(s). If multiple 
-                dict items are specified, the output will be a score per item. It a dict
-                item has multiple paths specified, the molecules will be scored for each 
-                query but only the maximum of the scores will be returned (i.e. the best
-                match).  
+            references: dict mapping reference group names to SDF/sq reference file path(s).
+                If multiple dict items are specified, the output will be a score per group.
+                If a dict item has multiple file paths specified, molecules will be scored
+                against each reference file but only the maximum score will be returned
+                (i.e. the best match within that group).
             score_type: Type of scoring to use (e.g., TanimotoCombo), ignored
                 if shape_only
             shape_only: If True, only shape scoring is performed
             optimize: turn optimizer on/off, if off score only
             color_optimize: If True, color optimization is performed
-            color_force_field: : Force field to use for color optimization
+            color_force_field: Force field to use for color optimization
             rocs_binary: Name of the ROCS binary to use
             binary_path: Path to the ROCS binary (if not in PATH)
             show_progress: If True, progress is shown during scoring
-        
+
         Raises:
             ImportError: If OpenEye toolkits are not available.
             FileNotFoundError: If rocs binary not found
@@ -129,9 +129,9 @@ class OpenEyeROCSScorer(Scorer):
             raise FileNotFoundError(f"ROCS binary not found: {self.binary_path}")
 
     def _validate_query_files(self):
-        """Validate all .sq files exist and are readable"""
+        """Validate all reference files exist and are readable"""
         assert isinstance(self.queries, dict), (
-            "query_files must be a dictionary with keys as query names and values"
+            "references must be a dictionary with keys as reference group names and values "
             "as file paths"
         )
 
@@ -142,12 +142,12 @@ class OpenEyeROCSScorer(Scorer):
 
             for qf in list_of_qf:
                 if not os.path.exists(qf):
-                    raise FileNotFoundError(f"Query file not found: {qf}")
+                    raise FileNotFoundError(f"Reference file not found: {qf}")
                 ext = oechem.OEGetFileExtension(qf)
                 if ext == "sq":
                     query = oeshape.OEShapeQuery()
                     if not oeshape.OEReadShapeQuery(qf, query):
-                        raise ValueError(f"Invalid query file: {qf}")
+                        raise ValueError(f"Invalid reference file: {qf}")
                 else:
                     qfs = oechem.oemolistream()
                     if not qfs.open(qf):
@@ -241,9 +241,9 @@ class OpenEyeROCSScorer(Scorer):
         """Score molecules with ROCS
 
         Returns:
-            dict: Dictionary with query names as keys and scores as values.
+            dict: Dictionary with reference group names as keys and scores as values.
         """
-        # Multi-query scoring
+        # Multi-group scoring
         scores_dict = {}
         for name, query_files in self.queries.items():
             if len(query_files) == 1:
@@ -254,22 +254,22 @@ class OpenEyeROCSScorer(Scorer):
         return scores_dict
 
     def _score_multi_query(self, conf_file, query_files) -> dict:
-        """Score against multiple queries, return best scores as dict"""
+        """Score against multiple reference files in a group, return best scores as dict"""
         best_scores = {}
 
         for query_file in query_files:
             query_scores = self._score_single_query(conf_file, query_file)
 
-            # Take maximum score for each molecule
+            # Take maximum score for each molecule across all reference files
             for mol_title, score in query_scores.items():
                 best_scores[mol_title] = max(score, best_scores.get(mol_title, 0.0))
 
         return best_scores
 
     def _score_single_query(self, conf_file, query_file: str) -> dict:
-        """Score molecules against a single query file and return as dict"""
+        """Score molecules against a single reference file and return as dict"""
         scores = {}
-        print("Scoring with query file:", query_file)
+        print("Scoring with reference file:", query_file)
 
         with _managed_tmpdir() as tmpdir:
             if not conf_file:
