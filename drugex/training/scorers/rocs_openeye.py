@@ -1,3 +1,4 @@
+"""OpenEye-ROCS based ROCS scorer."""
 import os
 import shutil
 import subprocess
