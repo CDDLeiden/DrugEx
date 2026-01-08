@@ -129,8 +129,12 @@ class Explorer(Model, ABC):
         dct['desired_ratio'] = unique.Desired.sum() / ntot
         
         # Average artithmetic and geometric mean score 
-        dct['avg_amean'] = unique[self.env.getScorerKeys()].values.mean()
-        dct['avg_gmean'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
+        if len(unique) == 0:
+            dct['avg_amean'] = 0.0
+            dct['avg_gmean'] = 0.0
+        else:
+            dct['avg_amean'] = unique[self.env.getScorerKeys()].values.mean()
+            dct['avg_gmean'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
         
         return dct
     
