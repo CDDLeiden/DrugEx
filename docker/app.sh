@@ -20,13 +20,3 @@ bash -c "${ACTIVATE_CMD} && conda create -n ${ENV_NAME} python=${PYTHON_VERSION}
 
 echo "Installing drugex package and jupyterlab..."
 bash -c "${RUN_CMD} && pip install git+${DRUGEX_REPO}@${DRUGEX_REVISION} jupyterlab git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}"
-
-#echo "Installing qsprpred package..."
-#bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}"
-#
-#echo "Checking for CUDA..."
-#bash -c "${RUN_CMD} && python -c 'import torch; print(torch.cuda.is_available())'"
-#echo "Checking for drugex version..."
-#bash -c "${RUN_CMD} && python -c 'import drugex; print(drugex.__version__)'"
-#echo "Checking for qsprpred version..."
-#bash -c "${RUN_CMD} && python -c 'import qsprpred; print(qsprpred.__version__)'"
