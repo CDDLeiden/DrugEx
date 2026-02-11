@@ -22,3 +22,4 @@ None.
   a small increase in the training loss before stopping training early if the
   `valid_fraction` is increased.
 - Shape matching as an objective function was added (see [tutorial](./tutorial/advanced/rocs))
+- Added a Docker container to easily setup DrugEx and QSPRpred enabled environments. See [Dockerfile](./docker/) for details.
