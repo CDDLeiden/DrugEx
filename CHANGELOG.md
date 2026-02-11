@@ -21,3 +21,4 @@ None.
 - Add argument 'loss_tolerance' to `Generator.fit`. Setting a loss tolerance allows 
   a small increase in the training loss before stopping training early if the
   `valid_fraction` is increased.
+- Shape matching as an objective function was added (see [tutorial](./tutorial/advanced/rocs))
