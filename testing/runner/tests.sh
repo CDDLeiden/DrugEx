@@ -42,12 +42,11 @@ git checkout ${DRUGEX_REVISION}
 cd testing/clitest
 bash -c "${RUN_CMD} && ./test.sh"
 
-echo "Installing tutorial dependencies..."
-bash -c "${RUN_CMD} && pip install papyrus_structure_pipeline git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@main mols2grid jupyterlab"
-bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}" # ensure version
-
 echo "Running tutorials..."
 cd "${WD}/DrugEx/tutorial"
+bash -c "${RUN_CMD} && pip install -r requirements.txt"
+bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}"
+bash -c "${RUN_CMD} && pip freeze"
 bash -c "${RUN_CMD} && ./run_all.sh"
 
 echo "All tests finished successfully. Exiting..."
