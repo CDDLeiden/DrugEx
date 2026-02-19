@@ -1,5 +1,7 @@
 jupyterlab
 mols2grid
+setuptools<81
 papyrus_structure_pipeline
 papyrus-scaffold-visualizer @ git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@main
 drugex[qsprpred] @ git+https://github.com/CDDLeiden/DrugEx.git@master
+scikit-learn>=1.8.0

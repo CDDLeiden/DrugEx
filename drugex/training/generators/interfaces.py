@@ -182,7 +182,7 @@ class Generator(Model, ABC):
         self.monitor.endStep(None, epoch)
 
 
-    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True):
+    def fit(self, train_loader, valid_loader, epochs=100, patience=50, evaluator=None, monitor=None, no_multifrag_smiles=True, loss_tolerance=None):
         """
         Fit the generator.
 
@@ -203,6 +203,10 @@ class Generator(Model, ABC):
             a `Monitor` instance to use for saving the model and performance info
         no_multifrag_smiles : bool
             if `True`, only single-fragment SMILES are considered valid
+        loss_tolerance : float
+            if specified, the best epoch is determined by the validation loss, but a 
+            tolerance of increase in loss is allowed. The best epoch within the tolerance
+            is determined by the the valid_ratio.
         """
         self.monitor = monitor if monitor else NullMonitor()
         best = float('inf')
@@ -223,10 +227,25 @@ class Generator(Model, ABC):
             else : value = 1 - valid_metrics['valid_ratio']
             valid_metrics['loss_train'] = loss_train
 
-            if value < best:
-                is_best = True
-                best, last_save = value, epoch
-            valid_metrics['best_epoch'] = last_save
+            if loss_tolerance is None or 'loss_valid' not in valid_metrics.keys():
+                if value < best:
+                    is_best = True
+                    best, last_save = value, epoch
+                valid_metrics['best_epoch'] = last_save
+            else:
+                # allow a small increase in validation loss if valid ratio improves
+                if value < best:
+                    is_best = True
+                    best, last_save = value, epoch
+                    valid_ratio_best = valid_metrics['valid_ratio']
+                elif value <= best + loss_tolerance:
+                    if valid_metrics['valid_ratio'] > valid_ratio_best:
+                        # update best valid ratio and last save, but not best loss
+                        # this allows to save the model with the best valid ratio within the tolerance
+                        is_best = True
+                        valid_ratio_best = valid_metrics['valid_ratio']
+                        last_save = epoch
+                valid_metrics['best_epoch'] = last_save
 
             # Save model
             save_model_option = monitor.getSaveModelOption()
