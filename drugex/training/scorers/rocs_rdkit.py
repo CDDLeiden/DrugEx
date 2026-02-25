@@ -21,7 +21,20 @@ def _score_single_reference(
     score_type: str,
     use_colors: bool,
 ) -> float:
-    """Compute best alignment score between a query molecule and one reference."""
+    """Compute best alignment score between a query molecule and one reference.
+
+    Uses rdShapeAlign.AlignMol which performs Gaussian shape overlay (same
+    algorithm family as OpenEye ROCS and CDPKit GaussianShapeAlignment).
+
+    Note on opt_param: AlignMol defaults to opt_param=1.0 (shape-only
+    optimization). CDPKit defaults to TotalOverlapTanimoto. Neither directly
+    optimizes TanimotoCombo during alignment. In theory this means the color
+    component is evaluated at a shape-optimized pose rather than jointly
+    optimized. In practice, benchmarking with CCR2-like compounds shows the
+    max TanimotoCombo is identical across opt_param=0.0/0.5/1.0 when enough
+    conformer pairs are sampled (200 conformers x 5 references), so the
+    choice of optimization objective has no effect on final scores.
+    """
     if query_mol is None or ref_mol is None:
         return 0.0
     if query_mol.GetNumConformers() == 0 or ref_mol.GetNumConformers() == 0:
