@@ -213,11 +213,11 @@ def main() -> None:
     np.random.seed(0)
 
     # Define paths
-    ROOT = Path.cwd()
+    ROOT = Path(__file__).resolve().parent
     CCR2_SDF = ROOT / 'rocs_rl_ccr/rdkit_cdpkit/CCR2_reference_ligands.sdf'
     MODEL_DIR = ROOT / 'demo_out/models'
     OUTPUT_DIR = ROOT / 'rl_runs_demo/cdpkit_rl'
-    PRETRAINED_DIR = Path("../../data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT")
+    PRETRAINED_DIR = ROOT.parents[2] / "data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT"
 
     FINETUNE_BASE = MODEL_DIR / 'CCR2_finetuned'
     FINETUNE_CHECKPOINT = FINETUNE_BASE.with_suffix('.pkg')

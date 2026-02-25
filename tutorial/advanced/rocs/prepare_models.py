@@ -230,11 +230,11 @@ def main() -> None:
     np.random.seed(0)
 
     # Define paths
-    ROOT = Path.cwd()
+    ROOT = Path(__file__).resolve().parent
     CCR2_TSV = ROOT / 'rocs_rl_ccr/rdkit_cdpkit/CCR_HUMAN_AL.tsv'
     MODEL_DIR = ROOT / 'demo_out/models'
     DATA_DIR = ROOT / 'demo_out/datasets/encoded/rnn'
-    PRETRAINED_DIR = Path("../../data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT")
+    PRETRAINED_DIR = ROOT.parents[2] / "data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT"
 
     # Create directories
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
