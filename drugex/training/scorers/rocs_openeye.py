@@ -3,8 +3,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections import defaultdict
 from contextlib import contextmanager
-from typing import List
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -79,6 +80,7 @@ class OpenEyeROCSScorer(Scorer):
         rocs_binary: str = "rocs",
         binary_path: str | None = None,
         show_progress: bool = True,
+        timeout: int = 300,
     ):
         """Initialize the OpenEye ROCS scorer.
 
@@ -98,6 +100,7 @@ class OpenEyeROCSScorer(Scorer):
             rocs_binary: Name of the ROCS binary to use
             binary_path: Path to the ROCS binary (if not in PATH)
             show_progress: If True, progress is shown during scoring
+            timeout: Timeout in seconds for the ROCS subprocess
 
         Raises:
             ImportError: If OpenEye toolkits are not available.
@@ -119,7 +122,7 @@ class OpenEyeROCSScorer(Scorer):
         self.color_optimize = color_optimize
         self.color_force_field = color_force_field
         self.binary_path = binary_path or rocs_binary
-
+        self.timeout = timeout
 
         self.shape_only = shape_only
         self.rocs_binary = rocs_binary
@@ -173,6 +176,27 @@ class OpenEyeROCSScorer(Scorer):
                 raise TypeError(f"Unsupported molecule type: {type(mol)}")
         return smiles_list
 
+    @staticmethod
+    def _deduplicate_smiles(
+        smiles_list: List[Union[str, None]]
+    ) -> Tuple[List[str], Dict[int, List[int]]]:
+        """Group identical SMILES to avoid redundant conformer generation."""
+        unique_smiles: List[str] = []
+        unique_lookup: Dict[str, int] = {}
+        unique_to_original: Dict[int, List[int]] = defaultdict(list)
+
+        for idx, smi in enumerate(smiles_list):
+            if smi is None:
+                continue
+            unique_idx = unique_lookup.get(smi)
+            if unique_idx is None:
+                unique_idx = len(unique_smiles)
+                unique_smiles.append(smi)
+                unique_lookup[smi] = unique_idx
+            unique_to_original[unique_idx].append(idx)
+
+        return unique_smiles, unique_to_original
+
     def getScores(self, mols, frags=None) -> np.ndarray:
         """Score molecules using one or more ROCS queries"""
         if not mols:
@@ -188,16 +212,35 @@ class OpenEyeROCSScorer(Scorer):
         # Convert to SMILES list for uniform processing
         smiles_list = self._convert_to_smiles(mols)
 
-        # Prepare conformers
+        # Deduplicate SMILES to avoid redundant conformer generation
+        unique_smiles, unique_to_original = self._deduplicate_smiles(smiles_list)
+
+        if not unique_smiles:
+            return np.zeros((num_input_mols, len(self.queries)), dtype=np.float32)
+
+        if self.show_progress and len(unique_smiles) < len(smiles_list):
+            print(
+                f"  Deduplicated: {len(smiles_list)} -> {len(unique_smiles)} "
+                f"unique SMILES"
+            )
+
+        # Prepare conformers for unique SMILES only
         with _managed_tmpdir() as tmpdir:
-            conf_file = self.conformer_generator.genConformers(smiles_list, tmpdir)
+            conf_file = self.conformer_generator.genConformers(
+                unique_smiles, tmpdir
+            )
 
             # Score using OpenEye ROCS
             scores_dict = self._score(conf_file)
 
+        # Map scores from unique indices back to original indices
         result_scores = np.zeros((num_input_mols, len(self.queries)), dtype=np.float32)
         for i, scores in enumerate(scores_dict.values()):
-            result_scores[list(scores.keys()), i] = list(scores.values())
+            for unique_idx, score in scores.items():
+                if unique_idx not in unique_to_original:
+                    continue
+                for original_idx in unique_to_original[unique_idx]:
+                    result_scores[original_idx, i] = score
 
         if self.show_progress:
             if timer and timer.Elapsed() > 2.0:
@@ -227,13 +270,18 @@ class OpenEyeROCSScorer(Scorer):
         
         if self.shape_only:
             # sets chemff none, optchem false and rankby tanimoto
-            cmd.extend(["-shapeonly", str(self.shape_only).lower()])
+            cmd.extend(["-shapeonly", "true"])
         else:
             cmd.extend(["-rankby", self.score_type])
             cmd.extend(["-chemff", self.color_force_field])
-            
+
         # set optimizer on/off, if off score only
         cmd.extend(["-opt", str(self.optimize).lower()])
+
+        # wire color_optimize to -optchem (only meaningful with optimizer on
+        # and shape_only off — ROCS ignores it otherwise)
+        if not self.shape_only and self.optimize:
+            cmd.extend(["-optchem", str(self.color_optimize).lower()])
 
         return cmd
 
@@ -306,8 +354,7 @@ class OpenEyeROCSScorer(Scorer):
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=300,
-                env=dict(os.environ, OMP_NUM_THREADS="1"),
+                timeout=self.timeout,
             )
 
             if self.show_progress and rocs_timer and rocs_timer.Elapsed() > 2.0:
@@ -327,7 +374,9 @@ class OpenEyeROCSScorer(Scorer):
         except RuntimeError as e:
             raise RuntimeError(e)
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"ROCS execution timed out")
+            raise RuntimeError(
+                f"ROCS execution timed out after {self.timeout}s"
+            )
         except Exception as e:
             raise RuntimeError(f"ROCS execution failed: {e}")
 
