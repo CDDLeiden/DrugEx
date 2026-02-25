@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import gc
 import os
 import logging
@@ -364,6 +366,7 @@ class RDKitConformerGenerator(ConformerGenerator):
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         num_threads: int = 0,
+        timeout: int = 120,
         show_progress: bool = False,
     ):
         """Initialize the conformer generator
@@ -377,8 +380,9 @@ class RDKitConformerGenerator(ConformerGenerator):
                 max_rotatable_bonds
             num_threads (int): Number of threads for ETKDG conformer generation.
                 0 = use all available CPU cores (default).
-                Set to 1 when using parallel scoring (n_jobs>1) to avoid CPU
-                oversubscription. When n_jobs=1 (sequential), num_threads=0 is optimal.
+            timeout (int): Per-isomer timeout in seconds for ETKDG embedding.
+                0 = no timeout. Default 120s prevents pathological molecules
+                from blocking the pipeline indefinitely.
             show_progress (bool): whether to show progress during conformer generation
         """
         if max_conformers > 200:
@@ -393,18 +397,17 @@ class RDKitConformerGenerator(ConformerGenerator):
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.num_threads = num_threads
+        self.timeout = timeout
         self.show_progress = show_progress
 
     def _create_fresh_etkdg(self):
-        """Create ETKDGv3 parameters for conformer generation
-
-        Thread control: Uses self.num_threads for CPU allocation.
-        Set num_threads=1 when using multiprocessing to avoid oversubscription.
-        """
+        """Create ETKDGv3 parameters for conformer generation."""
         params = AllChem.ETKDGv3()
         params.randomSeed = 0xc0ffee
         params.numThreads = self.num_threads
         params.pruneRmsThresh = 0.5
+        if self.timeout > 0:
+            params.timeout = self.timeout
         return params
 
     def _filter_mol(self, smi, mol) -> bool:
