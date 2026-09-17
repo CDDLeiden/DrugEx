@@ -8,6 +8,7 @@ change is provable. These characterization tests assert the current numbers
 (RDKit shape-only optimization, opt_param defaults to 1.0).
 """
 import os
+import shutil
 import unittest
 
 from rdkit import Chem
@@ -235,7 +236,11 @@ try:
 except Exception:
     _OE = False
 
-_ROCS_BIN = os.path.join(_REPO_ROOT, "ccr2_gen/oeye/current_apps/apps/openeye/bin/rocs")
+_ROCS_BIN = (
+    os.environ.get("ROCS_BINARY")
+    or shutil.which("rocs")
+    or os.path.join(_REPO_ROOT, "ccr2_gen/oeye/current_apps/apps/openeye/bin/rocs")
+)
 
 
 @unittest.skipUnless(_OE, "OpenEye toolkit not licensed/available")

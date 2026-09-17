@@ -14,6 +14,7 @@ enrichment. ALL THREE backends now support it:
   an L2 inner product, so O_ab<=sqrt(sov_a*sov_b) (NOT <=min); the index is clamped to [0,1].
 """
 import os
+import shutil
 import unittest
 
 from rdkit import Chem
@@ -210,10 +211,15 @@ try:
     _OE = _oechem.OEChemIsLicensed()
 except Exception:
     _OE = False
-_ROCS_BIN = os.path.join(_REPO_ROOT, "ccr2_gen/oeye/current_apps/apps/openeye/bin/rocs")
+_ROCS_BIN = (
+    os.environ.get("ROCS_BINARY")
+    or shutil.which("rocs")
+    or os.path.join(_REPO_ROOT, "ccr2_gen/oeye/current_apps/apps/openeye/bin/rocs")
+)
 
 
 @unittest.skipUnless(_OE, "OpenEye toolkit not licensed/available")
+@unittest.skipUnless(os.path.exists(_ROCS_BIN), f"rocs binary not found: {_ROCS_BIN}")
 @unittest.skipUnless(os.path.exists(_REF_SDF), f"reference SDF not found: {_REF_SDF}")
 class OpenEyeTversky(unittest.TestCase):
     """Task #16/#18 — OpenEyeROCSScorer must map (mode, score_variant) to the correct ROCS
@@ -268,9 +274,11 @@ class OpenEyeTversky(unittest.TestCase):
 
     @unittest.skipUnless(os.path.exists(_ROCS_BIN), f"rocs binary not found: {_ROCS_BIN}")
     def test_integration_tversky_ref_differs_from_tanimoto(self):
-        os.environ["LD_LIBRARY_PATH"] = (
-            os.path.join(_REPO_ROOT, "ccr2_gen/oeye/runtime_libs") + ":" + os.environ.get("LD_LIBRARY_PATH", "")
-        )
+        _libs = os.path.join(_REPO_ROOT, "ccr2_gen/oeye/runtime_libs")
+        if os.path.isdir(_libs):
+            os.environ["LD_LIBRARY_PATH"] = (
+                _libs + ":" + os.environ.get("LD_LIBRARY_PATH", "")
+            )
         _lic = os.path.join(_REPO_ROOT, "ccr2_gen/oe_license.txt")
         if os.path.exists(_lic):
             os.environ.setdefault("OE_LICENSE", _lic)
