@@ -25,7 +25,7 @@ ROOT = Path.cwd()
 CCR2_SDF = ROOT / 'rocs_rl_ccr/rdkit_cdpkit/CCR2_reference_ligands.sdf'
 MODEL_DIR = ROOT / 'demo_out/models'
 OUTPUT_DIR = ROOT / 'rl_runs_demo/rdkit_rl'
-MODELS_PR_PATH = str(Path(__file__).parent.parent.parent / 'data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT')
+MODELS_PR_PATH = str(Path(__file__).resolve().parents[3] / 'data/models/pretrained/smiles-rnn/Papyrus05.5_smiles_rnn_PT')
 
 FINETUNE_BASE = MODEL_DIR / 'CCR2_finetuned'
 FINETUNE_CHECKPOINT = Path(f"{FINETUNE_BASE}.pkg")
