@@ -43,6 +43,12 @@ class SequenceRNN(Generator):
         -------
         None
         """
+        if not gpus or gpus[0] == -1:
+            self.device = torch.device('cpu')
+            self.to(self.device)
+            self.gpus = (-1,)
+            return
+
         self.device = torch.device(f'cuda:{gpus[0]}')
         self.to(self.device)
         self.gpus = (gpus[0],)
