@@ -2,17 +2,222 @@
 import os
 import tempfile
 from collections import defaultdict
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from rdkit import Chem
-from rdkit.Chem import rdShapeAlign, AllChem
+from rdkit import Chem, RDConfig
+from rdkit.Chem import rdShapeAlign, AllChem, ChemicalFeatures, rdMolTransforms
 
 from drugex.training.scorers.interfaces import ConformerGenerator, Scorer
+from drugex.training.scorers.oe_color_smarts import OE_MILLS_DEAN_PATTERNS
+from drugex.training.scorers.parallel import (
+    pool_context, capped_n_jobs, mol_timeout, molecule_time_limit, ScoreTimeout,
+)
 
 _RDKIT_WORKER_SETTINGS: Dict[str, object] = {}
 _DEFAULT_RDKIT_GROUP_NAME = "_default_group"
+_VALID_SCORE_TYPES = frozenset({"shape", "color", "TanimotoCombo"})
+_VALID_SCORE_VARIANTS = frozenset({"tanimoto", "tversky_ref", "tversky_fit"})
+# color_ff selects which pharmacophore typing feeds rdShapeAlign's color channel via the
+# PUBCHEM_PHARMACOPHORE_FEATURES property written by _annotate_color_features:
+#   "default"       -> RDKit BaseFeatures.fdef typing (the existing inject_color path).
+#   "fdef"          -> alias of "default" (explicit name for the BaseFeatures.fdef typing).
+#   "oe_mills_dean" -> OpenEye ImplicitMillsDean SMARTS typing (Lever 1; oe_color_smarts.py).
+# OPT-IN: "oe_mills_dean" is the only value that changes typing; the default path is unchanged
+# (the annotation only runs at all when inject_color=True, exactly as before).
+_VALID_COLOR_FFS = frozenset({"default", "fdef", "oe_mills_dean"})
+# (alpha, beta) for the Tversky index; tversky_ref weights the REFERENCE (self_a).
+_TVERSKY_AB = {"tversky_ref": (0.95, 0.05), "tversky_fit": (0.05, 0.95)}
+
+# --- Color-feature annotation: the 6-type rdShapeAlign color path (incl. hydrophobe) ---
+# Without an explicit PUBCHEM_PHARMACOPHORE_FEATURES property, rdShapeAlign perceives color
+# with a 5-pattern fallback (donor/acceptor/rings/cation/anion) that has NO hydrophobe -- and
+# the CCR2 references are hydrophobe-heavy, so RDKit is blind to their dominant color feature.
+# Annotating from BaseFeatures.fdef activates the full 6-type scheme, matching OpenEye's
+# ImplicitMillsDean color FF. See ccr2_gen/docs/color_validation/HOW_CLOSE_TO_OE.md §1b.
+try:
+    _COLOR_FACTORY = ChemicalFeatures.BuildFeatureFactory(
+        os.path.join(RDConfig.RDDataDir, "BaseFeatures.fdef")
+    )
+except Exception:  # pragma: no cover - BaseFeatures.fdef ships with RDKit
+    _COLOR_FACTORY = None
+
+# RDKit fdef family -> rdShapeAlign color type name (PUBCHEM_PHARMACOPHORE_FEATURES scheme).
+# Per-atom "Hydrophobe" (not "LumpedHydrophobe") is used because LumpedHydrophobe does not
+# fire on plain alkyl chains (e.g. octane); see Task #14 REFACTOR note on over-counting.
+_FAMILY_TO_COLOR = {
+    "Donor": "donor",
+    "Acceptor": "acceptor",
+    "PosIonizable": "cation",
+    "NegIonizable": "anion",
+    "Aromatic": "rings",
+    "Hydrophobe": "hydrophobe",
+}
+
+
+def _color_lines_from_fdef(mol: Chem.Mol) -> List[str]:
+    """PUBCHEM_PHARMACOPHORE_FEATURES body lines from RDKit BaseFeatures.fdef typing."""
+    lines: List[str] = []
+    for feat in _COLOR_FACTORY.GetFeaturesForMol(mol):
+        color = _FAMILY_TO_COLOR.get(feat.GetFamily())
+        if color is None:
+            continue
+        ids = [str(i + 1) for i in feat.GetAtomIds()]  # SDF atom indices are 1-based
+        lines.append(f"{len(ids)} " + " ".join(ids) + f" {color}")
+    return lines
+
+
+def _color_lines_from_oe(mol: Chem.Mol) -> List[str]:
+    """PUBCHEM_PHARMACOPHORE_FEATURES body lines from the OpenEye ImplicitMillsDean SMARTS.
+
+    Each match of an OE color SMARTS becomes one feature line: ``<n> <atom ids...> <color>``
+    with 1-based SDF atom ids (the same scheme the fdef path and rdShapeAlign's 6-type reader
+    use). The OE port (oe_color_smarts.py) supplies precompiled patterns per color name.
+    """
+    lines: List[str] = []
+    for color, patterns in OE_MILLS_DEAN_PATTERNS.items():
+        seen: set = set()  # dedup identical atom sets a type may match via multiple patterns
+        for patt in patterns:
+            for match in mol.GetSubstructMatches(patt, uniquify=True):
+                key = frozenset(match)
+                if key in seen:
+                    continue
+                seen.add(key)
+                ids = [str(i + 1) for i in match]
+                lines.append(f"{len(ids)} " + " ".join(ids) + f" {color}")
+    return lines
+
+
+def _annotate_color_features(mol: Chem.Mol, color_ff: str = "default") -> Chem.Mol:
+    """Write PUBCHEM_PHARMACOPHORE_FEATURES so rdShapeAlign's color uses the full 6-type
+    scheme (donor/acceptor/cation/anion/rings/hydrophobe), matching OpenEye ImplicitMillsDean.
+
+    ``color_ff`` selects the pharmacophore typing:
+      "default" / "fdef" -> RDKit's BaseFeatures.fdef (the original behavior).
+      "oe_mills_dean"    -> OpenEye ImplicitMillsDean SMARTS (Lever 1, oe_color_smarts.py),
+                            which (unlike fdef) types saturated rings as ``rings`` and alkyl
+                            chains as ``hydrophobe`` exactly as OpenEye does.
+
+    Mutates ``mol`` in place and returns it. No-op when the (fdef) factory is unavailable or the
+    molecule yields no mappable features (an empty feature block crashes rdShapeAlign).
+
+    PRECONDITIONS before enabling ``inject_color`` in production (code-review #2/#3, Task #15):
+    1. Scheme consistency — if ONE molecule is annotated (6-type scheme) and the other is not
+       (e.g. a featureless molecule, or a reference SDF that already ships a foreign
+       PUBCHEM_PHARMACOPHORE_FEATURES), rdShapeAlign perceives the un-annotated one with its
+       5-pattern fallback whose integer type IDs differ -> color is computed on mismatched
+       schemes. The shipped CCR2 references have no pre-existing property and all map features,
+       so this is latent for them; annotate references ONCE in __init__ (overwriting any
+       foreign property) before enabling injection on arbitrary reference sets.
+    2. Mutation — this writes onto the passed object; in the sequential path that is the
+       scorer's reference Mol (private when loaded from an SDF path, but caller-shared if a
+       Chem.Mol was passed directly). Annotating refs once in __init__ also removes the
+       per-call shared mutation.
+    """
+    if mol is None:
+        return mol
+    if color_ff == "oe_mills_dean":
+        lines = _color_lines_from_oe(mol)
+    else:  # "default" / "fdef": BaseFeatures.fdef typing
+        if _COLOR_FACTORY is None:
+            return mol
+        lines = _color_lines_from_fdef(mol)
+    if lines:  # guard: an empty feature block crashes rdShapeAlign
+        mol.SetProp(
+            "PUBCHEM_PHARMACOPHORE_FEATURES",
+            f"{len(lines)}\n" + "\n".join(lines) + "\n",
+        )
+    return mol
+
+
+def _tversky_from_tanimoto(
+    tanimoto: float, self_a: float, self_b: float, alpha: float, beta: float
+) -> float:
+    """Tversky index on rdShapeAlign's NATIVE first-order Gaussian basis.
+
+    rdShapeAlign reports only Tanimoto ``T = O_ab/(sov_a + sov_b - O_ab)`` but exposes the
+    native self-overlaps (``ShapeInput.sov``/``.sof``). We recover the native cross-overlap
+    ``O_ab = T*(self_a + self_b)/(1 + T)`` and form the Tversky index
+    ``O_ab / (O_ab + alpha*(self_a - O_ab) + beta*(self_b - O_ab))``. With ``alpha=beta=1`` and
+    a per-component Tanimoto ``T in [0,1]`` this returns ``T`` exactly -- the proof that the
+    recovery is on the native basis. (The round-trip identity holds only for ``T<=1``; do NOT
+    feed a TanimotoCombo in [0,2] here -- call per component. The final clamp would cap such a
+    value at 1.0.) Result is clamped to [0, 1]: the first-order Gaussian overlap is an L2 inner
+    product, so O_ab can exceed a self-overlap under extreme size mismatch -- for reference-
+    weighted Tversky that legitimately means "reference fully covered" (saturates at 1.0).
+    ``alpha`` weights ``self_a`` (pass the REFERENCE self-overlap as ``self_a``).
+    """
+    o_ab = tanimoto * (self_a + self_b) / (1.0 + tanimoto) if tanimoto > 0.0 else 0.0
+    den = o_ab + alpha * (self_a - o_ab) + beta * (self_b - o_ab)
+    if den <= 1e-12:
+        return 0.0
+    return max(0.0, min(1.0, o_ab / den))
+
+
+def _self_overlaps(mol: Chem.Mol, conf_id: int, opts) -> Tuple[float, float]:
+    """Native (sov, sof) self-overlaps for a conformer (pose-independent)."""
+    si = rdShapeAlign.PrepareConformer(mol, conf_id, opts)
+    return si.sov, si.sof
+
+
+# --- Pose-dependence guard for rdShapeAlign (RDKit issue #8513) -----------------------------
+# rdShapeAlign.AlignMol's two-phase optimizer starts from the probe's *input* orientation, so
+# the same conformer in a rotated/translated frame can converge to a different local optimum and
+# report a different score (self-aligning omeprazole succeeds only ~75% of the time -- issue
+# #8513, root-caused upstream in ncbi/pubchem-align3d#2). Shape/color similarity is a rigid-body
+# invariant, so this is non-physical: in RL it injects orientation noise into the reward and lets
+# two encodings of one molecule earn different scores.
+#
+# The fix landed in RDKit by aligning the initial start to the principal (inertial) axes before
+# overlay (PR #8999, "Shape overlay initial start aligned to principal axes"; merged 2025-12-20,
+# i.e. a post-2025.09 release). We reproduce that guard here so scoring is pose-invariant on every
+# supported RDKit (verified: on 2025.09.3 the raw combo score spreads 0.13 / std 0.056 across
+# random rigid transforms of one conformer; canonicalize+sign-starts collapses it to 0.000).
+#
+# Mechanism:
+#   1. rdMolTransforms.CanonicalizeConformer puts each conformer in its inertial frame (center of
+#      mass at origin, axes = principal moments) -> removes the arbitrary input orientation.
+#   2. The inertial frame is sign-ambiguous (each principal axis is defined only up to +/-, the
+#      residual non-determinism PR #8999 flagged), so we additionally try the 4 proper-rotation
+#      (det=+1) 180-deg flips of the probe and keep the best overlay. This drives the cross-pose
+#      spread to exactly 0 and self-alignment failures to 0/20.
+# Reference molecules are canonicalized once up front; only the probe is flipped (the reference
+# frame is fixed, so flipping the probe spans every relative axis-sign assignment).
+
+# Proper rotations (determinant +1) that flip pairs of principal axes by 180 deg. The identity
+# plus three two-axis flips cover all sign assignments reachable without an (improper) reflection.
+_AXIS_SIGN_FLIPS: List[Tuple[int, int, int]] = [
+    (1, 1, 1),
+    (1, -1, -1),
+    (-1, 1, -1),
+    (-1, -1, 1),
+]
+
+
+def _canonicalize_conformer_inplace(mol: Chem.Mol, conf_id: int) -> None:
+    """Put one conformer of ``mol`` into its inertial frame in place (issue #8513 guard).
+
+    No-op (swallowed) for degenerate geometries (e.g. <3 atoms, collinear) where the inertia
+    tensor is singular; such molecules are pose-trivial anyway. ``conf_id`` of -1 selects the
+    default conformer, matching rdShapeAlign's convention.
+    """
+    try:
+        rdMolTransforms.CanonicalizeConformer(mol.GetConformer(conf_id))
+    except (RuntimeError, ValueError):  # pragma: no cover - singular inertia tensor
+        pass
+
+
+def _flip_conformer(mol: Chem.Mol, conf_id: int, signs: Tuple[int, int, int]) -> Chem.Mol:
+    """Return a copy of ``mol`` with conformer ``conf_id`` reflected by ``signs`` about the axes.
+
+    ``signs`` must be a proper rotation (product of the three == +1) so chirality is preserved.
+    """
+    out = Chem.Mol(mol)
+    transform = np.eye(4)
+    transform[0, 0], transform[1, 1], transform[2, 2] = signs
+    rdMolTransforms.TransformConformer(out.GetConformer(conf_id), transform)
+    return out
 
 
 def _score_single_reference(
@@ -20,40 +225,115 @@ def _score_single_reference(
     ref_mol: Chem.Mol,
     score_type: str,
     use_colors: bool,
+    inject_color: bool = False,
+    score_variant: str = "tanimoto",
+    color_ff: str = "default",
 ) -> float:
-    """Compute best alignment score between a query molecule and one reference."""
+    """Compute best alignment score between a query molecule and one reference.
+
+    Uses rdShapeAlign.AlignMol which performs Gaussian shape overlay (same
+    algorithm family as OpenEye ROCS and CDPKit GaussianShapeAlignment).
+
+    ``color_ff`` selects the pharmacophore typing for the color channel (see
+    ``_annotate_color_features``): "default"/"fdef" uses RDKit BaseFeatures.fdef,
+    "oe_mills_dean" uses the OpenEye ImplicitMillsDean SMARTS port (Lever 1).
+    Annotation is applied when ``inject_color`` is True OR ``color_ff`` is non-default
+    (selecting an explicit FF implies injecting it); ``color_ff="default"`` with
+    ``inject_color=False`` is the legacy no-op path.
+
+    The alignment OPTIMIZATION objective is driven by ``score_type`` through
+    AlignMol's ``opt_param`` (1.0 = shape-only, 0.5 = equal-weight shape+color
+    ~ OpenEye ROCS ``-optchem`` TanimotoCombo, 0.0 = color-only). On flexible
+    molecules this materially changes both the pose and the color score (an
+    8-rotatable-bond probe vs a CCR2 reference gains ~0.10 ColorTanimoto under
+    color optimization); it has little effect only on rigid references where
+    the shape- and color-optimal poses coincide. (The earlier claim that
+    opt_param has no effect held only at the rigid-reference / 200-conformer
+    regime and is false for the flexible generated library.)
+    """
     if query_mol is None or ref_mol is None:
         return 0.0
     if query_mol.GetNumConformers() == 0 or ref_mol.GetNumConformers() == 0:
         return 0.0
 
+    # Activate the 6-type color path (incl. hydrophobe) by annotating both molecules.
+    # Idempotent: each molecule is annotated once (refs/queries reused across calls), and
+    # the per-conformer Chem.Mol copies below inherit the property. Annotation runs when the
+    # caller asks for injection OR selects a non-default FF (an explicit FF means "inject it").
+    if (inject_color or color_ff != "default") and use_colors:
+        if not query_mol.HasProp("PUBCHEM_PHARMACOPHORE_FEATURES"):
+            _annotate_color_features(query_mol, color_ff=color_ff)
+        if not ref_mol.HasProp("PUBCHEM_PHARMACOPHORE_FEATURES"):
+            _annotate_color_features(ref_mol, color_ff=color_ff)
+
+    # Drive the alignment OPTIMIZATION objective from the requested score mode so that
+    # color/combo modes co-optimize color rather than reading it off a shape-optimized
+    # pose. rdShapeAlign.AlignMol opt_param: 1.0 = shape-only, 0.5 = equal-weight
+    # shape+color (~ OpenEye ROCS -optchem TanimotoCombo), 0.0 = color-only.
+    if score_type == "shape":
+        opt_param = 1.0
+    elif score_type == "color":
+        opt_param = 0.0
+    else:  # "TanimotoCombo" / combo
+        opt_param = 0.5
+
+    # For Tversky variants, precompute native (sov, sof) self-overlaps once per conformer; the
+    # per-pose Tanimoto from AlignMol is converted to Tversky on the same native basis below.
+    use_tversky = score_variant != "tanimoto"
+    if use_tversky:
+        alpha, beta = _TVERSKY_AB[score_variant]
+        _opts = rdShapeAlign.ShapeInputOptions()
+        _opts.useColors = use_colors
+        ref_self = {rc.GetId(): _self_overlaps(ref_mol, rc.GetId(), _opts) for rc in ref_mol.GetConformers()}
+        qry_self = {qc.GetId(): _self_overlaps(query_mol, qc.GetId(), _opts) for qc in query_mol.GetConformers()}
+
+    # --- Pose-dependence guard (issue #8513): canonicalize both molecules into their inertial
+    # frame, then start the probe from each principal-axis sign assignment and keep the best
+    # overlay. Operate on COPIES so the shared/cross-process ref_mol and query_mol (and the
+    # original-frame Tversky self-overlaps, which are pose-invariant) are untouched. The
+    # reference frame is canonicalized ONCE per ref_conf (hoisted out of the query loop) and
+    # reused so it stays fixed while the probe is flipped.
+    ref_canon = Chem.Mol(ref_mol)
+    for ref_conf in ref_mol.GetConformers():
+        _canonicalize_conformer_inplace(ref_canon, ref_conf.GetId())
+
     best_score = 0.0
     for query_conf in query_mol.GetConformers():
+        probe_canon = Chem.Mol(query_mol)
+        _canonicalize_conformer_inplace(probe_canon, query_conf.GetId())
         for ref_conf in ref_mol.GetConformers():
-            try:
-                probe_copy = Chem.Mol(query_mol)
-                result = rdShapeAlign.AlignMol(
-                    ref_mol,
-                    probe_copy,
-                    refConfId=ref_conf.GetId(),
-                    probeConfId=query_conf.GetId(),
-                    useColors=use_colors,
-                )
-            except (RuntimeError, ValueError):
-                continue
+            for signs in _AXIS_SIGN_FLIPS:
+                probe_copy = _flip_conformer(probe_canon, query_conf.GetId(), signs)
+                try:
+                    result = rdShapeAlign.AlignMol(
+                        ref_canon,
+                        probe_copy,
+                        refConfId=ref_conf.GetId(),
+                        probeConfId=query_conf.GetId(),
+                        useColors=use_colors,
+                        opt_param=opt_param,
+                    )
+                except (RuntimeError, ValueError):
+                    continue
 
-            if not isinstance(result, (list, tuple)) or len(result) < 2:
-                continue
+                if not isinstance(result, (list, tuple)) or len(result) < 2:
+                    continue
 
-            shape_score, color_score = result[0], result[1]
-            if score_type == "shape":
-                score = shape_score
-            elif score_type == "color":
-                score = color_score
-            else:
-                score = shape_score + color_score
-            if score > best_score:
-                best_score = score
+                shape_score, color_score = result[0], result[1]
+                if use_tversky:
+                    # ref_self/qry_self pass the REFERENCE self-overlap as self_a (alpha-weighted).
+                    sov_r, sof_r = ref_self[ref_conf.GetId()]
+                    sov_q, sof_q = qry_self[query_conf.GetId()]
+                    shape_score = _tversky_from_tanimoto(shape_score, sov_r, sov_q, alpha, beta)
+                    color_score = _tversky_from_tanimoto(color_score, sof_r, sof_q, alpha, beta)
+                if score_type == "shape":
+                    score = shape_score
+                elif score_type == "color":
+                    score = color_score
+                else:
+                    score = shape_score + color_score
+                if score > best_score:
+                    best_score = score
     return best_score
 
 
@@ -62,6 +342,9 @@ def _rdkit_worker_init(
     group_to_indices: List[List[int]],
     score_type: str,
     use_colors: bool,
+    inject_color: bool = False,
+    score_variant: str = "tanimoto",
+    color_ff: str = "default",
 ) -> None:
     """Initializer to share immutable worker state."""
     global _RDKIT_WORKER_SETTINGS
@@ -70,6 +353,9 @@ def _rdkit_worker_init(
         "group_to_indices": group_to_indices,
         "score_type": score_type,
         "use_colors": use_colors,
+        "inject_color": inject_color,
+        "score_variant": score_variant,
+        "color_ff": color_ff,
     }
 
 
@@ -81,21 +367,33 @@ def _score_molecule_rdkit_worker(args: Tuple[int, List[Chem.Mol]]) -> Tuple[int,
     group_to_indices: List[List[int]] = settings.get("group_to_indices", [])
     score_type: str = settings.get("score_type", "TanimotoCombo")
     use_colors: bool = settings.get("use_colors", True)
+    inject_color: bool = settings.get("inject_color", False)
+    score_variant: str = settings.get("score_variant", "tanimoto")
+    color_ff: str = settings.get("color_ff", "default")
     num_groups = len(group_to_indices) if group_to_indices else (1 if reference_mols else 0)
     if not mol_conformers or num_groups == 0:
         return mol_id, [0.0] * num_groups
 
     group_scores = [0.0] * num_groups
     try:
-        for conf_mol in mol_conformers:
-            if conf_mol is None or conf_mol.GetNumConformers() == 0:
-                continue
-            for group_idx, ref_indices in enumerate(group_to_indices):
-                for ref_idx in ref_indices:
-                    ref_mol = reference_mols[ref_idx]
-                    score = _score_single_reference(conf_mol, ref_mol, score_type, use_colors)
-                    if score > group_scores[group_idx]:
-                        group_scores[group_idx] = score
+        # Per-molecule wall-clock cap: a molecule whose alignment spins is scored 0 (invalid)
+        # so it can't wedge the worker / serial fallback / epoch. No-op unless
+        # DRUGEX_SCORE_MOL_TIMEOUT is set. (Same class of fix as cdpkit cell 615.)
+        with molecule_time_limit(mol_timeout()):
+            for conf_mol in mol_conformers:
+                if conf_mol is None or conf_mol.GetNumConformers() == 0:
+                    continue
+                for group_idx, ref_indices in enumerate(group_to_indices):
+                    for ref_idx in ref_indices:
+                        ref_mol = reference_mols[ref_idx]
+                        score = _score_single_reference(
+                            conf_mol, ref_mol, score_type, use_colors, inject_color,
+                            score_variant, color_ff,
+                        )
+                        if score > group_scores[group_idx]:
+                            group_scores[group_idx] = score
+    except ScoreTimeout:
+        return mol_id, [0.0] * num_groups
     except (RuntimeError, ValueError, AttributeError, TypeError) as exc:
         import sys
         print(f"Warning: Error scoring molecule {mol_id}: {exc}", file=sys.stderr)
@@ -142,6 +440,9 @@ class RDKitROCSScorer(Scorer):
         use_colors: bool = True,
         show_progress: bool = True,
         n_jobs: int = -1,
+        inject_color: bool = False,
+        score_variant: str = "tanimoto",
+        color_ff: str = "default",
     ):
         """Initialize the RDKit ROCS scorer.
 
@@ -153,6 +454,17 @@ class RDKitROCSScorer(Scorer):
             use_colors: Whether to include pharmacophore colors in alignments.
             show_progress: Enables stdout progress updates when True.
             n_jobs: Number of worker processes (-1 uses all available CPUs).
+            inject_color: When True, annotate query + reference molecules with the
+                6-type PUBCHEM_PHARMACOPHORE_FEATURES scheme (incl. hydrophobe) so
+                rdShapeAlign's color matches OpenEye ImplicitMillsDean rather than its
+                5-pattern fallback. Off by default (changes color scores; recalibrate
+                thresholds before enabling in production).
+            color_ff: Pharmacophore typing for the injected color features:
+                "default"/"fdef" = RDKit BaseFeatures.fdef (legacy), "oe_mills_dean" =
+                OpenEye ImplicitMillsDean SMARTS port (Lever 1). Selecting "oe_mills_dean"
+                implies color injection with OE typing. OPT-IN: the default leaves color
+                scoring bit-for-bit unchanged. Recalibrate thresholds before making it
+                the default (the OE-ground-truth Spearman GATE is a separate compute step).
 
         Raises:
             TypeError: If reference inputs use unsupported types.
@@ -161,11 +473,29 @@ class RDKitROCSScorer(Scorer):
         """
         super().__init__()
 
+        if score_type not in _VALID_SCORE_TYPES:
+            raise ValueError(
+                f"score_type must be one of {sorted(_VALID_SCORE_TYPES)}, got {score_type!r}"
+            )
+        if score_variant not in _VALID_SCORE_VARIANTS:
+            raise ValueError(
+                f"score_variant must be one of {sorted(_VALID_SCORE_VARIANTS)}, "
+                f"got {score_variant!r}"
+            )
+        if color_ff not in _VALID_COLOR_FFS:
+            raise ValueError(
+                f"color_ff must be one of {sorted(_VALID_COLOR_FFS)}, got {color_ff!r}"
+            )
+
         self.conformer_generator = conformer_generator
         self.score_type = score_type
         self.use_colors = use_colors
+        self.inject_color = inject_color
+        self.score_variant = score_variant
+        self.color_ff = color_ff
         self.show_progress = show_progress
         self.n_jobs = n_jobs if n_jobs != -1 else cpu_count()
+        self.n_jobs = capped_n_jobs(self.n_jobs)  # DRUGEX_SCORE_NJOBS bound (cell-615 mem hang)
 
         self.group_definitions = self._prepare_reference_groups(references)
         self.group_names = [name for name, _ in self.group_definitions]
@@ -304,7 +634,19 @@ class RDKitROCSScorer(Scorer):
         self.reference_mols = valid_refs
         self.group_to_indices = new_group_to_indices
 
+    def _key_suffix(self) -> str:
+        """Distinguish scorers by non-default flags so keys don't collide (defaults -> '')."""
+        suffix = ""
+        if self.score_variant != "tanimoto":
+            suffix += f"_{self.score_variant}"
+        if self.inject_color:
+            suffix += "_inject"
+        if self.color_ff == "oe_mills_dean":
+            suffix += "_oe"
+        return suffix
+
     def getKey(self) -> List[str]:
+        sfx = self._key_suffix()
         if (
             len(self.group_names) == 1
             and self.group_names[0] == _DEFAULT_RDKIT_GROUP_NAME
@@ -312,12 +654,9 @@ class RDKitROCSScorer(Scorer):
             prefix = "RDKit_Supermol" if self._single_reference else "RDKit_Aggregate"
             refs = len(self.reference_mols)
             if prefix == "RDKit_Aggregate":
-                return [f"{prefix}_{refs}refs_{self.score_type}"]
-            return [f"{prefix}_{self.score_type}"]
-        return [f"RDKit_{name}" for name in self.group_names]
-
-    def _calculate_shape_score(self, query_mol: Chem.Mol, ref_mol: Chem.Mol) -> float:
-        return _score_single_reference(query_mol, ref_mol, self.score_type, self.use_colors)
+                return [f"{prefix}_{refs}refs_{self.score_type}{sfx}"]
+            return [f"{prefix}_{self.score_type}{sfx}"]
+        return [f"RDKit_{name}{sfx}" for name in self.group_names]
 
     @staticmethod
     def _deduplicate_smiles(
@@ -382,7 +721,8 @@ class RDKitROCSScorer(Scorer):
                     for ref_idx in ref_indices:
                         ref_mol = self.reference_mols[ref_idx]
                         score = _score_single_reference(
-                            conf_mol, ref_mol, self.score_type, self.use_colors
+                            conf_mol, ref_mol, self.score_type, self.use_colors,
+                            self.inject_color, self.score_variant, self.color_ff,
                         )
                         if score > group_scores[group_idx]:
                             group_scores[group_idx] = score
@@ -414,7 +754,11 @@ class RDKitROCSScorer(Scorer):
         if not unique_smiles:
             return scores
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        # ignore_cleanup_errors: on networked scratch (NFS/Lustre) a lingering file handle at
+        # exit becomes a silly-rename (.nfsXXXX) so rmtree raises ENOTEMPTY *after* scores are
+        # computed -> the result would be silently lost. Swallow the cleanup error (the dir is
+        # reaped by the job's TMPDIR cleanup).
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             conf_file = self.conformer_generator.genConformers(unique_smiles, tmpdir)
             if not os.path.exists(conf_file):
                 if self.show_progress:
@@ -468,7 +812,10 @@ class RDKitROCSScorer(Scorer):
                 chunksize = max(1, unique_count // (effective_jobs * 4))
 
                 try:
-                    with Pool(
+                    # forkserver (via DRUGEX_MP_CONTEXT) avoids the fork-after-threads
+                    # deadlock that hangs a fork-Pool created after torch/OpenMP threads
+                    # exist (see parallel.pool_context + cdpkit cell 615).
+                    with pool_context().Pool(
                         self.n_jobs,
                         initializer=_rdkit_worker_init,
                         initargs=(
@@ -476,6 +823,9 @@ class RDKitROCSScorer(Scorer):
                             self.group_to_indices,
                             self.score_type,
                             self.use_colors,
+                            self.inject_color,
+                            self.score_variant,
+                            self.color_ff,
                         ),
                     ) as pool:
                         if self.show_progress:
