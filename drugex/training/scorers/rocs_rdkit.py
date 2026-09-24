@@ -35,7 +35,7 @@ _TVERSKY_AB = {"tversky_ref": (0.95, 0.05), "tversky_fit": (0.05, 0.95)}
 # with a 5-pattern fallback (donor/acceptor/rings/cation/anion) that has NO hydrophobe -- and
 # the CCR2 references are hydrophobe-heavy, so RDKit is blind to their dominant color feature.
 # Annotating from BaseFeatures.fdef activates the full 6-type scheme, matching OpenEye's
-# ImplicitMillsDean color FF. See ccr2_gen/docs/color_validation/HOW_CLOSE_TO_OE.md §1b.
+# ImplicitMillsDean color FF.
 try:
     _COLOR_FACTORY = ChemicalFeatures.BuildFeatureFactory(
         os.path.join(RDConfig.RDDataDir, "BaseFeatures.fdef")

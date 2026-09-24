@@ -1,6 +1,6 @@
 """Consolidated tests for :mod:`drugex.training.scorers`.
 
-Run:  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run:  python -m drugex.training.scorers.tests
 
 This module is the single test entry point for the scorers package, matching the
 repo convention (one ``tests.py`` per package, cf. ``drugex/data/tests.py`` and
@@ -116,7 +116,7 @@ _REF_SDF = os.path.join(
 _ROCS_BIN = (
     os.environ.get("ROCS_BINARY")
     or shutil.which("rocs")
-    or os.path.join(_REPO_ROOT, "ccr2_gen/oeye/current_apps/apps/openeye/bin/rocs")
+    or ""
 )
 
 
@@ -126,7 +126,7 @@ _ROCS_BIN = (
 
 """Characterization + behavior tests for the ROCS shape/color optimization mode switch.
 
-Run:  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run:  python -m drugex.training.scorers.tests
 
 Task 0 (this commit) = the SAFETY NET: lock the CURRENT behavior of
 rocs_rdkit._score_single_reference before wiring `opt_param` (Task B), so any
@@ -370,9 +370,9 @@ class OpenEyeModes(unittest.TestCase):
 
 """TDD tests for RDKit color hydrophobe injection (Lever 2, Task #14).
 
-Run:  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run:  python -m drugex.training.scorers.tests
 
-Background (verified at source, see ccr2_gen/docs/color_validation/HOW_CLOSE_TO_OE.md §1b):
+Background:
 rdShapeAlign's DEFAULT color uses a 5-pattern fallback (donor/acceptor/rings/cation/anion)
 with NO hydrophobe. OpenEye's ImplicitMillsDean has a 6th type (hydrophobe), and the CCR2
 references are hydrophobe-heavy -> RDKit is blind to their dominant color feature unless we
@@ -493,11 +493,10 @@ class RDKitArgValidation(unittest.TestCase):
 
 """TDD tests for the OpenEye ImplicitMillsDean color force field port (Lever 1).
 
-Run (with OE_LICENSE + LD_LIBRARY_PATH from ccr2_gen/oeye/runtime_libs):
-  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run (with OE_LICENSE set and the OpenEye libraries on LD_LIBRARY_PATH):
+  python -m drugex.training.scorers.tests
 
-Background (verified at source: ccr2_gen/oeye/current_apps/apps/openeye/data/rocs/
-3.9.0.1/rocs/ImplicitMillsDean.cff):
+Background (verified against ``ImplicitMillsDean.cff`` shipped with OpenEye ROCS 3.9.0.1):
 The OE ImplicitMillsDean color FF declares 6 INTERACTION types (donor, acceptor,
 cation, anion, rings, hydrophobe), each `attractive gaussian weight=1.0 radius=1.0`.
 Each type's PATTERN lines reference $macros expanded from the DEFINE block. This
@@ -874,7 +873,7 @@ class DefaultOff(unittest.TestCase):
 
 """TDD tests for RDKit ROCS pose-invariance guard (Lever 6, Task #17; RDKit issue #8513).
 
-Run:  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run:  python -m drugex.training.scorers.tests
 
 Background (verified against github.com/rdkit/rdkit/issues/8513 + PR #8999):
 ``rdShapeAlign.AlignMol``'s two-phase optimizer starts the overlay from the probe's *input*
@@ -1022,7 +1021,7 @@ class ScorerIsPoseInvariant(unittest.TestCase):
 
 """Task D2 tests: NATIVE CDPKit tautomer + protonation prep in CDPKitConformerGenerator.
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 def _first_sdf_charge(path):
@@ -1063,7 +1062,7 @@ Confirms the three NATIVE protonators (RDKit=Dimorphite-DL, CDPKit=ProtonationSt
 OpenEye=OEQuacPac) agree on the dominant pH-7.4 net charge for the same molecule — the basis
 for the "native-per-backend is consistent" claim.
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 # (SMILES, expected dominant net charge at pH 7.4)
@@ -1111,7 +1110,7 @@ class CrossBackendProtonationConsistency(unittest.TestCase):
 
 """Task D3 tests: NATIVE OpenEye (OEQuacPac) tautomer + protonation in OmegaConformerGenerator.
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 def _first_oeb_charge(path):
@@ -1156,7 +1155,7 @@ class OmegaConformerPrep(unittest.TestCase):
 
 """Task D1 tests: native tautomer + protonation prep in RDKitConformerGenerator.
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 def _first_sdf_mol(path):
@@ -1203,7 +1202,7 @@ class RDKitConformerPrep(unittest.TestCase):
 
 """Tests for the shared pH-protonation primitive (Task D).
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 def _charge(smi):
@@ -1284,7 +1283,7 @@ class TestRocsMpi(unittest.TestCase):
 
 """TDD tests for reference-weighted Tversky color/combo (Lever 4, Task #16) — CDPKit backend.
 
-Run:  ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run:  python -m drugex.training.scorers.tests
 
 Background (HOW_CLOSE_TO_OE.md): asymmetric reference-Tversky weights the REFERENCE pharmacophore
 ("is the reference covered by the candidate?"), forgiving the candidate being larger than the
@@ -1528,14 +1527,6 @@ class OpenEyeTversky(unittest.TestCase):
 
     @unittest.skipUnless(os.path.exists(_ROCS_BIN), f"rocs binary not found: {_ROCS_BIN}")
     def test_integration_tversky_ref_differs_from_tanimoto(self):
-        _libs = os.path.join(_REPO_ROOT, "ccr2_gen/oeye/runtime_libs")
-        if os.path.isdir(_libs):
-            os.environ["LD_LIBRARY_PATH"] = (
-                _libs + ":" + os.environ.get("LD_LIBRARY_PATH", "")
-            )
-        _lic = os.path.join(_REPO_ROOT, "ccr2_gen/oe_license.txt")
-        if os.path.exists(_lic):
-            os.environ.setdefault("OE_LICENSE", _lic)
         smis = ["NCCNCCNc1ccc(C(=O)O)cc1"]
         tani = self._scorer("color", "tanimoto").getScores(smis)[0, 0]
         tvr = self._scorer("color", "tversky_ref").getScores(smis)[0, 0]
@@ -1557,7 +1548,7 @@ embed cleanly burned 120s x max_isomers (=480s each). The shared TautomerEnumera
 was also default-uncapped (maxTautomers/maxTransforms = 1000). These tests pin the
 caps that bound per-molecule scoring time (near-constant-time training).
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 
@@ -1676,7 +1667,7 @@ clean intermediary that never had those threads, avoiding the deadlock. This hel
 start method configurable (default ``fork`` — byte-for-byte for external users; the RL scripts
 opt into ``forkserver``).
 
-Run: ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+Run: python -m drugex.training.scorers.tests
 """
 
 
@@ -1821,7 +1812,7 @@ survives, plus a Pool-level get(timeout) backstop. This test injects an unbounde
 alignment and asserts getScores returns in bounded time with that molecule scored 0.
 
 Run: OE_LICENSE=... DRUGEX_SCORE_MOL_TIMEOUT=2 \
-     ~/miniconda3/envs/drugex/bin/python -m drugex.training.scorers.tests
+     python -m drugex.training.scorers.tests
 """
 
 # Renamed from the original module-level ``CDPL`` / ``REF`` (too generic for a shared module).

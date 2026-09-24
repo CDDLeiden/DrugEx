@@ -8,7 +8,7 @@ pH so query and reference color features are on a common basis. Apply it BEFORE 
 generation. If Dimorphite-DL is unavailable or errors, the input is returned unchanged
 (pipeline-safe).
 
-Tool choice (see ccr2_gen/docs/color_validation/EXPERIMENT_PROTONATION_RESULTS.md):
+Tool choice:
 Dimorphite-DL (protonation only) — NOT Gypsum-DL, whose 3D/tautomer/stereo enumeration
 would duplicate the scorers' own conformer generators (Gypsum-DL calls Dimorphite-DL for
 its protonation anyway).

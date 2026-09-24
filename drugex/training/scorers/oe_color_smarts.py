@@ -1,7 +1,7 @@
 """OpenEye ImplicitMillsDean color force field, ported to self-contained SMARTS.
 
-PROVENANCE (verbatim source of every SMARTS below):
-    ccr2_gen/oeye/current_apps/apps/openeye/data/rocs/3.9.0.1/rocs/ImplicitMillsDean.cff
+PROVENANCE (verbatim source of every SMARTS below): ``ImplicitMillsDean.cff`` as shipped
+with OpenEye ROCS 3.9.0.1 (``data/rocs/`` in the OpenEye applications install).
 
 That file declares 6 color INTERACTION types -- donor, acceptor, cation, anion,
 rings, hydrophobe -- each ``attractive gaussian weight=1.0 radius=1.0`` (.cff lines
