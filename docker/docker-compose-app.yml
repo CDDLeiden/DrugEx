@@ -1,0 +1,31 @@
+services:
+
+  drugex-app-runner:
+    image: drugex-app-runner:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+      args:
+        - BASE_IMAGE_TAG=${BASE_IMAGE_TAG}
+        - DRUGEX_REPO=${DRUGEX_REPO}
+        - DRUGEX_REVISION=${DRUGEX_REVISION}
+        - QSPRPRED_REPO=${QSPRPRED_REPO}
+        - QSPRPRED_REVISION=${QSPRPRED_REVISION}
+    container_name: ${CONTAINER_NAME}-python${PYTHON_VERSION}
+    command: /opt/conda/bin/conda run -n drugex jupyter lab --port-retries=0 --ip 0.0.0.0 --allow-root --IdentityProvider.token=${JUPYTER_TOKEN} --ServerApp.password=${JUPYTER_PASSWORD} --port $APP_PORT
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES}
+      - PYTHON_VERSION=${PYTHON_VERSION}
+      - DRUGEX_REPO=${DRUGEX_REPO}
+      - DRUGEX_REVISION=${DRUGEX_REVISION}
+      - QSPRPRED_REPO=${QSPRPRED_REPO}
+      - QSPRPRED_REVISION=${QSPRPRED_REVISION}
+      - RUNNER_NAME=${CONTAINER_NAME}-python${PYTHON_VERSION}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]

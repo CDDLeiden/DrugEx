@@ -1,0 +1,40 @@
+ARG BASE_IMAGE_TAG=${BASE_IMAGE_TAG}
+
+FROM nvidia/cuda:${BASE_IMAGE_TAG}
+
+# install packages
+RUN apt-get update && apt-get install -y --no-install-recommends wget git libxrender1 libxext-dev build-essential && rm -rf /var/lib/apt/lists/*
+
+# install miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/conda && \
+    rm Miniconda3-latest-Linux-x86_64.sh
+
+# create user
+RUN useradd -m drugex-test-runner
+
+ENV PATH /opt/conda/bin:$PATH
+
+# copy test files
+
+COPY --chown=drugex-test-runner:drugex-test-runner app.sh /home/drugex-test-runner/app.sh
+
+WORKDIR /home/drugex-test-runner
+
+# source app.sh as user drugex-test-runner
+USER drugex-test-runner
+# Build-time args for repositories / revisions
+ARG DRUGEX_REPO
+ARG DRUGEX_REVISION
+ARG QSPRPRED_REPO
+ARG QSPRPRED_REVISION
+
+# Export build args as environment variables so app.sh has access
+ENV DRUGEX_REPO=${DRUGEX_REPO} \
+    DRUGEX_REVISION=${DRUGEX_REVISION} \
+    QSPRPRED_REPO=${QSPRPRED_REPO} \
+    QSPRPRED_REVISION=${QSPRPRED_REVISION}
+RUN bash -c "source app.sh"
+
+# remove the app.sh script after sourcing
+RUN rm app.sh

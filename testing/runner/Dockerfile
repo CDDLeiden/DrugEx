@@ -3,7 +3,7 @@ ARG BASE_IMAGE_TAG=${BASE_IMAGE_TAG}
 FROM nvidia/cuda:${BASE_IMAGE_TAG}
 
 # install packages
-RUN apt-get update && apt-get install -y --no-install-recommends wget git libxrender1 libxext-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends wget git libxrender1 libxext-dev build-essential && rm -rf /var/lib/apt/lists/*
 
 # install miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \

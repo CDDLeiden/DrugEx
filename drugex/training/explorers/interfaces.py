@@ -100,6 +100,7 @@ class Explorer(Model, ABC):
         dict
             The metrics:
                 - valid_ratio (float): ratio of valid molecules
+                - accurate_ratio (float, opt): the ratio of SMILES that are valid and have the desired fragments
                 - unique_ratio (float): ratio of valid and unique molecules
                 - desired_ratio (float): ratio of valid, unique and desired molecules
                 - avg_amean (float): average arithmetic mean score of valid and unique molecules
@@ -128,8 +129,12 @@ class Explorer(Model, ABC):
         dct['desired_ratio'] = unique.Desired.sum() / ntot
         
         # Average artithmetic and geometric mean score 
-        dct['avg_amean'] = unique[self.env.getScorerKeys()].values.mean()
-        dct['avg_gmean'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
+        if len(unique) == 0:
+            dct['avg_amean'] = 0.0
+            dct['avg_gmean'] = 0.0
+        else:
+            dct['avg_amean'] = unique[self.env.getScorerKeys()].values.mean()
+            dct['avg_gmean'] = unique[self.env.getScorerKeys()].apply(gmean, axis=1).mean()
         
         return dct
     

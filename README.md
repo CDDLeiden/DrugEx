@@ -2,7 +2,8 @@
  
 <img src='figures/logo.png' width=20% align=right>
 <p align=left width=70%>
-DrugEx is an open-source software library for <i>de novo</i> design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework. The package contains multiple generator architectures and a variety of scoring tools and multi-objective optimisation methods. It has a flexible application programming interface and can readily be used via the command line interface [[1](https://pubs.acs.org/doi/10.1021/acs.jcim.3c00434)] (see [Quick Start](#quick-start) to get to work right away).
+
+DrugEx is an open-source software library for <i>de novo</i> design of small molecules with deep learning generative models in a multi-objective reinforcement learning framework. The package contains multiple generator architectures and a variety of scoring tools and multi-objective optimisation methods. It has a flexible application programming interface and can readily be used via the command line interface [[1](https://pubs.acs.org/doi/10.1021/acs.jcim.3c00434)] (see the [Jupyter notebook tutorial](./tutorial) to get to work right away).
 
 ## History
 

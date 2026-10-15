@@ -11,7 +11,7 @@ from rdkit.Chem import RDConfig
 from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdDepictor, rdMolDraw2D
-opts = Draw.DrawingOptions()
+opts = Draw.MolDrawOptions()
 Draw.SetComicMode(opts)
 
 def initLogger(filename, dir_name='data/logs/'):

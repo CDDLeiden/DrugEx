@@ -9,6 +9,12 @@ RUN_CMD="${ACTIVATE_CMD} && conda activate ${ENV_NAME}"
 WD=`pwd`
 
 # setting up environments
+echo "Setting up channels..."
+conda config --remove-key channels
+conda config --add channels conda-forge
+conda config --show channels
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 echo "Creating environment: ${ENV_NAME}"
 bash -c "${ACTIVATE_CMD} && conda create -n ${ENV_NAME} python=${PYTHON_VERSION}"
 
@@ -36,12 +42,11 @@ git checkout ${DRUGEX_REVISION}
 cd testing/clitest
 bash -c "${RUN_CMD} && ./test.sh"
 
-echo "Installing tutorial dependencies..."
-bash -c "${RUN_CMD} && pip install papyrus_structure_pipeline git+https://github.com/martin-sicho/papyrus-scaffold-visualizer.git@main mols2grid jupyterlab"
-bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}" # ensure version
-
 echo "Running tutorials..."
 cd "${WD}/DrugEx/tutorial"
+bash -c "${RUN_CMD} && pip install -r requirements.txt"
+bash -c "${RUN_CMD} && pip install git+${QSPRPRED_REPO}@${QSPRPRED_REVISION}"
+bash -c "${RUN_CMD} && pip freeze"
 bash -c "${RUN_CMD} && ./run_all.sh"
 
 echo "All tests finished successfully. Exiting..."
