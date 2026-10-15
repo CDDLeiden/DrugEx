@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import gc
 import os
 import logging
 from pathlib import Path
 
 try:
-    from openeye import oechem, oemolprop, oeomega
+    from openeye import oechem, oemolprop, oeomega, oequacpac
 
     OE_AVAILABLE = True
 except ImportError:
@@ -19,6 +21,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors, AllChem
 from rdkit.Chem.EnumerateStereoisomers import (EnumerateStereoisomers,
                                                StereoEnumerationOptions)
+from rdkit.Chem.MolStandardize import rdMolStandardize
 
 try:
     import CDPL.Chem as CDPLChem
@@ -29,6 +32,27 @@ try:
     CDPL_AVAILABLE = True
 except ImportError:
     CDPL_AVAILABLE = False
+
+# Native RDKit tautomer canonicalizer (constructed once; cheap).
+# Cap the enumeration: RDKit defaults to maxTautomers/maxTransforms = 1000, which lets
+# Canonicalize() explore pathologically for molecules with many tautomerizable centers.
+# 50 is ample for picking a canonical tautomer and bounds the worst case (audit 2026-06-23).
+_RDKIT_TAUTOMER_MAX = 50
+_RDKIT_TAUTOMER_ENUMERATOR = rdMolStandardize.TautomerEnumerator()
+_RDKIT_TAUTOMER_ENUMERATOR.SetMaxTautomers(_RDKIT_TAUTOMER_MAX)
+_RDKIT_TAUTOMER_ENUMERATOR.SetMaxTransforms(_RDKIT_TAUTOMER_MAX)
+
+# CDPKit DefaultTautomerGenerator has NO native enumeration cap, so a molecule with
+# many tautomerizable centres can enumerate pathologically. Returning False from the
+# callback DOES stop generation (verified 2026-06-25), so we cap the count there.
+# 50 is ample for picking a canonical (highest-scoring) tautomer.
+_MAX_TAUTOMERS = 50
+# pH-7.4 protonation for the RDKit backend = Dimorphite-DL (pure-RDKit; core RDKit has no
+# pH ionization). Import-guarded so the module still loads if it is absent.
+try:
+    from drugex.training.scorers.protonation import protonate_smiles as _rdkit_protonate_smiles
+except ImportError:
+    _rdkit_protonate_smiles = None
 
 
 logger = logging.getLogger(__name__)
@@ -55,6 +79,9 @@ class OmegaConformerGenerator(ConformerGenerator):
         filter: oemolprop.OEFilter | int | str | None = None,
         use_gpu: bool = False,
         show_progress: bool = False,
+        protonate: bool = True,
+        canonicalize_tautomer: bool = True,
+        timeout: int = 20,
     ):
         """Initialize the conformer generator
 
@@ -71,6 +98,11 @@ class OmegaConformerGenerator(ConformerGenerator):
                     oemolprop.OEFilterType_BlockBuster)
             use_gpu (bool): whether to use GPU for conformer generation
             show_progress (bool): whether to show progress during conformer generation
+            timeout (int): per-molecule Omega search-time cap in seconds. Omega has
+                NO default per-molecule cap, so a torsion-driving-heavy molecule can
+                run unbounded and blow the GPU walltime (audit 2026-06-25). 20s bounds
+                the pathological tail; applied to both the top-level search-time and
+                the torsion-driving search-time via SetMaxSearchTime.
         """
         if not OE_AVAILABLE:
             raise ImportError("OpenEye toolkits required")
@@ -89,9 +121,12 @@ class OmegaConformerGenerator(ConformerGenerator):
         self.filter = filter
         self.use_gpu = use_gpu
         self.show_progress = show_progress
+        self.protonate = protonate
+        self.canonicalize_tautomer = canonicalize_tautomer
+        self.timeout = timeout
 
-    def _create_fresh_omega(self):
-        """Create a fresh Omega instance with proven parameters"""
+    def _build_omega_options(self):
+        """Build the OEOmegaOptions with the proven parameters + the search-time cap."""
         opts = oeomega.OEOmegaOptions()
         # Use conservative conformer limits
         opts.SetMaxConfs(self.max_conformers)
@@ -102,6 +137,12 @@ class OmegaConformerGenerator(ConformerGenerator):
         opts.SetEnumRing(True)
         opts.SetRotorOffset(False)
 
+        # Per-molecule search-time cap (BLOCKER B5): Omega has no default cap, so a
+        # torsion-driving-heavy molecule can run unbounded. Cap both the top-level
+        # search-time and the torsion-driving search-time (verified native API).
+        opts.SetMaxSearchTime(float(self.timeout))
+        opts.GetTorDriveOptions().SetMaxSearchTime(float(self.timeout))
+
         # Force CPU mode to reduce memory pressure
         if self.use_gpu and oeomega.OEOmegaIsGPUReady():
             opts.GetTorDriveOptions().SetUseGPU(True)
@@ -110,7 +151,15 @@ class OmegaConformerGenerator(ConformerGenerator):
             opts.GetTorDriveOptions().SetUseGPU(False)
             opts.SetSampleHydrogens(True)
 
-        return oeomega.OEOmega(opts)
+        return opts
+
+    def _omega_options_for_test(self):
+        """Return the configured OEOmegaOptions (introspection for tests)."""
+        return self._build_omega_options()
+
+    def _create_fresh_omega(self):
+        """Create a fresh Omega instance with proven parameters"""
+        return oeomega.OEOmega(self._build_omega_options())
 
     def _filter_mol(self, smi, mol) -> bool:
         """Filter molecules based on heavy atoms and rotatable bonds"""
@@ -180,6 +229,22 @@ class OmegaConformerGenerator(ConformerGenerator):
 
             if self._filter_mol(smi, mol):
                 continue
+
+            # NATIVE OpenEye prep (OEQuacPac) BEFORE OEFlipper + Omega:
+            #   OEGetReasonableTautomers(pKaNorm=protonate) -> reasonable tautomer
+            #   (+ pH-7.4 ionization when protonate); else OESetNeutralpHModel (protonate only).
+            # Guarded per-molecule (parity with RDKit/CDPKit): a bad molecule is skipped,
+            # never allowed to abort the whole batch.
+            try:
+                if self.canonicalize_tautomer:
+                    tauts = list(oequacpac.OEGetReasonableTautomers(
+                        mol, oequacpac.OETautomerOptions(), self.protonate))
+                    if tauts:
+                        mol = oechem.OEMol(tauts[0])
+                elif self.protonate:
+                    oequacpac.OESetNeutralpHModel(mol)
+            except Exception:
+                pass
 
             for j, iso in enumerate(self._get_isomers(mol)):
                 iso.SetTitle(f"{title}+{j}")
@@ -364,7 +429,10 @@ class RDKitConformerGenerator(ConformerGenerator):
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
         num_threads: int = 0,
+        timeout: int = 20,
         show_progress: bool = False,
+        protonate: bool = True,
+        canonicalize_tautomer: bool = True,
     ):
         """Initialize the conformer generator
 
@@ -377,8 +445,11 @@ class RDKitConformerGenerator(ConformerGenerator):
                 max_rotatable_bonds
             num_threads (int): Number of threads for ETKDG conformer generation.
                 0 = use all available CPU cores (default).
-                Set to 1 when using parallel scoring (n_jobs>1) to avoid CPU
-                oversubscription. When n_jobs=1 (sequential), num_threads=0 is optimal.
+            timeout (int): Per-isomer timeout in seconds for ETKDG embedding.
+                0 = no timeout. Default 20s bounds the ~10% of molecules that fail
+                to embed cleanly (these otherwise burn timeout x max_isomers seconds
+                each and dominate an RL epoch; audit 2026-06-23). The fast ~90% embed
+                in <1s and are unaffected.
             show_progress (bool): whether to show progress during conformer generation
         """
         if max_conformers > 200:
@@ -393,18 +464,19 @@ class RDKitConformerGenerator(ConformerGenerator):
         self.max_heavy_atoms = max_heavy_atoms
         self.max_rotatable_bonds = max_rotatable_bonds
         self.num_threads = num_threads
+        self.timeout = timeout
         self.show_progress = show_progress
+        self.protonate = protonate
+        self.canonicalize_tautomer = canonicalize_tautomer
 
     def _create_fresh_etkdg(self):
-        """Create ETKDGv3 parameters for conformer generation
-
-        Thread control: Uses self.num_threads for CPU allocation.
-        Set num_threads=1 when using multiprocessing to avoid oversubscription.
-        """
+        """Create ETKDGv3 parameters for conformer generation."""
         params = AllChem.ETKDGv3()
         params.randomSeed = 0xc0ffee
         params.numThreads = self.num_threads
         params.pruneRmsThresh = 0.5
+        if self.timeout > 0:
+            params.timeout = self.timeout
         return params
 
     def _filter_mol(self, smi, mol) -> bool:
@@ -470,6 +542,19 @@ class RDKitConformerGenerator(ConformerGenerator):
 
             if self._filter_mol(smi, mol):
                 continue
+
+            # Prep BEFORE stereoisomer enumeration + embedding. Order is load-bearing:
+            # tautomer Canonicalize strips sp3/bond stereo, so it must precede _get_isomers.
+            #   tautomer-canonicalize -> protonate(pH 7.4) -> stereoisomers -> AddHs -> embed
+            if self.canonicalize_tautomer:
+                try:
+                    mol = _RDKIT_TAUTOMER_ENUMERATOR.Canonicalize(mol)
+                except Exception:
+                    pass
+            if self.protonate and _rdkit_protonate_smiles is not None:
+                reparsed = Chem.MolFromSmiles(_rdkit_protonate_smiles(Chem.MolToSmiles(mol)))
+                if reparsed is not None:
+                    mol = reparsed
 
             for j, iso in enumerate(self._get_isomers(mol)):
                 iso = Chem.AddHs(iso)
@@ -569,10 +654,14 @@ class CDPKitConformerGenerator(ConformerGenerator):
         max_isomers: int = 4,
         max_heavy_atoms: int = 35,
         max_rotatable_bonds: int = 15,
-        timeout: int = 3600,  # seconds (following CDPKit example)
+        timeout: int = 20,  # seconds/molecule. Was 3600 (1hr!) per the CDPKit example, which
+                            # let cdpkit/supermol/eps0.3 run ~31min/epoch; 20s bounds the
+                            # pathological tail (CDPL enforces it natively via settings.timeout).
         min_rmsd: float = 0.5,
         energy_window: float = 20.0,
         show_progress: bool = False,
+        protonate: bool = True,
+        canonicalize_tautomer: bool = True,
     ):
         """Initialize the CDPKit conformer generator
 
@@ -605,6 +694,8 @@ class CDPKitConformerGenerator(ConformerGenerator):
         self.min_rmsd = min_rmsd
         self.energy_window = energy_window
         self.show_progress = show_progress
+        self.protonate = protonate
+        self.canonicalize_tautomer = canonicalize_tautomer
 
     def _create_conf_generator(self):
         """Create a CDPKit ConformerGenerator with optimal settings following CDPKit examples"""
@@ -766,6 +857,59 @@ class CDPKitConformerGenerator(ConformerGenerator):
         if count == 0:
             yield mol
 
+    def _canonical_tautomer(self, mol):
+        """Return the dominant (highest-scoring) tautomer via NATIVE CDPKit.
+
+        The enumeration is bounded: CDPKit's DefaultTautomerGenerator has no native
+        cap, so we count accepted tautomers in the callback and ``return False`` to
+        stop generation once ``_MAX_TAUTOMERS`` have been scored (verified: a False
+        return halts enumeration). This bounds the worst case for tautomer-rich
+        molecules (BLOCKER B6, audit 2026-06-25).
+        """
+        gen = CDPLChem.DefaultTautomerGenerator()
+        gen.setMode(CDPLChem.TautomerGenerator.Mode.TOPOLOGICALLY_UNIQUE)
+        scorer = CDPLChem.TautomerScore()
+        best = {"mol": None, "score": float("-inf"), "n": 0}
+
+        def _cb(taut):
+            t = CDPLChem.BasicMolecule(taut)
+            CDPLChem.calcBasicProperties(t, True)
+            s = scorer(t)
+            if s > best["score"]:
+                best["score"], best["mol"] = s, t
+            best["n"] += 1
+            # Stop once the cap is reached (False halts generation).
+            return best["n"] < _MAX_TAUTOMERS
+
+        gen.setCallbackFunction(_cb)
+        gen.generate(mol)
+        return best["mol"] if best["mol"] is not None else mol
+
+    def _canonical_tautomer_count(self, mol):
+        """Count how many tautomers the (capped) enumeration accepts (test probe)."""
+        gen = CDPLChem.DefaultTautomerGenerator()
+        gen.setMode(CDPLChem.TautomerGenerator.Mode.TOPOLOGICALLY_UNIQUE)
+        seen = {"n": 0}
+
+        def _cb(taut):
+            seen["n"] += 1
+            return seen["n"] < _MAX_TAUTOMERS
+
+        gen.setCallbackFunction(_cb)
+        gen.generate(mol)
+        return seen["n"]
+
+    def _protonate_physiological(self, mol):
+        """Return the pH-7.4 dominant protonation state via NATIVE CDPKit."""
+        std = CDPLChem.ProtonationStateStandardizer()
+        out = CDPLChem.BasicMolecule()
+        std.standardize(
+            mol, out,
+            CDPLChem.ProtonationStateStandardizer.Flavor.PHYSIOLOGICAL_CONDITION_STATE,
+        )
+        CDPLChem.calcBasicProperties(out, True)  # re-init for downstream stereo/confgen
+        return out
+
     def genConformers(self, smiles_list, out_dir) -> str:
         """Generate conformers for a list of SMILES and save to SDF
 
@@ -839,6 +983,19 @@ class CDPKitConformerGenerator(ConformerGenerator):
             # Filter molecules
             if self._filter_mol(smi, mol):
                 continue
+
+            # NATIVE CDPKit prep BEFORE stereoisomer enumeration (order load-bearing):
+            #   tautomer-canonicalize -> protonate(pH 7.4) -> stereoisomers -> conformers
+            if self.canonicalize_tautomer:
+                try:
+                    mol = self._canonical_tautomer(mol)
+                except Exception:
+                    pass
+            if self.protonate:
+                try:
+                    mol = self._protonate_physiological(mol)
+                except Exception:
+                    pass
 
             # Generate stereoisomers and conformers for each
             for j, iso in enumerate(self._get_isomers(mol)):

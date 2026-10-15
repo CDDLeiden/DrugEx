@@ -3,8 +3,10 @@ import os
 import shutil
 import subprocess
 import tempfile
+import warnings
+from collections import defaultdict
 from contextlib import contextmanager
-from typing import List
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -79,6 +81,11 @@ class OpenEyeROCSScorer(Scorer):
         rocs_binary: str = "rocs",
         binary_path: str | None = None,
         show_progress: bool = True,
+        n_jobs: int = -1,
+        timeout: int = 300,
+        mpi_np: int = 1,
+        optimization_mode: str | None = None,
+        score_variant: str = "tanimoto",
     ):
         """Initialize the OpenEye ROCS scorer.
 
@@ -98,6 +105,9 @@ class OpenEyeROCSScorer(Scorer):
             rocs_binary: Name of the ROCS binary to use
             binary_path: Path to the ROCS binary (if not in PATH)
             show_progress: If True, progress is shown during scoring
+            n_jobs: Accepted for API consistency with RDKit/CDPKit backends
+                but has no effect (OpenEye ROCS runs as a single CLI subprocess)
+            timeout: Timeout in seconds for the ROCS subprocess
 
         Raises:
             ImportError: If OpenEye toolkits are not available.
@@ -108,6 +118,23 @@ class OpenEyeROCSScorer(Scorer):
         if not OE_AVAILABLE:
             raise ImportError("OpenEye toolkits required")
 
+        # optimization_mode is a convenience that maps the three ROCS modes onto
+        # shape_only / score_type / color_optimize. When given it overrides those args:
+        #   shape -> -shapeonly true ; combo -> -rankby TanimotoCombo -optchem true ;
+        #   color -> -rankby ColorTanimoto -optchem true.
+        if optimization_mode is not None:
+            if optimization_mode == "shape":
+                shape_only = True
+            elif optimization_mode == "combo":
+                shape_only, score_type, color_optimize = False, "TanimotoCombo", True
+            elif optimization_mode == "color":
+                shape_only, score_type, color_optimize = False, "ColorTanimoto", True
+            else:
+                raise ValueError(
+                    "optimization_mode must be 'shape', 'combo', or 'color', "
+                    f"got {optimization_mode!r}"
+                )
+
         self.conformer_generator = conformer_generator
 
         # Convert to list and validate
@@ -115,11 +142,52 @@ class OpenEyeROCSScorer(Scorer):
         self._validate_query_files()
 
         self.score_type = score_type
+
+        # Tversky is a different READOUT of the same alignment: ROCS always emits the Ref/Fit
+        # Tversky columns in the report (verified), so we keep the optimization as-is and just
+        # parse a different column. score_variant: "tanimoto" | "tversky_ref" | "tversky_fit".
+        _valid_variants = {"tanimoto", "tversky_ref", "tversky_fit"}
+        if score_variant not in _valid_variants:
+            raise ValueError(
+                f"score_variant must be one of {sorted(_valid_variants)}, got {score_variant!r}"
+            )
+        self.score_variant = score_variant
+        # Derive the mode for Tversky column selection. shape_only=True (whether set directly or
+        # via optimization_mode="shape") means the report has ONLY shape columns, so map to
+        # "shape" — otherwise a Tversky variant would request RefTverskyCombo, absent from a
+        # -shapeonly report, and silently score all-zeros (code-review A).
+        _mode = optimization_mode or ("shape" if shape_only else {
+            "TanimotoCombo": "combo", "ColorTanimoto": "color", "ShapeTanimoto": "shape",
+        }.get(self.score_type, "combo"))
+        _tversky_cols = {
+            ("shape", "tversky_ref"): "RefTversky",
+            ("color", "tversky_ref"): "RefColorTversky",
+            ("combo", "tversky_ref"): "RefTverskyCombo",
+            ("shape", "tversky_fit"): "FitTversky",
+            ("color", "tversky_fit"): "FitColorTversky",
+            ("combo", "tversky_fit"): "FitTverskyCombo",
+        }
+        # Column to read from the ROCS report (tanimoto keeps the legacy score_type column).
+        self._score_column = (
+            self.score_type if score_variant == "tanimoto"
+            else _tversky_cols[(_mode, score_variant)]
+        )
+
         self.optimize = optimize
         self.color_optimize = color_optimize
         self.color_force_field = color_force_field
         self.binary_path = binary_path or rocs_binary
+        self.timeout = timeout
 
+        # OpenEye ROCS parallelises via its CLI `-mpi_np` flag, not Python jobs.
+        self.mpi_np = mpi_np
+        if n_jobs not in (-1, 1):
+            warnings.warn(
+                "OpenEye ROCS runs as a single CLI subprocess; n_jobs has no "
+                "effect. Use mpi_np=N for single-node MPI parallelism instead.",
+                stacklevel=2,
+            )
+        self.n_jobs = 1
 
         self.shape_only = shape_only
         self.rocs_binary = rocs_binary
@@ -173,6 +241,27 @@ class OpenEyeROCSScorer(Scorer):
                 raise TypeError(f"Unsupported molecule type: {type(mol)}")
         return smiles_list
 
+    @staticmethod
+    def _deduplicate_smiles(
+        smiles_list: List[Union[str, None]]
+    ) -> Tuple[List[str], Dict[int, List[int]]]:
+        """Group identical SMILES to avoid redundant conformer generation."""
+        unique_smiles: List[str] = []
+        unique_lookup: Dict[str, int] = {}
+        unique_to_original: Dict[int, List[int]] = defaultdict(list)
+
+        for idx, smi in enumerate(smiles_list):
+            if smi is None:
+                continue
+            unique_idx = unique_lookup.get(smi)
+            if unique_idx is None:
+                unique_idx = len(unique_smiles)
+                unique_smiles.append(smi)
+                unique_lookup[smi] = unique_idx
+            unique_to_original[unique_idx].append(idx)
+
+        return unique_smiles, unique_to_original
+
     def getScores(self, mols, frags=None) -> np.ndarray:
         """Score molecules using one or more ROCS queries"""
         if not mols:
@@ -188,16 +277,35 @@ class OpenEyeROCSScorer(Scorer):
         # Convert to SMILES list for uniform processing
         smiles_list = self._convert_to_smiles(mols)
 
-        # Prepare conformers
+        # Deduplicate SMILES to avoid redundant conformer generation
+        unique_smiles, unique_to_original = self._deduplicate_smiles(smiles_list)
+
+        if not unique_smiles:
+            return np.zeros((num_input_mols, len(self.queries)), dtype=np.float32)
+
+        if self.show_progress and len(unique_smiles) < len(smiles_list):
+            print(
+                f"  Deduplicated: {len(smiles_list)} -> {len(unique_smiles)} "
+                f"unique SMILES"
+            )
+
+        # Prepare conformers for unique SMILES only
         with _managed_tmpdir() as tmpdir:
-            conf_file = self.conformer_generator.genConformers(smiles_list, tmpdir)
+            conf_file = self.conformer_generator.genConformers(
+                unique_smiles, tmpdir
+            )
 
             # Score using OpenEye ROCS
             scores_dict = self._score(conf_file)
 
+        # Map scores from unique indices back to original indices
         result_scores = np.zeros((num_input_mols, len(self.queries)), dtype=np.float32)
         for i, scores in enumerate(scores_dict.values()):
-            result_scores[list(scores.keys()), i] = list(scores.values())
+            for unique_idx, score in scores.items():
+                if unique_idx not in unique_to_original:
+                    continue
+                for original_idx in unique_to_original[unique_idx]:
+                    result_scores[original_idx, i] = score
 
         if self.show_progress:
             if timer and timer.Elapsed() > 2.0:
@@ -227,13 +335,24 @@ class OpenEyeROCSScorer(Scorer):
         
         if self.shape_only:
             # sets chemff none, optchem false and rankby tanimoto
-            cmd.extend(["-shapeonly", str(self.shape_only).lower()])
+            cmd.extend(["-shapeonly", "true"])
         else:
             cmd.extend(["-rankby", self.score_type])
             cmd.extend(["-chemff", self.color_force_field])
-            
+
         # set optimizer on/off, if off score only
         cmd.extend(["-opt", str(self.optimize).lower()])
+
+        # wire color_optimize to -optchem (only meaningful with optimizer on
+        # and shape_only off — ROCS ignores it otherwise)
+        if not self.shape_only and self.optimize:
+            cmd.extend(["-optchem", str(self.color_optimize).lower()])
+
+        # OpenEye single-node MPI parallelism (rocs -mpi_np N ...); inert at N<=1.
+        # This is how the ROCS CLI parallelises across cores (the `n_jobs` arg is
+        # intentionally inert — ROCS is one subprocess, not Python multiprocessing).
+        if getattr(self, "mpi_np", 1) and self.mpi_np > 1:
+            cmd[1:1] = ["-mpi_np", str(self.mpi_np)]
 
         return cmd
 
@@ -306,8 +425,7 @@ class OpenEyeROCSScorer(Scorer):
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=300,
-                env=dict(os.environ, OMP_NUM_THREADS="1"),
+                timeout=self.timeout,
             )
 
             if self.show_progress and rocs_timer and rocs_timer.Elapsed() > 2.0:
@@ -327,7 +445,9 @@ class OpenEyeROCSScorer(Scorer):
         except RuntimeError as e:
             raise RuntimeError(e)
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"ROCS execution timed out")
+            raise RuntimeError(
+                f"ROCS execution timed out after {self.timeout}s"
+            )
         except Exception as e:
             raise RuntimeError(f"ROCS execution failed: {e}")
 
@@ -347,8 +467,11 @@ class OpenEyeROCSScorer(Scorer):
             print("ROCS output file is empty")
             return scores
 
-        if "Name" not in df.columns or self.score_type not in df.columns:
-            print("ROCS output file is missing required columns")
+        if "Name" not in df.columns or self._score_column not in df.columns:
+            print(
+                f"ROCS output file is missing required column {self._score_column!r}; "
+                f"available: {list(df.columns)}"
+            )
             return scores
 
         # find the maximum score per molecule out of all its conformers/isomers
@@ -358,12 +481,13 @@ class OpenEyeROCSScorer(Scorer):
                 mol_id = int(row["Name"].split("+")[0].split("_")[1])
             except IndexError:
                 raise ValueError(f"Invalid molecule name format: {row['Name']}")
-            conf_score = float(row[self.score_type])
+            conf_score = float(row[self._score_column])
             mol_max_score = scores.get(mol_id, 0.0)
             scores[mol_id] = max(mol_max_score, conf_score)
 
         return scores
 
     def getKey(self) -> List[str]:
-        """Return scorer identifier"""
-        return [f"ROCS_{name}" for name in self.queries.keys()]
+        """Return scorer identifier (suffixed by non-default score_variant so keys don't collide)."""
+        sfx = f"_{self.score_variant}" if self.score_variant != "tanimoto" else ""
+        return [f"ROCS_{name}{sfx}" for name in self.queries.keys()]
